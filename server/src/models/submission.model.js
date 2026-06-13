@@ -183,6 +183,10 @@ const submissionSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Class',
+    },
     answers: [submissionAnswerSchema],
     totalScore: {
       type: Number,
