@@ -1,0 +1,60 @@
+const httpStatus = require('http-status');
+const submissionService = require('../services/submission.service');
+const catchAsync = require('../utils/catchAsync');
+
+const scan = catchAsync(async (req, res) => {
+  const result = await submissionService.scan(req.body);
+  res.status(httpStatus.ACCEPTED).send(result);
+});
+
+const getById = catchAsync(async (req, res) => {
+  const submission = await submissionService.getById(req.params.id);
+  if (!submission) {
+    return res.status(httpStatus.NOT_FOUND).send({ message: 'Submission not found' });
+  }
+  res.send(submission);
+});
+
+const getAll = catchAsync(async (req, res) => {
+  const result = await submissionService.getAll(req.query);
+  res.send(result);
+});
+
+const getByExam = catchAsync(async (req, res) => {
+  const { examId, id } = req.params;
+  const result = await submissionService.getByExam(examId || id, req.query);
+  res.send(result);
+});
+
+const getByStudent = catchAsync(async (req, res) => {
+  const { studentId } = req.params;
+  const result = await submissionService.getByStudent(studentId, req.query);
+  res.send(result);
+});
+
+const manualOverride = catchAsync(async (req, res) => {
+  const submission = await submissionService.manualOverride(req.params.id, req.body);
+  res.send(submission);
+});
+
+const getStatistics = catchAsync(async (req, res) => {
+  const { examId } = req.params;
+  const stats = await submissionService.getStatistics(examId);
+  res.send(stats);
+});
+
+const remove = catchAsync(async (req, res) => {
+  await submissionService.delete(req.params.id);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+module.exports = {
+  scan,
+  getById,
+  getAll,
+  getByExam,
+  getByStudent,
+  manualOverride,
+  getStatistics,
+  remove,
+};

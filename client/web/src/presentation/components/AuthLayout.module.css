@@ -1,0 +1,316 @@
+.authContainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f4f6f9;
+  font-family: 'Inter', sans-serif;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 40px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #0b2240;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.logoIcon {
+  color: #0b2240;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navLink {
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.navLink:hover {
+  color: #0b2240;
+}
+
+.activeNavLink {
+  color: #0b2240;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.activeNavLink::after {
+  content: '';
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #0b2240;
+}
+
+.registerBtn {
+  background-color: #0b2240;
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.registerBtn:hover {
+  background-color: #112d52;
+}
+
+.registerBtn:active {
+  transform: scale(0.98);
+}
+
+/* Main Content Area */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+/* Card Styles */
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 540px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.splitCard {
+  max-width: 1000px;
+  display: flex;
+}
+
+/* Split Layout Left Column (Benefits) */
+.benefitsCol {
+  flex: 1;
+  background-color: #0b2240;
+  color: #ffffff;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.benefitsTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 16px;
+}
+
+.benefitsDesc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #94a3b8;
+  margin-bottom: 40px;
+}
+
+.benefitsList {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.benefitItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.benefitIconWrapper {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa;
+  margin-top: 2px;
+}
+
+.benefitTextTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #ffffff;
+}
+
+.benefitTextDesc {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* Split Layout Right Column (Form) */
+.formCol {
+  flex: 1.2;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Single Form Area */
+.singleFormCol {
+  padding: 40px;
+}
+
+/* Bottom Illustration Area */
+.illustrationContainer {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.illustrationBox {
+  background-color: #9ca3af;
+  border-radius: 12px;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.illustrationBox::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+}
+
+/* Footer Styles */
+.footer {
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 24px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 24px;
+}
+
+.footerLink {
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footerLink:hover {
+  color: #0b2240;
+}
+
+/* Responsiveness */
+@media (max-width: 868px) {
+  .splitCard {
+    flex-direction: column;
+    max-width: 500px;
+  }
+  .benefitsCol {
+    padding: 32px;
+  }
+  .formCol {
+    padding: 32px;
+  }
+  .header {
+    padding: 16px 20px;
+  }
+  .footer {
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px 20px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  .navLinks {
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .mainContent {
+    padding: 20px 12px;
+  }
+  .card {
+    border-radius: 8px;
+  }
+  .singleFormCol {
+    padding: 24px 16px;
+  }
+  .formCol {
+    padding: 24px 16px;
+  }
+  .benefitsCol {
+    padding: 24px 16px;
+  }
+  .benefitsTitle {
+    font-size: 22px;
+  }
+  .footer {
+    padding: 20px 16px;
+  }
+  .footerLinks {
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

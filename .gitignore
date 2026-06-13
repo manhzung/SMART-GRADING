@@ -1,0 +1,99 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+build/
+dist/
+out/
+
+# Flutter
+*.class
+*.dex
+*.jar
+*.log
+*.packagers/
+*.pubspec.lock
+
+# Android
+.gradle/
+android/.gradle/
+android/build/
+android/app/build/
+*.apk
+*.aab
+*.iml
+*.ipr
+*.iws
+local.properties
+
+# iOS
+ios/Pods/
+ios/*.pbxuser
+ios/*.mode1v3
+ios/*.mode2v3
+ios/*.perspectivev3
+ios/**/DerivedData/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+*.egg
+
+# OMRChecker
+OMRChecker/__pycache__/
+OMRChecker/outputs/
+OMRChecker/uploads/
+*.csv
+*.xlsx
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Cursor
+.cursor/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+.envrc
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# Flutter web build
+.web/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/

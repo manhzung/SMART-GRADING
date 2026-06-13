@@ -1,0 +1,16 @@
+module.exports.Token = require('./token.model');
+module.exports.User = require('./user.model');
+module.exports.School = require('./school.model');
+module.exports.Class = require('./class.model');
+module.exports.Subject = require('./subject.model');
+module.exports.OMRTemplate = require('./omrTemplate.model');
+module.exports.Question = require('./question.model');
+module.exports.Exam = require('./exam.model');
+module.exports.ExamVersion = require('./examVersion.model');
+module.exports.Submission = require('./submission.model');
+module.exports.Appeal = require('./appeal.model');
+module.exports.AIReport = require('./aiReport.model');
+module.exports.AIChat = require('./aiChat.model');
+module.exports.Notification = require('./notification.model');
+module.exports.StudentProgress = require('./studentProgress.model');
+module.exports.ExamReport = require('./examReport.model');

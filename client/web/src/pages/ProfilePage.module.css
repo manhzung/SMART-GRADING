@@ -1,0 +1,80 @@
+.container {
+  max-width: 600px;
+}
+
+.profileCard {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  color: white;
+  margin-bottom: 24px;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.profileCard h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.profileCard p {
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+
+.role {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  text-transform: capitalize;
+}
+
+.menu {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.2s;
+}
+
+.menuItem:hover {
+  background: #f8fafc;
+}
+
+.menuItem span {
+  flex: 1;
+}
+
+.logout {
+  color: #dc2626;
+}
+
+.logout:hover {
+  background: #fef2f2;
+}

@@ -1,0 +1,511 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Breadcrumb Styles */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.breadcrumbSeparator {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.breadcrumbActive {
+  color: #475569;
+  font-weight: 600;
+}
+
+/* Header */
+.header {
+  margin-bottom: 0;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0b2240;
+  margin: 0 0 4px 0;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Search Section */
+.searchSection {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.searchWrapper {
+  position: relative;
+  max-width: 600px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #0b2240;
+  box-shadow: 0 0 0 4px rgba(11, 34, 64, 0.08);
+}
+
+.searchInput::placeholder {
+  color: #94a3b8;
+}
+
+/* Section Title */
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0b2240;
+  margin: 0 0 16px 0;
+}
+
+/* Quick Guides Section */
+.quickGuidesSection {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.quickGuidesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.quickGuideCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.quickGuideCard:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.quickGuideIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background-color: #e0f2fe;
+  color: #0b2240;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quickGuideContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.quickGuideTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+
+.quickGuideDesc {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.quickGuideArrow {
+  color: #94a3b8;
+  flex-shrink: 0;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.quickGuideCard:hover .quickGuideArrow {
+  opacity: 1;
+}
+
+/* FAQ Section */
+.faqSection {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.faqCategory {
+  margin-bottom: 28px;
+}
+
+.faqCategory:last-child {
+  margin-bottom: 0;
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #0b2240;
+}
+
+.categoryTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0b2240;
+  margin: 0;
+  flex: 1;
+}
+
+.categoryCount {
+  font-size: 12px;
+  color: #64748b;
+  background-color: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faqItem {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.faqItem:hover {
+  border-color: #cbd5e1;
+}
+
+.faqItemExpanded {
+  border-color: #0b2240;
+  background-color: #ffffff;
+}
+
+.faqQuestion {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  gap: 12px;
+  transition: color 0.2s ease;
+}
+
+.faqQuestion:hover {
+  color: #0b2240;
+}
+
+.faqQuestion span {
+  flex: 1;
+}
+
+.faqChevron {
+  flex-shrink: 0;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.faqItemExpanded .faqChevron {
+  color: #0b2240;
+}
+
+.faqAnswer {
+  padding: 0 18px 16px 18px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.faqAnswer p {
+  margin: 0;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* No Results */
+.noResults {
+  text-align: center;
+  padding: 48px 24px;
+  color: #64748b;
+}
+
+.noResults svg {
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.noResults p {
+  font-size: 16px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 4px 0;
+}
+
+.noResults span {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+/* Contact Section */
+.contactSection {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.contactDesc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 20px 0;
+}
+
+.contactCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.contactCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.contactIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background-color: #e0f2fe;
+  color: #0b2240;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contactInfo h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.contactLink {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b2240;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.contactLink:hover {
+  color: #153259;
+  text-decoration: underline;
+}
+
+.contactText {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+/* Keyboard Shortcuts */
+.shortcutsSection {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.shortcutsToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shortcutsToggle:hover {
+  background-color: #f8fafc;
+  color: #475569;
+}
+
+.shortcutsToggle svg:first-child {
+  color: #94a3b8;
+}
+
+.shortcutsToggle span:first-of-type {
+  flex: 1;
+  text-align: left;
+}
+
+.shortcutsList {
+  padding: 0 20px 16px 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.shortcutItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}
+
+.shortcutKeys {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 26px;
+  padding: 0 8px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.keyPlus {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0 2px;
+}
+
+.shortcutAction {
+  font-size: 13px;
+  color: #475569;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .quickGuidesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .contactCards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .quickGuidesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .shortcutsList {
+    grid-template-columns: 1fr;
+  }
+
+  .contactCards {
+    grid-template-columns: 1fr;
+  }
+}

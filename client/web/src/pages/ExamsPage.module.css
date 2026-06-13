@@ -1,0 +1,589 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Breadcrumb Styles */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.breadcrumbSeparator {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.breadcrumbActive {
+  color: #475569;
+  font-weight: 600;
+}
+
+/* Page Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0b2240;
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.createBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #0b2240; /* Dark blue/navy */
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.createBtn:hover {
+  background-color: #153259;
+  transform: translateY(-1px);
+}
+
+/* Top Horizontal Filter Bar */
+.filterBar {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+}
+
+.filtersGroupLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* Dropdown Wrapper */
+.dropdownWrapper {
+  position: relative;
+}
+
+.filterDropdownBtn {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 130px;
+  text-align: left;
+}
+
+.filterDropdownBtn:hover {
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.btnIconLeft {
+  margin-right: 8px;
+  color: #64748b;
+}
+
+.btnChevron {
+  margin-left: auto;
+  padding-left: 6px;
+  color: #94a3b8;
+}
+
+/* Dropdown menu options list */
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 4px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdownItem {
+  border: none;
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: left;
+  color: #334155;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.dropdownItem:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.dropdownItemActive {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* Date Picker Container */
+.datePickerContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  background-color: #ffffff;
+}
+
+.calendarIcon {
+  color: #64748b;
+}
+
+.dateInput {
+  border: none;
+  outline: none;
+  font-size: 12px;
+  color: #475569;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.dateSeparator {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Reset button styling */
+.resetBtn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.resetBtn:hover {
+  color: #0b2240;
+}
+
+/* Table styling */
+.tableWrapper {
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f8fafc;
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+  user-select: none;
+}
+
+.tableRow {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.15s ease;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableRow:hover {
+  background-color: #f8fafc;
+}
+
+.rowSelected {
+  background-color: #f8fafc;
+}
+
+/* Checkbox Style */
+.checkboxInput {
+  width: 14px;
+  height: 14px;
+  accent-color: #0b2240;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+}
+
+/* Cell typography classes */
+.textMedium {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.textSemibold {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Exam Info Cell */
+.examNameCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 0;
+}
+
+.examTitleLink {
+  text-decoration: none;
+}
+
+.examTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.4;
+  transition: color 0.15s ease;
+}
+
+.examTitle:hover {
+  color: #0b2240;
+}
+
+.examId {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Status Badges */
+.statusBadge {
+  display: inline-block;
+  text-align: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.draftBadge {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.inProgressBadge {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.completedBadge {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.publishedBadge {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Submissions Progress column */
+.submissionsContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.submissionsText {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  min-width: 50px;
+}
+
+.progressLineWrapper {
+  width: 70px;
+  height: 6px;
+  background-color: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressLine {
+  height: 100%;
+  background-color: #0f172a; /* Dark bar indicating progress */
+  border-radius: 3px;
+}
+
+/* Direct Actions (Eye & Pencil) */
+.directActionsWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.directActionBtn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.directActionBtn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.emptyRow {
+  text-align: center;
+  padding: 40px !important;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* Pagination Row */
+.paginationRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.paginationLeft {
+  font-weight: 500;
+}
+
+.paginationRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pageSizeSelector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.pageSizeSelect {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 8px;
+  outline: none;
+  font-size: 12px;
+  cursor: pointer;
+  background-color: #ffffff;
+  color: #334155;
+}
+
+.paginationNavBtn {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paginationNavBtn:hover:not(:disabled) {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+.paginationNavBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationNumBtn {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paginationNumBtn:hover:not(.paginationNumBtnActive) {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+.paginationNumBtnActive {
+  background-color: #0b2240;
+  border-color: #0b2240;
+  color: #ffffff;
+}
+
+.paginationEllipsis {
+  padding: 0 4px;
+  color: #94a3b8;
+}
+
+/* Bottom Split Dashboard Widgets */
+.bottomSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .bottomSection {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Large dashboard card styles */
+.bottomDashboardCard {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 140px;
+  box-sizing: border-box;
+}
+
+.cardTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboardIconWrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blueIconBg {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.greenIconBg {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.navyIconBg {
+  background-color: #f1f5f9;
+  color: #0b2240;
+}
+
+.dashboardTimeText {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.dashboardCardContent {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboardLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.dashboardLargeValue {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 4px 0 2px 0;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1.1;
+}
+
+.dashboardSubtext {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin: 0;
+}
+
+.trendGreen {
+  color: #16a34a;
+}

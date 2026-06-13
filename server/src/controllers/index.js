@@ -1,0 +1,11 @@
+module.exports.authController = require('./auth.controller');
+module.exports.userController = require('./user.controller');
+module.exports.schoolController = require('./school.controller');
+module.exports.classController = require('./class.controller');
+module.exports.omrTemplateController = require('./omrTemplate.controller');
+module.exports.questionController = require('./question.controller');
+module.exports.examController = require('./exam.controller');
+module.exports.submissionController = require('./submission.controller');
+module.exports.appealController = require('./appeal.controller');
+module.exports.reportController = require('./report.controller');
+module.exports.notificationController = require('./notification.controller');

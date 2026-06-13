@@ -1,0 +1,516 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Title Section */
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #0b2240;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Statistics Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+.statCard {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0b2240;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1;
+}
+
+.statIconWrapper {
+  background-color: #f0f5fa;
+  color: #0b2240;
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Details Grid */
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+}
+
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.cardTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0b2240;
+  margin: 0;
+}
+
+.viewAllLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b2240;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.viewAllLink:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Vertical Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 24px;
+}
+
+.timelineLine {
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background-color: #e5e7eb;
+}
+
+.timelineItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 24px;
+}
+
+.timelineItem:last-child {
+  padding-bottom: 0;
+}
+
+.timelineDot {
+  position: absolute;
+  left: -23px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 2px solid #0b2240;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.timelineItemTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.timelineItemDesc {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.timelineItemTime {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Upcoming Exams */
+.upcomingList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.upcomingItem {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 20px;
+}
+
+.upcomingItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.upcomingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dateBadge {
+  background-color: #eff6ff;
+  color: #1e40af;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.classText {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.examTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b2240;
+  margin: 0;
+}
+
+.startBtn {
+  background-color: #0b2240;
+  color: #ffffff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.startBtn:hover {
+  background-color: #112d52;
+}
+
+.startBtn:active {
+  transform: scale(0.99);
+}
+
+.prepareBtn {
+  background-color: #ffffff;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.prepareBtn:hover {
+  background-color: #f9fafb;
+  border-color: #4b5563;
+  color: #0b2240;
+}
+
+/* Class Performance Card */
+.performanceCard {
+  background-color: #0b2240;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(11, 34, 64, 0.15);
+  margin-top: 24px;
+}
+
+.performanceTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.performanceText {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.progressWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.progressBar {
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #60a5fa;
+  border-radius: 3px;
+  width: 72%;
+}
+
+.progressLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Quick Stats Grid */
+.quickStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.quickStatCard {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quickStatIcon {
+  padding: 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quickStatInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quickStatValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0b2240;
+  line-height: 1;
+}
+
+.quickStatLabel {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Class Overview */
+.classList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.classItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+}
+
+.classInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.className {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b2240;
+}
+
+.classGrade {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.classStudents {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Exam Meta */
+.examMeta {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.examDuration,
+.examQuestions {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Student Progress */
+.progressList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.studentProgressItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.studentInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.studentName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.studentClass {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.progressBarWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressBarSmall {
+  flex: 1;
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFillSmall {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressScore {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0b2240;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* Responsiveness overrides */
+@media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .detailsGrid {
+    grid-template-columns: 1fr;
+  }
+  .quickStatsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+  .quickStatsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .title {
+    font-size: 24px;
+  }
+}

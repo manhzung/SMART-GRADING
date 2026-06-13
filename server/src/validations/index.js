@@ -1,0 +1,12 @@
+module.exports.authValidation = require('./auth.validation');
+module.exports.userValidation = require('./user.validation');
+module.exports.schoolValidation = require('./school.validation');
+module.exports.classValidation = require('./class.validation');
+module.exports.omrTemplateValidation = require('./omrTemplate.validation');
+module.exports.questionValidation = require('./question.validation');
+module.exports.examValidation = require('./exam.validation');
+module.exports.submissionValidation = require('./submission.validation');
+module.exports.appealValidation = require('./appeal.validation');
+module.exports.reportValidation = require('./report.validation');
+module.exports.aiValidation = require('./ai.validation');
+module.exports.notificationValidation = require('./notification.validation');
