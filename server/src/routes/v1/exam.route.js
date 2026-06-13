@@ -12,12 +12,7 @@ router
   .post(auth('manageExams'), validate(examValidation.createExam), examController.create)
   .get(auth(), validate(examValidation.getExams), examController.getAll);
 
-router.get(
-  '/upcoming',
-  auth(),
-  validate(examValidation.getUpcoming),
-  examController.getUpcoming
-);
+router.get('/upcoming', auth(), validate(examValidation.getUpcoming), examController.getUpcoming);
 
 router
   .route('/:id')
