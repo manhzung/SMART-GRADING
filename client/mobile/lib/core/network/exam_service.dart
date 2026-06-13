@@ -44,6 +44,14 @@ class ExamService {
     );
   }
 
+  Future<UpcomingExams> getUpcomingExams({int limit = 5}) {
+    return _apiClient.get<UpcomingExams>(
+      '${ApiConstants.exams}/upcoming',
+      queryParameters: {'limit': limit},
+      parser: (data) => UpcomingExams.fromJson(data as Map<String, dynamic>),
+    );
+  }
+
   Future<Exam> createExam({
     required String title,
     String? description,
@@ -180,6 +188,30 @@ class PaginatedExams {
       limit: (json['limit'] as num?)?.toInt() ?? 20,
       total: (json['total'] as num?)?.toInt() ?? 0,
       pages: (json['pages'] as num?)?.toInt() ?? 1,
+    );
+  }
+}
+
+class UpcomingExams {
+  final List<Exam> results;
+  final int limit;
+  final int count;
+
+  UpcomingExams({
+    required this.results,
+    required this.limit,
+    required this.count,
+  });
+
+  factory UpcomingExams.fromJson(Map<String, dynamic> json) {
+    final resultsRaw = json['results'] as List<dynamic>? ?? [];
+    return UpcomingExams(
+      results: resultsRaw
+          .whereType<Map<String, dynamic>>()
+          .map((e) => Exam.fromJson(e))
+          .toList(),
+      limit: (json['limit'] as num?)?.toInt() ?? 5,
+      count: (json['count'] as num?)?.toInt() ?? 0,
     );
   }
 }
