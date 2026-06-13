@@ -34,12 +34,14 @@ class DashboardView extends StatelessWidget {
       paperCount = examState.exams.fold<int>(0, (sum, e) => sum + e.totalSubmissions);
     }
 
-    final upcomingExams = _buildUpcomingExams(examState);
     final isLoading = (examState is ExamLoading) || (classState is ClassLoading);
+    final isLoadingUpcoming = examState is ExamUpcomingLoading;
+    final upcomingExams = _buildUpcomingExams(examState);
 
     return RefreshIndicator(
       onRefresh: () async {
         context.read<ExamBloc>().add(const ExamLoadRequested());
+        context.read<ExamBloc>().add(const UpcomingExamsLoadRequested(limit: 5));
         context.read<ClassBloc>().add(const ClassFetchRequested());
       },
       child: SingleChildScrollView(
@@ -169,7 +171,25 @@ class DashboardView extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            if (upcomingExams.isEmpty)
+            if (isLoadingUpcoming)
+              Container(
+                width: double.infinity,
+                height: 70,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (upcomingExams.isEmpty)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 32),
@@ -276,19 +296,14 @@ class DashboardView extends StatelessWidget {
   }
 
   List<Widget> _buildUpcomingExams(ExamState state) {
-    if (state is! ExamLoaded || state.exams.isEmpty) {
+    // Prefer the dedicated ExamUpcomingLoaded state; fall back to nothing.
+    if (state is! ExamUpcomingLoaded) {
       return [];
     }
-    final now = DateTime.now();
-    final upcoming = state.exams
-        .where((e) => e.examDate != null && e.examDate!.isAfter(now.subtract(const Duration(days: 1))))
-        .toList();
-
-    upcoming.sort((a, b) => (a.examDate ?? DateTime.now()).compareTo(b.examDate ?? DateTime.now()));
-
+    final upcoming = state.exams.take(3).toList();
     if (upcoming.isEmpty) return [];
 
-    return upcoming.take(3).map((exam) {
+    return upcoming.map((exam) {
       String statusLabel = exam.status.toUpperCase();
       Color bg = const Color(0xFFE2E5FA);
       Color text = const Color(0xFF6366F1);
