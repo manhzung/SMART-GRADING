@@ -179,6 +179,115 @@ class OMRTemplate {
       ],
     );
   }
+
+  /// Creates a template matching the 15-question A5 sheet:
+  /// - A5 portrait: 148 x 210 mm @ 300 DPI = 1748 x 2480 px
+  /// - 2-digit SBD (student code) + 2-digit MD (version code) + 15 MCQ4 questions
+  /// - Layout: 5 questions/row x 3 rows for answers
+  factory OMRTemplate.from15Question() {
+    return OMRTemplate(
+      id: '15q',
+      name: 'Phiếu 15 câu - Ngắn (A5)',
+      pageWidth: 1748,
+      pageHeight: 2480,
+      bubbleWidth: 30,
+      bubbleHeight: 30,
+      emptyValue: '',
+      outputColumns: [
+        'sbd1', 'sbd2', 'md1', 'md2',
+        ...List.generate(15, (i) => 'q${i + 1}'),
+      ],
+      fieldBlocks: [
+        FieldBlock.fromConfig(
+          name: 'SBD',
+          config: {
+            'fieldType': 'QTYPE_INT_FROM_1',
+            'fieldLabels': ['sbd1', 'sbd2'],
+            'origin': [177, 413],
+            'bubblesGap': 12,
+            'labelsGap': 12,
+          },
+          globalBubbleWidth: 30,
+          globalBubbleHeight: 30,
+          globalEmptyValue: '',
+        ),
+        FieldBlock.fromConfig(
+          name: 'MD',
+          config: {
+            'fieldType': 'QTYPE_INT_FROM_1',
+            'fieldLabels': ['md1', 'md2'],
+            'origin': [1181, 413],
+            'bubblesGap': 12,
+            'labelsGap': 12,
+          },
+          globalBubbleWidth: 30,
+          globalBubbleHeight: 30,
+          globalEmptyValue: '',
+        ),
+        FieldBlock.fromConfig(
+          name: 'Answers Row 1',
+          config: {
+            'fieldType': 'QTYPE_MCQ4',
+            'fieldLabels': ['q1', 'q2', 'q3', 'q4', 'q5'],
+            'origin': [248, 768],
+            'bubblesGap': 41,
+            'labelsGap': 94,
+          },
+          globalBubbleWidth: 30,
+          globalBubbleHeight: 30,
+          globalEmptyValue: '',
+        ),
+        FieldBlock.fromConfig(
+          name: 'Answers Row 2',
+          config: {
+            'fieldType': 'QTYPE_MCQ4',
+            'fieldLabels': ['q6', 'q7', 'q8', 'q9', 'q10'],
+            'origin': [248, 862],
+            'bubblesGap': 41,
+            'labelsGap': 94,
+          },
+          globalBubbleWidth: 30,
+          globalBubbleHeight: 30,
+          globalEmptyValue: '',
+        ),
+        FieldBlock.fromConfig(
+          name: 'Answers Row 3',
+          config: {
+            'fieldType': 'QTYPE_MCQ4',
+            'fieldLabels': ['q11', 'q12', 'q13', 'q14', 'q15'],
+            'origin': [248, 956],
+            'bubblesGap': 41,
+            'labelsGap': 94,
+          },
+          globalBubbleWidth: 30,
+          globalBubbleHeight: 30,
+          globalEmptyValue: '',
+        ),
+      ],
+      customLabels: {
+        'studentCode': ['sbd1', 'sbd2'],
+        'versionCode': ['md1', 'md2'],
+      },
+      preProcessors: [
+        OMRPreProcessor(
+            name: 'Levels',
+            options: {
+              'inBlack': 15.0,
+              'inWhite': 200.0,
+              'outBlack': 0.0,
+              'outWhite': 255.0,
+              'gamma': 1.0,
+            }),
+        OMRPreProcessor(
+            name: 'GaussianBlur',
+            options: {
+              'kSize': [3, 3],
+              'sigmaX': 0,
+            }),
+        OMRPreProcessor(name: 'CropPage', options: {}),
+      ],
+    );
+  }
 }
 
 /// Represents a pre-processor step in the pipeline.
