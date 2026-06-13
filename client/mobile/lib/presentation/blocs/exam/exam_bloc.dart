@@ -16,6 +16,7 @@ class ExamBloc extends Bloc<ExamEvent, ExamState> {
     on<ExamCreateRequested>(_onCreateRequested);
     on<ExamUpdateRequested>(_onUpdateRequested);
     on<ExamDeleteRequested>(_onDeleteRequested);
+    on<UpcomingExamsLoadRequested>(_onUpcomingExamsLoadRequested);
   }
 
   final ExamService _examService;
@@ -160,6 +161,19 @@ class ExamBloc extends Bloc<ExamEvent, ExamState> {
           currentPage: currentState.currentPage,
         ));
       }
+    } catch (e) {
+      emit(ExamError(message: e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onUpcomingExamsLoadRequested(
+    UpcomingExamsLoadRequested event,
+    Emitter<ExamState> emit,
+  ) async {
+    emit(ExamUpcomingLoading());
+    try {
+      final result = await _examService.getUpcomingExams(limit: event.limit);
+      emit(ExamUpcomingLoaded(result.results, result.count));
     } catch (e) {
       emit(ExamError(message: e.toString().replaceFirst('Exception: ', '')));
     }
