@@ -211,9 +211,15 @@ export const useClassStore = create<ClassState>((set, get) => ({
     try {
       const user = useAuthStore.getState().user;
       const schoolId = user?.schoolId;
-      const params: Record<string, string | number> = { role: 'teacher', limit: 100 };
-      if (schoolId) params.schoolId = schoolId;
-      const response = await apiService.get<PaginatedTeachers>('/users', { params });
+      if (!schoolId) {
+        set({ teachers: [] });
+        return;
+      }
+      const params: Record<string, string | number> = { limit: 100 };
+      const response = await apiService.get<PaginatedTeachers>(
+        `/schools/${schoolId}/available-teachers`,
+        { params }
+      );
       set({ teachers: response.results || [] });
     } catch (error) {
       console.error('Failed to fetch teachers:', error);

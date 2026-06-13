@@ -28,6 +28,25 @@ class UserService {
     );
   }
 
+  Future<PaginatedUsers> getAvailableStudents({
+    required String classId,
+    int page = 1,
+    int limit = 20,
+    String? search,
+  }) {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+    };
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+
+    return _apiClient.get<PaginatedUsers>(
+      '${ApiConstants.classes}/$classId/available-students',
+      queryParameters: queryParams,
+      parser: (data) => PaginatedUsers.fromJson(data as Map<String, dynamic>),
+    );
+  }
+
   Future<PaginatedUsers> getTeachers({
     int page = 1,
     int limit = 20,

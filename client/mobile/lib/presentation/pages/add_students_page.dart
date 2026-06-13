@@ -57,13 +57,10 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
     });
 
     try {
-      final students = await _userService.getStudents();
-      // Filter out students who are already in the class
-      final currentStudentIds = widget.cls.studentIds.map((s) => s.id).toSet();
-      final availableStudents = students.results.where((s) => !currentStudentIds.contains(s.id)).toList();
+      final response = await _userService.getAvailableStudents(classId: widget.cls.id);
 
       setState(() {
-        _allStudents = availableStudents;
+        _allStudents = response.results;
         _filterStudents(_searchQuery);
         _isLoadingExisting = false;
       });
