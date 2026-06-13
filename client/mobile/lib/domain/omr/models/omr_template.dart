@@ -185,6 +185,17 @@ class OMRTemplate {
   /// - A5 portrait: 148 x 210 mm @ 300 DPI = 1748 x 2480 px
   /// - 2-digit SBD (student code) + 2-digit MD (version code) + 15 MCQ4 questions
   /// - Layout: 5 questions/row x 3 rows for answers
+  ///
+  /// **Coordinate provenance:** All `origin`, `bubblesGap`, and `labelsGap`
+  /// values below are design-time estimates from the 15-question sheet
+  /// spec (`docs/superpowers/specs/2026-06-14-omr-15question-template-design.md`).
+  /// They have NOT been verified against a real scanned sheet yet.
+  ///
+  /// TODO(calibration): When a real 15q A5 sheet image is available, open
+  /// the Test Lab, scan the sheet with this template, and visually compare
+  /// the overlay circle positions to the actual printed bubbles. Adjust the
+  /// `origin` / `bubblesGap` / `labelsGap` values below if bubbles are
+  /// offset. Typical first-pass adjustments: +/- 10-20 px on `originX/Y`.
   factory OMRTemplate.from15Question() {
     return OMRTemplate(
       id: '15q',

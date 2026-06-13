@@ -191,8 +191,17 @@ class _BubbleOverlayPainter extends CustomPainter {
     final scaleX = displayImgWidth / imageWidth;
     final scaleY = displayImgHeight / imageHeight;
 
+    // Use uniform scaling so circles stay round (template may be scaled
+    // non-uniformly by BoxFit.contain in some aspect cases).
+    final scale = (scaleX < scaleY) ? scaleX : scaleY;
+
     // Iterate through all bubbles from the template
     for (final block in template.fieldBlocks) {
+      // Bubble radius in display pixels = half the template bubble size
+      // scaled to the displayed image. This makes the overlay circle
+      // match the real bubble on the sheet across zoom levels.
+      final radius = (block.bubbleWidth / 2) * scale;
+
       for (int rowIdx = 0; rowIdx < block.traverseBubbles.length; rowIdx++) {
         final row = block.traverseBubbles[rowIdx];
         if (row.isEmpty) continue;
@@ -226,19 +235,23 @@ class _BubbleOverlayPainter extends CustomPainter {
             bubbleColor = const Color(0xFF94A3B8); // Gray for unmarked
           }
 
-          // Draw outline circle only — no fill, preserves underlying image visibility
+          // Stroke width also scales so it remains visible at any zoom.
+          final strokeWidth = (radius * 0.12).clamp(1.0, 3.0);
+
+          // Draw outline circle scaled to match the real bubble size.
           final strokePaint = Paint()
             ..color = bubbleColor
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 2.0;
-          canvas.drawCircle(Offset(bx, by), 10.0, strokePaint);
+            ..strokeWidth = strokeWidth;
+          canvas.drawCircle(Offset(bx, by), radius, strokePaint);
 
-          // Draw small filled center dot for marked bubbles only
+          // Draw small filled center dot for marked bubbles only.
+          final dotRadius = (radius * 0.3).clamp(1.5, 6.0);
           if (isMarked) {
             final fillPaint = Paint()
               ..color = bubbleColor.withValues(alpha: 0.9)
               ..style = PaintingStyle.fill;
-            canvas.drawCircle(Offset(bx, by), 3.0, fillPaint);
+            canvas.drawCircle(Offset(bx, by), dotRadius, fillPaint);
           }
         }
       }
