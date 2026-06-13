@@ -3,7 +3,9 @@
  *
  * Conversion: px = mm * 300 / 25.4
  *
- * Dynamic Flow Layout coordinate calculations.
+ * This is the SINGLE SOURCE OF TRUTH for OMR bubble coordinates.
+ * Both Flutter mobile (via /json endpoint) and Web client (via jsPDF) consume this output.
+ * Guarantees web-rendered PDF and mobile-detected bubbles are perfectly aligned.
  */
 
 const MM_TO_PX = 300 / 25.4;
@@ -36,31 +38,37 @@ function estimateLabelWidth(label) {
   return width;
 }
 
-function convertTemplate(template) {
-  const { pageConfig = {}, zones = {} } = template;
+// ═══════════════════════════════════════════════════════════════════════════════
+// LAYOUT COMPUTATION - exported for testing
+// ═══════════════════════════════════════════════════════════════════════════════
 
-  const toPx = (mm) => mmToPx(mm);
-
+/**
+ * Compute the Y-axis flow positions (in mm) for header → code blocks → answer area.
+ * @returns {{
+ *   hdrEndY: number,
+ *   cbY: number,
+ *   codeRowH: number,
+ *   cbEndY: number,
+ *   mTop: number,
+ *   mLeft: number,
+ *   cW: number,
+ *   paperW: number
+ * }}
+ */
+function computeLayout({ pageConfig = {}, zones = {} }) {
   const paperSize = pageConfig.paperSize || 'A4';
-  const pageSizes = { A4: [2480, 3508], A5: [1748, 2480], A3: [3508, 4961] };
-  const [pageW, pageH] = pageSizes[paperSize] || pageSizes.A4;
+  const pageSizesMm = { A4: [210, 297], A5: [148, 210], A3: [297, 420] };
+  const [paperW] = pageSizesMm[paperSize] || pageSizesMm.A4;
 
   const mTop = pageConfig.margins?.top || 15;
   const mLeft = pageConfig.margins?.left || 15;
   const mRight = pageConfig.margins?.right || 15;
-  const paperSizesMm = { A4: [210, 297], A5: [148, 210], A3: [297, 420] };
-  const [paperW] = paperSizesMm[paperSize] || paperSizesMm.A4;
   const cW = paperW - mLeft - mRight;
 
-  const fieldBlocks = {};
-  const outputColumns = [];
-
-  // ── 1. Calculate Header Y bounds ──────────────────────────────────────────
   const hdrOn = zones.header?.enabled !== false;
   const hdrH = hdrOn ? (zones.header?.height || 40) : 0;
   const hdrEndY = hdrOn ? (mTop + hdrH) : mTop;
 
-  // ── 2. Calculate Code Blocks Y bounds ──────────────────────────────────────
   const sc = zones.studentCode;
   const vc = zones.versionCode;
   const scOn = sc && sc.enabled !== false;
@@ -76,146 +84,167 @@ function convertTemplate(template) {
   }
   const cbEndY = (scOn || vcOn) ? (cbY + codeRowH) : hdrEndY;
 
-  // ── Student code (INT: vertical 0-9 per digit column) ─────────────────
-  if (scOn) {
-    let labelText = (sc.label && sc.label.text) || 'STUDENT ID';
-    if (labelText === 'Số báo danh' || labelText === 'SBD') {
-      labelText = 'STUDENT ID';
-    } else if (labelText === 'Mã đề' || labelText === 'MĐ') {
-      labelText = 'EXAM CODE';
-    }
-    const label = removeVietnameseTones(labelText);
+  return { hdrEndY, cbY, codeRowH, cbEndY, mTop, mLeft, cW, paperW };
+}
 
-    const digits = sc.digits || 3;
-    const bwVal = sc.digitConfig?.bubbleSize?.width || 2.5;
-    const bGapHVal = sc.digitConfig?.bubbleSpacing?.horizontal || 1;
-    const stepXVal = bwVal + bGapHVal;
-    const totalContentW = digits * stepXVal - bGapHVal;
-    const padX = 2;
+/**
+ * Build a student code (INT) FieldBlock at the given Y position.
+ * @returns {Object|null} fieldBlock config or null if disabled
+ */
+function buildStudentCodeBlock(sc, layout) {
+  if (!sc || sc.enabled === false) return null;
 
-    const labelW = estimateLabelWidth(label) + 4;
-    let minBlockW = Math.max(20, labelW);
-    if (label.includes('STUDENT') || label.includes('DANH')) {
-      minBlockW = Math.max(minBlockW, 32);
-    } else if (label.includes('EXAM') || label.includes('DE')) {
-      minBlockW = Math.max(minBlockW, 28);
-    }
-    const blockW = Math.max(totalContentW + padX * 2, minBlockW);
-    const startBubblesX = (mLeft - padX) + (blockW - totalContentW) / 2;
-
-    const ox = toPx(startBubblesX);
-    const oy = toPx(cbY + 6); // Add 6mm label space
-    const bw = toPx(bwVal);
-    const bh = toPx(sc.digitConfig?.bubbleSize?.height || 2.5);
-    const bGapV = toPx(sc.digitConfig?.bubbleSpacing?.vertical || 1);
-    const bGapH = toPx(bGapHVal);
-    const labels = Array.from({ length: digits }, (_, i) => `roll${i + 1}`);
-
-    fieldBlocks.student_code = {
-      fieldType: 'QTYPE_INT',
-      fieldLabels: labels,
-      origin: [ox, oy],
-      bubblesGap: bh + bGapV,  // step size (vertical)
-      labelsGap: bw + bGapH,   // step size (horizontal)
-      bubbleWidth: bw,
-      bubbleHeight: bh,
-      emptyValue: sc.digitConfig?.emptyValue || '',
-    };
+  const { cbY, mLeft } = layout;
+  let labelText = (sc.label && sc.label.text) || 'STUDENT ID';
+  if (labelText === 'Số báo danh' || labelText === 'SBD') {
+    labelText = 'STUDENT ID';
+  } else if (labelText === 'Mã đề' || labelText === 'MĐ') {
+    labelText = 'EXAM CODE';
   }
+  const label = removeVietnameseTones(labelText);
 
-  // ── Version code (INT) ────────────────────────────────────────────────
-  if (vcOn) {
-    const vx = mLeft + cW / 2 + 2;
-    let labelText = (vc.label && vc.label.text) || 'EXAM CODE';
-    if (labelText === 'Mã đề' || labelText === 'MĐ') {
-      labelText = 'EXAM CODE';
-    } else if (labelText === 'Số báo danh' || labelText === 'SBD') {
-      labelText = 'STUDENT ID';
-    }
-    const label = removeVietnameseTones(labelText);
+  const digits = sc.digits || 3;
+  const bwVal = sc.digitConfig?.bubbleSize?.width || 2.5;
+  const bGapHVal = sc.digitConfig?.bubbleSpacing?.horizontal || 1;
+  const stepXVal = bwVal + bGapHVal;
+  const totalContentW = digits * stepXVal - bGapHVal;
+  const padX = 2;
 
-    const digits = vc.digits || 3;
-    const bwVal = vc.digitConfig?.bubbleSize?.width || 2;
-    const bGapHVal = vc.digitConfig?.bubbleSpacing?.horizontal || 0.5;
-    const stepXVal = bwVal + bGapHVal;
-    const totalContentW = digits * stepXVal - bGapHVal;
-    const padX = 2;
-
-    const labelW = estimateLabelWidth(label) + 4;
-    let minBlockW = Math.max(20, labelW);
-    if (label.includes('STUDENT') || label.includes('DANH')) {
-      minBlockW = Math.max(minBlockW, 32);
-    } else if (label.includes('EXAM') || label.includes('DE')) {
-      minBlockW = Math.max(minBlockW, 28);
-    }
-    const blockW = Math.max(totalContentW + padX * 2, minBlockW);
-    const startBubblesX = (vx - padX) + (blockW - totalContentW) / 2;
-
-    const ox = toPx(startBubblesX);
-    const oy = toPx(cbY + 6); // Add 6mm label space
-    const bw = toPx(bwVal);
-    const bh = toPx(vc.digitConfig?.bubbleSize?.height || 2);
-    const bGapV = toPx(vc.digitConfig?.bubbleSpacing?.vertical || 0.5);
-    const bGapH = toPx(bGapHVal);
-    const labels = Array.from({ length: digits }, (_, i) => `ver${i + 1}`);
-
-    fieldBlocks.version_code = {
-      fieldType: 'QTYPE_INT',
-      fieldLabels: labels,
-      origin: [ox, oy],
-      bubblesGap: bh + bGapV,  // step size (vertical)
-      labelsGap: bw + bGapH,   // step size (horizontal)
-      bubbleWidth: bw,
-      bubbleHeight: bh,
-      emptyValue: vc.digitConfig?.emptyValue || '',
-    };
+  const labelW = estimateLabelWidth(label) + 4;
+  let minBlockW = Math.max(20, labelW);
+  if (label.includes('STUDENT') || label.includes('DANH')) {
+    minBlockW = Math.max(minBlockW, 32);
+  } else if (label.includes('EXAM') || label.includes('DE')) {
+    minBlockW = Math.max(minBlockW, 28);
   }
+  const blockW = Math.max(totalContentW + padX * 2, minBlockW);
+  const startBubblesX = (mLeft - padX) + (blockW - totalContentW) / 2;
 
-  // ── 3. Calculate Answer Area Grid start Y and split columns ─────────────
-  const aa = zones.answerArea;
-  if (aa && aa.enabled !== false) {
-    const gridY = (scOn || vcOn) ? (cbEndY + 6) : (hdrOn ? (hdrEndY + 5) : mTop);
+  const ox = mmToPx(startBubblesX);
+  const oy = mmToPx(cbY + 6);
+  const bw = mmToPx(bwVal);
+  const bh = mmToPx(sc.digitConfig?.bubbleSize?.height || 2.5);
+  const bGapV = mmToPx(sc.digitConfig?.bubbleSpacing?.vertical || 1);
+  const bGapH = mmToPx(bGapHVal);
+  const labels = Array.from({ length: digits }, (_, i) => `roll${i + 1}`);
 
-    const gc = aa.gridConfig || {};
-    const bc = gc.bubbleConfig || {};
-    const qc = gc.questionNumberConfig || {};
+  return {
+    fieldType: 'QTYPE_INT',
+    fieldLabels: labels,
+    origin: [ox, oy],
+    bubblesGap: bh + bGapV,
+    labelsGap: bw + bGapH,
+    bubbleWidth: bw,
+    bubbleHeight: bh,
+    emptyValue: sc.digitConfig?.emptyValue || '',
+  };
+}
 
-    const startX = aa.startPosition?.x || mLeft;
-    const ox = toPx(startX);
-    const bw = toPx(bc.width || 4);
-    const bh = toPx(bc.height || 4);
-    const bGap = toPx(bc.spacing?.betweenOptions || 1);  // horizontal space
-    const lGap = toPx(bc.spacing?.betweenRows || 8);     // vertical space
-    const qNumW = toPx(qc.width || 8);
-    const questionGap = toPx(bc.spacing?.betweenQuestions || 3);
+/**
+ * Build a version code (INT) FieldBlock.
+ */
+function buildVersionCodeBlock(vc, layout) {
+  if (!vc || vc.enabled === false) return null;
 
-    const totalQuestions = gc.totalQuestions || 30;
-    const questionsPerRow = gc.questionsPerRow || 5;
-    const numOptions = 4;
+  const { cbY, mLeft, cW } = layout;
+  const vx = mLeft + cW / 2 + 2;
+  let labelText = (vc.label && vc.label.text) || 'EXAM CODE';
+  if (labelText === 'Mã đề' || labelText === 'MĐ') {
+    labelText = 'EXAM CODE';
+  } else if (labelText === 'Số báo danh' || labelText === 'SBD') {
+    labelText = 'STUDENT ID';
+  }
+  const label = removeVietnameseTones(labelText);
 
-    const stepX = bw + bGap; // horizontal step between options (A, B, C, D)
-    const stepY = bh + lGap; // vertical step between rows
-    const cellW = qNumW + questionGap + numOptions * bw + (numOptions - 1) * bGap;
+  const digits = vc.digits || 3;
+  const bwVal = vc.digitConfig?.bubbleSize?.width || 2;
+  const bGapHVal = vc.digitConfig?.bubbleSpacing?.horizontal || 0.5;
+  const stepXVal = bwVal + bGapHVal;
+  const totalContentW = digits * stepXVal - bGapHVal;
+  const padX = 2;
 
-    const rows = Math.ceil(totalQuestions / questionsPerRow);
+  const labelW = estimateLabelWidth(label) + 4;
+  let minBlockW = Math.max(20, labelW);
+  if (label.includes('STUDENT') || label.includes('DANH')) {
+    minBlockW = Math.max(minBlockW, 32);
+  } else if (label.includes('EXAM') || label.includes('DE')) {
+    minBlockW = Math.max(minBlockW, 28);
+  }
+  const blockW = Math.max(totalContentW + padX * 2, minBlockW);
+  const startBubblesX = (vx - padX) + (blockW - totalContentW) / 2;
 
-    // Apply vertical offset in the cells: cy + (cellH - bubbleH) / 2
-    const cellHOffset = Math.round(((bc.height || 4) + (bc.spacing?.betweenRows || 8) - (bc.height || 4)) / 2);
-    const oy = toPx(gridY + cellHOffset);
+  const ox = mmToPx(startBubblesX);
+  const oy = mmToPx(cbY + 6);
+  const bw = mmToPx(bwVal);
+  const bh = mmToPx(vc.digitConfig?.bubbleSize?.height || 2);
+  const bGapV = mmToPx(vc.digitConfig?.bubbleSpacing?.vertical || 0.5);
+  const bGapH = mmToPx(bGapHVal);
+  const labels = Array.from({ length: digits }, (_, i) => `ver${i + 1}`);
 
-    // Split answer area into separate column FieldBlocks
-    for (let col = 0; col < questionsPerRow; col++) {
-      const colLabels = [];
-      for (let r = 0; r < rows; r++) {
-        const qIdx = col + r * questionsPerRow;
-        if (qIdx < totalQuestions) {
-          colLabels.push(`q${qIdx + 1}`);
-        }
+  return {
+    fieldType: 'QTYPE_INT',
+    fieldLabels: labels,
+    origin: [ox, oy],
+    bubblesGap: bh + bGapV,
+    labelsGap: bw + bGapH,
+    bubbleWidth: bw,
+    bubbleHeight: bh,
+    emptyValue: vc.digitConfig?.emptyValue || '',
+  };
+}
+
+/**
+ * Build answer area FieldBlocks (one per column).
+ */
+function buildAnswerAreaBlocks(aa, layout) {
+  if (!aa || aa.enabled === false) return [];
+
+  const { mLeft, cbEndY, hdrEndY } = layout;
+  const gridY = (cbEndY !== hdrEndY || (aa.startPosition && aa.startPosition.y !== undefined))
+    ? (cbEndY + 6)
+    : (hdrEndY + 5);
+
+  const gc = aa.gridConfig || {};
+  const bc = gc.bubbleConfig || {};
+  const qc = gc.questionNumberConfig || {};
+
+  const startX = aa.startPosition?.x || mLeft;
+  const ox = mmToPx(startX);
+  const bw = mmToPx(bc.width || 4);
+  const bh = mmToPx(bc.height || 4);
+  const bGap = mmToPx(bc.spacing?.betweenOptions || 1);
+  const lGap = mmToPx(bc.spacing?.betweenRows || 8);
+  const qNumW = mmToPx(qc.width || 8);
+  const questionGap = mmToPx(bc.spacing?.betweenQuestions || 3);
+
+  const totalQuestions = gc.totalQuestions || 30;
+  const questionsPerRow = gc.questionsPerRow || 5;
+  const numOptions = 4;
+
+  const stepX = bw + bGap;
+  const stepY = bh + lGap;
+  const cellW = qNumW + questionGap + numOptions * bw + (numOptions - 1) * bGap;
+  const rows = Math.ceil(totalQuestions / questionsPerRow);
+
+  // Apply vertical offset in the cells: cy + (cellH - bubbleH) / 2
+  const cellHOffset = Math.round(((bc.height || 4) + (bc.spacing?.betweenRows || 8) - (bc.height || 4)) / 2);
+  const oy = mmToPx(gridY + cellHOffset);
+
+  const blocks = [];
+  for (let col = 0; col < questionsPerRow; col++) {
+    const colLabels = [];
+    for (let r = 0; r < rows; r++) {
+      const qIdx = col + r * questionsPerRow;
+      if (qIdx < totalQuestions) {
+        colLabels.push(`q${qIdx + 1}`);
       }
+    }
 
-      if (colLabels.length > 0) {
-        const colStartX = ox + col * cellW + qNumW + questionGap;
-        fieldBlocks[`answer_area_col_${col}`] = {
+    if (colLabels.length > 0) {
+      const colStartX = ox + col * cellW + qNumW + questionGap;
+      blocks.push({
+        name: `answer_area_col_${col}`,
+        config: {
           fieldType: 'QTYPE_MCQ4',
           fieldLabels: colLabels,
           direction: 'horizontal',
@@ -225,25 +254,72 @@ function convertTemplate(template) {
           bubbleWidth: bw,
           bubbleHeight: bh,
           emptyValue: '',
-        };
-      }
-    }
-
-    for (let i = 1; i <= totalQuestions; i += 1) {
-      outputColumns.push(`q${i}`);
+        },
+      });
     }
   }
+  return blocks;
+}
+
+/**
+ * Main conversion: zones (mm) → Flutter FieldBlock JSON (pixels @ 300 DPI).
+ * This is the SINGLE SOURCE OF TRUTH for OMR bubble coordinates.
+ */
+function convertTemplate(template) {
+  const { pageConfig = {}, zones = {}, scannerConfig = {} } = template;
+
+  const paperSize = pageConfig.paperSize || 'A4';
+  const pageSizes = { A4: [2480, 3508], A5: [1748, 2480], A3: [3508, 4961] };
+  const [pageW, pageH] = pageSizes[paperSize] || pageSizes.A4;
+
+  const layout = computeLayout({ pageConfig, zones });
+  const fieldBlocks = {};
+  const outputColumns = [];
+
+  // Student code
+  const scBlock = buildStudentCodeBlock(zones.studentCode, layout);
+  if (scBlock) {
+    fieldBlocks.student_code = scBlock;
+  }
+
+  // Version code
+  const vcBlock = buildVersionCodeBlock(zones.versionCode, layout);
+  if (vcBlock) {
+    fieldBlocks.version_code = vcBlock;
+  }
+
+  // Answer area
+  const aaBlocks = buildAnswerAreaBlocks(zones.answerArea, layout);
+  for (const { name, config } of aaBlocks) {
+    fieldBlocks[name] = config;
+  }
+
+  for (let i = 1; i <= (zones.answerArea?.gridConfig?.totalQuestions || 0); i += 1) {
+    outputColumns.push(`q${i}`);
+  }
+
+  // autoAlign flag - default true for backward compat
+  const autoAlign = scannerConfig.autoAlign !== false;
 
   return {
     name: template.name || 'OMR Template',
     pageDimensions: [pageW, pageH],
-    bubbleDimensions: [toPx(4), toPx(4)],
+    bubbleDimensions: [mmToPx(4), mmToPx(4)],
     emptyValue: '',
     outputColumns,
     customLabels: {},
     preProcessors: [],
     fieldBlocks,
+    autoAlign,
   };
 }
 
-module.exports = { convertTemplate };
+module.exports = {
+  convertTemplate,
+  // Exported for testing only
+  computeLayout,
+  buildStudentCodeBlock,
+  buildVersionCodeBlock,
+  buildAnswerAreaBlocks,
+  mmToPx,
+};

@@ -2,6 +2,7 @@
 
 exports[`omrTemplateJson.service - snapshot tests A4 default template converts to expected JSON 1`] = `
 Object {
+  "autoAlign": true,
   "bubbleDimensions": Array [
     47,
     47,
@@ -192,6 +193,7 @@ Object {
 
 exports[`omrTemplateJson.service - snapshot tests A5 15-question template (matches omr_template.from15Question) 1`] = `
 Object {
+  "autoAlign": true,
   "bubbleDimensions": Array [
     47,
     47,

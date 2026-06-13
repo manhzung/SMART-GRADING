@@ -50,10 +50,11 @@ describe('Layout computation - Y flow', () => {
       },
     };
     const result = convertTemplate(template);
-    // answer_area_col_0 origin Y = (60mm + cellHOffset) * 300/25.4
-    // Current code applies a cellHOffset of 4 (half of betweenRows=8) → 64mm → 756px
-    // This is a documented quirk; matches the existing snapshot for A4 default
-    expect(result.fieldBlocks.answer_area_col_0.origin[1]).toBe(756);
+    // answer_area_col_0 origin Y = (cbEndY + 6 + cellHOffset)mm in px
+    // For A4 with header 40mm: mTop=15, hdrEndY=55, cbEndY=55 (no code blocks)
+    // gridY = 55 + 6 = 61; cellHOffset = (4+8-4)/2 = 4
+    // final = 65mm * 11.811 = 767.7 → 768px
+    expect(result.fieldBlocks.answer_area_col_0.origin[1]).toBe(768);
   });
 
   test('code blocks push answer area down', () => {
@@ -122,5 +123,36 @@ describe('Answer area - field block generation', () => {
     // bubbleH = 47; betweenRows = round(8 * 11.811) = 94
     // labelsGap = 47 + 94 = 141
     expect(result.fieldBlocks.answer_area_col_0.labelsGap).toBe(141);
+  });
+});
+
+describe('autoAlign field in output', () => {
+  test('omr template without autoAlign config → output autoAlign = true (default)', () => {
+    const template = {
+      pageConfig: { paperSize: 'A4' },
+      zones: { answerArea: { enabled: false } },
+    };
+    const result = convertTemplate(template);
+    expect(result.autoAlign).toBe(true);
+  });
+
+  test('omr template with autoAlign = false in scannerConfig → output autoAlign = false', () => {
+    const template = {
+      pageConfig: { paperSize: 'A4' },
+      scannerConfig: { autoAlign: false },
+      zones: { answerArea: { enabled: false } },
+    };
+    const result = convertTemplate(template);
+    expect(result.autoAlign).toBe(false);
+  });
+
+  test('omr template with autoAlign = true in scannerConfig → output autoAlign = true', () => {
+    const template = {
+      pageConfig: { paperSize: 'A4' },
+      scannerConfig: { autoAlign: true },
+      zones: { answerArea: { enabled: false } },
+    };
+    const result = convertTemplate(template);
+    expect(result.autoAlign).toBe(true);
   });
 });
