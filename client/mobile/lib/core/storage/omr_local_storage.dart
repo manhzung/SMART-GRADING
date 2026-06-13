@@ -10,6 +10,7 @@ class PendingSubmission {
   final String id;
   final String examId;
   final String? studentId;
+  final String? classId;
   final Uint8List imageBytes;
   final Map<String, String> answers;
   final double score;
@@ -22,6 +23,7 @@ class PendingSubmission {
     required this.id,
     required this.examId,
     this.studentId,
+    this.classId,
     required this.imageBytes,
     required this.answers,
     required this.score,
@@ -35,6 +37,7 @@ class PendingSubmission {
         'id': id,
         'examId': examId,
         'studentId': studentId,
+        'classId': classId,
         'imageBytes': base64Encode(imageBytes),
         'answers': answers,
         'score': score,
@@ -49,6 +52,7 @@ class PendingSubmission {
       id: json['id'] as String,
       examId: json['examId'] as String,
       studentId: json['studentId'] as String?,
+      classId: json['classId'] as String?,
       imageBytes: base64Decode(json['imageBytes'] as String),
       answers: Map<String, String>.from(json['answers'] as Map),
       score: (json['score'] as num).toDouble(),
@@ -172,6 +176,7 @@ class OMRLocalStorage {
       id: submissions[idx].id,
       examId: submissions[idx].examId,
       studentId: submissions[idx].studentId,
+      classId: submissions[idx].classId,
       imageBytes: submissions[idx].imageBytes,
       answers: submissions[idx].answers,
       score: submissions[idx].score,
