@@ -9,8 +9,15 @@ import 'package:smart_grading_mobile/presentation/pages/camera_scanner_page.dart
 
 class StudentListPage extends StatefulWidget {
   final Exam exam;
+  final String classId;
+  final String className;
 
-  const StudentListPage({super.key, required this.exam});
+  const StudentListPage({
+    super.key,
+    required this.exam,
+    required this.classId,
+    required this.className,
+  });
 
   @override
   State<StudentListPage> createState() => _StudentListPageState();
@@ -58,7 +65,7 @@ class _StudentListPageState extends State<StudentListPage> {
       final result = await _userService.getStudents(
         page: loadMore ? _currentPage + 1 : 1,
         limit: 30,
-        classId: widget.exam.primaryClassId?.id,
+        classId: widget.classId,
         search: _searchQuery.isEmpty ? null : _searchQuery,
       );
       setState(() {
@@ -100,6 +107,8 @@ class _StudentListPageState extends State<StudentListPage> {
           child: CameraScannerPage(
             examId: widget.exam.id,
             examName: widget.exam.title,
+            classId: widget.classId,
+            className: widget.className,
             studentId: studentId,
             studentName: studentName,
           ),
@@ -117,7 +126,7 @@ class _StudentListPageState extends State<StudentListPage> {
         foregroundColor: const Color(0xFF0F172A),
         elevation: 0,
         title: Text(
-          widget.exam.title,
+          '${widget.className} • ${widget.exam.title}',
           style: const TextStyle(fontWeight: FontWeight.bold),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

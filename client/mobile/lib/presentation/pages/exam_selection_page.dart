@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_grading_mobile/presentation/blocs/exam/exam_bloc.dart';
-import 'package:smart_grading_mobile/presentation/pages/student_list_page.dart';
+import 'package:smart_grading_mobile/presentation/pages/class_selection_page.dart';
 
 class ExamSelectionPage extends StatelessWidget {
   const ExamSelectionPage({super.key});
@@ -78,7 +78,7 @@ class ExamSelectionPage extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => StudentListPage(exam: exam),
+                          builder: (_) => ClassSelectionPage(exam: exam),
                         ),
                       );
                     },

@@ -16,6 +16,8 @@ class CameraScannerPage extends StatefulWidget {
   final EvaluationConfig? evaluationConfig;
   final String? examId;
   final String? examName;
+  final String? classId;
+  final String? className;
   final String? studentId;
   final String? studentName;
 
@@ -25,6 +27,8 @@ class CameraScannerPage extends StatefulWidget {
     this.evaluationConfig,
     this.examId,
     this.examName,
+    this.classId,
+    this.className,
     this.studentId,
     this.studentName,
   });
@@ -61,6 +65,8 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         evaluationConfig: widget.evaluationConfig,
         examId: widget.examId,
         examName: widget.examName,
+        classId: widget.classId,
+        className: widget.className,
       ));
     } else {
       final template = OMRTemplate.simpleMcq(
@@ -82,6 +88,8 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         evaluationConfig: evalConfig,
         examId: widget.examId ?? 'demo',
         examName: widget.examName ?? 'Demo Exam',
+        classId: widget.classId,
+        className: widget.className,
       ));
     }
   }
@@ -136,8 +144,8 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
             } else {
               StudentPickerDialog.show(
                 context: context,
-                classId: '',
-                className: widget.examName ?? '',
+                classId: widget.classId ?? '',
+                className: widget.className ?? widget.examName ?? '',
                 examId: widget.examId ?? '',
                 examName: widget.examName ?? '',
                 imageBytes: state.imageBytes,

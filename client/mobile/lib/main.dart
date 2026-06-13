@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'core/network/notification_service.dart';
 import 'core/network/subject_service.dart';
 import 'core/network/api_client.dart';
+import 'core/network/class_service.dart';
 import 'core/network/omr_template_service.dart';
 import 'core/network/omr_submission_sync_service.dart';
 import 'core/network/user_service.dart';
@@ -37,6 +38,7 @@ import 'presentation/pages/create_edit_class_page.dart';
 import 'presentation/pages/class_detail_page.dart';
 import 'presentation/pages/add_students_page.dart';
 import 'presentation/pages/student_list_page.dart';
+import 'presentation/pages/class_selection_page.dart';
 import 'presentation/pages/camera_scanner_page.dart';
 import 'presentation/pages/omr_result_page.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
@@ -79,6 +81,9 @@ void setupDependencies() {
   );
   getIt.registerLazySingleton<SubjectService>(
     () => SubjectService(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ClassService>(
+    () => ClassService(apiClient: getIt<ApiClient>()),
   );
 }
 
@@ -219,18 +224,27 @@ class SmartGradingApp extends StatelessWidget {
           '/class-students': (context) {
             final args = ModalRoute.of(context)?.settings.arguments;
             final exam = args is Exam ? args : null;
-            return StudentListPage(exam: exam ?? Exam(
-              id: '',
-              title: '',
-              status: 'draft',
-              createdAt: DateTime.now(),
-            ));
+            if (exam == null) {
+              return const Scaffold(body: Center(child: Text('Missing exam')));
+            }
+            final classId = args is Map ? (args['classId'] as String? ?? '') : '';
+            final className = args is Map ? (args['className'] as String? ?? exam.title) : exam.title;
+            if (classId.isEmpty) {
+              return ClassSelectionPage(exam: exam);
+            }
+            return StudentListPage(
+              exam: exam,
+              classId: classId,
+              className: className,
+            );
           },
           '/scan': (context) {
             final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
             return CameraScannerPage(
               examId: args?['examId'] as String?,
               examName: args?['examName'] as String?,
+              classId: args?['classId'] as String?,
+              className: args?['className'] as String?,
               studentId: args?['studentId'] as String?,
             );
           },
