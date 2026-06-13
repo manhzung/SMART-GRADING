@@ -6,9 +6,9 @@ const { parsePagination } = require('../utils/parsePagination');
 
 class SubmissionService {
   async scan(data) {
-    const { examId, image, deviceInfo } = data;
+    const { examId, classId, image, deviceInfo } = data;
 
-    // Find exam and versions
+    // Find exam
     const exam = await Exam.findById(examId);
     if (!exam) {
       throw new ApiError(404, 'Exam not found');
@@ -16,12 +16,11 @@ class SubmissionService {
 
     // TODO: Implement actual OMR scanning here
     // For now, return a placeholder
-    // In production, this would call an OMR processing service
-
     return {
       status: 'pending',
       message: 'OMR scanning service not yet implemented',
       examId,
+      classId,
     };
   }
 
