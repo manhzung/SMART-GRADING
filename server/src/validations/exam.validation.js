@@ -113,6 +113,12 @@ const exportExam = {
   }),
 };
 
+const getUpcoming = {
+  query: Joi.object().keys({
+    limit: Joi.number().integer().min(1).max(10).default(5),
+  }),
+};
+
 module.exports = {
   createExam,
   updateExam,
@@ -121,6 +127,7 @@ module.exports = {
   publishExam,
   getExam,
   getExams,
+  getUpcoming,
   getExamVersions,
   generateVersions,
   exportExam,
