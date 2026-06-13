@@ -104,6 +104,15 @@ const removeExamFromClass = {
   }),
 };
 
+const getAvailableStudents = {
+  params: id,
+  query: Joi.object().keys({
+    search: Joi.string().trim().max(100).allow(''),
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(20),
+  }),
+};
+
 module.exports = {
   createClass,
   updateClass,
@@ -117,4 +126,5 @@ module.exports = {
   getClassExams,
   assignExamsToClass,
   removeExamFromClass,
+  getAvailableStudents,
 };

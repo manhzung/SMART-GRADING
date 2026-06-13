@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { updateClass } = require('../../../src/validations/class.validation');
+const { updateClass, getAvailableStudents } = require('../../../src/validations/class.validation');
 
 describe('Class validation schemas', () => {
   describe('updateClass', () => {
@@ -69,6 +69,58 @@ describe('Class validation schemas', () => {
       const { error } = Joi.compile({ body, params }).validate({
         params: { id: 'invalid-id' },
         body: { name: 'New Name' },
+      });
+      expect(error).toBeDefined();
+    });
+  });
+
+  describe('getAvailableStudents', () => {
+    const { params, query } = getAvailableStudents;
+
+    test('should accept valid id with all query params', () => {
+      const { error } = Joi.compile({ params, query }).validate({
+        params: { id: '507f1f77bcf86cd799439011' },
+        query: { search: 'Nguyen', page: 1, limit: 20 },
+      });
+      expect(error).toBeUndefined();
+    });
+
+    test('should accept request without any query params (use defaults)', () => {
+      const { error } = Joi.compile({ params, query }).validate({
+        params: { id: '507f1f77bcf86cd799439011' },
+        query: {},
+      });
+      expect(error).toBeUndefined();
+    });
+
+    test('should reject invalid id', () => {
+      const { error } = Joi.compile({ params, query }).validate({
+        params: { id: 'invalid-id' },
+        query: {},
+      });
+      expect(error).toBeDefined();
+    });
+
+    test('should reject limit greater than 100', () => {
+      const { error } = Joi.compile({ params, query }).validate({
+        params: { id: '507f1f77bcf86cd799439011' },
+        query: { limit: 200 },
+      });
+      expect(error).toBeDefined();
+    });
+
+    test('should reject search longer than 100 chars', () => {
+      const { error } = Joi.compile({ params, query }).validate({
+        params: { id: '507f1f77bcf86cd799439011' },
+        query: { search: 'a'.repeat(101) },
+      });
+      expect(error).toBeDefined();
+    });
+
+    test('should reject negative page', () => {
+      const { error } = Joi.compile({ params, query }).validate({
+        params: { id: '507f1f77bcf86cd799439011' },
+        query: { page: -1 },
       });
       expect(error).toBeDefined();
     });
