@@ -54,3 +54,11 @@ class ExamDeleteRequested extends ExamEvent {
   @override
   List<Object?> get props => [examId];
 }
+
+class UpcomingExamsLoadRequested extends ExamEvent {
+  final int limit;
+  const UpcomingExamsLoadRequested({this.limit = 5});
+
+  @override
+  List<Object?> get props => [limit];
+}

@@ -54,3 +54,15 @@ class ExamError extends ExamState {
   @override
   List<Object?> get props => [message];
 }
+
+class ExamUpcomingLoading extends ExamState {}
+
+class ExamUpcomingLoaded extends ExamState {
+  final List<Exam> exams;
+  final int count;
+
+  const ExamUpcomingLoaded(this.exams, this.count);
+
+  @override
+  List<Object?> get props => [exams, count];
+}

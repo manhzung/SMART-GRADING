@@ -14,6 +14,12 @@ class OMRTemplate {
   final Map<String, List<String>> customLabels;
   final List<OMRPreProcessor> preProcessors;
 
+  /// When true (default), the OMR engine auto-aligns detected bubbles by computing
+  /// small X-shifts to compensate for scan misalignment. When false, the engine uses
+  /// the template coordinates exactly - useful for templates that have been visually
+  /// calibrated against a real scanned sheet.
+  final bool autoAlign;
+
   const OMRTemplate({
     this.id,
     required this.name,
@@ -26,6 +32,7 @@ class OMRTemplate {
     required this.fieldBlocks,
     required this.customLabels,
     required this.preProcessors,
+    this.autoAlign = true,
   });
 
   factory OMRTemplate.fromJson(Map<String, dynamic> json) {
@@ -101,6 +108,7 @@ class OMRTemplate {
       fieldBlocks: fieldBlocks,
       customLabels: customLabels,
       preProcessors: preProcessors,
+      autoAlign: json['autoAlign'] as bool? ?? true,
     );
   }
 
