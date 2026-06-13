@@ -32,6 +32,7 @@ class OMRSubmissionSyncService {
             score: (data['score'] as num).toDouble(),
             maxScore: (data['maxScore'] as num).toDouble(),
             studentId: data['studentId'] as String?,
+            classId: data['classId'] as String?,
             submissionId: data['submissionId'] as String?,
           );
           if (success) {
@@ -58,10 +59,12 @@ class OMRSubmissionSyncService {
     required Map<String, String> answers,
     required double score,
     required double maxScore,
+    String? classId,
   }) async {
     try {
       final formData = FormData.fromMap({
         'examId': examId,
+        if (classId != null) 'classId': classId,
         'image': MultipartFile.fromBytes(
           imageBytes,
           filename: 'omr_scan_${DateTime.now().millisecondsSinceEpoch}.jpg',
@@ -88,6 +91,7 @@ class OMRSubmissionSyncService {
     required double score,
     required double maxScore,
     String? studentId,
+    String? classId,
     String? submissionId,
   }) async {
     try {
@@ -99,6 +103,7 @@ class OMRSubmissionSyncService {
           'score': score.toString(),
           'maxScore': maxScore.toString(),
           if (studentId != null) 'studentId': studentId,
+          if (classId != null) 'classId': classId,
           if (submissionId != null) 'submissionId': submissionId,
         },
       );
