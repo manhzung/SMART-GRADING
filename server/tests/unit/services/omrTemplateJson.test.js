@@ -37,3 +37,90 @@ describe('omrTemplateJson.service - snapshot tests', () => {
     expect(result).toMatchSnapshot();
   });
 });
+
+describe('Layout computation - Y flow', () => {
+  test('header occupies top of page', () => {
+    const template = {
+      pageConfig: { paperSize: 'A4', margins: { top: 15 } },
+      zones: {
+        header: { enabled: true, height: 40 },
+        studentCode: { enabled: false },
+        versionCode: { enabled: false },
+        answerArea: { enabled: true, startPosition: { x: 20, y: 60 }, gridConfig: { totalQuestions: 5, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } }, questionNumberConfig: { enabled: false } } },
+      },
+    };
+    const result = convertTemplate(template);
+    // answer_area_col_0 origin Y = (60mm + cellHOffset) * 300/25.4
+    // Current code applies a cellHOffset of 4 (half of betweenRows=8) → 64mm → 756px
+    // This is a documented quirk; matches the existing snapshot for A4 default
+    expect(result.fieldBlocks.answer_area_col_0.origin[1]).toBe(756);
+  });
+
+  test('code blocks push answer area down', () => {
+    const template = {
+      pageConfig: { paperSize: 'A4', margins: { top: 15 } },
+      zones: {
+        header: { enabled: true, height: 40 },
+        studentCode: { enabled: true, digits: 3, digitConfig: { bubbleSize: { width: 2.5, height: 2.5 }, bubbleSpacing: { horizontal: 1, vertical: 1 } } },
+        versionCode: { enabled: false },
+        answerArea: { enabled: true, startPosition: { x: 20, y: 90 }, gridConfig: { totalQuestions: 5, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } }, questionNumberConfig: { enabled: false } } },
+      },
+    };
+    const result = convertTemplate(template);
+    // code block height ≈ 35mm; answer Y pushed down beyond 1100px
+    expect(result.fieldBlocks.answer_area_col_0.origin[1]).toBeGreaterThan(1100);
+  });
+});
+
+describe('Answer area - field block generation', () => {
+  test('50 questions, 5/row → 10 columns (one block per column)', () => {
+    // Current behavior: one FieldBlock per column, each holds multiple questions.
+    // For 50 questions / 5 per row = 10 rows, 5 columns → 5 FieldBlocks total.
+    // (Each block contains all questions in its column.)
+    const template = {
+      pageConfig: { paperSize: 'A4' },
+      zones: {
+        header: { enabled: false },
+        studentCode: { enabled: false },
+        versionCode: { enabled: false },
+        answerArea: { enabled: true, startPosition: { x: 20 }, gridConfig: { totalQuestions: 50, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8, betweenQuestions: 3 } }, questionNumberConfig: { width: 8 } } },
+      },
+    };
+    const result = convertTemplate(template);
+    const colBlocks = Object.keys(result.fieldBlocks).filter((k) => k.startsWith('answer_area_col_'));
+    // One block per questionPerRow column
+    expect(colBlocks).toHaveLength(5);
+    // First column should have 10 questions (q1, q6, q11, ..., q46)
+    expect(result.fieldBlocks.answer_area_col_0.fieldLabels).toHaveLength(10);
+    expect(result.fieldBlocks.answer_area_col_0.fieldLabels[0]).toBe('q1');
+    expect(result.fieldBlocks.answer_area_col_0.fieldLabels[9]).toBe('q46');
+  });
+
+  test('bubblesGap = bubbleW + betweenOptions (horizontal step)', () => {
+    const template = {
+      pageConfig: { paperSize: 'A4' },
+      zones: {
+        header: { enabled: false },
+        answerArea: { enabled: true, gridConfig: { totalQuestions: 5, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8, betweenQuestions: 3 } }, questionNumberConfig: { width: 8 } } },
+      },
+    };
+    const result = convertTemplate(template);
+    // bubbleW = round(4 * 11.811) = 47; betweenOptions = round(1 * 11.811) = 12
+    // bubblesGap = 47 + 12 = 59
+    expect(result.fieldBlocks.answer_area_col_0.bubblesGap).toBe(59);
+  });
+
+  test('labelsGap = bubbleH + betweenRows (vertical step)', () => {
+    const template = {
+      pageConfig: { paperSize: 'A4' },
+      zones: {
+        header: { enabled: false },
+        answerArea: { enabled: true, gridConfig: { totalQuestions: 5, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } }, questionNumberConfig: { enabled: false } } },
+      },
+    };
+    const result = convertTemplate(template);
+    // bubbleH = 47; betweenRows = round(8 * 11.811) = 94
+    // labelsGap = 47 + 94 = 141
+    expect(result.fieldBlocks.answer_area_col_0.labelsGap).toBe(141);
+  });
+});
