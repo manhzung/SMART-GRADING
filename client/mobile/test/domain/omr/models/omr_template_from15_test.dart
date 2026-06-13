@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/domain/omr/models/field_block.dart';
+import 'package:smart_grading_mobile/domain/omr/models/template_layout.dart';
 
 void main() {
   group('OMRTemplate.from15Question', () {
@@ -97,6 +98,24 @@ void main() {
       // Row 3 must still fit within the A5 page
       expect(row3BottomY + row3.bubbleHeight, lessThanOrEqualTo(t.pageHeight),
           reason: 'Last question in Row 3 must fit within A5 page height');
+    });
+
+    test('SBD and MD digit blocks have no column overlap', () {
+      // Each digit block has 2 columns (e.g. sbd1, sbd2). If the
+      // columns are too close, the bubbles overlap horizontally.
+      final t = OMRTemplate.from15Question();
+      for (final name in ['SBD', 'MD']) {
+        final block = t.fieldBlocks.firstWhere((b) => b.name == name);
+        expect(block.labelsGap, greaterThanOrEqualTo(block.bubbleWidth),
+            reason: '$name labelsGap must clear bubble width to avoid column overlap');
+      }
+    });
+
+    test('assertNoOverlap passes for from15Question() (no SBD/MD/row overlap)', () {
+      // The factory should self-validate via the layout calculator
+      // (debug-only assert in the factory). Calling it here in a
+      // test forces a runtime check.
+      TemplateLayout.assertNoOverlap(OMRTemplate.from15Question());
     });
   });
 }

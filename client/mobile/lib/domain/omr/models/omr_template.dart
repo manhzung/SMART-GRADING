@@ -1,4 +1,5 @@
 import 'field_block.dart';
+import 'template_layout.dart';
 
 /// Represents an OMR template configuration parsed from template.json.
 class OMRTemplate {
@@ -34,6 +35,24 @@ class OMRTemplate {
     required this.preProcessors,
     this.autoAlign = true,
   });
+
+  /// Debug-only: validate this template against the layout calculator
+  /// (no-overlap rules, page bounds). Stripped out in release builds
+  /// because the entire body is wrapped in `assert`.
+  ///
+  /// Factories call this with `.._debugValidate()` to catch layout
+  /// mistakes at the first place they appear, in tests and during
+  /// development, without paying any cost in production.
+  void _debugValidate() {
+    assert(
+      () {
+        TemplateLayout.assertNoOverlap(this);
+        return true;
+      }(),
+      'OMRTemplate "$name" failed layout validation. '
+      'See TemplateLayout.assertNoOverlap for the specific rule.',
+    );
+  }
 
   factory OMRTemplate.fromJson(Map<String, dynamic> json) {
     final pageDims = json['pageDimensions'] as List<dynamic>?;
@@ -186,7 +205,7 @@ class OMRTemplate {
         OMRPreProcessor(name: 'GaussianBlur', options: {'kSize': [3, 3], 'sigmaX': 0}),
         OMRPreProcessor(name: 'CropPage', options: {'morphKernel': [10, 10]}),
       ],
-    );
+    ).._debugValidate();
   }
 
   /// Creates a template matching the 15-question A5 sheet:
@@ -225,7 +244,9 @@ class OMRTemplate {
             'fieldLabels': ['sbd1', 'sbd2'],
             'origin': [177, 413],
             'bubblesGap': 12,
-            'labelsGap': 12,
+            // 2 digit columns must be at least bubbleWidth (30) apart
+            // to not overlap; +1 px for a tiny safety margin.
+            'labelsGap': 31,
           },
           globalBubbleWidth: 30,
           globalBubbleHeight: 30,
@@ -238,7 +259,7 @@ class OMRTemplate {
             'fieldLabels': ['md1', 'md2'],
             'origin': [1181, 413],
             'bubblesGap': 12,
-            'labelsGap': 12,
+            'labelsGap': 31,
           },
           globalBubbleWidth: 30,
           globalBubbleHeight: 30,
@@ -306,7 +327,7 @@ class OMRTemplate {
             }),
         OMRPreProcessor(name: 'CropPage', options: {}),
       ],
-    );
+    ).._debugValidate();
   }
 }
 
