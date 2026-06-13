@@ -254,7 +254,7 @@ class OMRTemplate {
           config: {
             'fieldType': 'QTYPE_MCQ4',
             'fieldLabels': ['q6', 'q7', 'q8', 'q9', 'q10'],
-            'origin': [248, 862],
+            'origin': [248, 1238],
             'bubblesGap': 41,
             'labelsGap': 94,
           },
@@ -267,7 +267,7 @@ class OMRTemplate {
           config: {
             'fieldType': 'QTYPE_MCQ4',
             'fieldLabels': ['q11', 'q12', 'q13', 'q14', 'q15'],
-            'origin': [248, 956],
+            'origin': [248, 1708],
             'bubblesGap': 41,
             'labelsGap': 94,
           },

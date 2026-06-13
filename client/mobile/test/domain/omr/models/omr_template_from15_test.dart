@@ -74,5 +74,29 @@ void main() {
       expect(t.customLabels['studentCode'], ['sbd1', 'sbd2']);
       expect(t.customLabels['versionCode'], ['md1', 'md2']);
     });
+
+    test('answer row blocks do not overlap each other on Y axis', () {
+      final t = OMRTemplate.from15Question();
+      // Each answer row is a separate FieldBlock; guard against a regression
+      // where their originY values were too close (previously Row 1.q2 and
+      // Row 2.q1 shared the same Y, causing visible bubble overlap).
+      final row1 = t.fieldBlocks[2];
+      final row2 = t.fieldBlocks[3];
+      final row3 = t.fieldBlocks[4];
+
+      final row1BottomY = row1.originY + (row1.fieldLabels.length - 1) * row1.labelsGap;
+      final row2BottomY = row2.originY + (row2.fieldLabels.length - 1) * row2.labelsGap;
+      final row3BottomY = row3.originY + (row3.fieldLabels.length - 1) * row3.labelsGap;
+
+      // Row 2 originY must be strictly below Row 1's last question
+      expect(row2.originY, greaterThan(row1BottomY),
+          reason: 'Row 2 origin Y must clear Row 1 last question to avoid overlap');
+      // Row 3 originY must be strictly below Row 2's last question
+      expect(row3.originY, greaterThan(row2BottomY),
+          reason: 'Row 3 origin Y must clear Row 2 last question to avoid overlap');
+      // Row 3 must still fit within the A5 page
+      expect(row3BottomY + row3.bubbleHeight, lessThanOrEqualTo(t.pageHeight),
+          reason: 'Last question in Row 3 must fit within A5 page height');
+    });
   });
 }
