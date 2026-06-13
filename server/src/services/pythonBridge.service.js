@@ -18,14 +18,14 @@ class PythonBridgeService {
    * @param {number} [params.timeout] - Timeout in milliseconds
    * @returns {Promise<Object>} Processing result
    */
-  async processImage({ image, template, evaluation, options, timeout }) {
+  async processImage({ image, imageUrl, template, evaluation, options, timeout }) {
     const timeoutMs = timeout || this.defaultTimeout;
 
     // Validate required parameters
-    if (!image) {
+    if (!image && !imageUrl) {
       return {
         success: false,
-        error: 'Missing required field: image',
+        error: 'Missing required field: image or imageUrl',
         error_code: 'VALIDATION_ERROR',
       };
     }
@@ -39,10 +39,15 @@ class PythonBridgeService {
     }
 
     // Convert Buffer to base64 if needed
-    let imageBase64 = image;
-    if (Buffer.isBuffer(image)) {
+    let imageBase64;
+    if (imageUrl) {
+      // Python will download
+      imageBase64 = null;
+    } else if (Buffer.isBuffer(image)) {
       imageBase64 = image.toString('base64');
-    } else if (typeof image !== 'string') {
+    } else if (typeof image === 'string') {
+      imageBase64 = image.startsWith('data:') ? image.replace(/^data:[^;]+;base64,/, '') : image;
+    } else {
       return {
         success: false,
         error: 'Invalid image format: expected Buffer or base64 string',
@@ -53,6 +58,7 @@ class PythonBridgeService {
     // Prepare input data
     const inputData = {
       image: imageBase64,
+      imageUrl: imageUrl || null,
       template,
       ...(evaluation !== undefined && { evaluation }),
       ...(options !== undefined && { options }),
