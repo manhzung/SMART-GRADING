@@ -38,6 +38,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     context.read<ExamBloc>().add(const ExamLoadRequested());
+    context.read<ExamBloc>().add(const UpcomingExamsLoadRequested(limit: 5));
     context.read<ClassBloc>().add(const ClassFetchRequested());
     context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
     _syncPendingSubmissions();
