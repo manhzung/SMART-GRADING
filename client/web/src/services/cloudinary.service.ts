@@ -32,7 +32,10 @@ export interface UploadAndAttachParams extends SignatureParams {
 }
 
 export class CloudinaryService {
-  constructor(private baseUrl: string) {}
+  private baseUrl: string;
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
 
   async getUploadSignature(params: SignatureParams): Promise<UploadSignature> {
     const qs = new URLSearchParams({ examId: params.examId, type: params.type });

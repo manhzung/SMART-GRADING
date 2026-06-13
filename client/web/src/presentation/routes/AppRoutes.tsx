@@ -15,6 +15,7 @@ import ExamDetailPage from '../../pages/ExamDetailPage';
 import CreateExamPage from '../../pages/CreateExamPage';
 import EditExamPage from '../../pages/EditExamPage';
 import SubmissionsPage from '../../pages/SubmissionsPage';
+import { SubmissionDetailRoute } from '../../components/submission/SubmissionDetailRoute';
 import ScanPage from '../../pages/ScanPage';
 import ProfilePage from '../../pages/ProfilePage';
 import QuestionBankPage from '../../pages/QuestionBankPage';
@@ -112,6 +113,7 @@ export default function AppRoutes() {
           <Route path="exams/:id" element={<ExamDetailPage />} />
           <Route path="exams/:id/edit" element={<EditExamPage />} />
           <Route path="submissions" element={<SubmissionsPage />} />
+          <Route path="submissions/:id" element={<SubmissionDetailRoute />} />
           <Route path="question-bank" element={<QuestionBankPage />} />
           <Route path="scan" element={<ScanPage />} />
           <Route path="appeals" element={<AppealsPage />} />

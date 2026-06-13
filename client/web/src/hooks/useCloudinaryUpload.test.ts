@@ -49,7 +49,9 @@ describe('useCloudinaryUpload', () => {
     act(() => {
       result.current
         .upload({} as File, { examId: 'e1', type: 'original' })
-        .then((r) => (returned = r));
+        .then((r) => {
+          returned = r;
+        });
     });
 
     expect(result.current.isUploading).toBe(true);
@@ -59,7 +61,7 @@ describe('useCloudinaryUpload', () => {
       resolveUpload({ publicId: 'p1' });
     });
 
-    expect(returned?.publicId).toBe('p1');
+    expect((returned as { publicId: string } | null)?.publicId).toBe('p1');
     expect(result.current.isUploading).toBe(false);
     expect(result.current.error).toBeNull();
   });

@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import {
   cloudinaryService,
-  ImageType,
-  UploadResult,
+  type ImageType,
+  type UploadResult,
 } from '../services/cloudinary.service';
 
 export interface UseCloudinaryUploadReturn {
