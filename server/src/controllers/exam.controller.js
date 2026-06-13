@@ -16,6 +16,16 @@ const getAll = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getUpcoming = catchAsync(async (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 5;
+  const exams = await examService.getUpcomingExams(req.user, limit);
+  res.send({
+    results: exams,
+    limit,
+    count: exams.length,
+  });
+});
+
 const getById = catchAsync(async (req, res) => {
   const exam = await examService.getById(req.params.id);
   if (!exam) {
@@ -73,9 +83,7 @@ const exportExamPDF = catchAsync(async (req, res) => {
 
   let exam;
   if (format === 'excel') {
-    const data = await examService.exportExamPDF(req.params.id, format);
-    res.send(data);
-    return;
+    return res.status(400).send({ message: 'Xuất đề thi sang Excel chưa được hỗ trợ' });
   }
 
   try {
@@ -199,6 +207,7 @@ const remove = catchAsync(async (req, res) => {
 module.exports = {
   create,
   getAll,
+  getUpcoming,
   getById,
   update,
   publish,
