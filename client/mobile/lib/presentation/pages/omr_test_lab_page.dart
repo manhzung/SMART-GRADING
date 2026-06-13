@@ -214,9 +214,9 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
                 color: const Color(0xFFE8F0FE),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Text(
-                '11 Questions | 4 Options',
-                style: TextStyle(
+              child: Text(
+                '${_template.outputColumns.length} Questions | 4 Options',
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF6366F1),
@@ -303,6 +303,7 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
             ],
           ),
         ),
+        if (_template.id == '15q') _buildSbdMdHeader(),
         Expanded(
           child: TabBarView(
             controller: _tabController,
@@ -322,6 +323,24 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSbdMdHeader() {
+    final answers = _processingResult?.response.answers ?? const <String, String>{};
+    final sbd = '${answers['sbd1'] ?? ''}${answers['sbd2'] ?? ''}';
+    final md = '${answers['md1'] ?? ''}${answers['md2'] ?? ''}';
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFE8F0FE),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _CodeLabel(label: 'SBD', value: sbd),
+          _CodeLabel(label: 'MĐ', value: md),
+        ],
+      ),
     );
   }
 
@@ -452,6 +471,40 @@ class _CaptureButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CodeLabel extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _CodeLabel({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF64748B),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value.isEmpty ? '--' : value,
+          style: const TextStyle(
+            fontSize: 20,
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
+      ],
     );
   }
 }
