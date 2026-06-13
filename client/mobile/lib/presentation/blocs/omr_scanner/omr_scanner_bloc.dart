@@ -42,6 +42,8 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
       evaluationConfig: event.evaluationConfig,
       examId: event.examId,
       examName: event.examName,
+      classId: event.classId,
+      className: event.className,
     ));
   }
 
@@ -169,9 +171,11 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     );
 
     String? examId;
+    String? classId;
     final templateState = state;
     if (templateState is OMRScannerTemplateReady) {
       examId = templateState.examId;
+      classId = templateState.classId;
     }
 
     // Check connectivity
@@ -184,6 +188,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
         final syncService = GetIt.instance<OMRSubmissionSyncService>();
         final success = await syncService.submitResultOnly(
           examId: examId ?? 'unknown',
+          classId: classId,
           answers: answers,
           score: current.gradingResult.score,
           maxScore: current.gradingResult.maxScore,
@@ -208,6 +213,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
         PendingSubmission(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           examId: examId ?? 'unknown',
+          classId: classId,
           imageBytes: current.imageBytes,
           answers: answers,
           score: current.gradingResult.score,
