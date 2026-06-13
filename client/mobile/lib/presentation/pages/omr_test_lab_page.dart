@@ -6,6 +6,7 @@ import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/presentation/widgets/omr_bubble_details_table.dart';
 import 'package:smart_grading_mobile/presentation/widgets/omr_bubble_overlay.dart';
 import 'package:smart_grading_mobile/presentation/widgets/omr_processing_log.dart';
+import 'package:smart_grading_mobile/presentation/widgets/template_picker.dart';
 
 enum _CaptureState { idle, capturing, processing, done, error }
 
@@ -25,7 +26,7 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
   final ImagePicker _imagePicker = ImagePicker();
 
   late final TabController _tabController;
-  final OMRTemplate _template = OMRTemplate.sample4();
+  OMRTemplate _template = OMRTemplate.sample4();
 
   @override
   void initState() {
@@ -175,6 +176,14 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            TemplatePicker(
+              selected: _template,
+              onChanged: (t) {
+                setState(() => _template = t);
+                _reset();
+              },
+            ),
+            const SizedBox(height: 24),
             const Icon(
               Icons.science_outlined,
               size: 80,
