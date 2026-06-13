@@ -205,6 +205,10 @@ const omrTemplateSchema = mongoose.Schema(
         enum: ['portrait', 'landscape'],
         default: 'portrait',
       },
+      autoAlign: {
+        type: Boolean,
+        default: true,
+      },
       binarizationThreshold: { type: Number, default: 128 },
       rotation: { type: Number, default: 0 },
       preprocessing: {
