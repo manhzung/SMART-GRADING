@@ -243,9 +243,12 @@ class OMRTemplate {
             'fieldType': 'QTYPE_INT_FROM_1',
             'fieldLabels': ['sbd1', 'sbd2'],
             'origin': [177, 413],
-            'bubblesGap': 12,
-            // 2 digit columns must be at least bubbleWidth (30) apart
-            // to not overlap; +1 px for a tiny safety margin.
+            // bubblesGap (Y) must be >= bubbleHeight (30) to avoid
+            // 10 value bubbles overlapping vertically. 31 = 30 + 1 px
+            // safety, matching labelsGap.
+            'bubblesGap': 31,
+            // labelsGap (X) must be >= bubbleWidth (30) to avoid the
+            // 2 digit columns overlapping horizontally.
             'labelsGap': 31,
           },
           globalBubbleWidth: 30,
@@ -258,7 +261,7 @@ class OMRTemplate {
             'fieldType': 'QTYPE_INT_FROM_1',
             'fieldLabels': ['md1', 'md2'],
             'origin': [1181, 413],
-            'bubblesGap': 12,
+            'bubblesGap': 31,
             'labelsGap': 31,
           },
           globalBubbleWidth: 30,

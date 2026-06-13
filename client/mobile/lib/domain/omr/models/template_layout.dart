@@ -103,29 +103,39 @@ class TemplateLayout {
   /// Intended to be called inside `assert(...)` at the end of a
   /// template factory so it runs in debug builds only.
   static void assertNoOverlap(OMRTemplate template) {
-    // Per-block axis-aware checks.
+    // Per-block axis-aware checks. `labelsGap` and `bubblesGap` are
+    // assigned to *axes* by the block's `direction`, not to "fields"
+    // vs "values" generically. See FieldBlock.fromConfig:
+    //
+    //   horizontal: fields stacked along Y (labelsGap -> Y),
+    //               values spread along X (bubblesGap -> X)
+    //   vertical:   fields stacked along X (labelsGap -> X),
+    //               values spread along Y (bubblesGap -> Y)
+    //
+    // In both cases the spacing on the relevant axis must be at
+    // least the bubble's size on that axis.
     for (final block in template.fieldBlocks) {
       final isHorizontal = block.direction == FieldDirection.horizontal;
-      final crossDim = isHorizontal ? block.bubbleWidth : block.bubbleHeight;
-      final alongDim = isHorizontal ? block.bubbleHeight : block.bubbleWidth;
-      // labelsGap is the spacing between adjacent fields along the
-      // cross axis (perpendicular to the option/value row). It must
-      // be at least the bubble size on that axis.
-      if (block.labelsGap < crossDim) {
+      // Axis to which labelsGap applies (cross-field axis).
+      final labelsAxisDim =
+          isHorizontal ? block.bubbleHeight : block.bubbleWidth;
+      // Axis to which bubblesGap applies (along-value axis).
+      final bubblesAxisDim =
+          isHorizontal ? block.bubbleWidth : block.bubbleHeight;
+      if (block.labelsGap < labelsAxisDim) {
         throw StateError(
           'Block "${block.name}": labelsGap (${block.labelsGap}) is smaller '
-          'than bubble ${isHorizontal ? "width" : "height"} ($crossDim). '
-          'Adjacent fields overlap.',
+          'than bubble ${isHorizontal ? "height" : "width"} '
+          '($labelsAxisDim). Adjacent fields overlap on the '
+          '${isHorizontal ? "Y" : "X"} axis.',
         );
       }
-      // bubblesGap is the spacing between adjacent values within one
-      // field, along the option/value row. It must be at least the
-      // bubble size on that axis.
-      if (block.bubblesGap < alongDim) {
+      if (block.bubblesGap < bubblesAxisDim) {
         throw StateError(
           'Block "${block.name}": bubblesGap (${block.bubblesGap}) is '
-          'smaller than bubble ${isHorizontal ? "height" : "width"} '
-          '($alongDim). Adjacent values overlap.',
+          'smaller than bubble ${isHorizontal ? "width" : "height"} '
+          '($bubblesAxisDim). Adjacent values overlap on the '
+          '${isHorizontal ? "X" : "Y"} axis.',
         );
       }
     }

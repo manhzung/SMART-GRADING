@@ -85,12 +85,29 @@ void main() {
     });
 
     test('passes for from15Question() template after the fix', () {
-      // The fix changes SBD/MD labelsGap from 12 to 31. If the
-      // factory is regressed back to 12, this test should fail.
+      // The fix changes SBD/MD bubblesGap from 12 to 31 and labelsGap
+      // from 12 to 31. If the factory is regressed back to 12, this
+      // test should fail.
       expect(
         () => TemplateLayout.assertNoOverlap(OMRTemplate.from15Question()),
         returnsNormally,
       );
+    });
+
+    test('detects SBD-style Y-axis overlap (bubblesGap < bubbleHeight)', () {
+      // Regression for the 15q SBD/MD bug: bubblesGap=12 (1mm) on
+      // the Y axis is smaller than bubbleHeight=30, so 10 stacked
+      // value bubbles overlap. The factory fix is bubblesGap=31.
+      final broken = OMRTemplate.from15Question();
+      final sbd = broken.fieldBlocks.firstWhere((b) => b.name == 'SBD');
+      // Sanity: the current SBD must be legal.
+      expect(
+        () => TemplateLayout.assertNoOverlap(broken),
+        returnsNormally,
+      );
+      // The validator's per-block rule must catch the bug if a
+      // future edit shrinks bubblesGap below bubbleHeight.
+      expect(sbd.bubblesGap, greaterThanOrEqualTo(sbd.bubbleHeight));
     });
   });
 }

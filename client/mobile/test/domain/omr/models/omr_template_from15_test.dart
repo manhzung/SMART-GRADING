@@ -103,11 +103,15 @@ void main() {
     test('SBD and MD digit blocks have no column overlap', () {
       // Each digit block has 2 columns (e.g. sbd1, sbd2). If the
       // columns are too close, the bubbles overlap horizontally.
+      // Vertical direction: labelsGap controls X spacing, bubblesGap
+      // controls Y spacing.
       final t = OMRTemplate.from15Question();
       for (final name in ['SBD', 'MD']) {
         final block = t.fieldBlocks.firstWhere((b) => b.name == name);
         expect(block.labelsGap, greaterThanOrEqualTo(block.bubbleWidth),
-            reason: '$name labelsGap must clear bubble width to avoid column overlap');
+            reason: '$name labelsGap (X) must clear bubble width');
+        expect(block.bubblesGap, greaterThanOrEqualTo(block.bubbleHeight),
+            reason: '$name bubblesGap (Y) must clear bubble height');
       }
     });
 
