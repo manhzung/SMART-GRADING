@@ -111,6 +111,19 @@ class ExamService {
     };
   }
 
+  async getUpcomingExams(user, limit) {
+    const now = new Date();
+    return Exam.find({
+      createdBy: user.id,
+      examDate: { $ne: null, $gte: now },
+    })
+      .sort({ examDate: 1 })
+      .limit(limit)
+      .populate('classIds', 'name code')
+      .populate('primaryClassId', 'name code')
+      .lean();
+  }
+
   async update(id, data) {
     const exam = await Exam.findByIdAndUpdate(id, data, { new: true, runValidators: true });
     return exam;
