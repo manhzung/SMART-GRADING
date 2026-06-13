@@ -35,4 +35,12 @@ router
   .route('/student/:studentId')
   .get(auth(), validate(submissionValidation.getStudentSubmissions), submissionController.getByStudent);
 
+router
+  .route('/:id/attach-image')
+  .post(auth('scanSubmissions'), validate(submissionValidation.attachImage), submissionController.attachImage);
+
+router
+  .route('/:id/image/:type')
+  .delete(auth('scanSubmissions'), validate(submissionValidation.deleteImage), submissionController.deleteImage);
+
 module.exports = router;
