@@ -234,6 +234,10 @@ class AppOMREngine {
 
       if (template.autoAlign) {
         _computeShifts(normalized);
+      } else {
+        // Ensure no stale shifts from a previous run affect this scan
+        _shifts.clear();
+        debugPrint('AppOMREngine: autoAlign disabled, using template coordinates exactly');
       }
 
       final (responses, details, confidence, finalMarked) =
@@ -1362,3 +1366,33 @@ class _Line {
     required this.length,
   });
 }
+
+class _FieldIntensity {
+  final int fieldIdx;
+  final int bubbleIdx;
+  final double mean;
+
+  const _FieldIntensity({
+    required this.fieldIdx,
+    required this.bubbleIdx,
+    required this.mean,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is _FieldIntensity &&
+        other.fieldIdx == fieldIdx &&
+        other.bubbleIdx == bubbleIdx &&
+        other.mean == mean;
+  }
+
+  @override
+  int get hashCode => Object.hash(fieldIdx, bubbleIdx, mean);
+}
+
+/// Per-field threshold used to detect marked bubbles within a single
+/// question row. Currently delegates to the same jump-based heuristic as
+/// the global threshold; exposed under this name to match the call sites
+/// in [_readResponses].
+double _computeThreshold(List<double> vals) => _computeGlobalThreshold(vals);

@@ -233,7 +233,7 @@ class OMREngine {
       procWidth: null,
       procHeight: null,
       minJump: 8.0,
-      autoAlign: false,
+      autoAlign: template.autoAlign,
       useMarkers: false,
     );
   }

@@ -120,7 +120,7 @@ class AppOmrTemplate {
     this.procWidth,
     this.procHeight,
     this.minJump = 8.0,
-    this.autoAlign = false,
+    this.autoAlign = true,
     this.useMarkers = false,
   });
 
