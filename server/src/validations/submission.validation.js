@@ -7,7 +7,9 @@ const id = Joi.object().keys({
 const scanSubmission = {
   body: Joi.object().keys({
     examId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    image: Joi.string().required(), // Base64 encoded image
+    classId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
+    // Base64 encoded image
+    image: Joi.string().required(),
     deviceInfo: Joi.object().keys({
       platform: Joi.string().valid('ios', 'android', 'web'),
       deviceModel: Joi.string(),
