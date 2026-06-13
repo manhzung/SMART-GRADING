@@ -73,6 +73,11 @@ const removeExamFromClass = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const getAvailableStudents = catchAsync(async (req, res) => {
+  const result = await classService.getAvailableStudents(req.params.id, req.query, req.user);
+  res.send(result);
+});
+
 const getClassStatistics = catchAsync(async (req, res) => {
   const stats = await classService.getClassStatistics(req.params.id, req.user);
   res.send(stats);
@@ -93,4 +98,5 @@ module.exports = {
   assignExamsToClass,
   removeExamFromClass,
   getClassStatistics,
+  getAvailableStudents,
 };

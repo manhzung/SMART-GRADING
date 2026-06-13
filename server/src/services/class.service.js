@@ -242,6 +242,50 @@ class ClassService {
     return results;
   }
 
+  // ── Available Students (for "Add Students" flow) ──────────────────────────
+  async getAvailableStudents(classId, query = {}, requestingUser = null) {
+    // 1. Authorize access to class (admin OK; teacher must be homeroom/subject teacher)
+    const classData = await this._authorizeClassAccess(classId, requestingUser, 'view');
+
+    // 2. Parse pagination
+    const { page, limit, skip } = parsePagination(query);
+
+    // 3. Build filter: students in same school, NOT already in this class
+    const filter = {
+      role: 'student',
+      schoolId: classData.schoolId,
+      _id: { $nin: classData.studentIds },
+    };
+
+    // 4. Add search filter (case-insensitive, partial match on name/studentCode/email)
+    if (query.search && String(query.search).trim().length > 0) {
+      const escaped = String(query.search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.$or = [
+        { name: { $regex: escaped, $options: 'i' } },
+        { studentCode: { $regex: escaped, $options: 'i' } },
+        { email: { $regex: escaped, $options: 'i' } },
+      ];
+    }
+
+    // 5. Query with select to limit fields
+    const [results, total] = await Promise.all([
+      User.find(filter)
+        .select('name email studentCode avatarUrl isActive')
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments(filter),
+    ]);
+
+    return {
+      results,
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    };
+  }
+
   async delete(id, requestingUser = null) {
     const classData = await this._authorizeClassAccess(id, requestingUser, 'delete');
 

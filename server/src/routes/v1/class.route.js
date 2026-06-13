@@ -52,4 +52,8 @@ router
   .route('/:id/statistics')
   .get(auth(), classController.getClassStatistics);
 
+router
+  .route('/:id/available-students')
+  .get(auth('manageClasses'), validate(classValidation.getAvailableStudents), classController.getAvailableStudents);
+
 module.exports = router;
