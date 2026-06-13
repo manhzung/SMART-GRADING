@@ -90,6 +90,9 @@ coverage/
 tmp/
 temp/
 
+# Git worktrees
+.worktrees/
+
 # Flutter web build
 .web/
 .flutter-plugins
