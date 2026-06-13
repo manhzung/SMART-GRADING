@@ -6,12 +6,43 @@ const { parsePagination } = require('../utils/parsePagination');
 
 class SubmissionService {
   async scan(data) {
-    const { examId, image, deviceInfo } = data;
+    const { examId, originalUrl, originalPublicId, imageMeta, deviceInfo, image } = data;
+    const config = require('../config/config');
+    const { assertIsCloudinaryUrl } = require('../utils/cloudinary.util');
 
     // Find exam and versions
     const exam = await Exam.findById(examId);
     if (!exam) {
       throw new ApiError(404, 'Exam not found');
+    }
+
+    if (config.upload.mode === 'cloudinary') {
+      if (!originalUrl) {
+        throw new ApiError(400, 'originalUrl is required when UPLOAD_MODE=cloudinary');
+      }
+      assertIsCloudinaryUrl(originalUrl, config.cloudinary.cloud_name);
+    }
+
+    // If we have a Cloudinary URL, forward to python bridge for actual scanning
+    if (config.upload.mode === 'cloudinary' && originalUrl) {
+      const pythonBridge = require('./pythonBridge.service');
+      try {
+        const result = await pythonBridge.processImage({
+          imageUrl: originalUrl,
+          template: {},
+        });
+        return {
+          status: 'scanning',
+          examId,
+          originalUrl,
+          originalPublicId,
+          imageMeta: imageMeta || null,
+          deviceInfo: deviceInfo || null,
+          pythonResult: result,
+        };
+      } catch (err) {
+        // Fall through to pending response
+      }
     }
 
     // TODO: Implement actual OMR scanning here
@@ -22,6 +53,10 @@ class SubmissionService {
       status: 'pending',
       message: 'OMR scanning service not yet implemented',
       examId,
+      originalUrl: originalUrl || null,
+      originalPublicId: originalPublicId || null,
+      imageMeta: imageMeta || null,
+      deviceInfo: deviceInfo || null,
     };
   }
 
