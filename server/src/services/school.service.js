@@ -1,5 +1,7 @@
-const { School } = require('../models');
+const { School, User } = require('../models');
 const { parsePagination } = require('../utils/parsePagination');
+const ApiError = require('../utils/ApiError');
+const httpStatus = require('http-status');
 
 class SchoolService {
   async create(data) {
@@ -59,6 +61,63 @@ class SchoolService {
   async getGradingScale(id) {
     const school = await School.findById(id).select('settings.gradingScale');
     return school?.settings?.gradingScale;
+  }
+
+  // ── Available Teachers (for teacher dropdown in class form) ──────────────
+  async getAvailableTeachers(schoolId, query = {}, requestingUser = null) {
+    // 1. Verify school exists
+    const school = await School.findById(schoolId);
+    if (!school) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'School not found');
+    }
+
+    // 2. Authorize: admin can access any school; teacher/student must be in same school
+    if (requestingUser) {
+      const isAdmin = requestingUser.role === 'admin';
+      if (!isAdmin) {
+        const userSchoolId = requestingUser.schoolId?.toString() || requestingUser.schoolId;
+        if (userSchoolId !== schoolId.toString()) {
+          throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden: you can only access teachers in your own school');
+        }
+      }
+    }
+
+    // 3. Parse pagination
+    const { page, limit, skip } = parsePagination(query);
+
+    // 4. Build filter: teachers in this school
+    const filter = {
+      role: 'teacher',
+      schoolId,
+    };
+
+    // 5. Add search filter (case-insensitive, partial match on name/email/teacherCode)
+    if (query.search && String(query.search).trim().length > 0) {
+      const escaped = String(query.search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.$or = [
+        { name: { $regex: escaped, $options: 'i' } },
+        { teacherCode: { $regex: escaped, $options: 'i' } },
+        { email: { $regex: escaped, $options: 'i' } },
+      ];
+    }
+
+    // 6. Query with select to limit fields
+    const [results, total] = await Promise.all([
+      User.find(filter)
+        .select('name email teacherCode avatarUrl isActive')
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments(filter),
+    ]);
+
+    return {
+      results,
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    };
   }
 }
 

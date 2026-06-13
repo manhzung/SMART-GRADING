@@ -21,4 +21,8 @@ router
   .route('/:id/grade-distribution')
   .post(auth(), schoolController.getGradeDistribution);
 
+router
+  .route('/:schoolId/available-teachers')
+  .get(auth('manageClasses'), validate(schoolValidation.getAvailableTeachers), schoolController.getAvailableTeachers);
+
 module.exports = router;

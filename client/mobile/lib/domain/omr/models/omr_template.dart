@@ -149,6 +149,7 @@ class OMRTemplate {
   /// 11 MCQ questions (q1-q11), 4 options (A-D), page 1189x1682.
   factory OMRTemplate.sample4() {
     return OMRTemplate(
+      id: 'sample4',
       name: 'Sample 4 - 11 MCQ',
       pageWidth: 1189,
       pageHeight: 1682,

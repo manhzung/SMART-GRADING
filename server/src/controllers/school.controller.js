@@ -46,6 +46,11 @@ const getGradeDistribution = catchAsync(async (req, res) => {
   res.send(distribution);
 });
 
+const getAvailableTeachers = catchAsync(async (req, res) => {
+  const result = await schoolService.getAvailableTeachers(req.params.schoolId, req.query, req.user);
+  res.send(result);
+});
+
 module.exports = {
   create,
   getAll,
@@ -53,4 +58,5 @@ module.exports = {
   update,
   remove,
   getGradeDistribution,
+  getAvailableTeachers,
 };

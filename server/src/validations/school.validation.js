@@ -66,6 +66,17 @@ const getSchool = {
   params: id,
 };
 
+const getAvailableTeachers = {
+  params: Joi.object().keys({
+    schoolId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+  }),
+  query: Joi.object().keys({
+    search: Joi.string().trim().max(100).allow(''),
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(20),
+  }),
+};
+
 const deleteSchool = {
   params: id,
 };
@@ -74,5 +85,6 @@ module.exports = {
   createSchool,
   updateSchool,
   getSchool,
+  getAvailableTeachers,
   deleteSchool,
 };

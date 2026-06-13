@@ -91,8 +91,13 @@ class TemplatePicker extends StatelessWidget {
   }
 
   String _keyFor(OMRTemplate t) {
-    if (t.id == '15q') return '15q';
-    if (t.name.startsWith('Sample')) return 'sample4';
-    return '';
+    switch (t.id) {
+      case '15q':
+        return '15q';
+      case 'sample4':
+        return 'sample4';
+      default:
+        return '';
+    }
   }
 }
