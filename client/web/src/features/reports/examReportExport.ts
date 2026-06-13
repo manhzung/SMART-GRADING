@@ -4,9 +4,8 @@ import * as XLSX from 'xlsx';
 import type { ExamReport } from './types';
 import type { Exam } from '../../presentation/store/examStore';
 import type { BackendSubmission } from '../../presentation/store/submissionStore';
-import type { OMRTemplate } from '../../types/index';
 import { apiService } from '../../core/api';
-import { generateOmrSheetPdf, generateOmrVersionSheetsPdf } from './omrSheetPdf';
+import { generateOmrSheetPdf, generateOmrVersionSheetsPdf, type OMRTemplateJson } from './omrSheetPdf';
 
 // ─── Type Definitions ──────────────────────────────────────────────────────────
 
@@ -473,9 +472,9 @@ export function prepareGradeDistribution(report: ExamReport): GradeDistributionR
 
 // ─── OMR Template PDF Export (browser-side) ──────────────────────────────────────
 
-async function fetchFullTemplate(templateId: string): Promise<OMRTemplate> {
+async function fetchOmrJson(templateId: string): Promise<OMRTemplateJson> {
   const response = await fetch(
-    `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/omr-templates/${templateId}/full`,
+    `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/omr-templates/${templateId}/json`,
     { headers: apiService.getHeaders() }
   );
   if (!response.ok) {
@@ -501,7 +500,7 @@ export async function exportOmrTemplatePdf(
   examTitle: string,
   schoolName?: string
 ): Promise<void> {
-  const template = await fetchFullTemplate(templateId);
+  const template = await fetchOmrJson(templateId);
 
   const blob = await generateOmrSheetPdf({
     template,
@@ -520,7 +519,7 @@ export async function exportOmrTemplateVersionSheetsPdf(
   examTitle: string,
   schoolName?: string
 ): Promise<void> {
-  const template = await fetchFullTemplate(templateId);
+  const template = await fetchOmrJson(templateId);
 
   if (versionCodes.length === 1) {
     const blob = await generateOmrSheetPdf({
