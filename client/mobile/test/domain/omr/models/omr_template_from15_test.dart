@@ -45,13 +45,18 @@ void main() {
       expect(md.direction, FieldDirection.vertical);
     });
 
-    test('Answer row 1 has 5 questions with 4 options MCQ4', () {
+    test('Answer row 1 has 5 questions with 4 options MCQ4 in vertical layout', () {
+      // 5 questions side-by-side on the printed row, each question's
+      // A/B/C/D options stacked vertically underneath. So
+      // direction=vertical: each field (question) is a column of 4
+      // bubbles spread along Y, and the 5 fields spread along X.
       final t = OMRTemplate.from15Question();
       final r1 = t.fieldBlocks[2];
       expect(r1.fieldType, FieldType.qtypeMcq4);
       expect(r1.fieldLabels, ['q1', 'q2', 'q3', 'q4', 'q5']);
       expect(r1.bubbleValues, ['A', 'B', 'C', 'D']);
-      expect(r1.direction, FieldDirection.horizontal);
+      expect(r1.direction, FieldDirection.vertical,
+          reason: '5 questions/row on the printed sheet => vertical FieldBlock');
     });
 
     test('Answer rows 2 and 3 cover q6..q15 in order', () {
@@ -92,11 +97,14 @@ void main() {
       expect(row3.originY - row2.originY, 94,
           reason: 'Row 3 originY - Row 2 originY must equal spec betweenRows (94 px)');
 
-      // All three rows must still fit within the A5 page height
-      // (2480 px) with some bottom margin.
-      final lastRowBottom = row3.originY +
-          (row3.fieldLabels.length - 1) * row3.labelsGap +
-          row3.bubbleHeight;
+      // In vertical layout each question is a column of 4 bubbles
+      // stacked along Y, so the row's Y span is driven by bubblesGap
+      // (3*41+30 = 153 px), not labelsGap. The 5-question row X span
+      // is 4*labelsGap+30 = 406 px (one column 30 wide per question,
+      // separated by 94 px). All three rows must still fit within
+      // the A5 page height (2480 px) with some bottom margin.
+      final lastRowBottom =
+          row3.originY + 3 * row3.bubblesGap + row3.bubbleHeight;
       expect(lastRowBottom, lessThan(t.pageHeight),
           reason: 'Last answer row must fit inside the A5 page height');
     });

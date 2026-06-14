@@ -272,19 +272,23 @@ class OMRTemplate {
           name: 'Answers Row 1',
           config: {
             'fieldType': 'QTYPE_MCQ4',
+            // direction: vertical means each *field* (question) is
+            // a column of 4 bubbles stacked along Y, and the 5
+            // fields in this row are spread along X. So one row on
+            // the printed sheet = 5 questions side-by-side, with
+            // each question's A/B/C/D options stacked vertically
+            // underneath. This matches the spec's "5 questions/row"
+            // geometry: 5 columns of 4 bubbles.
+            'direction': 'vertical',
             'fieldLabels': ['q1', 'q2', 'q3', 'q4', 'q5'],
             'origin': [248, 768],
+            // bubblesGap (Y) = 3mm bubble + 0.5mm gap = 41 px; used
+            // for A→B→C→D spacing *within* a single question column.
             'bubblesGap': 41,
-            // labelsGap is the Y spacing between adjacent questions
-            // *within* a single row. Spec §2.4 table pins this to
-            // 8mm = 94 px. With the spec's row gap of 8mm, the
-            // 5-question row's *bbox* (as computed by FieldBlock
-            // linear math) will extend 4*94+30 = 406 px below the
-            // row origin, well past the 94-px gap to the next row.
-            // This is a known limitation of FieldBlock's linear
-            // model when a layout is actually a multi-row grid -
-            // see TemplateLayout.assertNoOverlap, which now skips
-            // the cross-block bbox check for that reason.
+            // labelsGap (X) = center-to-center spacing between two
+            // adjacent questions in the same row. Spec §2.4 table:
+            // 8mm = 94 px. Each question occupies a 30-px-wide
+            // column, so 5 questions span 4*94+30 = 406 px on X.
             'labelsGap': 94,
           },
           globalBubbleWidth: 30,
@@ -295,6 +299,7 @@ class OMRTemplate {
           name: 'Answers Row 2',
           config: {
             'fieldType': 'QTYPE_MCQ4',
+            'direction': 'vertical',
             'fieldLabels': ['q6', 'q7', 'q8', 'q9', 'q10'],
             // Row 1 origin Y = 768 (65mm). Spec §2.3: betweenRows
             // = 8mm = 94.5 px, so Row 2 origin Y = 862 (73mm).
@@ -313,6 +318,7 @@ class OMRTemplate {
           name: 'Answers Row 3',
           config: {
             'fieldType': 'QTYPE_MCQ4',
+            'direction': 'vertical',
             'fieldLabels': ['q11', 'q12', 'q13', 'q14', 'q15'],
             // Row 1 Y = 768, Row 2 Y = 862, Row 3 Y = 956 (81mm).
             // Earlier draft had 1708 (768 + 940 = 5×6 + 5×94), which
