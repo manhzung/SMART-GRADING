@@ -23,6 +23,9 @@ class OMRProcessingResult {
   final Uint8List? croppedImageBytes;
   final int? croppedWidth;
   final int? croppedHeight;
+  /// Auto-alignment shifts per field block (px), computed during OMR scan.
+  /// Empty when autoAlign=false. Overlay uses these to draw at correct positions.
+  final List<int> alignmentShifts;
 
   const OMRProcessingResult({
     required this.template,
@@ -38,6 +41,7 @@ class OMRProcessingResult {
     this.croppedImageBytes,
     this.croppedWidth,
     this.croppedHeight,
+    this.alignmentShifts = const [],
   });
 
   bool get hasError => errorMessage != null;
@@ -171,6 +175,7 @@ class OMREngine {
         croppedImageBytes: appResult.croppedImageBytes,
         croppedWidth: appResult.croppedWidth,
         croppedHeight: appResult.croppedHeight,
+        alignmentShifts: appResult.alignmentShifts,
       );
     } catch (e, st) {
       debugPrint('OMREngine.processImage ERROR: $e\n$st');
@@ -190,6 +195,7 @@ class OMREngine {
         croppedImageBytes: null,
         croppedWidth: null,
         croppedHeight: null,
+        alignmentShifts: const [],
       );
     }
   }
@@ -207,6 +213,8 @@ class OMREngine {
         originX: fb.originX,
         originY: fb.originY,
         shift: 0,
+        bubbleWidth: fb.bubbleWidth,
+        bubbleHeight: fb.bubbleHeight,
         fieldLabels: fieldLabels,
         bubbleValues: bubbleValues,
         bubblesGap: bubblesGap.toDouble(),

@@ -301,10 +301,20 @@ function convertTemplate(template) {
   // autoAlign flag - default true for backward compat
   const autoAlign = scannerConfig.autoAlign !== false;
 
+  // bubbleDimensions root = max bubble size across all blocks
+  // (used as fallback by clients that don't read block-level sizes)
+  let maxBw = 0, maxBh = 0;
+  if (scBlock) { maxBw = Math.max(maxBw, scBlock.bubbleWidth); maxBh = Math.max(maxBh, scBlock.bubbleHeight); }
+  if (vcBlock) { maxBw = Math.max(maxBw, vcBlock.bubbleWidth); maxBh = Math.max(maxBh, vcBlock.bubbleHeight); }
+  for (const { config } of aaBlocks) { maxBw = Math.max(maxBw, config.bubbleWidth); maxBh = Math.max(maxBh, config.bubbleHeight); }
+  // If no blocks, fall back to default 4mm for backward compat
+  const bubbleW = maxBw || mmToPx(4);
+  const bubbleH = maxBh || mmToPx(4);
+
   return {
     name: template.name || 'OMR Template',
     pageDimensions: [pageW, pageH],
-    bubbleDimensions: [mmToPx(4), mmToPx(4)],
+    bubbleDimensions: [bubbleW, bubbleH],
     emptyValue: '',
     outputColumns,
     customLabels: {},

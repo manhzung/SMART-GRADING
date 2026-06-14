@@ -23,7 +23,6 @@ const double _globalThrWhite = 200.0;
 const int _looseness = 4;
 const int _rectInnerMarginNum = 12;
 const int _rectOuterMarginNum = 10;
-const double _textSize = 0.5;
 
 double _computeGlobalThreshold(List<double> vals) {
   if (vals.isEmpty) return 128;
@@ -59,6 +58,11 @@ class AppOMREngine {
 
   AppOMREngine(this.template, {Uint8List? markerBytes})
       : _markerBytes = markerBytes;
+
+  /// Returns the auto-alignment shifts per field block.
+  /// Call this AFTER processImage() to get the shifts used during reading.
+  /// Returns empty list if autoAlign was false or if processImage() hasn't run.
+  List<int> get alignmentShifts => List.unmodifiable(_shifts);
 
   /// Process image bytes and return OmrResult with annotated image bytes.
   (AppOmrResult, Uint8List?) processImage(Uint8List imageBytes) {
@@ -193,8 +197,25 @@ class AppOMREngine {
             'AppOMREngine: No cropping succeeded, resizing to template size: $pw x $ph');
 
         final resizedImg = _resize(img, pw, ph);
-        final (responses, details, confidence, _) = _readResponses(resizedImg);
-        resizedImg.dispose();
+
+        // Normalize even when warp fails — same logic as warp-ok branch
+        cv.Mat normalized;
+        final minMax = cv.minMaxLoc(resizedImg);
+        if (minMax.$2 > minMax.$1) {
+          normalized = _normalize(resizedImg);
+        } else {
+          normalized = resizedImg;
+        }
+
+        // Compute alignment shifts even when warp fails
+        if (template.autoAlign) {
+          _computeShifts(normalized);
+        } else {
+          _shifts.clear();
+        }
+
+        final (responses, details, confidence, _) = _readResponses(normalized);
+        normalized.dispose();
 
         if (origWidth > 0 && origHeight > 0) {
           final displayImg = cv.cvtColor(img, cv.COLOR_GRAY2BGR);
@@ -217,6 +238,7 @@ class AppOMREngine {
             croppedImageBytes: annotatedBytes,
             croppedWidth: origWidth,
             croppedHeight: origHeight,
+            alignmentShifts: List.from(_shifts),
           ),
           annotatedBytes,
         );
@@ -265,6 +287,7 @@ class AppOMREngine {
           croppedImageBytes: croppedBytes,
           croppedWidth: pw,
           croppedHeight: ph,
+          alignmentShifts: List.from(_shifts),
         ),
         annotatedBytes,
       );
@@ -1058,9 +1081,6 @@ class AppOMREngine {
     final responses = <String, String>{};
     final details = <AppBubbleResult>[];
 
-    final boxW = template.bubbleWidth;
-    final boxH = template.bubbleHeight;
-
     final displayImg = cv.cvtColor(img, cv.COLOR_GRAY2BGR);
     final transpLayer = displayImg.clone();
     final finalMarked = displayImg.clone();
@@ -1072,6 +1092,10 @@ class AppOMREngine {
       final block = template.fieldBlocks[b];
       final shift = _shifts.length > b ? _shifts[b] : 0;
       final isHorizontal = block.direction == 'horizontal';
+
+      // Use block-level bubble sizes (Bug E fix)
+      final blockBoxW = block.bubbleWidth;
+      final blockBoxH = block.bubbleHeight;
 
       for (int fi = 0; fi < block.fieldLabels.length; fi++) {
         final xBase = isHorizontal
@@ -1092,9 +1116,9 @@ class AppOMREngine {
               : yBase + vi * block.bubblesGap.round();
 
           final bx1 = bx.clamp(0, img.cols - 1);
-          final bx2 = (bx + boxW).clamp(0, img.cols);
+          final bx2 = (bx + blockBoxW).clamp(0, img.cols);
           final by1 = by.clamp(0, img.rows - 1);
-          final by2 = (by + boxH).clamp(0, img.rows);
+          final by2 = (by + blockBoxH).clamp(0, img.rows);
 
           final roi = cv.Mat.fromRange(img, by1, by2,
               colStart: bx1, colEnd: bx2);
@@ -1138,31 +1162,31 @@ class AppOMREngine {
               : yBase + vi * block.bubblesGap.round();
 
           if (detectedBubbles.contains(vi)) {
-            final innerMargin = boxW ~/ _rectInnerMarginNum;
+            final innerMargin = blockBoxW ~/ _rectInnerMarginNum;
             cv.rectangle(
               finalMarked,
               cv.Rect(
                   bx + innerMargin,
                   by + innerMargin,
-                  boxW - innerMargin * 2,
-                  boxH - innerMargin * 2),
+                  blockBoxW - innerMargin * 2,
+                  blockBoxH - innerMargin * 2),
               cv.Scalar(50, 50, 50),
               thickness: 3,
             );
             _putText(finalMarked, block.bubbleValues[vi],
-                (bx, by + boxH ~/ 3),
+                (bx, by + blockBoxH ~/ 3),
                 fontScale: 0.4,
                 color: cv.Scalar(10, 10, 20),
                 thickness: 1);
           } else {
-            final outerMargin = boxW ~/ _rectOuterMarginNum;
+            final outerMargin = blockBoxW ~/ _rectOuterMarginNum;
             cv.rectangle(
               finalMarked,
               cv.Rect(
                   bx + outerMargin,
                   by + outerMargin,
-                  boxW - outerMargin * 2,
-                  boxH - outerMargin * 2),
+                  blockBoxW - outerMargin * 2,
+                  blockBoxH - outerMargin * 2),
               cv.Scalar(128, 128, 128),
               thickness: -1,
             );
@@ -1241,20 +1265,6 @@ class AppOMREngine {
     );
   }
 
-  void _drawFieldBlockLabel(cv.Mat img, AppOmrFieldBlock block) {
-    final blockWidth =
-        block.bubbleValues.length * block.bubblesGap.round();
-    final textX = block.originX + block.shift + blockWidth - 60;
-    final textY = block.originY - 5;
-
-    if (textX > 0 && textY > 0) {
-      _putText(img, block.name, (textX.toInt(), textY),
-          fontScale: _textSize,
-          color: cv.Scalar(0, 0, 0),
-          thickness: 4);
-    }
-  }
-
   double _computeConfidence(List<AppBubbleResult> details) {
     if (details.isEmpty) return 0;
     int correctCount = 0;
@@ -1310,8 +1320,8 @@ class AppOMREngine {
           final bx =
               ((block.originX + shift + col * block.bubblesGap.round()) * scaleX)
                   .round();
-          final bubbleW = (template.bubbleWidth * scaleX).round();
-          final bubbleH = (template.bubbleHeight * scaleY).round();
+          final bubbleW = (block.bubbleWidth * scaleX).round();
+          final bubbleH = (block.bubbleHeight * scaleY).round();
           final bubbleCenterX = bx + bubbleW ~/ 2;
           final bubbleCenterY = by + bubbleH ~/ 2;
 

@@ -18,7 +18,7 @@ CONFIG_DEFAULTS = DotMap(
         },
         "alignment_params": {
             # Note: 'auto_align' enables automatic template alignment, use if the scans show slight misalignments.
-            "auto_align": False,
+            "auto_align": True,
             "match_col": 5,
             "max_steps": 20,
             "stride": 1,

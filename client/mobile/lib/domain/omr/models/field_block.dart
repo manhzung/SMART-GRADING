@@ -87,8 +87,12 @@ class FieldBlock {
     required String globalEmptyValue,
   }) {
     final fieldType = FieldType.fromKey(config['fieldType'] as String? ?? 'QTYPE_INT');
+    // Mirror OMRChecker Python: when 'direction' is absent, fall back to the
+    // field type's default direction (QTYPE_MCQ* -> horizontal, QTYPE_INT -> vertical).
+    // Falling back to a hard-coded 'vertical' made QTYPE_MCQ4 templates default
+    // to vertical, which misaligned bubble coordinates vs. the scanned sheet.
     final direction = FieldDirection.fromString(
-      config['direction'] as String? ?? 'vertical',
+      config['direction'] as String? ?? fieldType.defaultDirection.name,
     );
     final bubbleValues = (config['bubbleValues'] as List<dynamic>?)
         ?.map((e) => e.toString())

@@ -26,6 +26,8 @@ class AppOmrFieldBlock {
   final int originX;
   final int originY;
   final int shift;
+  final int bubbleWidth;
+  final int bubbleHeight;
   final List<String> fieldLabels;
   final List<String> bubbleValues;
   final double bubblesGap;
@@ -38,6 +40,8 @@ class AppOmrFieldBlock {
     required this.originX,
     required this.originY,
     this.shift = 0,
+    required this.bubbleWidth,
+    required this.bubbleHeight,
     required this.fieldLabels,
     required this.bubbleValues,
     required this.bubblesGap,
@@ -52,6 +56,8 @@ class AppOmrFieldBlock {
       originX: (map['originX'] as num?)?.toInt() ?? 0,
       originY: (map['originY'] as num?)?.toInt() ?? 0,
       shift: (map['shift'] as num?)?.toInt() ?? 0,
+      bubbleWidth: (map['bubbleWidth'] as num?)?.toInt() ?? 35,
+      bubbleHeight: (map['bubbleHeight'] as num?)?.toInt() ?? 35,
       fieldLabels: (map['fieldLabels'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -72,6 +78,8 @@ class AppOmrFieldBlock {
         'originX': originX,
         'originY': originY,
         'shift': shift,
+        'bubbleWidth': bubbleWidth,
+        'bubbleHeight': bubbleHeight,
         'fieldLabels': fieldLabels,
         'bubbleValues': bubbleValues,
         'bubblesGap': bubblesGap,
@@ -86,6 +94,8 @@ class AppOmrFieldBlock {
       originX: originX,
       originY: originY,
       shift: newShift,
+      bubbleWidth: bubbleWidth,
+      bubbleHeight: bubbleHeight,
       fieldLabels: fieldLabels,
       bubbleValues: bubbleValues,
       bubblesGap: bubblesGap,
@@ -217,6 +227,9 @@ class AppOmrResult {
   final Uint8List? croppedImageBytes;
   final int? croppedWidth;
   final int? croppedHeight;
+  /// Auto-alignment shifts per field block (px), computed during processing.
+  /// Empty when autoAlign=false. Use AppOMREngine.alignmentShifts after processImage().
+  final List<int> alignmentShifts;
 
   const AppOmrResult({
     required this.responses,
@@ -230,9 +243,14 @@ class AppOmrResult {
     this.croppedImageBytes,
     this.croppedWidth,
     this.croppedHeight,
+    this.alignmentShifts = const [],
   });
 
   factory AppOmrResult.fromMap(Map<String, dynamic> map) {
+    final rawShifts = map['alignmentShifts'];
+    final alignmentShifts = rawShifts is List
+        ? rawShifts.map((e) => (e as num).toInt()).toList()
+        : <int>[];
     return AppOmrResult(
       responses: Map<String, String>.from(map['responses'] as Map? ?? {}),
       confidence: (map['confidence'] as num?)?.toDouble() ?? 0.0,
@@ -245,6 +263,7 @@ class AppOmrResult {
       croppedImageBytes: map['croppedImageBytes'] as Uint8List?,
       croppedWidth: (map['croppedWidth'] as num?)?.toInt(),
       croppedHeight: (map['croppedHeight'] as num?)?.toInt(),
+      alignmentShifts: alignmentShifts,
     );
   }
 
@@ -257,5 +276,6 @@ class AppOmrResult {
         if (croppedImageBytes != null) 'croppedImageBytes': croppedImageBytes,
         if (croppedWidth != null) 'croppedWidth': croppedWidth,
         if (croppedHeight != null) 'croppedHeight': croppedHeight,
+        if (alignmentShifts.isNotEmpty) 'alignmentShifts': alignmentShifts,
       };
 }

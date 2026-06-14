@@ -195,8 +195,8 @@ exports[`omrTemplateJson.service - snapshot tests A5 15-question template (match
 Object {
   "autoAlign": true,
   "bubbleDimensions": Array [
-    47,
-    47,
+    35,
+    35,
   ],
   "customLabels": Object {},
   "emptyValue": "",
