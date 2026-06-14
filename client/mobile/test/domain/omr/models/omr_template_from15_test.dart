@@ -76,28 +76,29 @@ void main() {
       expect(t.customLabels['versionCode'], ['md1', 'md2']);
     });
 
-    test('answer row blocks do not overlap each other on Y axis', () {
+    test('answer rows fit within the A5 page and are in spec order', () {
       final t = OMRTemplate.from15Question();
-      // Each answer row is a separate FieldBlock; guard against a regression
-      // where their originY values were too close (previously Row 1.q2 and
-      // Row 2.q1 shared the same Y, causing visible bubble overlap).
       final row1 = t.fieldBlocks[2];
       final row2 = t.fieldBlocks[3];
       final row3 = t.fieldBlocks[4];
 
-      final row1BottomY = row1.originY + (row1.fieldLabels.length - 1) * row1.labelsGap;
-      final row2BottomY = row2.originY + (row2.fieldLabels.length - 1) * row2.labelsGap;
-      final row3BottomY = row3.originY + (row3.fieldLabels.length - 1) * row3.labelsGap;
+      // Spec §2.3: betweenRows = 8mm = 94.5 px. Each row is just
+      // 94 px below the previous one. The earlier draft of this
+      // factory had row 2 / row 3 originY values that were 5x the
+      // spec, putting q6-q15 overlay far below the actual printed
+      // rows. This test guards the spec values directly.
+      expect(row2.originY - row1.originY, 94,
+          reason: 'Row 2 originY - Row 1 originY must equal spec betweenRows (94 px)');
+      expect(row3.originY - row2.originY, 94,
+          reason: 'Row 3 originY - Row 2 originY must equal spec betweenRows (94 px)');
 
-      // Row 2 originY must be strictly below Row 1's last question
-      expect(row2.originY, greaterThan(row1BottomY),
-          reason: 'Row 2 origin Y must clear Row 1 last question to avoid overlap');
-      // Row 3 originY must be strictly below Row 2's last question
-      expect(row3.originY, greaterThan(row2BottomY),
-          reason: 'Row 3 origin Y must clear Row 2 last question to avoid overlap');
-      // Row 3 must still fit within the A5 page
-      expect(row3BottomY + row3.bubbleHeight, lessThanOrEqualTo(t.pageHeight),
-          reason: 'Last question in Row 3 must fit within A5 page height');
+      // All three rows must still fit within the A5 page height
+      // (2480 px) with some bottom margin.
+      final lastRowBottom = row3.originY +
+          (row3.fieldLabels.length - 1) * row3.labelsGap +
+          row3.bubbleHeight;
+      expect(lastRowBottom, lessThan(t.pageHeight),
+          reason: 'Last answer row must fit inside the A5 page height');
     });
 
     test('SBD and MD digit blocks have no column overlap', () {
@@ -113,6 +114,36 @@ void main() {
         expect(block.bubblesGap, greaterThanOrEqualTo(block.bubbleHeight),
             reason: '$name bubblesGap (Y) must clear bubble height');
       }
+    });
+
+    test('answer row origins match spec section 2.3/2.5 (mm-to-px at 300 DPI)', () {
+      // Regression for a bug where Row 2 origin Y was 1238 and Row 3
+      // was 1708 - both about 5x the spec's betweenRows distance.
+      // Spec values: Row 1 Y = 65mm = 768, Row 2 Y = 73mm = 862,
+      // Row 3 Y = 81mm = 956. The same X offset (248) is used for
+      // all three rows (15mm + 71px qNum width).
+      final t = OMRTemplate.from15Question();
+      final r1 = t.fieldBlocks[2];
+      final r2 = t.fieldBlocks[3];
+      final r3 = t.fieldBlocks[4];
+      expect(r1.originX, 248, reason: 'Row 1 origin X');
+      expect(r1.originY, 768, reason: 'Row 1 origin Y (65mm)');
+      expect(r2.originX, 248, reason: 'Row 2 origin X');
+      expect(r2.originY, 862, reason: 'Row 2 origin Y (73mm = 65+8mm)');
+      expect(r3.originX, 248, reason: 'Row 3 origin X');
+      expect(r3.originY, 956, reason: 'Row 3 origin Y (81mm = 65+16mm)');
+    });
+
+    test('SBD and MD origins match spec section 2.3', () {
+      // Spec: SBD x=177 (15mm), y=413 (35mm); MD x=1181 (100mm),
+      // y=413. Both blocks are vertical QTYPE_INT_FROM_1.
+      final t = OMRTemplate.from15Question();
+      final sbd = t.fieldBlocks[0];
+      final md = t.fieldBlocks[1];
+      expect(sbd.originX, 177, reason: 'SBD x = 15mm');
+      expect(sbd.originY, 413, reason: 'SBD y = 35mm');
+      expect(md.originX, 1181, reason: 'MD x = 100mm');
+      expect(md.originY, 413, reason: 'MD y = 35mm');
     });
 
     test('assertNoOverlap passes for from15Question() (no SBD/MD/row overlap)', () {

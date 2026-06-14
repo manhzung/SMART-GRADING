@@ -286,7 +286,12 @@ class OMRTemplate {
           config: {
             'fieldType': 'QTYPE_MCQ4',
             'fieldLabels': ['q6', 'q7', 'q8', 'q9', 'q10'],
-            'origin': [248, 1238],
+            // Row 1 origin Y = 768 (65mm). Spec §2.3: betweenRows
+            // = 8mm = 94.5 px, so Row 2 origin Y = 862 (73mm).
+            // An earlier draft had 1238 (768 + 470) here, which was
+            // 5× the row spacing — that put the overlay for q6-q10
+            // ~376 px below the actual printed row on the sheet.
+            'origin': [248, 862],
             'bubblesGap': 41,
             'labelsGap': 94,
           },
@@ -299,7 +304,10 @@ class OMRTemplate {
           config: {
             'fieldType': 'QTYPE_MCQ4',
             'fieldLabels': ['q11', 'q12', 'q13', 'q14', 'q15'],
-            'origin': [248, 1708],
+            // Row 1 Y = 768, Row 2 Y = 862, Row 3 Y = 956 (81mm).
+            // Earlier draft had 1708 (768 + 940 = 5×6 + 5×94), which
+            // placed q11-q15 overlay ~752 px too low.
+            'origin': [248, 956],
             'bubblesGap': 41,
             'labelsGap': 94,
           },
