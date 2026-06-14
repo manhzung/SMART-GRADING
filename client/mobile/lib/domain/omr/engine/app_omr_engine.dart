@@ -193,8 +193,25 @@ class AppOMREngine {
             'AppOMREngine: No cropping succeeded, resizing to template size: $pw x $ph');
 
         final resizedImg = _resize(img, pw, ph);
-        final (responses, details, confidence, _) = _readResponses(resizedImg);
-        resizedImg.dispose();
+
+        // Normalize even when warp fails — same logic as warp-ok branch
+        cv.Mat normalized;
+        final minMax = cv.minMaxLoc(resizedImg);
+        if (minMax.$2 > minMax.$1) {
+          normalized = _normalize(resizedImg);
+        } else {
+          normalized = resizedImg;
+        }
+
+        // Compute alignment shifts even when warp fails
+        if (template.autoAlign) {
+          _computeShifts(normalized);
+        } else {
+          _shifts.clear();
+        }
+
+        final (responses, details, confidence, _) = _readResponses(normalized);
+        normalized.dispose();
 
         if (origWidth > 0 && origHeight > 0) {
           final displayImg = cv.cvtColor(img, cv.COLOR_GRAY2BGR);
