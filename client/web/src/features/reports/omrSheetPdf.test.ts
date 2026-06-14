@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { jsonToPdfLayout, bubbleAtMm, PX_TO_MM } from './omrSheetPdf';
+import { jsonToPdfLayout, bubbleAtMm, bubbleCenterAtMm, PX_TO_MM } from './omrSheetPdf';
 import type { OMRFieldBlockJson } from './omrSheetPdf';
 
 describe('jsonToPdfLayout', () => {
@@ -107,5 +107,86 @@ describe('bubbleAtMm', () => {
     expect(bubbleAtMm(block, 0, 0, layout).xMm).toBeCloseTo(100 * PX_TO_MM, 2);
     expect(bubbleAtMm(block, 0, 0, layout).yMm).toBeCloseTo(200 * PX_TO_MM, 2);
     expect(bubbleAtMm(block, 0, 1, layout).yMm).toBeCloseTo((200 + 40) * PX_TO_MM, 2);
+  });
+});
+
+describe('bubbleCenterAtMm', () => {
+  // Mobile convention: bubble.x/y in template = TOP-LEFT of bubble's bounding box.
+  // The CENTER (where Canvas.drawCircle draws) is (x + bubbleW/2, y + bubbleH/2).
+  // This is the SAME math as the mobile `bubbleDisplayCenter` helper, just in mm.
+  it('returns top-left + bubbleW/2 horizontally', () => {
+    const block: OMRFieldBlockJson = {
+      fieldType: 'QTYPE_MCQ4',
+      fieldLabels: ['q1'],
+      direction: 'horizontal',
+      origin: [200, 400],
+      bubblesGap: 55,
+      labelsGap: 45,
+      bubbleWidth: 35,
+      bubbleHeight: 35,
+      emptyValue: '',
+    };
+    const layout = { dpi: 300, mmToPx: 300 / 25.4, paper: { w: 210, h: 297 } };
+    const center = bubbleCenterAtMm(block, 0, 0, layout);
+    // top-left = (200, 400) px; center = (200 + 17.5, 400 + 17.5) px
+    expect(center.cxMm).toBeCloseTo((200 + 35 / 2) * PX_TO_MM, 2);
+    expect(center.cyMm).toBeCloseTo((400 + 35 / 2) * PX_TO_MM, 2);
+  });
+
+  it('applies bubblesGap along X for horizontal MCQ4 (center positions)', () => {
+    const block: OMRFieldBlockJson = {
+      fieldType: 'QTYPE_MCQ4',
+      fieldLabels: ['q1'],
+      direction: 'horizontal',
+      origin: [0, 0],
+      bubblesGap: 55,
+      labelsGap: 45,
+      bubbleWidth: 35,
+      bubbleHeight: 35,
+      emptyValue: '',
+    };
+    const layout = { dpi: 300, mmToPx: 300 / 25.4, paper: { w: 210, h: 297 } };
+    // Centers: A=(17.5, 17.5), B=(72.5, 17.5), C=(127.5, 17.5), D=(182.5, 17.5) px
+    expect(bubbleCenterAtMm(block, 0, 0, layout).cxMm).toBeCloseTo((35 / 2) * PX_TO_MM, 2);
+    expect(bubbleCenterAtMm(block, 0, 1, layout).cxMm).toBeCloseTo((55 + 35 / 2) * PX_TO_MM, 2);
+    expect(bubbleCenterAtMm(block, 0, 3, layout).cxMm).toBeCloseTo((3 * 55 + 35 / 2) * PX_TO_MM, 2);
+  });
+
+  it('applies labelsGap along Y for horizontal MCQ4 (center positions)', () => {
+    const block: OMRFieldBlockJson = {
+      fieldType: 'QTYPE_MCQ4',
+      fieldLabels: ['q1', 'q2', 'q3'],
+      direction: 'horizontal',
+      origin: [0, 0],
+      bubblesGap: 55,
+      labelsGap: 45,
+      bubbleWidth: 35,
+      bubbleHeight: 35,
+      emptyValue: '',
+    };
+    const layout = { dpi: 300, mmToPx: 300 / 25.4, paper: { w: 210, h: 297 } };
+    // Centers q1: y=17.5, q2: y=45+17.5=62.5, q3: y=90+17.5=107.5 px
+    expect(bubbleCenterAtMm(block, 0, 0, layout).cyMm).toBeCloseTo((35 / 2) * PX_TO_MM, 2);
+    expect(bubbleCenterAtMm(block, 1, 0, layout).cyMm).toBeCloseTo((45 + 35 / 2) * PX_TO_MM, 2);
+    expect(bubbleCenterAtMm(block, 2, 0, layout).cyMm).toBeCloseTo((2 * 45 + 35 / 2) * PX_TO_MM, 2);
+  });
+
+  it('vertical INT: centers spread along Y (center positions)', () => {
+    const block: OMRFieldBlockJson = {
+      fieldType: 'QTYPE_INT',
+      fieldLabels: ['roll1'],
+      direction: 'vertical',
+      origin: [100, 200],
+      bubblesGap: 40,
+      labelsGap: 0,
+      bubbleWidth: 35,
+      bubbleHeight: 35,
+      emptyValue: '',
+    };
+    const layout = { dpi: 300, mmToPx: 300 / 25.4, paper: { w: 210, h: 297 } };
+    // Center of value 0 = (117.5, 217.5) px; value 1 = (117.5, 257.5) px
+    expect(bubbleCenterAtMm(block, 0, 0, layout).cxMm).toBeCloseTo((100 + 35 / 2) * PX_TO_MM, 2);
+    expect(bubbleCenterAtMm(block, 0, 0, layout).cyMm).toBeCloseTo((200 + 35 / 2) * PX_TO_MM, 2);
+    expect(bubbleCenterAtMm(block, 0, 1, layout).cyMm).toBeCloseTo((200 + 40 + 35 / 2) * PX_TO_MM, 2);
   });
 });

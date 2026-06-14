@@ -1,11 +1,21 @@
 /**
  * omrSheetPdf.ts
  *
- * Renders OMR answer sheet PDF from pre-computed JSON layout (from /json endpoint).
+ * Renders an OMR answer sheet PDF from the pre-computed JSON layout
+ * (the same /json endpoint consumed by the mobile app).
  *
- * KEY CHANGE: This file no longer computes bubble positions from raw zones.
- * It uses the SAME pixel coordinates that the mobile app receives via /json endpoint.
- * This guarantees web-rendered PDF and mobile-detected bubbles are perfectly aligned.
+ * Design goals (intentionally minimal, mirroring OMRChecker sample4 style):
+ *   1. NO fill colors, NO background rectangles. Black ink on white paper only.
+ *   2. NO letters (A/B/C/D, 0-9) inside bubbles. Bubbles are empty outlined
+ *      circles — the student fills them with pen.
+ *   3. Question numbers printed BESIDE the bubbles (left of the row), not
+ *      inside them. This matches what OMRChecker sample4 sheets look like
+ *      and what the mobile overlay expects to see.
+ *   4. Bubble positions are EXACTLY the same math as the mobile
+ *      `bubbleDisplayCenter` helper: top-left template coord + bubbleW/2,
+ *      bubbleH/2 → center. This guarantees the printed bubble and the
+ *      mobile overlay (which draws a stroke-only circle at the same
+ *      center) are perfectly aligned.
  *
  * Conversion: mm = px / (300 / 25.4) = px / 11.811
  */
@@ -14,9 +24,7 @@ import { jsPDF } from 'jspdf';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
-/**
- * OMRTemplate JSON format - same as server /json endpoint.
- */
+/** OMRTemplate JSON format - same as server /json endpoint. */
 export interface OMRTemplateJson {
   name: string;
   pageDimensions: [number, number]; // [width, height] in pixels @ 300 DPI
@@ -60,11 +68,27 @@ const DPI = 300;
 export const MM_TO_PX = DPI / 25.4; // 11.811...
 export const PX_TO_MM = 1 / MM_TO_PX;
 
+const INK: [number, number, number] = [0, 0, 0]; // black
+const PAPER: [number, number, number] = [255, 255, 255]; // white
+const STROKE_WIDTH = 0.25; // mm - thin, looks like a printed circle
+const QUESTION_NUMBER_OFFSET_MM = 4; // gap between question number text and first bubble
+
+function setInk(doc: jsPDF): void {
+  doc.setTextColor(...INK);
+  doc.setDrawColor(...INK);
+}
+
+function setInkFill(doc: jsPDF): void {
+  doc.setFillColor(...INK);
+}
+
+function setPaperFill(doc: jsPDF): void {
+  doc.setFillColor(...PAPER);
+}
+
 // ─── Exported helpers for testing ──────────────────────────────────────────
 
-/**
- * Convert OMRTemplateJson into a PdfLayout (paper size in mm).
- */
+/** Convert OMRTemplateJson → PdfLayout (paper size in mm). */
 export function jsonToPdfLayout(json: OMRTemplateJson): PdfLayout {
   const [pwPx, phPx] = json.pageDimensions;
   return {
@@ -75,8 +99,9 @@ export function jsonToPdfLayout(json: OMRTemplateJson): PdfLayout {
 }
 
 /**
- * Compute the (x, y) position in mm of bubble (fieldIdx, valueIdx) in a field block.
- * Mirrors the mobile FieldBlock coordinate generation.
+ * Top-left (x, y) of bubble (fieldIdx, valueIdx) in mm.
+ * Mirrors mobile FieldBlock.fromConfig: the stored origin is the
+ * bounding-box top-left of the first bubble, not the center.
  */
 export function bubbleAtMm(
   block: OMRFieldBlockJson,
@@ -97,6 +122,24 @@ export function bubbleAtMm(
     : originYPx + valueIdx * block.bubblesGap;
 
   return { xMm: xPx * PX_TO_MM, yMm: yPx * PX_TO_MM };
+}
+
+/**
+ * Center (cx, cy) of bubble (fieldIdx, valueIdx) in mm.
+ * This is what `jsPDF.circle()` draws at - it takes a CENTER point, not
+ * a top-left. Same formula as mobile's `bubbleDisplayCenter` helper.
+ */
+export function bubbleCenterAtMm(
+  block: OMRFieldBlockJson,
+  fieldIdx: number,
+  valueIdx: number,
+  layout: PdfLayout,
+): { cxMm: number; cyMm: number } {
+  const tl = bubbleAtMm(block, fieldIdx, valueIdx, layout);
+  return {
+    cxMm: tl.xMm + (block.bubbleWidth * PX_TO_MM) / 2,
+    cyMm: tl.yMm + (block.bubbleHeight * PX_TO_MM) / 2,
+  };
 }
 
 // ─── Entry point ───────────────────────────────────────────────────────────
@@ -124,32 +167,30 @@ export async function generateOmrSheetPdf(params: OmrSheetParams): Promise<Blob>
     format: [paper.w, paper.h],
   });
 
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, paper.w, paper.h, 'F');
+  // No background fill - the printed paper is white. jsPDF defaults to white
+  // already, so we don't need to call setFillColor / rect.
 
-  // Draw header
-  drawHeader(doc, cleanSchool, cleanTitle);
+  drawTitleHeader(doc, cleanSchool, cleanTitle);
 
-  // Draw student code (if present)
+  // Student code (if present)
   const scBlock = template.fieldBlocks.student_code;
   if (scBlock) {
-    drawCodeField(doc, scBlock, 'STUDENT ID', null);
+    drawIntField(doc, scBlock, layout, 'STUDENT ID', null);
   }
 
-  // Draw version code (if present)
+  // Version code (if present)
   const vcBlock = template.fieldBlocks.version_code;
   if (vcBlock) {
-    drawCodeField(doc, vcBlock, 'EXAM CODE', versionCode ?? null);
+    drawIntField(doc, vcBlock, layout, 'EXAM CODE', versionCode ?? null);
   }
 
-  // Draw answer area (one block per column)
+  // Answer area (one block per column)
   for (const [name, block] of Object.entries(template.fieldBlocks)) {
     if (name.startsWith('answer_area_col_')) {
-      drawAnswerColumn(doc, block);
+      drawMcqColumn(doc, block, layout);
     }
   }
 
-  // Draw footer
   drawFooter(doc, layout);
 
   return doc.output('blob');
@@ -167,141 +208,140 @@ export async function generateOmrVersionSheetsPdf(
 
 // ─── Drawing helpers ───────────────────────────────────────────────────────
 
-function drawHeader(doc: jsPDF, schoolName: string, examTitle: string): void {
+function drawTitleHeader(doc: jsPDF, schoolName: string, examTitle: string): void {
   const pageW = doc.internal.pageSize.getWidth();
   const mLeft = 15;
-  const mTop = 15;
+  const mTop = 10;
   const cW = pageW - 2 * mLeft;
-  const headerH = 40;
 
-  doc.setFillColor(240, 244, 248);
-  doc.rect(mLeft, mTop, cW, headerH, 'F');
-  doc.setDrawColor(37, 99, 235);
-  doc.setLineWidth(0.5);
-  doc.line(mLeft, mTop + headerH, mLeft + cW, mTop + headerH);
-
+  setInk(doc);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.setTextColor(30, 64, 175);
-  doc.text(schoolName.toUpperCase(), mLeft + cW / 2, mTop + 10, {
+  doc.text(schoolName.toUpperCase(), mLeft + cW / 2, mTop + 5, {
     align: 'center',
     maxWidth: cW - 8,
   });
 
-  doc.setFontSize(14);
-  doc.setTextColor(15, 23, 42);
-  doc.text(examTitle.toUpperCase(), mLeft + cW / 2, mTop + 22, {
+  doc.setFontSize(13);
+  doc.text(examTitle.toUpperCase(), mLeft + cW / 2, mTop + 12, {
     align: 'center',
     maxWidth: cW - 8,
   });
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(148, 163, 184);
-  doc.text('OMR ANSWER SHEET  ·  SMART GRADING', mLeft + cW / 2, mTop + 33, {
-    align: 'center',
-    maxWidth: cW - 8,
-  });
-}
-
-function drawCodeField(
-  doc: jsPDF,
-  block: OMRFieldBlockJson,
-  label: string,
-  filled: string | null,
-): void {
-  // For INT (vertical) blocks: each fieldLabel is a digit column, bubbleValues are 0-9
-  const isInt = block.fieldType === 'QTYPE_INT' || block.fieldType === 'QTYPE_INT_FROM_1';
-  if (!isInt) return;
-
-  const digitCount = block.fieldLabels.length;
-  const bubbleValues = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const [originXPx, originYPx] = block.origin;
-  const baseX = originXPx * PX_TO_MM;
-  const baseY = originYPx * PX_TO_MM;
-  const bubbleWMm = block.bubbleWidth * PX_TO_MM;
-  const bubbleHMm = block.bubbleHeight * PX_TO_MM;
-  const stepXMm = block.bubblesGap * PX_TO_MM; // horizontal step between digits
-  const stepYMm = block.labelsGap * PX_TO_MM; // vertical step between value options
-
-  // Draw label above
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(100, 116, 139);
-  doc.text(label, baseX, baseY - 2);
-
-  for (let d = 0; d < digitCount; d++) {
-    const colX = baseX + d * stepXMm;
-    for (let v = 0; v < bubbleValues.length; v++) {
-      const y = baseY + v * stepYMm;
-      const isFilled = filled !== null && String(filled[d]) === bubbleValues[v];
-      doc.setFillColor(isFilled ? 30 : 255, isFilled ? 64 : 255, isFilled ? 175 : 255);
-      doc.setDrawColor(148, 163, 184);
-      doc.setLineWidth(0.25);
-      doc.circle(colX + bubbleWMm / 2, y + bubbleHMm / 2, bubbleWMm / 2, 'FD');
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(5);
-      doc.setTextColor(isFilled ? 255 : 100, isFilled ? 255 : 116, isFilled ? 255 : 139);
-      doc.text(
-        bubbleValues[v],
-        colX + bubbleWMm / 2,
-        y + bubbleHMm / 2,
-        { align: 'center', baseline: 'middle' },
-      );
-    }
-  }
-}
-
-function drawAnswerColumn(doc: jsPDF, block: OMRFieldBlockJson): void {
-  const [originXPx, originYPx] = block.origin;
-  const baseX = originXPx * PX_TO_MM;
-  const baseY = originYPx * PX_TO_MM;
-  const bubbleWMm = block.bubbleWidth * PX_TO_MM;
-  const bubbleHMm = block.bubbleHeight * PX_TO_MM;
-  const stepXMm = block.bubblesGap * PX_TO_MM; // horizontal step between options
-  const stepYMm = block.labelsGap * PX_TO_MM; // vertical step between questions
-
-  const bubbleValues =
-    block.fieldType === 'QTYPE_MCQ4' || block.fieldType === 'QTYPE_MCQ4_RTL'
-      ? ['A', 'B', 'C', 'D']
-      : ['A', 'B', 'C', 'D', 'E'];
-
-  for (let fi = 0; fi < block.fieldLabels.length; fi++) {
-    for (let vi = 0; vi < bubbleValues.length; vi++) {
-      const x = baseX + vi * stepXMm;
-      const y = baseY + fi * stepYMm;
-      doc.setFillColor(255, 255, 255);
-      doc.setDrawColor(148, 163, 184);
-      doc.setLineWidth(0.25);
-      doc.circle(x + bubbleWMm / 2, y + bubbleHMm / 2, bubbleWMm / 2, 'FD');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(5);
-      doc.setTextColor(100, 116, 139);
-      doc.text(
-        bubbleValues[vi],
-        x + bubbleWMm / 2,
-        y + bubbleHMm / 2,
-        { align: 'center', baseline: 'middle' },
-      );
-    }
-  }
+  // Thin separator
+  doc.setLineWidth(0.2);
+  doc.line(mLeft, mTop + 16, mLeft + cW, mTop + 16);
 }
 
 function drawFooter(doc: jsPDF, layout: PdfLayout): void {
   const { paper } = layout;
-  const fH = 12;
-  const fY = paper.h - 15 - fH;
   const mLeft = 15;
-  const cW = paper.w - 2 * mLeft;
+  const mRight = 15;
+  const footerY = paper.h - 10;
 
-  doc.setFillColor(248, 250, 252);
-  doc.rect(mLeft, fY, cW, fH, 'F');
-  doc.setDrawColor(220, 225, 235);
-  doc.setLineWidth(0.3);
-  doc.line(mLeft, fY, mLeft + cW, fY);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6);
-  doc.setTextColor(148, 163, 184);
-  doc.text('Smart Grading  ·  OMR Answer Sheet', mLeft + 4, fY + 4);
-  doc.text('Page 1/1', mLeft + cW - 4, fY + 4, { align: 'right' });
+  doc.setFontSize(7);
+  setInk(doc);
+  doc.text('Smart Grading · OMR Answer Sheet', mLeft, footerY);
+  doc.text('Page 1/1', paper.w - mRight, footerY, { align: 'right' });
+}
+
+/**
+ * Draw an INT (vertical) field: 10 value bubbles (0-9 or 1-0) for each digit.
+ * The student code shows empty bubbles; the version code may show one filled
+ * digit per column when the form is generated for a specific version.
+ */
+function drawIntField(
+  doc: jsPDF,
+  block: OMRFieldBlockJson,
+  layout: PdfLayout,
+  label: string,
+  filled: string | null,
+): void {
+  const isInt = block.fieldType === 'QTYPE_INT' || block.fieldType === 'QTYPE_INT_FROM_1';
+  if (!isInt) return;
+
+  const digitCount = block.fieldLabels.length;
+  // QTYPE_INT shows 0..9 top-to-bottom. QTYPE_INT_FROM_1 shows 1..9,0.
+  const bubbleValues =
+    block.fieldType === 'QTYPE_INT_FROM_1'
+      ? ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+      : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+  const baseTL = bubbleAtMm(block, 0, 0, layout);
+  const radiusMm = (block.bubbleWidth * PX_TO_MM) / 2;
+
+  // Draw label above the first digit column
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  setInk(doc);
+  doc.text(label, baseTL.xMm, baseTL.yMm - 2);
+
+  doc.setLineWidth(STROKE_WIDTH);
+
+  for (let d = 0; d < digitCount; d++) {
+    for (let v = 0; v < bubbleValues.length; v++) {
+      const center = bubbleCenterAtMm(block, d, v, layout);
+      const isFilled = filled !== null && String(filled[d]) === bubbleValues[v];
+
+      if (isFilled) {
+        // Filled (printed) bubble for version code: solid black, no letter.
+        setInkFill(doc);
+        doc.circle(center.cxMm, center.cyMm, radiusMm, 'F');
+      } else {
+        // Empty (unfilled) bubble: outline only. NO letter inside.
+        setPaperFill(doc);
+        doc.circle(center.cxMm, center.cyMm, radiusMm, 'FD');
+      }
+    }
+  }
+}
+
+/**
+ * Draw a single MCQ column (one field block = one "column" of questions).
+ * Layout matches OMRChecker sample4:
+ *   [ question number ]  [ ○ ○ ○ ○ ]   <-- one row per question
+ *
+ * Bubbles are empty circles (no A/B/C/D inside). Question numbers are
+ * printed to the LEFT of the first bubble.
+ */
+function drawMcqColumn(
+  doc: jsPDF,
+  block: OMRFieldBlockJson,
+  layout: PdfLayout,
+): void {
+  const bubbleValues =
+    block.fieldType === 'QTYPE_MCQ4' ||
+    block.fieldType === 'QTYPE_MCQ4_RTL'
+      ? ['A', 'B', 'C', 'D']
+      : ['A', 'B', 'C', 'D', 'E'];
+
+  const radiusMm = (block.bubbleWidth * PX_TO_MM) / 2;
+
+  setInk(doc);
+  doc.setLineWidth(STROKE_WIDTH);
+  setPaperFill(doc);
+
+  // First bubble center's Y → row position. Question number is to the LEFT
+  // of this center by (first bubble center X - question number offset).
+  const firstCenter = bubbleCenterAtMm(block, 0, 0, layout);
+  const questionNumberX = firstCenter.cxMm - radiusMm - QUESTION_NUMBER_OFFSET_MM;
+
+  for (let fi = 0; fi < block.fieldLabels.length; fi++) {
+    const rowLabel = block.fieldLabels[fi];
+
+    // Question number (or column header) — small text, left of the row
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.text(rowLabel, questionNumberX, firstCenter.cyMm + fi * (block.labelsGap * PX_TO_MM), {
+      align: 'right',
+      baseline: 'middle',
+    });
+
+    // Bubbles for this question — empty outline only, NO letters inside
+    for (let vi = 0; vi < bubbleValues.length; vi++) {
+      const center = bubbleCenterAtMm(block, fi, vi, layout);
+      doc.circle(center.cxMm, center.cyMm, radiusMm, 'FD');
+    }
+  }
 }
