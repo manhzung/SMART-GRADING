@@ -4,6 +4,38 @@ import 'package:smart_grading_mobile/domain/omr/engine/omr_engine.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_response.dart';
 
+/// Pure helper: given a bubble's template coordinates, the template
+/// block it belongs to, and the scale + letterbox offset used by the
+/// painter, return the on-screen (x, y) where the bubble's CENTER
+/// should be drawn.
+///
+/// `bubble.x` / `bubble.y` are the TOP-LEFT corner of the bubble's
+/// bounding box (see FieldBlock.fromConfig). `Canvas.drawCircle`
+/// expects the CENTER, so we add half the bubble size on each axis
+/// before scaling. Without this, every overlay circle is drawn at
+/// the top-left corner of its bubble, shifting the visible
+/// overlay up-and-left by `bubbleW/2, bubbleH/2` template pixels.
+///
+/// Exposed as a top-level function (not a class method) so the
+/// coordinate math can be unit-tested without spinning up a
+/// `CustomPainter`.
+Offset bubbleDisplayCenter({
+  required int bubbleTemplateX,
+  required int bubbleTemplateY,
+  required num blockBubbleWidth,
+  required num blockBubbleHeight,
+  required double scaleX,
+  required double scaleY,
+  required double offsetX,
+  required double offsetY,
+}) {
+  final centerX =
+      (bubbleTemplateX + blockBubbleWidth / 2) * scaleX + offsetX;
+  final centerY =
+      (bubbleTemplateY + blockBubbleHeight / 2) * scaleY + offsetY;
+  return Offset(centerX, centerY);
+}
+
 /// Widget that displays a cropped OMR image with colored bubble overlays.
 ///
 /// The overlay is drawn AFTER the image has been cropped and warped to template
@@ -212,9 +244,23 @@ class _BubbleOverlayPainter extends CustomPainter {
         for (int colIdx = 0; colIdx < row.length; colIdx++) {
           final bubble = row[colIdx];
 
-          // Map template coords → display coords
-          final bx = bubble.x * scaleX + offsetX;
-          final by = bubble.y * scaleY + offsetY;
+          // Map template coords → display coords via the shared
+          // helper. `bubble.x` / `bubble.y` are top-left in template
+          // space (see FieldBlock.fromConfig); the helper returns
+          // the bubble's CENTER in display space, which is what
+          // `Canvas.drawCircle` needs.
+          final center = bubbleDisplayCenter(
+            bubbleTemplateX: bubble.x,
+            bubbleTemplateY: bubble.y,
+            blockBubbleWidth: block.bubbleWidth,
+            blockBubbleHeight: block.bubbleHeight,
+            scaleX: scaleX,
+            scaleY: scaleY,
+            offsetX: offsetX,
+            offsetY: offsetY,
+          );
+          final bx = center.dx;
+          final by = center.dy;
 
           // Retrieve intensity for this specific bubble position
           final intensity = (intensities != null && colIdx < intensities.length)
