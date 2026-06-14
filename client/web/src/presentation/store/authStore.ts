@@ -7,7 +7,7 @@ export interface User {
   _id?: string;
   name: string;
   email: string;
-  role: 'admin' | 'teacher' | 'student' | 'parent';
+  role: 'admin' | 'school-admin' | 'teacher' | 'student' | 'parent';
   avatarUrl?: string;
   isEmailVerified: boolean;
   schoolId?: string;

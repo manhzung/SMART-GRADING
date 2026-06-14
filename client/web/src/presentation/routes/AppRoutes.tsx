@@ -8,6 +8,8 @@ import ForgotPasswordPage from '../../pages/ForgotPasswordPage';
 import VerifyEmailPage from '../../pages/VerifyEmailPage';
 import ResetPasswordPage from '../../pages/ResetPasswordPage';
 import DashboardPage from '../../pages/DashboardPage';
+import MyScoresPage from '../../pages/MyScoresPage';
+import MyAppealsPage from '../../pages/MyAppealsPage';
 import ClassesPage from '../../pages/ClassesPage';
 import ClassDetailPage from '../../pages/ClassDetailPage';
 import ExamsPage from '../../pages/ExamsPage';
@@ -24,6 +26,9 @@ import SettingsPage from '../../pages/SettingsPage';
 import HelpPage from '../../pages/HelpPage';
 import NotFoundPage from '../../pages/NotFoundPage';
 import AITutorPage from '../../features/ai-tutor/AITutorPage';
+import AdminDashboard from '../../pages/admin/AdminDashboard';
+import SchoolsPage from '../../pages/admin/SchoolsPage';
+import UsersPage from '../../pages/admin/UsersPage';
 import Layout from '../components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -42,6 +47,16 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
     return null;
   }
   return isAuthenticated ? <Navigate to="/" replace /> : <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const userRole = useAuthStore((state) => state.user?.role);
+  if (isLoading) return null;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (userRole !== 'admin' && userRole !== 'school-admin') return <Navigate to="/" replace />;
+  return <>{children}</>;
 }
 
 export default function AppRoutes() {
@@ -105,6 +120,8 @@ export default function AppRoutes() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="my-scores" element={<MyScoresPage />} />
+          <Route path="my-appeals" element={<MyAppealsPage />} />
           <Route path="classes" element={<ClassesPage />} />
           <Route path="classes/:id" element={<ClassDetailPage />} />
           <Route path="exams" element={<ExamsPage />} />
@@ -120,6 +137,32 @@ export default function AppRoutes() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="help" element={<HelpPage />} />
           <Route path="ai-tutor" element={<AITutorPage />} />
+
+          {/* Admin routes */}
+          <Route
+            path="admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="admin/schools"
+            element={
+              <AdminRoute>
+                <SchoolsPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="admin/users"
+            element={
+              <AdminRoute>
+                <UsersPage />
+              </AdminRoute>
+            }
+          />
         </Route>
 
         {/* Catch-all 404 route */}
