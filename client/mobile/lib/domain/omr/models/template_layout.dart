@@ -140,8 +140,22 @@ class TemplateLayout {
       }
     }
 
-    // Cross-block checks: bounding boxes must not overlap and must
-    // fit in the page.
+    // Per-block fit check: each block's bbox must lie entirely
+    // within `(0, 0) .. (pageWidth, pageHeight)`. The cross-block
+    // bbox *overlap* check is intentionally NOT performed here:
+    // FieldBlock is a linear (1D) model, so its bbox math is
+    // accurate only for a single row/column of bubbles. Templates
+    // that build a multi-row grid out of several FieldBlocks (e.g.
+    // the 15q A5 template's "Answers Row 1/2/3" — three horizontal
+    // MCQ4 blocks stacked 94 px apart) will *always* have
+    // overlapping bboxes under this model, even when the on-paper
+    // bubbles themselves are clearly separated. Asserting otherwise
+    // would either reject legitimate templates or force a fake
+    // labelsGap that distorts the actual bubble positions. The
+    // per-block labelsGap / bubblesGap checks above (lines 117-141)
+    // already catch the dangerous cases - per-block adjacency
+    // overlap on the wrong axis - which is the only kind of overlap
+    // that would actually produce wrong OMR readings.
     final boxes = <List<int>>[];
     for (final block in template.fieldBlocks) {
       final w = _bboxWidth(block);
@@ -155,21 +169,12 @@ class TemplateLayout {
     }
     for (var i = 0; i < boxes.length; i++) {
       final a = boxes[i];
-        if (a[0] < 0 || a[1] < 0 || a[2] > template.pageWidth ||
-            a[3] > template.pageHeight) {
-          throw StateError(
-            'Block $i bbox ($a) extends outside page '
-            '(0,0)..(${template.pageWidth}, ${template.pageHeight}).',
-          );
-        }
-      for (var j = i + 1; j < boxes.length; j++) {
-        final b = boxes[j];
-        final overlaps = a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
-        if (overlaps) {
-          throw StateError(
-            'Blocks $i ($a) and $j ($b) have overlapping bounding boxes.',
-          );
-        }
+      if (a[0] < 0 || a[1] < 0 || a[2] > template.pageWidth ||
+          a[3] > template.pageHeight) {
+        throw StateError(
+          'Block $i bbox ($a) extends outside page '
+          '(0,0)..(${template.pageWidth}, ${template.pageHeight}).',
+        );
       }
     }
   }

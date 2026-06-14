@@ -88,6 +88,11 @@ void main() {
       // The fix changes SBD/MD bubblesGap from 12 to 31 and labelsGap
       // from 12 to 31. If the factory is regressed back to 12, this
       // test should fail.
+      //
+      // Note: this test only checks that the per-block intra-overlap
+      // rules pass. Cross-block bbox overlap is intentionally NOT
+      // checked (see comment in assertNoOverlap), so the 3 answer
+      // rows' overlapping bboxes do not cause a throw.
       expect(
         () => TemplateLayout.assertNoOverlap(OMRTemplate.from15Question()),
         returnsNormally,

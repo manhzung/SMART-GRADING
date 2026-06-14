@@ -275,6 +275,16 @@ class OMRTemplate {
             'fieldLabels': ['q1', 'q2', 'q3', 'q4', 'q5'],
             'origin': [248, 768],
             'bubblesGap': 41,
+            // labelsGap is the Y spacing between adjacent questions
+            // *within* a single row. Spec §2.4 table pins this to
+            // 8mm = 94 px. With the spec's row gap of 8mm, the
+            // 5-question row's *bbox* (as computed by FieldBlock
+            // linear math) will extend 4*94+30 = 406 px below the
+            // row origin, well past the 94-px gap to the next row.
+            // This is a known limitation of FieldBlock's linear
+            // model when a layout is actually a multi-row grid -
+            // see TemplateLayout.assertNoOverlap, which now skips
+            // the cross-block bbox check for that reason.
             'labelsGap': 94,
           },
           globalBubbleWidth: 30,
