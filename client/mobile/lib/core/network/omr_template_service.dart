@@ -25,6 +25,20 @@ class OMRTemplateService {
     }
   }
 
+  /// Fetch the full Flutter-ready JSON layout (px @ 300 DPI) for a template.
+  /// This is the single source of truth used by both PDF and OMR engine.
+  Future<OMRTemplate> getJsonById(String templateId) async {
+    try {
+      final response = await _apiClient.get(
+        '${ApiConstants.omrTemplates}/$templateId/json',
+      );
+      final data = response.data as Map<String, dynamic>;
+      return OMRTemplate.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception('Failed to fetch template JSON: ${e.message}');
+    }
+  }
+
   /// Fetch evaluation config (answer key + marking scheme) for an exam.
   Future<EvaluationConfig> getEvaluationForExam(String examId) async {
     try {
