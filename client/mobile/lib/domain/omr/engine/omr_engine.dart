@@ -207,6 +207,8 @@ class OMREngine {
         originX: fb.originX,
         originY: fb.originY,
         shift: 0,
+        bubbleWidth: fb.bubbleWidth,
+        bubbleHeight: fb.bubbleHeight,
         fieldLabels: fieldLabels,
         bubbleValues: bubbleValues,
         bubblesGap: bubblesGap.toDouble(),

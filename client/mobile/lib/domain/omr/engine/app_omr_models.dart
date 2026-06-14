@@ -26,6 +26,8 @@ class AppOmrFieldBlock {
   final int originX;
   final int originY;
   final int shift;
+  final int bubbleWidth;
+  final int bubbleHeight;
   final List<String> fieldLabels;
   final List<String> bubbleValues;
   final double bubblesGap;
@@ -38,6 +40,8 @@ class AppOmrFieldBlock {
     required this.originX,
     required this.originY,
     this.shift = 0,
+    required this.bubbleWidth,
+    required this.bubbleHeight,
     required this.fieldLabels,
     required this.bubbleValues,
     required this.bubblesGap,
@@ -52,6 +56,8 @@ class AppOmrFieldBlock {
       originX: (map['originX'] as num?)?.toInt() ?? 0,
       originY: (map['originY'] as num?)?.toInt() ?? 0,
       shift: (map['shift'] as num?)?.toInt() ?? 0,
+      bubbleWidth: (map['bubbleWidth'] as num?)?.toInt() ?? 35,
+      bubbleHeight: (map['bubbleHeight'] as num?)?.toInt() ?? 35,
       fieldLabels: (map['fieldLabels'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -72,6 +78,8 @@ class AppOmrFieldBlock {
         'originX': originX,
         'originY': originY,
         'shift': shift,
+        'bubbleWidth': bubbleWidth,
+        'bubbleHeight': bubbleHeight,
         'fieldLabels': fieldLabels,
         'bubbleValues': bubbleValues,
         'bubblesGap': bubblesGap,
@@ -86,6 +94,8 @@ class AppOmrFieldBlock {
       originX: originX,
       originY: originY,
       shift: newShift,
+      bubbleWidth: bubbleWidth,
+      bubbleHeight: bubbleHeight,
       fieldLabels: fieldLabels,
       bubbleValues: bubbleValues,
       bubblesGap: bubblesGap,

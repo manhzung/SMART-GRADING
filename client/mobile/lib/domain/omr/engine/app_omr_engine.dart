@@ -1058,9 +1058,6 @@ class AppOMREngine {
     final responses = <String, String>{};
     final details = <AppBubbleResult>[];
 
-    final boxW = template.bubbleWidth;
-    final boxH = template.bubbleHeight;
-
     final displayImg = cv.cvtColor(img, cv.COLOR_GRAY2BGR);
     final transpLayer = displayImg.clone();
     final finalMarked = displayImg.clone();
@@ -1072,6 +1069,10 @@ class AppOMREngine {
       final block = template.fieldBlocks[b];
       final shift = _shifts.length > b ? _shifts[b] : 0;
       final isHorizontal = block.direction == 'horizontal';
+
+      // Use block-level bubble sizes (Bug E fix)
+      final blockBoxW = block.bubbleWidth;
+      final blockBoxH = block.bubbleHeight;
 
       for (int fi = 0; fi < block.fieldLabels.length; fi++) {
         final xBase = isHorizontal
@@ -1092,9 +1093,9 @@ class AppOMREngine {
               : yBase + vi * block.bubblesGap.round();
 
           final bx1 = bx.clamp(0, img.cols - 1);
-          final bx2 = (bx + boxW).clamp(0, img.cols);
+          final bx2 = (bx + blockBoxW).clamp(0, img.cols);
           final by1 = by.clamp(0, img.rows - 1);
-          final by2 = (by + boxH).clamp(0, img.rows);
+          final by2 = (by + blockBoxH).clamp(0, img.rows);
 
           final roi = cv.Mat.fromRange(img, by1, by2,
               colStart: bx1, colEnd: bx2);
@@ -1310,8 +1311,8 @@ class AppOMREngine {
           final bx =
               ((block.originX + shift + col * block.bubblesGap.round()) * scaleX)
                   .round();
-          final bubbleW = (template.bubbleWidth * scaleX).round();
-          final bubbleH = (template.bubbleHeight * scaleY).round();
+          final bubbleW = (block.bubbleWidth * scaleX).round();
+          final bubbleH = (block.bubbleHeight * scaleY).round();
           final bubbleCenterX = bx + bubbleW ~/ 2;
           final bubbleCenterY = by + bubbleH ~/ 2;
 
