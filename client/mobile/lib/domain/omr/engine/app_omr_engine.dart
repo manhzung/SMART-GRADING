@@ -23,7 +23,6 @@ const double _globalThrWhite = 200.0;
 const int _looseness = 4;
 const int _rectInnerMarginNum = 12;
 const int _rectOuterMarginNum = 10;
-const double _textSize = 0.5;
 
 double _computeGlobalThreshold(List<double> vals) {
   if (vals.isEmpty) return 128;
@@ -59,6 +58,11 @@ class AppOMREngine {
 
   AppOMREngine(this.template, {Uint8List? markerBytes})
       : _markerBytes = markerBytes;
+
+  /// Returns the auto-alignment shifts per field block.
+  /// Call this AFTER processImage() to get the shifts used during reading.
+  /// Returns empty list if autoAlign was false or if processImage() hasn't run.
+  List<int> get alignmentShifts => List.unmodifiable(_shifts);
 
   /// Process image bytes and return OmrResult with annotated image bytes.
   (AppOmrResult, Uint8List?) processImage(Uint8List imageBytes) {
@@ -234,6 +238,7 @@ class AppOMREngine {
             croppedImageBytes: annotatedBytes,
             croppedWidth: origWidth,
             croppedHeight: origHeight,
+            alignmentShifts: List.from(_shifts),
           ),
           annotatedBytes,
         );
@@ -282,6 +287,7 @@ class AppOMREngine {
           croppedImageBytes: croppedBytes,
           croppedWidth: pw,
           croppedHeight: ph,
+          alignmentShifts: List.from(_shifts),
         ),
         annotatedBytes,
       );
@@ -1156,31 +1162,31 @@ class AppOMREngine {
               : yBase + vi * block.bubblesGap.round();
 
           if (detectedBubbles.contains(vi)) {
-            final innerMargin = boxW ~/ _rectInnerMarginNum;
+            final innerMargin = blockBoxW ~/ _rectInnerMarginNum;
             cv.rectangle(
               finalMarked,
               cv.Rect(
                   bx + innerMargin,
                   by + innerMargin,
-                  boxW - innerMargin * 2,
-                  boxH - innerMargin * 2),
+                  blockBoxW - innerMargin * 2,
+                  blockBoxH - innerMargin * 2),
               cv.Scalar(50, 50, 50),
               thickness: 3,
             );
             _putText(finalMarked, block.bubbleValues[vi],
-                (bx, by + boxH ~/ 3),
+                (bx, by + blockBoxH ~/ 3),
                 fontScale: 0.4,
                 color: cv.Scalar(10, 10, 20),
                 thickness: 1);
           } else {
-            final outerMargin = boxW ~/ _rectOuterMarginNum;
+            final outerMargin = blockBoxW ~/ _rectOuterMarginNum;
             cv.rectangle(
               finalMarked,
               cv.Rect(
                   bx + outerMargin,
                   by + outerMargin,
-                  boxW - outerMargin * 2,
-                  boxH - outerMargin * 2),
+                  blockBoxW - outerMargin * 2,
+                  blockBoxH - outerMargin * 2),
               cv.Scalar(128, 128, 128),
               thickness: -1,
             );
@@ -1257,20 +1263,6 @@ class AppOMREngine {
       color ?? cv.Scalar(0, 0, 0),
       thickness: thickness,
     );
-  }
-
-  void _drawFieldBlockLabel(cv.Mat img, AppOmrFieldBlock block) {
-    final blockWidth =
-        block.bubbleValues.length * block.bubblesGap.round();
-    final textX = block.originX + block.shift + blockWidth - 60;
-    final textY = block.originY - 5;
-
-    if (textX > 0 && textY > 0) {
-      _putText(img, block.name, (textX.toInt(), textY),
-          fontScale: _textSize,
-          color: cv.Scalar(0, 0, 0),
-          thickness: 4);
-    }
   }
 
   double _computeConfidence(List<AppBubbleResult> details) {

@@ -86,6 +86,7 @@ class OMRBubbleOverlay extends StatelessWidget {
                       hasMultiMarked: result.response.multiMarked,
                       imageWidth: imageWidth,
                       imageHeight: imageHeight,
+                      alignmentShifts: result.alignmentShifts,
                     ),
                   ),
                 ),
@@ -181,6 +182,7 @@ class _BubbleOverlayPainter extends CustomPainter {
   final bool hasMultiMarked;
   final int imageWidth;
   final int imageHeight;
+  final List<int> alignmentShifts;
 
   _BubbleOverlayPainter({
     required this.template,
@@ -189,6 +191,7 @@ class _BubbleOverlayPainter extends CustomPainter {
     required this.hasMultiMarked,
     required this.imageWidth,
     required this.imageHeight,
+    this.alignmentShifts = const [],
   });
 
   @override
@@ -228,7 +231,11 @@ class _BubbleOverlayPainter extends CustomPainter {
     final scale = (scaleX < scaleY) ? scaleX : scaleY;
 
     // Iterate through all bubbles from the template
-    for (final block in template.fieldBlocks) {
+    for (int blockIdx = 0; blockIdx < template.fieldBlocks.length; blockIdx++) {
+      final block = template.fieldBlocks[blockIdx];
+      final shift = alignmentShifts.isNotEmpty && blockIdx < alignmentShifts.length
+          ? alignmentShifts[blockIdx]
+          : 0;
       // Bubble radius in display pixels = half the template bubble size
       // scaled to the displayed image. This makes the overlay circle
       // match the real bubble on the sheet across zoom levels.
@@ -245,12 +252,10 @@ class _BubbleOverlayPainter extends CustomPainter {
           final bubble = row[colIdx];
 
           // Map template coords → display coords via the shared
-          // helper. `bubble.x` / `bubble.y` are top-left in template
-          // space (see FieldBlock.fromConfig); the helper returns
-          // the bubble's CENTER in display space, which is what
-          // `Canvas.drawCircle` needs.
+          // helper. `bubble.x + shift` / `bubble.y` are the engine's
+          // actual read position (top-left in template space).
           final center = bubbleDisplayCenter(
-            bubbleTemplateX: bubble.x,
+            bubbleTemplateX: bubble.x + shift,
             bubbleTemplateY: bubble.y,
             blockBubbleWidth: block.bubbleWidth,
             blockBubbleHeight: block.bubbleHeight,

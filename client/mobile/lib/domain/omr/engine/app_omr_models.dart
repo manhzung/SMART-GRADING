@@ -227,6 +227,9 @@ class AppOmrResult {
   final Uint8List? croppedImageBytes;
   final int? croppedWidth;
   final int? croppedHeight;
+  /// Auto-alignment shifts per field block (px), computed during processing.
+  /// Empty when autoAlign=false. Use AppOMREngine.alignmentShifts after processImage().
+  final List<int> alignmentShifts;
 
   const AppOmrResult({
     required this.responses,
@@ -240,9 +243,14 @@ class AppOmrResult {
     this.croppedImageBytes,
     this.croppedWidth,
     this.croppedHeight,
+    this.alignmentShifts = const [],
   });
 
   factory AppOmrResult.fromMap(Map<String, dynamic> map) {
+    final rawShifts = map['alignmentShifts'];
+    final alignmentShifts = rawShifts is List
+        ? rawShifts.map((e) => (e as num).toInt()).toList()
+        : <int>[];
     return AppOmrResult(
       responses: Map<String, String>.from(map['responses'] as Map? ?? {}),
       confidence: (map['confidence'] as num?)?.toDouble() ?? 0.0,
@@ -255,6 +263,7 @@ class AppOmrResult {
       croppedImageBytes: map['croppedImageBytes'] as Uint8List?,
       croppedWidth: (map['croppedWidth'] as num?)?.toInt(),
       croppedHeight: (map['croppedHeight'] as num?)?.toInt(),
+      alignmentShifts: alignmentShifts,
     );
   }
 
@@ -267,5 +276,6 @@ class AppOmrResult {
         if (croppedImageBytes != null) 'croppedImageBytes': croppedImageBytes,
         if (croppedWidth != null) 'croppedWidth': croppedWidth,
         if (croppedHeight != null) 'croppedHeight': croppedHeight,
+        if (alignmentShifts.isNotEmpty) 'alignmentShifts': alignmentShifts,
       };
 }
