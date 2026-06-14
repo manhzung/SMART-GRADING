@@ -1,9 +1,10 @@
-# OMR PDF — Tọa độ Bubble Chính xác & Khớp giữa Web và Mobile
+# OMR Coordinate Synchronization — Design Specification
 
 **Ngày:** 2026-06-14
-**Trạng thái:** Draft (đã duyệt qua 5 phần brainstorming)
-**Platform:** Web (React + jsPDF) + Backend (Node.js) + Flutter mobile
-**Phạm vi:** Đảm bảo khi in phiếu từ web và quét/scán bằng app, tọa độ bubble khớp chính xác cho từng template
+**Cập nhật lần cuối:** 2026-06-14 (v2 — bổ sung 5 root cause mới từ phân tích sâu)
+**Trạng thái:** Draft
+**Platform:** Flutter mobile + Web (React + jsPDF) + Backend (Node.js) + Python OMRChecker
+**Phạm vi:** Đồng bộ toàn bộ 4 thành phần — chấm OMR, overlay OMR, template OMR, tạo file PDF
 
 ---
 
@@ -53,7 +54,43 @@ App mobile (Flutter)
   - PDFKit: `v * 2.8346456693` (floating point)
   - JSON: `Math.round(mm * 300/25.4)` (rounding integer pixel)
 
-### 1.3 Ví dụ bug đã thấy
+### 1.3 Các root cause bổ sung (v2 - phát hiện từ phân tích sâu)
+
+#### Bug A: Overlay không áp dụng shift từ auto-align
+- **Vị trí:** `client/mobile/lib/presentation/widgets/omr_bubble_overlay.dart`
+- **Vấn đề:** Overlay vẽ bubble tại `bubble.x, bubble.y` (tọa độ gốc từ template). Engine `app_omr_engine.dart` khi chấm thực tế thì áp dụng `_shifts[b]` (shift từ auto-align) vào tọa độ đọc tại lines 1073-1092.
+- **Hệ quả:** Nếu auto-align dịch bubble 5px, overlay vẫn hiển thị ở vị trí cũ, còn engine đọc ở vị trí mới. User nhìn overlay thấy đáp án A nhưng thực tế engine đọc được đáp án B.
+- **Fix:** `OMRBubbleOverlay` phải nhận `shifts` array từ engine và áp dụng khi vẽ.
+
+#### Bug B: Hai overlay system khác nhau trên mobile
+- **Vị trí:** `app_omr_engine.dart` vs `omr_bubble_overlay.dart`
+- **Vấn đề:** Có 2 overlay độc lập:
+  1. `annotatedImageBytes` (OpenCV) — filled/empty rectangle màu xám/đen
+  2. `OMRBubbleOverlay` (Flutter widget) — colored circle outline
+- **Hệ quả:** User có thể bị confuse khi thấy 2 overlay khác nhau. Cả 2 cùng phải dùng shifts để đồng bộ.
+- **Fix:** Cả 2 đều phải nhận và áp dụng `shifts[]` khi vẽ.
+
+#### Bug C: `bubbleDimensions` root-level hard-coded sai
+- **Vị trí:** `omrTemplateJson.service.js` line 307
+- **Vấn đề:** `bubbleDimensions` root luôn set `[mmToPx(4), mmToPx(4)]` = `[47, 47]` (4mm). Nhưng template model default là `bubbleSize: 6mm` (71px), và thực tế các block có thể dùng kích thước khác nhau.
+- **Hệ quả:** Flutter `fromJson` nhận `[47, 47]` từ JSON nhưng thực tế bubbles có thể rộng 71px.
+- **Fix:** `bubbleDimensions` root nên là `mmToPx(maxBubbleSizeFromAllBlocks)` hoặc lấy từ `pageConfig.defaultBubbleSize`.
+
+#### Bug D: Auto-align default khác nhau giữa các platform
+- **Vị trí:** Python `defaults/config.py` vs Flutter `omr_template.dart`
+- **Vấn đề:**
+  - Python: `auto_align: False` (default)
+  - Flutter: `autoAlign = true` (default)
+- **Hệ quả:** Template tạo trên server có `autoAlign=true` nhưng nếu Python engine được dùng, nó sẽ không auto-align.
+- **Fix:** Thống nhất `autoAlign=true` là default trên tất cả platforms.
+
+#### Bug E: `app_omr_engine.dart` bỏ qua block-level `bubbleWidth/bubbleHeight`
+- **Vị trí:** `app_omr_engine.dart` lines 1061-1062
+- **Vấn đề:** Engine dùng `template.bubbleWidth` và `template.bubbleHeight` (root level) cho ROI extraction, bỏ qua block-level `bubbleWidth/bubbleHeight`. Nếu server trả về blocks với kích thước bubble khác nhau, engine sẽ dùng kích thước root.
+- **Hệ quả:** Nếu answer area block dùng bubble 47px nhưng engine dùng 35px root, ROI sẽ sai kích thước → đọc sai intensity.
+- **Fix:** Engine nên dùng block-level `bubbleWidth/bubbleHeight` khi available.
+
+### 1.4 Ví dụ bug đã thấy
 
 Trong `omr_template.dart` (line 192-198) có comment:
 ```dart
@@ -90,16 +127,51 @@ Trong `omr_template.dart` (line 192-198) có comment:
 - Web hiện đang gọi `/full` rồi tự tính → **logic web khác logic server** → dễ lệch
 - Nếu web dùng `/json` (giống mobile), cả hai sẽ thống nhất 1 cách tính tọa độ
 
-### 2.3 Auto-align nên configurable vì sao?
+### 2.3 Summary của tất cả bugs đã tìm được
+
+| Bug ID | Mô tả | Mức độ | Priority |
+|--------|--------|---------|----------|
+| A | Overlay không áp dụng shift (auto-align) | Cao | P1 |
+| B | 2 overlay system trên mobile dùng shifts khác nhau | Cao | P1 |
+| C | `bubbleDimensions` root hard-coded 4mm sai | Cao | P1 |
+| D | Auto-align default khác nhau Python vs Flutter | Trung bình | P2 |
+| E | Engine bỏ qua block-level bubbleWidth/Height | Cao | P1 |
+| F | `FieldBlock.withShift` có bug logic | Cao | P1 |
+| G | 3 PDF generators độc lập (jsPDF, PDFKit, JSON) | Cao | P1 |
+| H | `omrSheetPdf.ts` vẽ chữ cái trong bubble (A/B/C/D) | Trung bình | P2 |
+| I | Flutter hardcoded templates khác server template | Thấp | P3 |
+| J | `annotatedImageBytes` khi warp fail không apply shift | Trung bình | P2 |
+
+### 2.4 Auto-align nên configurable vì sao?
 
 - Auto-align hiện tại (`_computeShifts`) hoạt động khi scan bị lệch nhẹ
-- Nhưng nếu web in đúng, mobile đọc đúng → **auto-align là nguồn bug khó debug**
+- Nhưng nếu web in đúng, mobile đọc đúng → **auto-align là nguồn bug khó debug** khi overlay không reflect shift
 - Giải pháp: cho phép teacher tắt auto-align khi tạo template "đã calibrate"
 - Mặc định **BẬT** auto-align để backward compatible; teacher tắt khi muốn kiểm soát tuyệt đối
 
 ---
 
 ## 3. Thiết kế giải pháp
+
+### 3.0 Priority ordering
+
+Thứ tự ưu tiên sửa (critical path):
+
+**Phase 1 (P1 - Critical - Fix trước):**
+- Bug C: Fix `bubbleDimensions` root-level hard-code trong `omrTemplateJson.service.js`
+- Bug E: Fix engine dùng block-level `bubbleWidth/bubbleHeight`
+- Bug F: Fix `FieldBlock.withShift` logic
+- Bug G: Đồng bộ web PDF với `/json`
+- Bug A: Fix overlay áp dụng shifts
+
+**Phase 2 (P2 - High - Fix sau):**
+- Bug B: Đồng bộ 2 overlay systems
+- Bug H: Bỏ chữ cái trong bubble trên PDF (nếu muốn)
+- Bug J: Fix annotatedImageBytes khi warp fail
+
+**Phase 3 (P3 - Nice to have):**
+- Bug D: Thống nhất auto-align default
+- Bug I: Hardcoded templates vs server template
 
 ### 3.1 Kiến trúc tổng thể (sau khi sửa)
 
@@ -364,27 +436,37 @@ Test thực tế:
 ## 7. Files thay đổi
 
 ### Backend (Node.js)
-| File | Loại | Mô tả |
-|---|---|---|
-| `server/src/services/omrTemplateJson.service.js` | SỬA | Refactor thành các hàm nhỏ, thêm `autoAlign` field |
-| `server/src/models/omrTemplate.model.js` | SỬA | Thêm `scannerConfig.autoAlign` (optional, default true) |
-| `server/src/controllers/omrTemplate.controller.js` | SỬA | Truyền `autoAlign` vào `/json` response |
-| `server/tests/unit/services/omrTemplateJson.test.js` | MỚI | Unit tests cho layout computation |
+| File | Loại | Bug | Mô tả |
+|---|---|---|---|
+| `server/src/services/omrTemplateJson.service.js` | SỬA | C | Fix `bubbleDimensions` root: compute từ zones config thay vì hard-code 4mm |
+| `server/src/models/omrTemplate.model.js` | SỬA | D | `scannerConfig.autoAlign` default `true` |
+| `server/src/controllers/omrTemplate.controller.js` | SỬA | D | Truyền `autoAlign` vào `/json` response |
+| `server/tests/unit/services/omrTemplateJson.test.js` | MỚI | C,G | Unit tests + snapshot test |
 
 ### Web (React)
-| File | Loại | Mô tả |
-|---|---|---|
-| `client/web/src/features/reports/omrSheetPdf.ts` | SỬA LỚN | Viết lại: input là JSON, render từ pixel coordinates (convert sang mm) |
-| `client/web/src/features/reports/examReportExport.ts` | SỬA | `fetchOmrJson` thay cho `fetchFullTemplate` |
-| `client/web/src/features/reports/omrSheetPdf.test.ts` | MỚI | Unit test coordinate conversion |
+| File | Loại | Bug | Mô tả |
+|---|---|---|---|
+| `client/web/src/features/reports/omrSheetPdf.ts` | SỬA LỚN | G,H | Viết lại: input là JSON từ `/json`, render từ pixel coordinates |
+| `client/web/src/features/reports/examReportExport.ts` | SỬA | G | `fetchOmrJson` gọi `/json` thay `/full` |
+| `client/web/src/features/reports/omrSheetPdf.test.ts` | MỚI | G | Unit test coordinate conversion |
+| `client/web/src/features/reports/omrSheetPdf.verify.test.ts` | MỚI | G | Snapshot test JSON → PDF consistency |
 
 ### Mobile (Flutter)
-| File | Loại | Mô tả |
-|---|---|---|
-| `client/mobile/lib/domain/omr/models/omr_template.dart` | SỬA | Parse `autoAlign` từ JSON |
-| `client/mobile/lib/domain/omr/engine/app_omr_models.dart` | SỬA | Thêm field `autoAlign` vào `AppOmrTemplate` |
-| `client/mobile/lib/domain/omr/engine/app_omr_engine.dart` | SỬA | Tôn trọng `autoAlign` flag |
-| `client/mobile/test/domain/omr/template_test.dart` | CẬP NHẬT | Test `autoAlign` parsing |
+| File | Loại | Bug | Mô tả |
+|---|---|---|---|
+| `client/mobile/lib/domain/omr/engine/app_omr_engine.dart` | SỬA LỚN | A,B,E,F,J | Dùng block-level bubble size; apply shifts cho annotation; fix annotatedImageBytes |
+| `client/mobile/lib/domain/omr/engine/omr_engine.dart` | SỬA | A,B,E | Truyền shifts ra ngoài để overlay dùng |
+| `client/mobile/lib/domain/omr/models/field_block.dart` | SỬA | F | Fix `withShift()`: xBase cần thêm `fi * labelsGap` khi vertical |
+| `client/mobile/lib/domain/omr/models/omr_template.dart` | SỬA | D | Parse `autoAlign` từ JSON, default `true` |
+| `client/mobile/lib/domain/omr/engine/app_omr_models.dart` | SỬA | D | Thêm field `autoAlign` vào `AppOmrTemplate` |
+| `client/mobile/lib/presentation/widgets/omr_bubble_overlay.dart` | SỬA | A,B | Nhận và áp dụng `shifts[]` khi vẽ bubbles |
+| `client/mobile/test/domain/omr/models/field_block_test.dart` | MỚI | F | Test `withShift()` for horizontal + vertical |
+| `client/mobile/test/domain/omr/template_test.dart` | CẬP NHẬT | D,E | Test `autoAlign`, test block-level bubble sizes |
+
+### Python (OMRChecker) — Reference only
+| File | Loại | Bug | Mô tả |
+|---|---|---|---|
+| `OMRChecker/src/defaults/config.py` | SỬA | D | Đổi `auto_align: False` → `True` |
 
 ### Spec
 | File | Mô tả |
@@ -409,21 +491,43 @@ Test thực tế:
 
 | Rủi ro | Giảm thiểu |
 |---|---|
-| Refactor `omrTemplateJson.service.js` gây lệch mobile hiện tại | Unit test snapshot trước/sau; nếu thay đổi output phải update mobile cùng lúc |
+| Refactor `omrTemplateJson.service.js` gây lệch mobile hiện tại | Snapshot test trước/sau; nếu output thay đổi phải update mobile cùng lúc |
 | Web dùng `/json` thay `/full` mà template cũ chưa có `autoAlign` | Default `true` → backward compat |
-| Auto-align tắt gây sai tọa độ nếu scan bị lệch | Hiển thị warning trên UI; document rõ cho teacher |
-| PDF vẽ bằng jsPDF có thể render khác PDFKit (font, kerning) | Snapshot test cho tọa độ bubble (text/fill không ảnh hưởng detect) |
-| Tolerance 0.5mm có thể không đủ | Calibration test với ảnh scan thực tế sau khi implement |
+| Auto-align tắt gây sai tọa độ nếu scan bị lệch | Hiển thị warning trên UI |
+| PDF vẽ bằng jsPDF có thể render khác PDFKit | Snapshot test cho tọa độ bubble |
+| Tolerance 0.5mm có thể không đủ | Calibration test với ảnh scan thực tế |
+| Fix `withShift()` logic thay đổi shift behavior | Test `withShift()` với cả horizontal và vertical blocks |
+| Block-level bubble size thay đổi ROI extraction | Regression test với template có mixed bubble sizes |
+| Overlay shifts applied sai gây 2 overlay lệch nhau | So sánh pixel coords giữa 2 overlays |
 
----
+## 10. Implementation Plan (Tổng quan)
 
-## 10. Checklist triển khai (preview)
+### Phase 1: Backend Fixes
+1. Fix `bubbleDimensions` root-level hard-code trong `omrTemplateJson.service.js`
+2. Thêm `autoAlign` field vào `/json` response
+3. Viết unit tests + snapshot tests
+4. Commit: "fix(omr): correct bubbleDimensions and add autoAlign"
 
-Sẽ được chi tiết trong `writing-plans` skill output. Tổng quan:
+### Phase 2: Web PDF Rewrite
+1. Viết lại `omrSheetPdf.ts`: nhận JSON từ `/json`, convert px→mm
+2. Cập nhật `examReportExport.ts` fetch `/json` thay `/full`
+3. Viết unit tests + verify tests
+4. Commit: "feat(web): rewrite OMR PDF generator to use /json endpoint"
 
-1. **Server**: Refactor `omrTemplateJson.service.js` + thêm `autoAlign` + Unit tests
-2. **Web**: Viết lại `omrSheetPdf.ts` dùng JSON + Unit tests
-3. **Web**: Cập nhật `examReportExport.ts` fetch `/json` thay `/full`
-4. **Mobile**: Parse `autoAlign` + truyền xuống engine + tôn trọng flag + Tests
-5. **Manual test**: in PDF từ web → scan bằng app → verify bubble detect đúng
-6. **Snapshot test**: cố định output `omrTemplateJson.service.js` để mobile không bị lệch
+### Phase 3: Mobile Engine Fixes
+1. Fix `app_omr_engine.dart`: dùng block-level bubbleWidth/bubbleHeight
+2. Fix `FieldBlock.withShift()` logic
+3. Fix `_drawAnnotationsScaled()` khi warp fail
+4. Fix annotatedImageBytes khi warp fail
+5. Commit: "fix(mobile): correct bubble sizes and shift in OMR engine"
+
+### Phase 4: Mobile Overlay Fixes
+1. Export `_shifts` array từ `AppOMREngine`
+2. Truyền shifts qua `OMRProcessingResult`
+3. `OMRBubbleOverlay` nhận và áp dụng shifts khi vẽ
+4. Commit: "fix(mobile): sync overlay with engine shifts"
+
+### Phase 5: Verification
+1. Chạy tất cả unit tests (server, web, mobile)
+2. In PDF từ web → scan bằng app → verify bubble detect đúng
+3. So sánh tọa độ giữa 2 overlays trên mobile
