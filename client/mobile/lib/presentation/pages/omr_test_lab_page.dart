@@ -1,14 +1,20 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:smart_grading_mobile/core/network/api_client.dart';
+import 'package:smart_grading_mobile/core/network/omr_template_service.dart';
 import 'package:smart_grading_mobile/domain/omr/engine/omr_engine.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/presentation/widgets/omr_bubble_details_table.dart';
 import 'package:smart_grading_mobile/presentation/widgets/omr_bubble_overlay.dart';
 import 'package:smart_grading_mobile/presentation/widgets/omr_processing_log.dart';
-import 'package:smart_grading_mobile/presentation/widgets/template_picker.dart';
 
 enum _CaptureState { idle, capturing, processing, done, error }
+
+/// Source of an OMR template. Test Lab loads templates from the server
+/// (single source of truth) but can fall back to the bundled `sample4`
+/// factory if the backend is unreachable.
+enum _TemplateSource { serverFetched, offlineFallback }
 
 class OMRTestLabPage extends StatefulWidget {
   const OMRTestLabPage({super.key});
@@ -26,12 +32,63 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
   final ImagePicker _imagePicker = ImagePicker();
 
   late final TabController _tabController;
-  OMRTemplate _template = OMRTemplate.sample4();
+
+  // Loaded templates from the backend (id → template JSON, px @ 300 DPI).
+  final Map<String, OMRTemplate> _serverTemplates = {};
+  bool _isLoadingTemplates = false;
+  String? _templateLoadError;
+  OMRTemplate? _template;
+  _TemplateSource? _templateSource;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // Start with the bundled Sample 4 — keeps the test lab working even
+    // when the backend is offline. User can switch to a server template
+    // (or the "Phiếu 15 câu" server template) once they load.
+    _template = OMRTemplate.sample4();
+    _templateSource = _TemplateSource.offlineFallback;
+    _loadServerTemplates();
+  }
+
+  Future<void> _loadServerTemplates() async {
+    setState(() {
+      _isLoadingTemplates = true;
+      _templateLoadError = null;
+    });
+    try {
+      final apiClient = ApiClient();
+      final service = OMRTemplateService(apiClient: apiClient);
+      // Fetch all templates (metadata only)
+      final metadataList = await service.getAll();
+      _serverTemplates.clear();
+      for (final meta in metadataList) {
+        // We need the id; OMRTemplate parses _id into the id field.
+        final id = meta.id;
+        if (id == null) continue;
+        try {
+          // Fetch the full Flutter-ready JSON (single source of truth)
+          final fullTemplate = await service.getJsonById(id);
+          _serverTemplates[id] = fullTemplate;
+        } catch (e) {
+          debugPrint('OMRTestLab: failed to load template $id: $e');
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _isLoadingTemplates = false;
+          _templateLoadError = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingTemplates = false;
+          _templateLoadError = 'Cannot reach server: $e. Using offline fallback.';
+        });
+      }
+    }
   }
 
   @override
@@ -46,9 +103,13 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
     });
 
     try {
+      final t = _template;
+      if (t == null) {
+        throw Exception('No template selected');
+      }
       final result = await OMREngine().processImage(
         imageBytes: bytes,
-        template: _template,
+        template: t,
       );
 
       if (!mounted) return;
@@ -157,6 +218,19 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
           'OMR Test Lab',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: _isLoadingTemplates
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            tooltip: 'Reload templates from server',
+            onPressed: _isLoadingTemplates ? null : _loadServerTemplates,
+          ),
+        ],
       ),
       body: switch (_state) {
         _CaptureState.idle || _CaptureState.capturing => _buildCaptureScreen(),
@@ -164,6 +238,123 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
         _CaptureState.done => _buildResultScreen(),
         _CaptureState.error => _buildErrorScreen(),
       },
+    );
+  }
+
+  Widget _buildTemplateSelector() {
+    final selected = _template;
+    if (selected == null) {
+      return const Text('No template selected');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'Active template: ${selected.name}',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        if (_templateSource == _TemplateSource.offlineFallback) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Offline fallback (Sample 4) — server templates not loaded',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildTemplateMenu() {
+    final selected = _template;
+    if (selected == null) {
+      return const Text('No template selected');
+    }
+
+    final entries = <_TemplateMenuEntry>[];
+
+    // Always offer the bundled Sample 4 as a fallback option.
+    entries.add(_TemplateMenuEntry(
+      label: 'Sample 4 (bundled)',
+      source: _TemplateSource.offlineFallback,
+      template: OMRTemplate.sample4(),
+    ));
+
+    // Add every server template loaded from the /json endpoint.
+    for (final entry in _serverTemplates.entries) {
+      final t = entry.value;
+      entries.add(_TemplateMenuEntry(
+        label: '${t.name} (server)',
+        source: _TemplateSource.serverFetched,
+        template: t,
+      ));
+    }
+
+    return PopupMenuButton<_TemplateMenuEntry>(
+      tooltip: 'Switch template',
+      onSelected: (entry) {
+        setState(() {
+          _template = entry.template;
+          _templateSource = entry.source;
+        });
+        _reset();
+      },
+      itemBuilder: (context) => entries
+          .map((e) => PopupMenuItem<_TemplateMenuEntry>(
+                value: e,
+                child: Text(
+                  e.label,
+                  style: TextStyle(
+                    fontWeight: e.template.id == selected.id
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: e.template.id == selected.id
+                        ? const Color(0xFF6366F1)
+                        : null,
+                  ),
+                ),
+              ))
+          .toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFE2E8F0),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.description_outlined, size: 18, color: Color(0xFF6366F1)),
+            const SizedBox(width: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: Text(
+                selected.name,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_drop_down, size: 20, color: Color(0xFF64748B)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -176,13 +367,20 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TemplatePicker(
-              selected: _template,
-              onChanged: (t) {
-                setState(() => _template = t);
-                _reset();
-              },
-            ),
+            _buildTemplateMenu(),
+            const SizedBox(height: 8),
+            _buildTemplateSelector(),
+            if (_templateLoadError != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _templateLoadError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.orange.shade700,
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             const Icon(
               Icons.science_outlined,
@@ -215,7 +413,7 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '${_template.outputColumns.length} Questions | 4 Options',
+                '${_template?.outputColumns.length ?? 0} Questions | 4 Options',
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -303,7 +501,7 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
             ],
           ),
         ),
-        if (_template.id == '15q') _buildSbdMdHeader(),
+        if (_template?.id == '15q') _buildSbdMdHeader(),
         Expanded(
           child: TabBarView(
             controller: _tabController,
@@ -412,6 +610,18 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
       ),
     );
   }
+}
+
+class _TemplateMenuEntry {
+  final String label;
+  final _TemplateSource source;
+  final OMRTemplate template;
+
+  const _TemplateMenuEntry({
+    required this.label,
+    required this.source,
+    required this.template,
+  });
 }
 
 class _CaptureButton extends StatelessWidget {
