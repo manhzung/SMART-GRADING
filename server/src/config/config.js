@@ -30,6 +30,11 @@ const envVarsSchema = Joi.object()
     UPLOAD_MODE: Joi.string().valid('cloudinary', 'base64').default('cloudinary'),
     UPLOAD_SIGNATURE_TTL_SECONDS: Joi.number().default(300),
     UPLOAD_MAX_BYTES: Joi.number().default(10 * 1024 * 1024),
+    GEMINI_API_KEY: Joi.string().description('Google Gemini API key for AI chat and reports'),
+    GEMINI_MODEL: Joi.string().default('gemini-2.0-flash').description('Gemini model to use'),
+    AI_PROVIDER: Joi.string().valid('gemini', 'openai', 'claude').default('gemini').description('Primary AI provider'),
+    OPENAI_API_KEY: Joi.string().description('OpenAI API key (fallback)'),
+    CLAUDE_API_KEY: Joi.string().description('Claude API key (fallback)'),
   })
   .unknown();
 
@@ -78,5 +83,12 @@ module.exports = {
     mode: envVars.UPLOAD_MODE,
     signatureTtlSeconds: envVars.UPLOAD_SIGNATURE_TTL_SECONDS,
     maxBytes: envVars.UPLOAD_MAX_BYTES,
+  },
+  ai: {
+    provider: envVars.AI_PROVIDER,
+    geminiApiKey: envVars.GEMINI_API_KEY,
+    geminiModel: envVars.GEMINI_MODEL,
+    openaiApiKey: envVars.OPENAI_API_KEY,
+    claudeApiKey: envVars.CLAUDE_API_KEY,
   },
 };

@@ -49,8 +49,9 @@
     "prettier"
   ],
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "archiver": "^6.0.2",
-    "axios": "^1.17.0",
+    "axios": "^1.18.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.10.0",
     "compression": "^1.7.4",
