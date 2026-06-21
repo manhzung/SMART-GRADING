@@ -30,7 +30,7 @@ void main() {
       expect(shifted.traverseBubbles[0][3].x, equals(547));
     });
 
-    test('vertical: shifts originX AND fi*labelsGap per field', () {
+    test('vertical: shifts originX by the given amount', () {
       final block = FieldBlock.fromConfig(
         name: 'roll',
         config: {
@@ -47,11 +47,14 @@ void main() {
 
       final shifted = block.withShift(5);
 
-      // r1 (fi=0): value 0 at (286+5, 780)
+      // For vertical (column-per-digit): xBase = originX + fi*labelsGap + shift
+      // fi is the column offset (digit position), shift moves the whole block right.
+      // r1 (fi=0): x = 286 + 0*42 + 5 = 291
       expect(shifted.traverseBubbles[0][0].x, equals(291));
-      expect(shifted.traverseBubbles[0][0].y, equals(780));
-      // r2 (fi=1): value 0 at (286+5+1*42, 780) = (333, 780)
+      // r2 (fi=1): x = 286 + 1*42 + 5 = 333
       expect(shifted.traverseBubbles[1][0].x, equals(333));
+      // y is unchanged (780) — vertical means bubbles stacked in Y
+      expect(shifted.traverseBubbles[0][0].y, equals(780));
       expect(shifted.traverseBubbles[1][0].y, equals(780));
     });
   });

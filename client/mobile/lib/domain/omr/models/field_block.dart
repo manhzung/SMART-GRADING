@@ -171,7 +171,7 @@ class FieldBlock {
     for (int fi = 0; fi < fieldLabels.length; fi++) {
       final fieldBubbles = <Bubble>[];
       final yBase = isHorizontal ? originY + fi * labelsGap : originY;
-      final xBase = isHorizontal ? originX + shift : originX + shift + fi * labelsGap;
+      final xBase = isHorizontal ? originX + shift : originX + fi * labelsGap + shift;
 
       for (int vi = 0; vi < bubbleValues.length; vi++) {
         final bx = isHorizontal ? xBase + vi * bubblesGap : xBase;

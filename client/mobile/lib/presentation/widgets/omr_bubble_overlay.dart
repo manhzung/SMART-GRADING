@@ -312,10 +312,39 @@ class _BubbleOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(_BubbleOverlayPainter oldDelegate) {
     return template != oldDelegate.template ||
-        bubbleIntensities != oldDelegate.bubbleIntensities ||
         globalThreshold != oldDelegate.globalThreshold ||
         hasMultiMarked != oldDelegate.hasMultiMarked ||
         imageWidth != oldDelegate.imageWidth ||
-        imageHeight != oldDelegate.imageHeight;
+        imageHeight != oldDelegate.imageHeight ||
+        !_listEquals(alignmentShifts, oldDelegate.alignmentShifts) ||
+        !_mapEquals(bubbleIntensities, oldDelegate.bubbleIntensities);
+  }
+
+  bool _listEquals(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  bool _mapEquals(
+      Map<String, List<BubbleIntensity>> a,
+      Map<String, List<BubbleIntensity>> b) {
+    if (a.length != b.length) return false;
+    for (final key in a.keys) {
+      final aList = a[key];
+      final bList = b[key];
+      if (aList == null || bList == null || aList.length != bList.length) {
+        return false;
+      }
+      for (int i = 0; i < aList.length; i++) {
+        if (aList[i].meanIntensity != bList[i].meanIntensity ||
+            aList[i].isMarked != bList[i].isMarked) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 }
