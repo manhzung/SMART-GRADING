@@ -51,10 +51,39 @@ const remove = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const questionGenService = require('../services/questionGen.service');
+
 const generate = catchAsync(async (req, res) => {
-  // TODO: Implement AI generation
-  res.status(httpStatus.NOT_IMPLEMENTED).send({
-    message: 'AI question generation not yet implemented'
+  const { topicId, count, difficulty, requirements, gradeLevel } = req.body;
+  const { Question } = require('../models');
+
+  const generated = await questionGenService.generateQuestions({
+    topicId,
+    topicName: '',
+    count: count || 5,
+    difficulty: difficulty || 'medium',
+    requirements: requirements || '',
+    gradeLevel: gradeLevel || 10,
+    subjectId: null,
+    createdBy: req.user?.id,
+  });
+
+  const inserted = await Question.insertMany(generated);
+
+  res.status(httpStatus.CREATED).send({
+    success: true,
+    data: {
+      count: inserted.length,
+      questions: inserted.map((q) => ({
+        _id: q._id,
+        content: q.content,
+        difficulty: q.difficulty,
+        topicId: q.topicId,
+        topicName: q.topicName,
+        source: q.source,
+        isApproved: q.isApproved,
+      })),
+    },
   });
 });
 

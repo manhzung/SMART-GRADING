@@ -13,3 +13,4 @@ module.exports.reportService = require('./report.service');
 module.exports.pythonBridgeService = require('./pythonBridge.service');
 module.exports.geminiService = require('./gemini.service');
 module.exports.aiReportService = require('./aiReport.service');
+module.exports.questionGenService = require('./questionGen.service');
