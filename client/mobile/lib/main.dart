@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'core/network/notification_service.dart';
 import 'core/network/subject_service.dart';
 import 'core/network/api_client.dart';
+import 'core/network/ai_service.dart';
 import 'core/network/class_service.dart';
 import 'core/network/omr_template_service.dart';
 import 'core/network/omr_submission_sync_service.dart';
@@ -84,6 +85,9 @@ void setupDependencies() {
   );
   getIt.registerLazySingleton<ClassService>(
     () => ClassService(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<AIService>(
+    () => AIService(apiClient: getIt<ApiClient>()),
   );
 }
 
