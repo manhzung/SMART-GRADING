@@ -14,6 +14,7 @@ const reportRoute = require('./report.route');
 const notificationRoute = require('./notification.route');
 const analyticsRoute = require('./analytics.route');
 const uploadRoute = require('./upload.route');
+const aiChatRoute = require('./aiChat.route');
 const config = require('../../config/config');
 
 const router = express.Router();
@@ -32,6 +33,7 @@ router.use('/reports', reportRoute);
 router.use('/notifications', notificationRoute);
 router.use('/analytics', analyticsRoute);
 router.use('/upload', uploadRoute);
+router.use('/ai-chat', aiChatRoute);
 
 if (config.env === 'development') {
   router.use('/docs', docsRoute);

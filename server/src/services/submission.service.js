@@ -56,6 +56,8 @@ class SubmissionService {
       originalPublicId: originalPublicId || null,
       imageMeta: imageMeta || null,
       deviceInfo: deviceInfo || null,
+    };
+
   }
 
   async createFromOMR(scanResult, userId) {
