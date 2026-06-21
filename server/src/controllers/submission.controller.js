@@ -32,6 +32,11 @@ const getByStudent = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getMy = catchAsync(async (req, res) => {
+  const result = await submissionService.getMy(req.user.id, req.query);
+  res.send(result);
+});
+
 const manualOverride = catchAsync(async (req, res) => {
   const submission = await submissionService.manualOverride(req.params.id, req.body);
   res.send(submission);
@@ -54,6 +59,7 @@ module.exports = {
   getAll,
   getByExam,
   getByStudent,
+  getMy,
   manualOverride,
   getStatistics,
   remove,

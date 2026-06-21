@@ -1,0 +1,26 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\section{Kết luận}
+Trong quá trình thực hiện đồ án tốt nghiệp, em đã nghiên cứu, phân tích và xây dựng thành công hệ thống SMART GRADING - Ứng dụng di động chấm thi trắc nghiệm tích hợp OCR và Generative AI. Hệ thống đã đạt được các mục tiêu đề ra ban đầu, cụ thể như sau.
+
+Về mặt sản phẩm, ứng dụng di động SMART GRADING đã được xây dựng hoàn chỉnh trên nền tảng Flutter với đầy đủ các chức năng: quản lý người dùng (đăng nhập, đăng ký, quản lý hồ sơ), quản lý lớp học (tạo, sửa, xóa, thêm học sinh), quản lý đề thi (tạo, sửa, xóa, xuất bản đề thi), quét phiếu thi bằng camera, chấm điểm tự động, xem kết quả thi với biểu đồ phổ điểm, phân tích kết quả bằng Generative AI, và hệ thống phúc khảo. Backend API cũng được xây dựng hoàn chỉnh với Node.js/Express và MongoDB, cung cấp đầy đủ các endpoint phục vụ cho ứng dụng di động.
+
+Về mặt kỹ thuật, module xử lý OMR trên thiết bị di động đạt độ chính xác 96,5\% trong điều kiện chuẩn và 88\% trên bộ dữ liệu thực tế đa dạng, với thời gian xử lý trung bình chỉ 1,8 giây mỗi ảnh. Việc tích hợp Generative AI vào phân tích kết quả thi là điểm nổi bật, mang lại giá trị phân tích thông minh vượt trội so với các sản phẩm tương tự trên thị trường. Hệ thống được triển khai thử nghiệm thực tế với 50 học sinh và 5 giáo viên trong 2 tuần, cho thấy ứng dụng hoạt động ổn định và tiết kiệm 70-80\% thời gian chấm thi so với phương pháp truyền thống.
+
+Về mặt kiến thức, trong suốt quá trình thực hiện đồ án, em đã nắm vững kiến thức về phát triển ứng dụng di động đa nền tảng với Flutter, hiểu sâu về các bài toán thị giác máy tính (xử lý ảnh, phát hiện góc, căn chỉnh phối cảnh, nhận dạng bọt), nắm được cách tích hợp và sử dụng Generative AI thông qua API, và phát triển được kỹ năng phân tích thiết kế hệ thống theo kiến trúc đa tầng.
+
+Bên cạnh các kết quả đạt được, hệ thống vẫn còn một số hạn chế cần được cải thiện trong tương lai. Thứ nhất, module OMR chưa hỗ trợ nhận dạng ký tự viết tay, hiện chỉ nhận dạng được các bọt tô. Thứ hai, giao diện ứng dụng chưa được thiết kế tối ưu cho tất cả các loại thiết bị, một số màn hình còn chưa responsive trên tablet. Thứ ba, hệ thống phúc khảo chưa có giao diện đầy đủ cho giáo viên xem và duyệt yêu cầu phúc khảo.
+
+\section{Hướng phát triển}
+Trong thời gian tới, đề tài có thể được hoàn thiện và mở rộng theo các hướng sau đây.
+
+Trước hết, về việc mở rộng chức năng hiện có, hệ thống nên bổ sung module nhận dạng ký tự viết tay (Handwriting Recognition) để hỗ trợ các loại bài thi yêu cầu học sinh điền đáp án dạng số hoặc chữ cái viết tay. Hệ thống cũng nên phát triển thêm phiên bản web app để giáo viên có thể sử dụng trên máy tính, đặc biệt thuận tiện khi cần nhập liệu nhiều. Ngoài ra, tính năng tạo đề thi đa phiên bản (multi-version exam) với câu hỏi được xáo trộn cần được hoàn thiện để hỗ trợ chống gian lận trong thi cử.
+
+Tiếp theo, về cải thiện chất lượng module OMR, hệ thống cần được huấn luyện thêm với dữ liệu ảnh đa dạng hơn để nâng cao độ chính xác nhận dạng trong các điều kiện khó như ánh sáng yếu, phiếu bị nhàu nát. Việc áp dụng kỹ thuật deep learning (CNN) để nhận dạng bọt đã tô có thể thay thế hoặc bổ sung cho phương pháp fill-intensity analysis hiện tại, giúp cải thiện độ chính xác đặc biệt với các trường hợp tô không đầy bọt. Ngoài ra, việc nghiên cứu tích hợp kỹ thuật super-resolution để cải thiện chất lượng ảnh trước khi nhận dạng cũng là hướng đáng quan tâm.
+
+Về mở rộng ứng dụng AI, hệ thống có thể tích hợp thêm chức năng AI sinh câu hỏi tự động từ nội dung bài giảng, giúp giáo viên tiết kiệm thời gian ra đề. Tính năng AI phân tích xu hướng học tập của từng học sinh theo thời gian (learning analytics) cũng là hướng phát triển có giá trị cao, cho phép giáo viên và phụ huynh theo dõi sự tiến bộ của học sinh. Bên cạnh đó, việc tích hợp AI để phát hiện bất thường trong kết quả thi (anh ninh lập) có thể giúp phát hiện các trường hợp gian lận thi cử.
+
+Cuối cùng, về mặt triển khai và vận hành, hệ thống nên được triển khai trên nền tảng đám mây (cloud) như Google Cloud Platform hoặc AWS để đảm bảo scalability và availability cao. Việc xây dựng hệ thống CI/CD (Continuous Integration/Continuous Deployment) để tự động hóa quy trình build, test và deploy cũng cần được thực hiện khi đưa sản phẩm vào sử dụng thực tế.
+
+\end{document}

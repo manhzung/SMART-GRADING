@@ -26,6 +26,11 @@ const getByStudent = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getMy = catchAsync(async (req, res) => {
+  const result = await appealService.getMy(req.user.id, req.query);
+  res.send(result);
+});
+
 const getByExam = catchAsync(async (req, res) => {
   const { examId } = req.params;
   const result = await appealService.getByExam(examId, req.query);
@@ -48,6 +53,7 @@ module.exports = {
   getById,
   getAll,
   getByStudent,
+  getMy,
   getByExam,
   review,
   getPendingCount,

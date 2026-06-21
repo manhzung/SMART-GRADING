@@ -1,0 +1,67 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\section{Tổng quan}
+\addcontentsline{toc}{section}{Tổng quan}
+Chương 2 đã trình bày hiện trạng quy trình chấm thi trắc nghiệm, phân tích các sản phẩm tương tự và đặc tả chi tiết các yêu cầu chức năng cùng phi chức năng của hệ thống SMART GRADING. Chương 3 này sẽ giới thiệu các nền tảng lý thuyết và công nghệ được lựa chọn để xây dựng hệ thống, bao gồm Flutter cho phát triển ứng dụng di động, các kỹ thuật xử lý ảnh và thị giác máy tính (OpenCV), kỹ thuật Nhận dạng ký tự quang học (OCR), cơ sở dữ liệu MongoDB, Node.js cho backend, và Generative AI cùng cách tích hợp API. Mỗi phần sẽ trình bày lý thuyết nền tảng, các công nghệ và framework liên quan, đồng thời phân tích các lựa chọn thay thế và lý do lựa chọn công nghệ cụ thể.
+
+\section{Nền tảng phát triển ứng dụng di động}
+\subsection{Lựa chọn Flutter}
+Trong quá trình nghiên cứu để lựa chọn nền tảng phát triển ứng dụng di động cho hệ thống SMART GRADING, có ba phương án chính được xem xét: phát triển ứng dụng native trên Android bằng Kotlin hoặc trên iOS bằng Swift, sử dụng framework cross-platform như Flutter hoặc React Native, hoặc phát triển ứng dụng web di động (Progressive Web App). Phát triển native cho phép tận dụng tối đa khả năng phần cứng thiết bị, đặc biệt quan trọng với các tác vụ xử lý ảnh thời gian thực, tuy nhiên chi phí phát triển cao gấp đôi do phải viết và duy trì hai codebase riêng biệt cho Android và iOS.
+
+Flutter được lựa chọn làm framework phát triển chính cho hệ thống SMART GRADING vì nhiều lý do thuyết phục. Flutter sử dụng ngôn ngữ Dart, biên dịch trực tiếp sang mã máy (ARM code) thông qua công nghệ AOT (Ahead-of-Time) compilation, cho hiệu năng gần như native và khả năng phản hồi nhanh, đặc biệt phù hợp với các tác vụ xử lý ảnh thời gian thực từ camera. Kiến trúc rendering của Flutter sử dụng engine Skia vẽ trực tiếp lên canvas, không phụ thuộc vào các widget native của hệ điều hành, đảm bảo tính nhất quán của giao diện trên mọi thiết bị. Hệ sinh thái plugin pub.dev cung cấp rất nhiều gói mở rộng cho camera, xử lý ảnh, HTTP request và các chức năng khác. Việc xây dựng một codebase duy nhất chạy trên cả Android và iOS giúp tiết kiệm thời gian và chi phí phát triển so với việc duy trì hai codebase riêng biệt.
+
+Flutter sử dụng kiến trúc BLoC (Business Logic Component) để quản lý trạng thái ứng dụng, trong đó mỗi feature được chia thành ba thành phần chính: Events (sự kiện từ giao diện người dùng), States (trạng thái của feature tại một thời điểm) và BLoC (xử lý logic nghiệp vụ, nhận events và phát ra states mới). Kiến trúc này đảm bảo sự tách biệt rõ ràng giữa logic nghiệp vụ và giao diện, giúp mã nguồn dễ đọc, dễ kiểm thử và dễ bảo trì.
+
+\subsection{Các công cụ và thư viện hỗ trợ trên Flutter}
+Để xây dựng hệ thống SMART GRADING trên nền tảng Flutter, một số thư viện quan trọng được sử dụng như sau. Thư viện flutter\_bloc (phiên bản 9.1.1) được sử dụng để cài đặt kiến trúc BLoC, quản lý trạng thái ứng dụng theo mô hình reactive. Thư viện camera và image\_picker được sử dụng để truy cập camera thiết bị, chụp ảnh và chọn ảnh từ thư viện. Thư viện dio được sử dụng làm HTTP client để giao tiếp với backend API. Thư viện opencv\_dart cho phép tích hợp OpenCV vào Flutter, phục vụ các tác vụ xử lý ảnh nâng cao như phát hiện cạnh, biến đổi phối cảnh và tách vùng. Thư viện flutter\_secure\_storage được sử dụng để lưu trữ token xác thực một cách an toàn trên thiết bị.
+
+\section{Xử lý ảnh và Thị giác máy tính}
+\subsection{Khái quát về xử lý ảnh trên di động}
+Xử lý ảnh trên thiết bị di động đặt ra nhiều thách thức đặc thù so với xử lý trên máy tính. Thiết bị di động có tài nguyên tính toán hạn chế, đặc biệt khi xử lý ảnh độ phân giải cao cần nhiều bộ nhớ và CPU. Ngoài ra, nguồn pin hạn chế đòi hỏi thuật toán phải tối ưu về mặt năng lượng. Camera di động chất lượng thấp hơn camera chuyên dụng, ảnh chụp thường bị nhiễu, méo, thiếu sáng hoặc dư sáng. Tốc độ xử lý cần đủ nhanh để đảm bảo trải nghiệm người dùng mượt mà.
+
+OpenCV (Open Source Computer Vision Library) là thư viện mã nguồn mở chuẩn công nghiệp cho xử lý ảnh và thị giác máy tính. Phiên bản OpenCV 4.x cung cấp hàng trăm thuật toán từ cơ bản đến nâng cao, bao gồm các thao tác xử lý ảnh cơ bản như lọc nhiễu, phát hiện cạnh, biến đổi hình học, cho tới các thuật toán phức tạp như phát hiện đặc trưng, matching hình ảnh. OpenCV được viết bằng C++ với bindings cho Python, Java và các ngôn ngữ khác. Trên nền tảng di động, OpenCV hỗ trợ Android và iOS, có thể tích hợp qua CMake hoặc thông qua các package như opencv4nodejs hoặc opencv\_dart.
+
+Một số lựa chọn thay thế cho xử lý ảnh trên di động bao gồm sử dụng các API cloud-based như Google Cloud Vision API hoặc Amazon Rekognition, cho phép xử lý ảnh trên server mạnh và độ chính xác cao, tuy nhiên yêu cầu kết nối internet liên tục và phát sinh chi phí theo số lượng request. TensorFlow Lite cho phép triển khai các mô hình machine learning trên di động, phù hợp cho nhận diện đối tượng phức tạp, nhưng đòi hỏi huấn luyện mô hình riêng cho bài toán OMR và tốn nhiều công sức. Giải pháp được lựa chọn cho hệ thống SMART GRADING là sử dụng kết hợp OpenCV cho xử lý ảnh cơ bản và thuật toán nhận dạng bọt tự xây dựng, vì yêu cầu xử lý theo thời gian thực, không phụ thuộc internet và cần kiểm soát chi phí.
+
+\subsection{Các kỹ thuật xử lý ảnh cốt lõi cho bài toán OMR}
+Bài toán nhận dạng phiếu trắc nghiệm (OMR) đòi hỏi một chuỗi các kỹ thuật xử lý ảnh được thực hiện tuần tự. Mỗi kỹ thuật đóng vai trò quan trọng trong việc nâng cao độ chính xác nhận dạng.
+
+Phát hiện góc tài liệu (Document Corner Detection) là bước đầu tiên và quan trọng nhất. Mục tiêu là xác định chính xác vị trí bốn góc của phiếu thi trong ảnh chụp từ camera. Thuật toán phổ biến bao gồm sử dụng Hough Transform để phát hiện các đường thẳng và giao điểm của chúng làm góc, hoặc sử dụng phát hiện contour và xấp xỉ đa giác để tìm hình chữ nhật có bốn đỉnh. Trong hệ thống SMART GRADING, phương pháp contour-based detection kết hợp với Douglas-Peucker algorithm để xấp xỉ đa giác được sử dụng, vì cho kết quả tốt với phiếu thi có viền rõ ràng.
+
+Căn chỉnh phối cảnh (Perspective Transformation) là bước tiếp theo, nhằm biến đổi ảnh chụp từ góc nghiêng thành ảnh nhìn thẳng, đúng tỷ lệ. Kỹ thuật này sử dụng phép biến đổi perspective transform dựa trên bốn điểm góc đã xác định ở bước trước. Ma trận biến đổi được tính toán bằng hàm getPerspectiveTransform của OpenCV, sau đó áp dụng warpPerspective để tạo ảnh đã căn chỉnh.
+
+Tiền xử lý ảnh (Image Preprocessing) bao gồm các bước nâng cao chất lượng ảnh trước khi nhận dạng. Các kỹ thuật được áp dụng bao gồm chuyển đổi sang ảnh xám (grayscale) để giảm độ phức tạp tính toán, áp dụng Gaussian blur để giảm nhiễu, sử dụng adaptive threshold (phương pháp Otsu hoặc Adaptive Gaussian) để nhị phân hóa ảnh, tách riêng vùng trắng và vùng đen một cách rõ ràng.
+
+Tách vùng bọt đáp án (Bubble Segmentation) là bước phân đoạn ảnh để xác định chính xác vị trí từng bọt trả lời trên phiếu. Dựa trên template phiếu thi đã biết trước (khoảng cách, kích thước các bọt), hệ thống sử dụng phương pháp projection profile analysis để xác định ranh giới các hàng và cột chứa bọt. Mỗi bọt được cắt riêng thành vùng ảnh con để phân tích mức độ tô đậm.
+
+Nhận dạng bọt đã tô (Bubble Fill Detection) là bước quan trọng nhất quyết định độ chính xác của toàn bộ hệ thống. Phương pháp được sử dụng là tính toán tổng giá trị pixel trong vùng bọt: nếu tổng này vượt qua một ngưỡng (threshold) nhất định, bọt đó được coi là đã được tô. Ngưỡng này có thể là ngưỡng cố định hoặc ngưỡng động được tính dựa trên phân bố giá trị pixel của tất cả các bọt trong cùng một hàng, giúp thích ứng với điều kiện ánh sáng khác nhau.
+
+\section{Kỹ thuật Nhận dạng ký tự quang học (OCR)}
+Nhận dạng ký tự quang học (Optical Character Recognition - OCR) là kỹ thuật chuyển đổi hình ảnh chứa văn bản thành văn bản số mà máy tính có thể đọc và xử lý. Trong bài toán OMR, OCR không chỉ đơn thuần nhận dạng ký tự mà còn phải nhận dạng vùng tô đậm trên phiếu thi.
+
+Google ML Kit là bộ công cụ machine learning của Google dành cho các ứng dụng di động, cung cấp các mô hình ML đã được huấn luyện sẵn và tối ưu cho thiết bị di động. ML Kit bao gồm module Text Recognition hỗ trợ nhận dạng văn bản Latin, có thể sử dụng để nhận dạng các ký hiệu, mã phiếu in trên phiếu thi. ML Kit chạy trên thiết bị (on-device), không cần kết nối internet, và được tối ưu hóa cho tốc độ và pin.
+
+Tesseract là engine OCR mã nguồn mở phổ biến nhất hiện nay, được phát triển ban đầu bởi HP Labs và sau đó được Google bảo trì. Tesseract hỗ trợ hơn 100 ngôn ngữ và có khả năng nhận dạng cao với các hình ảnh chất lượng tốt. Tuy nhiên, Tesseract yêu cầu xử lý trên máy tính hoặc server, không chạy trực tiếp trên thiết bị di động mà cần thông qua server, gây phụ thuộc vào kết nối mạng.
+
+Đối với hệ thống SMART GRADING, do bài toán OMR chủ yếu là nhận dạng vùng tô (mark detection) chứ không phải nhận dạng ký tự phức tạp, phương pháp tiếp cận kết hợp giữa OpenCV và thuật toán fill-intensity analysis được lựa chọn thay vì dùng OCR engine nặng. Kỹ thuật này dựa trên nguyên lý: một bọt trắng trên giấy khi được tô đậm bằng bút chì hoặc bút bi sẽ có mật độ pixel tối (pixel intensity thấp) khác biệt rõ ràng so với bọt không được tô. Bằng cách tính toán giá trị trung bình pixel trong vùng mỗi bọt và so sánh với ngưỡng, hệ thống xác định bọt nào đã được chọn với độ chính xác cao.
+
+\section{Cơ sở dữ liệu và Backend}
+Hệ thống SMART GRADING sử dụng MongoDB làm cơ sở dữ liệu chính. MongoDB là cơ sở dữ liệu NoSQL document-oriented, lưu trữ dữ liệu dưới dạng JSON-like documents (BSON), cho phép linh hoạt trong việc thay đổi cấu trúc dữ liệu mà không cần migrate schema phức tạp. Điều này đặc biệt phù hợp với bài toán quản lý đề thi và câu hỏi, nơi mà cấu trúc một câu hỏi có thể thay đổi theo thời gian (ví dụ: thêm trường hình ảnh, thêm giải thích). MongoDB cũng có khả năng mở rộng theo chiều ngang (horizontal scaling) tốt, phù hợp với mô hình phát triển ban đầu và có thể mở rộng sau này.
+
+Node.js với Express.js được lựa chọn làm runtime và framework backend. Node.js sử dụng mô hình I/O bất đồng bộ (non-blocking I/O) xử lý đồng thời nhiều request hiệu quả, đặc biệt phù hợp với các ứng dụng real-time và I/O-heavy như ứng dụng chat, streaming. Express.js là framework web nhẹ, linh hoạt và dễ sử dụng cho Node.js, cung cấp hệ thống middleware mạnh mẽ cho việc xử lý request, authentication và validation. Hệ sinh thái npm của Node.js cung cấp hàng trăm nghìn gói thư viện hữu ích cho mọi nhu cầu.
+
+Một số lựa chọn thay thế bao gồm Django (Python) với ORM mạnh mẽ và admin interface sẵn có, phù hợp với các dự án cần xây dựng nhanh nhưng kiến trúc đơn giản hơn và ít real-time features. Spring Boot (Java) là lựa chọn mạnh mẽ cho các hệ thống doanh nghiệp với yêu cầu bảo mật và scalability cao, tuy nhiên độ phức tạp cài đặt và đường cong học tập cao hơn. Go (Golang) cho hiệu năng cao và concurrency xuất sắc, phù hợp với các hệ thống cần xử lý request lớn, nhưng hệ sinh thái thư viện cho web development chưa phong phú bằng Node.js.
+
+\section{Generative AI và tích hợp API}
+Generative AI (GenAI) là nhánh của trí tuệ nhân tạo có khả năng tạo ra nội dung mới bao gồm văn bản, hình ảnh, âm nhạc hoặc mã nguồn, dựa trên việc học từ dữ liệu huấn luyện. Các mô hình GenAI tiền đào tạo (pretrained) như GPT-4, Claude, Gemini đã đạt được khả năng hiểu ngôn ngữ tự nhiên ở mức gần con người, cho phép tích hợp vào các ứng dụng thông qua API một cách dễ dàng.
+
+Trong hệ thống SMART GRADING, Generative AI được tích hợp để thực hiện các tác vụ phân tích dữ liệu thông minh. Thay vì chỉ trả về điểm số đơn thuần, hệ thống gửi dữ liệu kết quả thi tổng hợp tới API Generative AI và nhận về báo cáo phân tích chi tiết bao gồm phổ điểm, xu hướng, các câu hỏi khó và gợi ý cải thiện. Việc tích hợp được thực hiện thông qua HTTP request tới API endpoint của nhà cung cấp GenAI, sử dụng prompt engineering để định dạng yêu cầu và xử lý response.
+
+Một số lựa chọn API GenAI bao gồm OpenAI GPT-4 API cung cấp khả năng ngôn ngữ xuất sắc, document processing mạnh mẽ, tuy nhiên chi phí sử dụng cao hơn và cần tuân thủ các quy định về dữ liệu. Google Gemini API là mô hình đa phương thức (multimodal) hỗ trợ text, image, audio trong cùng một model, chi phí cạnh tranh hơn. Anthropic Claude cung cấp khả năng phân tích chi tiết, long context window và safety alignment tốt. Hệ thống SMART GRADING sử dụng Google Gemini API vì hỗ trợ multimodal, chi phí hợp lý, dễ tích hợp và có tier miễn phí cho mục đích phát triển.
+
+\section{Kết chương}
+\addcontentsline{toc}{section}{Kết chương}
+Chương này đã trình bày chi tiết các nền tảng lý thuyết và công nghệ được lựa chọn để xây dựng hệ thống SMART GRADING. Flutter được chọn làm framework phát triển ứng dụng di động đa nền tảng với kiến trúc BLoC, mang lại hiệu năng cao và trải nghiệm người dùng nhất quán trên Android và iOS. Kỹ thuật xử lý ảnh với OpenCV kết hợp thuật toán fill-intensity analysis được áp dụng cho bài toán nhận dạng bọt đáp án, không phụ thuộc internet và kiểm soát chi phí. MongoDB và Node.js/Express cung cấp nền tảng backend linh hoạt, dễ mở rộng. Generative AI (Google Gemini) được tích hợp để mang lại giá trị phân tích thông minh vượt trội so với các giải pháp chấm thi thông thường. Từ các công nghệ đã chọn, chương tiếp theo sẽ trình bày chi tiết về phân tích thiết kế và triển khai hệ thống SMART GRADING.
+
+\end{document}

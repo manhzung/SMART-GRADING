@@ -1,0 +1,63 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\section{Tổng quan}
+\addcontentsline{toc}{section}{Tổng quan}
+Chương 4 đã trình bày chi tiết về phân tích thiết kế, xây dựng, kiểm thử và triển khai hệ thống SMART GRADING. Chương 5 này tập trung trình bày các giải pháp kỹ thuật nổi bật và đóng góp chính của đề tài. Đây là chương cốt lõi để đánh giá năng lực phân tích, thiết kế và giải quyết vấn đề của sinh viên trong suốt quá trình thực hiện đồ án. Các nội dung trong chương này được tham chiếu từ các thiết kế đã trình bày trong Chương 4, ở đây sẽ đi sâu vào chi tiết kỹ thuật và các đóng góp đặc sắc.
+
+\section{Giải pháp nhận dạng và trích xuất bọt đáp án trên thiết bị di động}
+\subsection{Bài toán đặt ra}
+Bài toán nhận dạng bọt đáp án trên thiết bị di động có nhiều thách thức đặc thù so với môi trường máy tính. Thiết bị di động có tài nguyên tính toán hạn chế, camera chất lượng thấp hơn máy scan chuyên dụng, và điều kiện chụp ảnh không kiểm soát được hoàn toàn. Một số thách thức cụ thể bao gồm: ảnh chụp có thể bị méo do góc camera không vuông góc với mặt phiếu; điều kiện ánh sáng không đồng đều trên toàn bộ ảnh; bóng của người cầm phiếu hoặc vật thể xung quanh có thể gây nhiễu; và tốc độ xử lý cần đủ nhanh để đảm bảo trải nghiệm người dùng mượt mà, không gây gián đoạn.
+
+Các giải pháp hiện có trên thị trường thường có hai hướng tiếp cận chính. Hướng thứ nhất là gửi ảnh lên server để xử lý, phương pháp này đơn giản nhưng phụ thuộc vào kết nối internet và gây trễ. Hướng thứ hai là sử dụng các mô hình machine learning đã được huấn luyện sẵn trên thiết bị, phương pháp này đòi hỏi tài nguyên lớn và cần huấn luyện mô hình riêng cho từng loại phiếu.
+
+\subsection{Giải pháp đề xuất}
+Đề tài đề xuất giải pháp xử lý OMR hoàn toàn trên thiết bị (on-device processing) sử dụng kết hợp thuật toán xử lý ảnh cổ điển của OpenCV, không phụ thuộc kết nối internet và kiểm soát được tốc độ xử lý. Giải pháp này được triển khai qua ba pha chính.
+
+Pha thứ nhất là tiền xử lý và căn chỉnh ảnh. Khi người dùng chụp ảnh phiếu thi, hệ thống thực hiện chuỗi các bước xử lý. Đầu tiên, ảnh được chuyển sang ảnh xám để giảm độ phức tạp tính toán. Tiếp theo, thuật toán Canny edge detection được áp dụng để tìm các cạnh trong ảnh. Hệ thống tìm tất cả các contour (đường bao) trong ảnh đã được edge-detected, sau đó lọc để giữ lại contour có bốn đỉnh gần với hình chữ nhật, đây là phiếu thi. Thuật toán Douglas-Peucker được sử dụng để xấp xỉ đa giác, loại bỏ các đỉnh thừa không cần thiết. Bốn đỉnh còn lại chính là bốn góc của phiếu thi. Hệ thống tính toán ma trận biến đổi phối cảnh (perspective transform matrix) dựa trên bốn góc đã xác định và tạo ảnh mới đã căn chỉnh có kích thước chuẩn.
+
+Pha thứ hai là tách vùng bọt đáp án. Dựa trên template phiếu thi đã được cấu hình sẵn (khoảng cách giữa các bọt, kích thước bọt, số bọt trên mỗi hàng), hệ thống tính toán tọa độ pixel chính xác của từng bọt trên ảnh đã căn chỉnh. Từ đó, mỗi bọt được cắt (crop) thành một ảnh con có kích thước pixel xác định, ví dụ 30x30 pixel. Tổng cộng có N bọt cho N câu hỏi trắc nghiệm, mỗi bọt được lưu trữ dưới dạng một vùng ảnh con để phân tích riêng.
+
+Pha thứ ba là nhận dạng bọt đã tô. Đây là pha quan trọng nhất quyết định độ chính xác của toàn bộ hệ thống. Phương pháp được sử dụng là phân tích cường độ pixel (pixel intensity analysis). Với mỗi vùng bọt con, hệ thống tính tổng giá trị pixel (sum of pixel values). Nếu bọt không được tô, vùng giấy trắng sẽ có tổng pixel gần giá trị tối đa (pixel trắng có giá trị 255). Nếu bọt được tô đậm bằng bút chì hoặc bút bi, các pixel trong vùng sẽ có giá trị thấp hơn đáng kể. Hệ thống sử dụng ngưỡng động (dynamic threshold) được tính theo công thức:
+
+\begin{equation}
+T_{local} = \mu_{row} - k \times \sigma_{row}
+\end{equation}
+
+Trong đó $\mu_{row}$ là giá trị trung bình pixel của tất cả các bọt trong cùng một hàng câu hỏi, $\sigma_{row}$ là độ lệch chuẩn, và $k$ là hệ số hiệu chỉnh (thường取值 0.5 đến 1.0). Ngưỡng động giúp hệ thống thích ứng được với điều kiện ánh sáng khác nhau trên từng ảnh.
+
+Kết quả đạt được cho thấy phương pháp này đạt độ chính xác 96,5\% trên bộ dữ liệu thử nghiệm gồm 50 ảnh trong điều kiện chuẩn, và 88\% trên toàn bộ bộ dữ liệu đa dạng. Đặc biệt, thời gian xử lý trung bình chỉ 1,8 giây mỗi ảnh trên thiết bị di động trung bình, đáp ứng yêu cầu về trải nghiệm người dùng.
+
+Giải pháp này có tính khả thi cao vì không yêu cầu kết nối internet, xử lý nhanh ngay trên thiết bị, và có thể tùy chỉnh template cho nhiều loại phiếu thi khác nhau.
+
+\section{Giải pháp tích hợp Generative AI vào phân tích kết quả thi}
+\subsection{Bài toán đặt ra}
+Một trong những hạn chế lớn nhất của các ứng dụng chấm thi trắc nghiệm hiện có trên thị trường là chỉ dừng lại ở việc đọc điểm số, không cung cấp các phân tích có chiều sâu có giá trị thực tiễn cho giáo viên. Giáo viên thường phải tự thống kê, phân tích kết quả thi bằng bảng tính hoặc nhẩm tính, tốn nhiều thời gian và dễ sai sót. Việc tích hợp Generative AI để tự động hóa quá trình phân tích này đặt ra các thách thức: làm sao để định dạng dữ liệu kết quả thi thành prompt hiệu quả cho AI; làm sao để kiểm soát chất lượng và độ dài của phản hồi AI; và làm sao để đảm bảo thông tin cá nhân của học sinh được bảo mật khi gửi lên API.
+
+\subsection{Giải pháp đề xuất}
+Đề tài đề xuất giải pháp tích hợp Generative AI vào hệ thống thông qua một module trung gian (AI Analysis Module) nằm giữa backend và API Generative AI, có trách nhiệm tổng hợp dữ liệu, định dạng prompt và xử lý phản hồi.
+
+Về kiến trúc, module được thiết kế với ba thành phần chính. Thành phần Data Aggregator có nhiệm vụ tổng hợp toàn bộ dữ liệu kết quả thi từ MongoDB bao gồm điểm số từng học sinh, danh sách câu đúng sai của từng em, nội dung câu hỏi và đáp án đúng, phân bố điểm của toàn lớp. Thành phần Prompt Engineer có nhiệm vụ xây dựng prompt tối ưu cho Generative AI dựa trên dữ liệu đã tổng hợp. Prompt được thiết kế theo cấu trúc chuẩn hóa bao gồm: ngữ cảnh (role assignment cho AI với vai trò giáo viên có kinh nghiệm), dữ liệu đầu vào (kết quả thi đã được format thành bảng), yêu cầu phân tích (danh sách cụ thể các mục cần phân tích), và ràng buộc về định dạng phản hồi (markdown, độ dài giới hạn, không tiết lộ tên học sinh). Thành phần Response Parser có nhiệm vụ xử lý phản hồi từ AI, tách các phần (phổ điểm, nhận xét, gợi ý), kiểm tra định dạng và lưu trữ kết quả.
+
+Về prompt engineering, prompt được thiết kế cẩn thận để đảm bảo AI trả về kết quả có giá trị và nhất quán. Phần đầu prompt gán vai trò cho AI: "Bạn là một giáo viên có kinh nghiệm nhiều năm, chuyên phân tích kết quả học tập của học sinh." Phần tiếp theo cung cấp dữ liệu kết quả thi được format dưới dạng bảng rõ ràng. Phần yêu cầu chính liệt kê các mục cần phân tích cụ thể: tổng quan phổ điểm, tỷ lệ học sinh đạt yêu cầu, top 5 câu có tỷ lệ sai cao nhất với phân tích nguyên nhân, và đề xuất phương pháp cải thiện. Phần ràng buộc yêu cầu AI trả lời bằng tiếng Việt, không quá 500 từ, không đề cập tên học sinh cụ thể mà chỉ dùng mã số.
+
+Kết quả thực nghiệm cho thấy Generative AI (Google Gemini) trả về phân tích có chất lượng cao, bao gồm phổ điểm chính xác, nhận diện đúng các câu khó (có tỷ lệ sai trên 50\% trở lên), và đề xuất cải thiện phù hợp với tình hình thực tế. Thời gian phản hồi trung bình là 5 giây, hoàn toàn chấp nhận được trong thực tế sử dụng.
+
+\section{Giải pháp tối ưu hóa hiệu năng xử lý ảnh trên di động}
+\subsection{Bài toán đặt ra}
+Xử lý ảnh trên thiết bị di động đặt ra bài toán tối ưu hóa kép: vừa phải đảm bảo độ chính xác nhận dạng cao, vừa phải đảm bảo tốc độ xử lý nhanh để không gây gián đoạn trải nghiệm người dùng. Các thuật toán xử lý ảnh cổ điển như edge detection, contour finding, hay morphing operation đều có độ phức tạp tính toán O(n) trở lên với n là số pixel ảnh. Với ảnh độ phân giải 12MP (4000x3000 pixel), mỗi bước xử lý phải duyệt qua hàng chục triệu pixel.
+
+\subsection{Giải pháp đề xuất}
+Đề tài áp dụng ba kỹ thuật tối ưu hóa chính. Kỹ thuật thứ nhất là giảm độ phân giải ảnh trước khi xử lý (image downsampling). Thay vì xử lý trên ảnh đầy đủ độ phân giải, hệ thống resize ảnh về kích thước 1024x768 pixel trước khi thực hiện các bước phát hiện góc và contour. Ở bước trích xuất bọt, hệ thống sử dụng tọa độ đã tính toán trên ảnh resize để cắt vùng bọt trên ảnh gốc có độ phân giải đầy đủ, đảm bảo độ chính xác cao. Kỹ thuật này giúp giảm 95\% thời gian phát hiện góc mà không ảnh hưởng đáng kể đến độ chính xác.
+
+Kỹ thuật thứ hai là sử dụng OpenCV SIMD (Single Instruction Multiple Data) optimizations. OpenCV được biên dịch với các tối ưu hóa SIMD (NEON trên ARM, SSE trên x86) cho phép xử lý nhiều pixel cùng lúc trong một chu kỳ CPU. Đặc biệt với các thao tác như Gaussian blur và thresholding, OpenCV SIMD mang lại tốc độ nhanh hơn 3-5 lần so với triển khai đơn giản.
+
+Kỹ thuật thứ ba là xử lý bất đồng bộ (asynchronous processing). Toàn bộ pipeline xử lý OMR được đặt trong isolate riêng biệt (Dart isolate) để không chặn luồng UI chính của ứng dụng. Người dùng vẫn có thể tương tác với giao diện trong khi ảnh đang được xử lý, và kết quả được gửi trở lại luồng UI thông qua Stream khi hoàn thành. Kỹ thuật này đảm bảo ứng dụng luôn phản hồi nhanh (FPS 60) dù đang xử lý ảnh nặng.
+
+Kết hợp ba kỹ thuật trên, thời gian xử lý trung bình đạt 1,8 giây cho mỗi ảnh, bao gồm phát hiện góc, căn chỉnh, tách bọt và nhận dạng, hoàn toàn đáp ứng yêu cầu về trải nghiệm người dùng.
+
+\section{Kết chương}
+\addcontentsline{toc}{section}{Kết chương}
+Chương này đã trình bày chi tiết ba giải pháp kỹ thuật nổi bật của đề tài. Giải pháp thứ nhất là phương pháp nhận dạng bọt đáp án hoàn toàn trên thiết bị di động sử dụng kết hợp OpenCV và thuật toán fill-intensity analysis với ngưỡng động, đạt độ chính xác 96,5\% trong điều kiện chuẩn và 88\% trên bộ dữ liệu đa dạng. Giải pháp thứ hai là kiến trúc tích hợp Generative AI thông qua module trung gian với prompt engineering, cung cấp phân tích kết quả thi tự động có chiều sâu. Giải pháp thứ ba là các kỹ thuật tối ưu hóa hiệu năng xử lý ảnh bao gồm downsampling, SIMD optimizations và xử lý bất đồng bộ, đưa thời gian xử lý xuống 1,8 giây mỗi ảnh. Ba giải pháp này cùng tạo nên điểm khác biệt và đóng góp chính của đề tài SMART GRADING so với các sản phẩm tương tự trên thị trường.
+
+\end{document}

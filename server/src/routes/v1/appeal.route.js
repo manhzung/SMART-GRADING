@@ -7,6 +7,10 @@ const auth = require('../../middlewares/auth');
 const router = express.Router();
 
 router
+  .route('/me')
+  .get(auth(), validate(appealValidation.getMyAppeals), appealController.getMy);
+
+router
   .route('/')
   .post(auth('submitAppeals'), validate(appealValidation.createAppeal), appealController.create)
   .get(auth(), validate(appealValidation.getAppeals), appealController.getAll);

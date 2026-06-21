@@ -59,6 +59,16 @@ const getExamAppeals = {
   }),
 };
 
+const getMyAppeals = {
+  query: Joi.object().keys({
+    submissionId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    examId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    status: Joi.string().valid('pending', 'under_review', 'approved', 'rejected'),
+    limit: Joi.number().min(1).max(100),
+    page: Joi.number().min(1),
+  }),
+};
+
 module.exports = {
   createAppeal,
   reviewAppeal,
@@ -66,4 +76,5 @@ module.exports = {
   getAppeals,
   getStudentAppeals,
   getExamAppeals,
+  getMyAppeals,
 };

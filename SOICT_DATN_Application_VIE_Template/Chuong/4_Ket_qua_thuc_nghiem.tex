@@ -1,0 +1,210 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\section{Tổng quan}
+\addcontentsline{toc}{section}{Tổng quan}
+Chương 3 đã giới thiệu các nền tảng lý thuyết và công nghệ được sử dụng trong hệ thống SMART GRADING. Chương 4 này trình bày chi tiết về phân tích và thiết kế hệ thống, bao gồm lựa chọn kiến trúc phần mềm, thiết kế tổng quan, thiết kế chi tiết các module, thiết kế cơ sở dữ liệu, thiết kế giao diện người dùng, kết quả xây dựng ứng dụng, quá trình kiểm thử và triển khai thử nghiệm.
+
+\section{Thiết kế kiến trúc}
+\subsection{Lựa chọn kiến trúc phần mềm}
+Hệ thống SMART GRADING được thiết kế theo kiến trúc đa tầng (Multi-tier Architecture) kết hợp với mô hình BLoC (Business Logic Component) cho tầng xử lý nghiệp vụ trên ứng dụng di động. Kiến trúc đa tầng là mô hình trong đó hệ thống được chia thành nhiều tầng (layers) rõ ràng, mỗi tầng có trách nhiệm riêng biệt và chỉ giao tiếp với tầng ngay bên dưới hoặc bên trên nó.
+
+Cụ thể, ứng dụng di động SMART GRADING được tổ chức thành ba tầng chính. Tầng Presentation (Trình bày) chứa các widget giao diện người dùng (UI widgets) và các BLoC xử lý trạng thái, chịu trách nhiệm hiển thị dữ liệu và tương tác với người dùng. Tầng Domain (Nghiệp vụ) chứa các entity (mô hình dữ liệu nghiệp vụ) và repository interfaces, định nghĩa các nghiệp vụ cốt lõi mà hệ thống thực hiện. Tầng Data (Dữ liệu) chứa các repository implementation, API services và local storage, chịu trách nhiệm lấy dữ liệu từ backend hoặc lưu trữ cục bộ.
+
+Kiến trúc BLoC được lựa chọn cho tầng Presentation vì nhiều ưu điểm vượt trội. Mô hình reactive đảm bảo giao diện luôn đồng bộ với trạng thái nghiệp vụ. Luồng dữ liệu một chiều (unidirectional data flow) giúp code dễ hiểu và debug: Event đi vào BLoC, BLoC xử lý và phát ra State mới, UI nhận State và render lại. BLoC tách biệt hoàn toàn logic nghiệp vụ khỏi UI, cho phép kiểm thử BLoC một cách độc lập mà không cần mock widget. Kiến trúc này cũng hỗ trợ tốt cho việc tái sử dụng code và làm việc nhóm.
+
+Backend của hệ thống SMART GRADING tuân theo mô hình ba tầng MVC truyền thống. Tầng Controller nhận request từ client, gọi tầng Service tương ứng và trả response về. Tầng Service chứa logic nghiệp vụ chính, xử lý validation, tính toán và điều phối giữa các model. Tầng Model chứa schema định nghĩa cấu trúc dữ liệu trong MongoDB và các phương thức truy vấn.
+
+Backend được triển khai dưới dạng API RESTful, trong đó mỗi endpoint đại diện cho một tài nguyên (resource) và một phương thức HTTP tương ứng với một thao tác CRUD. Ví dụ: GET /api/v1/exams để lấy danh sách đề thi, POST /api/v1/exams để tạo đề thi mới, PUT /api/v1/exams/:id để cập nhật, DELETE /api/v1/exams/:id để xóa.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth, height=0.5\textwidth]{Hinhve/KienTrucHeThong.png}
+    \caption{Sơ đồ kiến trúc tổng thể hệ thống SMART GRADING}
+    \label{fig:kientructh}
+\end{figure}
+
+Hình \ref{fig:kientructh} mô tả kiến trúc tổng thể của hệ thống SMART GRADING. Ứng dụng di động Flutter giao tiếp với Backend Node.js/Express thông qua API REST. Backend kết nối với MongoDB để lưu trữ dữ liệu và gọi API Generative AI (Google Gemini) để phân tích kết quả thi. Module xử lý OMR trên ứng dụng di động xử lý ảnh cục bộ, không cần server, đảm bảo tốc độ và bảo mật.
+
+\subsection{Thiết kế tổng quan}
+Hệ thống SMART GRADING được tổ chức thành các gói (package) theo cấu trúc phân tầng rõ ràng. Hình \ref{fig:bieu_do_goi} thể hiện biểu đồ các gói chính của ứng dụng di động.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=0.45\textwidth]{Hinhve/BieuDoGoi.png}
+    \caption{Biểu đồ gói (Package Diagram) của ứng dụng di động}
+    \label{fig:bieu_do_goi}
+\end{figure}
+
+Gói core chứa các thành phần dùng chung nhất toàn ứng dụng, bao gồm constants (hằng số ứng dụng như API URL, kích thước bọt mặc định), errors (các lớp exception tùy chỉnh), network (API client dùng chung để giao tiếp với backend), storage (lưu trữ cục bộ bằng secure storage cho token). Gói domain chứa các entity (mô hình dữ liệu thuần như User, Exam, Submission, Class) và giao diện repository. Gói presentation chứa toàn bộ thành phần UI, bao gồm các bloc (logic nghiệp vụ theo mô hình BLoC), pages (các trang màn hình), widgets (các thành phần UI nhỏ có thể tái sử dụng), và routes (cấu hình điều hướng). Gói services chứa các service đặc thù như omr\_engine (module xử lý OMR trên thiết bị), ai\_service (giao tiếp với Generative AI).
+
+Các gói tuân thủ nguyên tắc phân tầng: gói presentation phụ thuộc vào gói domain và gói services, gói domain không phụ thuộc vào gói nào khác ngoài các thư viện bên ngoài, gói services phụ thuộc vào gói core và gói domain. Nhờ đó, thay đổi ở một gói không ảnh hưởng đến các gói khác trừ khi có thay đổi ở interface.
+
+Backend cũng được tổ chức theo cấu trúc phân tầng tương tự, với các thư mục controllers (nhận request và điều phối), services (xử lý logic nghiệp vụ), models (schema MongoDB), routes (định nghĩa API endpoints), middlewares (xác thực, validation, xử lý lỗi) và validations (Joi schema cho input validation).
+
+\subsection{Thiết kế chi tiết gói}
+Phần này trình bày thiết kế chi tiết của hai gói quan trọng nhất: gói omr\_engine (module xử lý OMR) và gói submission (quản lý kết quả thi).
+
+Gói omr\_engine chịu trách nhiệm xử lý ảnh phiếu thi từ lúc nhận ảnh đầu vào cho đến khi trả về kết quả nhận dạng. Các lớp chính bao gồm OMREngine (lớp điều phối chính, nhận ảnh đầu vào, gọi các module con theo đúng thứ tự và trả về kết quả tổng hợp), ImageProcessor (chứa các phương thức xử lý ảnh cơ bản như grayscale conversion, thresholding, morphology), CornerDetector (phát hiện bốn góc phiếu thi bằng thuật toán contour detection), PerspectiveWarper (thực hiện biến đổi phối cảnh để tạo ảnh phẳng), BubbleExtractor (tách riêng từng vùng bọt đáp án dựa trên template), BubbleReader (phân tích mức độ tô của từng bọt để xác định đáp án), và GradingResult (lớp kết quả chứa điểm số, danh sách đúng sai).
+
+Gói submission chứa các lớp liên quan đến quản lý kết quả thi. Lớp SubmissionBloc nhận các event như LoadSubmissions, CreateSubmission, UpdateSubmission, DeleteSubmission và phát ra các state tương ứng. Lớp SubmissionRepository định nghĩa interface để lấy dữ liệu submission. Lớp SubmissionService (ở tầng backend) xử lý logic nghiệp vụ như kiểm tra quyền truy cập, lưu kết quả vào MongoDB.
+
+Hình \ref{fig:sequance_quyetphieu} mô tả biểu đồ trình tự của chức năng quét phiếu thi, thể hiện luồng xử lý từ khi người dùng bấm chụp ảnh đến khi nhận được kết quả chấm điểm.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth, height=0.5\textwidth]{Hinhve/SequenceQuetPhieu.png}
+    \caption{Biểu đồ trình tự chức năng Quét phiếu thi}
+    \label{fig:sequance_quyetphieu}
+\end{figure}
+
+Quy trình bắt đầu khi người dùng bấm nút chụp tại giao diện CameraScannerPage. OMRScannerBloc nhận event CaptureImage, gọi OMREngine.processImage() để xử lý ảnh. OMREngine lần lượt gọi CornerDetector.detect() để tìm góc phiếu, PerspectiveWarper.warp() để căn chỉnh, BubbleExtractor.extract() để tách bọt, và BubbleReader.read() để nhận dạng đáp án. Kết quả trả về OMRScannerBloc, bloc tính điểm bằng cách đối chiếu với đáp án mẫu, và phát ra OMRResultState chứa kết quả chấm điểm. Giao diện hiển thị kết quả cho người dùng.
+
+\section{Thiết kế chi tiết}
+\subsection{Thiết kế giao diện}
+Giao diện người dùng của ứng dụng SMART GRADING được thiết kế theo nguyên tắc Material Design 3 của Google, đảm bảo tính nhất quán, thẩm mỹ và dễ sử dụng. Ứng dụng hỗ trợ đa ngôn ngữ với tiếng Việt làm ngôn ngữ mặc định, tiếng Anh là ngôn ngữ phụ.
+
+Về nguyên tắc thiết kế chung, màu sắc chủ đạo của ứng dụng là xanh dương (mã màu chính \texttt{\#2196F3}), thể hiện sự chuyên nghiệp và đáng tin cậy phù hợp với ứng dụng giáo dục. Các màu phụ bao gồm xanh lá (\texttt{\#4CAF50}) cho trạng thái thành công, đỏ (\texttt{\#F44336}) cho trạng thái lỗi và cam (\texttt{\#FF9800}) cho trạng thái cảnh báo. Bố cục sử dụng bottom navigation bar với năm tab chính: Trang chủ, Bài thi, Quét, Lớp học và Hồ sơ. Mỗi tab có biểu tượng (icon) và nhãn (label) rõ ràng, icon được thiết kế theo phong cách outlined khi không được chọn và filled khi được chọn để tạo sự phân biệt rõ ràng.
+
+Về thiết kế các màn hình chính, màn hình Trang chủ hiển thị tổng quan với thẻ thống kê số bài thi gần đây, số lớp đang quản lý, số bài đã chấm trong tuần, và nút truy cập nhanh tới chức năng quét phiếu thi. Màn hình Tạo đề thi sử dụng bố cục form với các trường nhập liệu rõ ràng, hỗ trợ nhập từng câu hỏi một hoặc nhập hàng loạt bằng sao chép-dán. Màn hình Quét phiếu thi là màn hình toàn màn hình với giao diện camera ở giữa, khung hướng dẫn đặt phiếu được vẽ trực tiếp trên preview camera, nút chụp lớn ở dưới cùng. Sau khi chụp, màn hình kết quả hiển thị điểm số nổi bật ở trên, danh sách các câu đúng/sai bên dưới với màu xanh/đỏ tương ứng. Màn hình Phân tích AI hiển thị kết quả phân tích dưới dạng card với biểu đồ phổ điểm (sử dụng thư viện fl\_chart) và văn bản nhận xét từ AI.
+
+Hình \ref{fig:giao_dien_chinh} minh họa thiết kế giao diện của một số màn hình chính trong ứng dụng.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth, height=0.5\textwidth]{Hinhve/GiaoDienChinh.png}
+    \caption{Minh họa thiết kế giao diện các màn hình chính}
+    \label{fig:giao_dien_chinh}
+\end{figure}
+
+\subsection{Thiết kế cơ sở dữ liệu}
+Hệ thống SMART GRADING sử dụng MongoDB làm cơ sở dữ liệu chính. Cơ sở dữ liệu được thiết kế với 10 collection chính: Users, Schools, Classes, Subjects, Questions, Exams, ExamVersions, Submissions, Appeals và Notifications.
+
+Hình \ref{fig:er_diagram} thể hiện biểu đồ thực thể liên kết (ER Diagram) của hệ thống.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth, height=0.55\textwidth]{Hinhve/ERDiagram.png}
+    \caption{Biểu đồ thực thể liên kết của hệ thống SMART GRADING}
+    \label{fig:er_diagram}
+\end{figure}
+
+Các thực thể chính và thuộc tính quan trọng nhất bao gồm. User lưu trữ thông tin người dùng với các trường name, email, password (đã hash), role (admin, teacher, student), schoolId, classIds (danh sách lớp học sinh viên tham gia), studentCode (mã học sinh dùng trên phiếu thi). Class lưu trữ thông tin lớp học với các trường name, code, gradeLevel (khối lớp), academicYear (năm học), homeroomTeacherId, studentIds, subjectTeachers. Exam lưu trữ thông tin đề thi với các trường title, classIds (danh sách lớp thi), creatorId, questions (mảng object chứa nội dung câu hỏi, đáp án, điểm số), totalScore, status (draft, published, completed), versions (danh sách các phiên bản đề thi khác nhau phục vụ cho chức năng tạo đề thi đa phiên bản). Submission lưu trữ kết quả chấm thi với các trường examId, studentId, answers (mảng đáp án đã nhận diện), totalScore, scanMetadata (thông tin về ảnh scan như độ phân giải, thời gian xử lý, confidence score).
+
+Các mối quan hệ chính trong hệ thống bao gồm: User thuộc School (many-to-one), User dạy/nắm Class (many-to-many giữa teacher và class, many-to-many giữa student và class), Class chứa Subject (many-to-many), Exam áp dụng cho nhiều Class (many-to-many), Submission thuộc về Exam và Student (many-to-one với cả hai), Appeal thuộc về Submission và Question (many-to-one với cả hai).
+
+\section{Xây dựng ứng dụng}
+\subsection{Thư viện và công cụ sử dụng}
+Bảng \ref{table:congcu} dưới đây liệt kê các công cụ, ngôn ngữ lập trình, thư viện và môi trường phát triển được sử dụng để xây dựng hệ thống SMART GRADING cùng với phiên bản cụ thể.
+
+\begin{landscape}
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\hline
+\textbf{Mục đích} & \textbf{Công cụ / Phiên bản} & \textbf{Địa chỉ URL / Ghi chú} \\ \hline
+Framework ứng dụng di động & Flutter 3.10.x & https://flutter.dev \\ \hline
+Ngôn ngữ lập trình ứng dụng & Dart 3.x & https://dart.dev \\ \hline
+Quản lý state (BLoC) & flutter\_bloc 9.1.1 & https://pub.dev \\ \hline
+HTTP Client & dio 5.x & https://pub.dev \\ \hline
+Xử lý ảnh & opencv\_dart (OpenCV 4.x) & https://pub.dev \\ \hline
+Camera & camera 0.10.x & https://pub.dev \\ \hline
+Lưu trữ an toàn & flutter\_secure\_storage 9.x & https://pub.dev \\ \hline
+Biểu đồ thống kê & fl\_chart 0.66.x & https://pub.dev \\ \hline
+Runtime backend & Node.js 20.x LTS & https://nodejs.org \\ \hline
+Framework backend & Express.js 4.x & https://expressjs.com \\ \hline
+Cơ sở dữ liệu & MongoDB 6.x & https://mongodb.com \\ \hline
+ODM & Mongoose 8.x & https://mongoosejs.com \\ \hline
+Xác thực & JWT (jsonwebtoken) & https://www.npmjs.com \\ \hline
+Validation input & Joi 17.x & https://joi.dev \\ \hline
+Linting (Flutter) & flutter\_analyzer & Đi kèm Flutter SDK \\ \hline
+Linting (Node.js) & ESLint & https://eslint.org \\ \hline
+Kiểm thử backend & Jest 29.x & https://jestjs.io \\ \hline
+API documentation & Swagger (swagger-ui-express) & https://swagger.io \\ \hline
+API GenAI & Google Gemini API & https://ai.google.dev \\ \hline
+IDE (Flutter) & Android Studio / VS Code & https://developer.android.com \\ \hline
+\end{tabular}
+\caption{Danh sách thư viện và công cụ sử dụng}
+\label{table:congcu}
+\end{table}
+\end{landscape}
+
+\subsection{Kết quả đạt được}
+Hệ thống SMART GRADING đã được xây dựng và triển khai thành công ba thành phần chính. Thành phần thứ nhất là ứng dụng di động SMART GRADING, được xây dựng bằng Flutter với khoảng 15.000 dòng mã nguồn Dart, bao gồm 25 màn hình (pages), 6 BLoC quản lý trạng thái, 5 service giao tiếp API, 1 module xử lý OMR. Thành phần thứ hai là backend API SMART GRADING, được xây dựng bằng Node.js/Express với khoảng 8.000 dòng mã nguồn JavaScript, bao gồm 15 route modules, 15 controller, 11 service, 16 MongoDB schema. Thành phần thứ ba là module xử lý OMR, tích hợp trong ứng dụng di động và backend, sử dụng OpenCV cho xử lý ảnh.
+
+Bảng \ref{table:thongke} thể hiện số liệu thống kê chi tiết về các thành phần đã xây dựng.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrr}
+\hline
+\textbf{Thành phần} & \textbf{Số dòng code} & \textbf{Số module} \\ \hline
+Ứng dụng di động (Dart) & ~15.000 & 25 trang, 6 BLoC, 5 service \\ \hline
+Backend (JavaScript) & ~8.000 & 15 route, 15 controller, 11 service \\ \hline
+Module OMR (Dart + OpenCV) & ~2.000 & 7 lớp xử lý \\ \hline
+Cơ sở dữ liệu (Schema) & - & 16 MongoDB collection \\ \hline
+Tổng cộng & ~25.000 & - \\ \hline
+\end{tabular}
+\caption{Thống kê kết quả xây dựng hệ thống SMART GRADING}
+\label{table:thongke}
+\end{table}
+
+Ứng dụng đã triển khai đầy đủ các chức năng theo yêu cầu đề ra bao gồm: đăng nhập đăng ký với xác thực JWT, quản lý lớp học (tạo, sửa, xóa, thêm học sinh), quản lý đề thi (tạo, sửa, xóa, xuất bản), quét phiếu thi bằng camera với xử lý OMR tự động, chấm điểm và hiển thị kết quả chi tiết, xem kết quả thi với biểu đồ phổ điểm, phân tích kết quả bằng Generative AI, hệ thống phúc khảo cho học sinh, thông báo real-time.
+
+\subsection{Minh họa các chức năng chính}
+Hình \ref{fig:ket_qua_quet} minh họa quy trình quét phiếu thi và hiển thị kết quả chấm điểm trên ứng dụng SMART GRADING. Giao diện bên trái thể hiện màn hình camera với khung hướng dẫn đặt phiếu. Giao diện bên phải thể hiện kết quả chấm thi sau khi xử lý, hiển thị điểm số, số câu đúng sai.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth, height=0.4\textwidth]{Hinhve/KetQuaQuetPhieu.png}
+    \caption{Minh họa chức năng quét phiếu thi và kết quả chấm điểm}
+    \label{fig:ket_qua_quet}
+\end{figure}
+
+Hình \ref{fig:phan_tich_ai} minh họa giao diện phân tích kết quả bằng Generative AI, bao gồm biểu đồ phổ điểm, thông tin thống kê và nhận xét chi tiết từ AI.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth, height=0.4\textwidth]{Hinhve/PhanTichAI.png}
+    \caption{Minh họa chức năng phân tích kết quả bằng Generative AI}
+    \label{fig:phan_tich_ai}
+\end{figure}
+
+\section{Kiểm thử}
+Quá trình kiểm thử hệ thống SMART GRADING được thực hiện theo ba cấp độ: kiểm thử đơn vị (unit testing), kiểm thử tích hợp (integration testing) và kiểm thử người dùng (user acceptance testing).
+
+Về kiểm thử đơn vị, các BLoC trong ứng dụng Flutter được kiểm thử bằng cách sử dụng bloc\_test. Mỗi BLoC được kiểm thử với các trường hợp: emit state ban đầu đúng, xử lý event đúng và emit state mới đúng, xử lý lỗi và emit state lỗi đúng. Tổng cộng 18 trường hợp kiểm thử BLoC đã được viết. Các service backend được kiểm thử bằng Jest với mock MongoDB, kiểm thử các hàm xử lý logic nghiệp vụ với các trường hợp đầu vào khác nhau.
+
+Về kiểm thử tích hợp, module OMR được kiểm thử với bộ dữ liệu ảnh phiếu thi đa dạng. Bộ dữ liệu bao gồm 50 ảnh phiếu thi được chụp trong các điều kiện khác nhau: ánh sáng tự nhiên ban ngày, ánh sáng nhân tạo, góc nghiêng nhẹ (dưới 15 độ), góc nghiêng vừa (15-30 độ), và phiếu bị nhàu nhẹ. Kết quả kiểm thử cho thấy module OMR đạt độ chính xác 96,5\% với các ảnh chụp trong điều kiện ánh sáng tốt và góc nghiêng dưới 15 độ. Độ chính xác giảm xuống 88\% với các ảnh có góc nghiêng từ 15-30 độ và 82\% với các ảnh bị nhàu.
+
+Bảng \ref{table:ketqua_kt} tổng hợp kết quả kiểm thử module OMR với bộ dữ liệu 50 ảnh.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrrr}
+\hline
+\textbf{Điều kiện chụp} & \textbf{Số ảnh} & \textbf{Chính xác} & \textbf{Tỷ lệ} \\ \hline
+Ánh sáng tốt, góc thẳng & 20 & 19 & 95\% \\ \hline
+Ánh sáng tốt, góc nghiêng nhẹ & 15 & 14 & 93,3\% \\ \hline
+Ánh sáng yếu hoặc góc nghiêng vừa & 10 & 8 & 80\% \\ \hline
+Phiếu bị nhàu, điều kiện khó & 5 & 3 & 60\% \\ \hline
+\textbf{Tổng cộng} & \textbf{50} & \textbf{44} & \textbf{88\%} \\ \hline
+\end{tabular}
+\caption{Kết quả kiểm thử độ chính xác module OMR}
+\label{table:ketqua_kt}
+\end{table}
+
+Về kiểm thử người dùng, ứng dụng đã được thử nghiệm bởi 5 giáo viên tại một trường trung học phổ thông trong thời gian 2 tuần. Kết quả cho thấy 4/5 giáo viên đánh giá ứng dụng dễ sử dụng, thời gian làm quen trung bình là 15 phút. Giáo viên phản hồi tích cực về chức năng quét và chấm điểm tự động, tiết kiệm được 70-80\% thời gian so với chấm bằng tay. Chức năng phân tích AI được đánh giá là hữu ích và có giá trị.
+
+\section{Triển khai}
+Ứng dụng di động SMART GRADING được triển khai trên hai nền tảng chính. Với Android, ứng dụng được build thành file APK (Android Package Kit) sử dụng lệnh flutter build apk --release, kích thước file APK khoảng 45MB (bao gồm thư viện OpenCV). Ứng dụng đã được thử nghiệm trên các thiết bị Android thực với phiên bản Android 6.0 đến Android 14, bao gồm các dòng Samsung Galaxy, Xiaomi, Oppo và Realme. Với iOS, ứng dụng được build thành file IPA sử dụng lệnh flutter build ios --release sau khi đã ký (sign) bằng tài khoản Apple Developer, yêu cầu iOS 12.0 trở lên.
+
+Backend được triển khai trên server với cấu hình 2 vCPU, 4GB RAM, chạy hệ điều hành Ubuntu 22.04 LTS. Node.js process được quản lý bằng PM2 (Process Manager) để đảm bảo auto-restart khi có sự cố. MongoDB được triển khai trên cùng server ở chế độ standalone cho giai đoạn thử nghiệm, có thể mở rộng lên replica set cho môi trường production. API được expose qua reverse proxy Nginx với cấu hình HTTPS (Let's Encrypt SSL certificate).
+
+Kết quả triển khai thử nghiệm cho thấy hệ thống hoạt động ổn định với thời gian phản hồi trung bình của API là 120ms, thời gian xử lý OMR trung bình là 1,8 giây mỗi ảnh, và thời gian phản hồi của Generative AI là 4-7 giây tùy độ dài yêu cầu. Hệ thống đã phục vụ thử nghiệm cho 50 học sinh và 5 giáo viên trong 2 tuần với tổng cộng 120 phiếu thi được quét và xử lý.
+
+\section{Kết chương}
+\addcontentsline{toc}{section}{Kết chương}
+Chương này đã trình bày chi tiết về phân tích và thiết kế hệ thống SMART GRADING theo kiến trúc đa tầng kết hợp BLoC/MVC, từ kiến trúc tổng thể, biểu đồ gói, biểu đồ trình tự cho đến thiết kế cơ sở dữ liệu MongoDB và giao diện người dùng. Quá trình xây dựng đã hoàn thành ứng dụng di động Flutter, backend Node.js và module xử lý OMR với tổng cộng khoảng 25.000 dòng mã nguồn. Kiểm thử đơn vị và tích hợp cho thấy module OMR đạt độ chính xác 88\% trên bộ dữ liệu thực tế đa dạng, và kiểm thử người dùng với giáo viên cho phản hồi tích cực. Triển khai thử nghiệm trên thiết bị thực và server với 50 học sinh và 5 giáo viên xác nhận hệ thống hoạt động ổn định. Phần tiếp theo, Chương 5 sẽ trình bày chi tiết các giải pháp kỹ thuật nổi bật và đóng góp của đề tài.
+
+\end{document}

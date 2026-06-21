@@ -1,0 +1,221 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\section{Tổng quan}
+\addcontentsline{toc}{section}{Tổng quan}
+Chương 1 đã trình bày bối cảnh thực tiễn và sự cần thiết của việc xây dựng ứng dụng chấm thi trắc nghiệm di động tích hợp OCR và Generative AI. Chương 2 này sẽ khảo sát chi tiết hiện trạng quy trình chấm thi trắc nghiệm hiện nay, phân tích và so sánh các sản phẩm tương tự trên thị trường, từ đó xác định các yêu cầu chức năng và phi chức năng cho hệ thống SMART GRADING. Nội dung chương bao gồm khảo sát hiện trạng, tổng quan chức năng với biểu đồ use case và quy trình nghiệp vụ, đặc tả chi tiết các use case quan trọng, và cuối cùng là các yêu cầu phi chức năng.
+
+\section{Khảo sát hiện trạng}
+\label{section:2.1}
+Hiện tại, quy trình chấm thi trắc nghiệm tại các trường học ở Việt Nam được thực hiện chủ yếu qua ba phương thức. Phương thức phổ biến nhất là chấm bằng tay, trong đó giáo viên sử dụng đáp án để đối chiếu từng phiếu trả lời của học sinh, đánh dấu kết quả và tính điểm. Phương thức thứ hai là sử dụng máy quét OMR chuyên dụng, các thiết bị này có khả năng đọc các vòng tròn đã tô trên phiếu trắc nghiệm và xuất kết quả ra máy tính, tuy nhiên chi phí đầu tư cho một máy quét chất lượng dao động từ vài triệu đến hàng chục triệu đồng. Phương thức thứ ba là sử dụng phần mềm trên máy tính kết hợp với máy scan, yêu cầu cơ sở vật chất phòng máy và thiết bị scan.
+
+Quy trình chấm thi bằng tay tồn tại nhiều hạn chế nghiêm trọng. Thứ nhất, vấn đề về thời gian và công sức: với một lớp 45 học sinh, mỗi bài thi 50 câu, giáo viên cần thực hiện khoảng 2.250 phép so sánh đáp án, công việc lặp đi lặp lại và nhàm chán. Thứ hai, sai sót do yếu tố con người: mệt mỏi dẫn đến nhầm lẫn dòng, sót câu hoặc đánh nhầm điểm. Thứ ba, khó khăn trong lưu trữ và thống kê: các phiếu thi giấy chiếm nhiều không gian lưu trữ, việc thống kê phân tích kết quả thi phải thực hiện thủ công bằng bảng tính.
+
+Trên thị trường ứng dụng, một số sản phẩm đáng chú ý bao gồm: ứng dụng chấm thi trắc nghiệm của các công ty EdTech Việt Nam như Viettel, FPT; các ứng dụng đơn giản trên điện thoại chỉ hỗ trợ đếm điểm đơn giản; và các phần mềm OMR trên máy tính cần kết hợp máy scan. Phần lớn các ứng dụng hiện tại mới chỉ dừng ở chức năng nhận diện và tính điểm, chưa tích hợp phân tích dữ liệu thông minh bằng AI.
+
+Bảng \ref{table:sanpham} dưới đây trình bày kết quả khảo sát và so sánh một số sản phẩm tương tự.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{2.8cm} p{3cm} p{3cm} p{3cm} p{3cm}}
+\hline
+\textbf{Tiêu chí} & \textbf{Sản phẩm A (phần mềm OMR máy tính)} & \textbf{Sản phẩm B (ứng dụng di động)} & \textbf{Sản phẩm C (EdTech)} & \textbf{SMART GRADING} \\ \hline
+Nền tảng & Máy tính + máy scan & Di động & Web + Di động & Di động \\ \hline
+Quét OMR & Có & Hạn chế & Không & Có \\ \hline
+OCR nhận dạng & Không & Có & Không & Có \\ \hline
+Phân tích AI & Không & Không & Hạn chế & Có \\ \hline
+Chi phí & Cao (thiết bị scan) & Thấp & Trung bình & Thấp (chỉ cần điện thoại) \\ \hline
+Độ chính xác & Cao & Trung bình & Không áp dụng & Cao \\ \hline
+Phân tích phổ điểm & Thủ công & Không & Hạn chế & Tự động bằng AI \\ \hline
+\end{tabular}
+\caption{So sánh các sản phẩm chấm thi trắc nghiệm trên thị trường}
+\label{table:sanpham}
+\end{table}
+
+Qua khảo sát, hạn chế chung của các sản phẩm hiện tại là chưa kết hợp được khả năng quét OMR di động với phân tích thông minh bằng Generative AI trên cùng một ứng dụng, đây chính là khoảng trống mà đề tài SMART GRADING hướng tới lấp đầy.
+
+\section{Tổng quan chức năng}
+\label{section:2.2}
+Phần \ref{section:2.2} này tóm tắt các chức năng tổng quan của hệ thống SMART GRADING ở mức cao. Hệ thống được thiết kế với hai nhóm người dùng chính: giáo viên và học sinh. Giáo viên có thể thực hiện các thao tác quản lý lớp học, quản lý đề thi, quét phiếu trả lời, xem kết quả chấm thi và phân tích chi tiết bằng AI. Học sinh có thể xem kết quả thi cá nhân và nộp đơn phúc khảo nếu không đồng ý với kết quả.
+
+\subsection{Biểu đồ use case tổng quát}
+\label{subsection:2.2.1}
+Hệ thống SMART GRADING có ba tác nhân chính tham gia: Giáo viên, Học sinh và Hệ thống (bao gồm các module backend, OCR và AI). Biểu đồ use case tổng quát được mô tả trong Hình \ref{fig:usecase_tongquat}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth]{Hinhve/UseCaseTongQuat.png}
+    \caption{Biểu đồ use case tổng quát của hệ thống SMART GRADING}
+    \label{fig:usecase_tongquat}
+\end{figure}
+
+Các use case chính của hệ thống được mô tả như sau. Use case Đăng nhập/Đăng ký cho phép người dùng xác thực danh tính để truy cập hệ thống. Use case Quản lý lớp học cho phép giáo viên tạo mới, chỉnh sửa, xóa lớp học và thêm học sinh vào lớp. Use case Quản lý đề thi cho phép giáo viên tạo, chỉnh sửa, xóa và xuất bản đề thi. Use case Quét phiếu thi là chức năng cốt lõi, cho phép giáo viên sử dụng camera để chụp ảnh phiếu trả lời trắc nghiệm, hệ thống tự động nhận diện vùng đáp án, trích xuất kết quả và chấm điểm. Use case Phân tích kết quả bằng AI cho phép giáo viên yêu cầu Generative AI phân tích kết quả bài thi và nhận về các nhận xét chi tiết. Use case Xem kết quả thi cho phép giáo viên và học sinh xem điểm số và chi tiết từng câu. Use case Nộp phúc khảo cho phép học sinh gửi yêu cầu phúc khảo cho một câu hỏi cụ thể.
+
+\subsection{Biểu đồ use case phân rã Quét phiếu thi}
+\label{subsection:2.2.2}
+Use case Quét phiếu thi là chức năng cốt lõi nhất của hệ thống. Biểu đồ use case phân rã được thể hiện trong Hình \ref{fig:usecase_quetphieu}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=0.55\textwidth]{Hinhve/UseCaseQuetPhieu.png}
+    \caption{Biểu đồ use case phân rã chức năng Quét phiếu thi}
+    \label{fig:usecase_quetphieu}
+\end{figure}
+
+Use case Quét phiếu thi được phân rã thành các use case con: Khởi tạo camera để chuẩn bị chế độ quét; Phát hiện góc phiếu để nhận diện bốn góc của phiếu thi trong khung hình; Căn chỉnh phối cảnh để biến đổi ảnh chụp lệch thành ảnh phẳng; Trích xuất vùng đáp án để tách riêng vùng chứa các bọt trả lời; Nhận dạng bọt đã tô bằng kỹ thuật OCR/OMR để xác định đáp án được chọn; Chấm điểm tự động bằng cách đối chiếu với đáp án mẫu; và Hiển thị kết quả để trình bày điểm số cùng các chi tiết.
+
+\subsection{Quy trình nghiệp vụ}
+\label{subsection:2.2.3}
+Quy trình nghiệp vụ chính của hệ thống SMART GRADING bao gồm ba giai đoạn: chuẩn bị, thực hiện thi và phân tích kết quả. Giai đoạn chuẩn bị bắt đầu khi giáo viên đăng nhập hệ thống, tạo hoặc chọn lớp học, tạo đề thi với danh sách câu hỏi và đáp án, thiết lập thông tin phiên thi. Giai đoạn thực hiện thi bắt đầu khi giáo viên chọn chức năng quét, mở camera và chụp ảnh từng phiếu trả lời của học sinh, hệ thống tự động xử lý ảnh và hiển thị kết quả chấm điểm, giáo viên xác nhận và lưu kết quả. Giai đoạn phân tích bắt đầu khi giáo viên chọn phiên thi đã chấm xong, gửi yêu cầu phân tích AI, hệ thống tổng hợp dữ liệu điểm số và gửi tới API Generative AI, nhận về báo cáo phân tích và hiển thị cho giáo viên.
+
+\section{Đặc tả chức năng}
+\label{section:2.3}
+Phần này đặc tả chi tiết bốn use case quan trọng nhất của hệ thống: Quản lý đề thi, Quét phiếu thi, Phân tích kết quả bằng AI và Xem kết quả thi.
+
+\subsection{Đặc tả use case Quản lý đề thi}
+\hfill
+
+\textbf{Tên use case:} Quản lý đề thi
+
+\textbf{Tác nhân chính:} Giáo viên
+
+\textbf{Mô tả:} Cho phép giáo viên tạo mới, chỉnh sửa, xóa và xuất bản đề thi trắc nghiệm.
+
+\textbf{Tiền điều kiện:} Giáo viên đã đăng nhập thành công vào hệ thống.
+
+\textbf{Luồng sự kiện chính:}
+\begin{enumerate}
+    \item Giáo viên chọn chức năng Quản lý đề thi từ màn hình chính.
+    \item Hệ thống hiển thị danh sách các đề thi đã tạo, bao gồm tiêu đề, số câu hỏi, ngày tạo và trạng thái (bản nháp hoặc đã xuất bản).
+    \item Giáo viên chọn tạo đề thi mới.
+    \item Hệ thống hiển thị biểu mẫu tạo đề thi, yêu cầu nhập tiêu đề đề thi, chọn lớp học, nhập danh sách câu hỏi với các phương án A, B, C, D và đáp án đúng.
+    \item Giáo viên nhập thông tin và bấm lưu.
+    \item Hệ thống kiểm tra dữ liệu đầu vào, lưu vào cơ sở dữ liệu và hiển thị thông báo thành công.
+    \item Giáo viên có thể chọn xuất bản đề thi để kích hoạt để sử dụng trong phiên chấm thi.
+\end{enumerate}
+
+\textbf{Luồng sự kiện phát sinh - Chỉnh sửa đề thi:}
+\begin{enumerate}
+    \item[a)] Giáo viên chọn đề thi từ danh sách và bấm chỉnh sửa.
+    \item[b)] Hệ thống hiển thị biểu mẫu với thông tin hiện tại của đề thi.
+    \item[c)] Giáo viên thay đổi thông tin và bấm lưu, hệ thống cập nhật vào cơ sở dữ liệu.
+\end{enumerate}
+
+\textbf{Luồng sự kiện phát sinh - Xóa đề thi:}
+\begin{enumerate}
+    \item[a)] Giáo viên chọn đề thi và bấm xóa.
+    \item[b)] Hệ thống hiển thị hộp thoại xác nhận xóa.
+    \item[c)] Giáo viên xác nhận xóa, hệ thống xóa đề thi khỏi cơ sở dữ liệu.
+\end{enumerate}
+
+\textbf{Hậu điều kiện:} Đề thi được lưu thành công vào cơ sở dữ liệu và có thể được sử dụng trong phiên chấm thi.
+
+\subsection{Đặc tả use case Quét phiếu thi}
+\hfill
+
+\textbf{Tên use case:} Quét phiếu thi
+
+\textbf{Tác nhân chính:} Giáo viên
+
+\textbf{Mô tả:} Cho phép giáo viên sử dụng camera thiết bị di động để chụp ảnh phiếu trả lời trắc nghiệm, hệ thống tự động nhận diện góc phiếu, căn chỉnh phối cảnh, trích xuất đáp án và chấm điểm.
+
+\textbf{Tiền điều kiện:} Giáo viên đã đăng nhập và đã có ít nhất một đề thi đã xuất bản.
+
+\textbf{Luồng sự kiện chính:}
+\begin{enumerate}
+    \item Giáo viên chọn chức năng Quét phiếu thi từ màn hình chính.
+    \item Hệ thống hiển thị giao diện camera với khung hướng dẫn đặt phiếu thi.
+    \item Giáo viên đặt phiếu thi trắc nghiệm trước camera, hệ thống tự động phát hiện bốn góc phiếu và hiển thị đường viền phát hiện.
+    \item Giáo viên bấm nút chụp, hệ thống chụp ảnh và thực hiện căn chỉnh phối cảnh.
+    \item Hệ thống trích xuất vùng chứa các bọt đáp án và áp dụng kỹ thuật OCR/OMR để nhận dạng các bọt đã tô.
+    \item Hệ thống đối chiếu đáp án nhận diện được với đáp án mẫu của đề thi đã chọn và tính điểm.
+    \item Hệ thống hiển thị kết quả chấm điểm chi tiết: tổng điểm, số câu đúng, số câu sai, danh sách các câu sai kèm đáp án đúng.
+    \item Giáo viên xác nhận kết quả hoặc điều chỉnh thủ công một số câu nếu cần.
+    \item Hệ thống lưu kết quả chấm thi vào cơ sở dữ liệu.
+\end{enumerate}
+
+\textbf{Luồng sự kiện phát sinh - Điều chỉnh thủ công:}
+\begin{enumerate}
+    \item[a)] Tại bước 7, giáo viên bấm nút sửa để chỉnh sửa thủ công một số câu.
+    \item[b)] Hệ thống hiển thị danh sách các câu với phương án A, B, C, D.
+    \item[c)] Giáo viên thay đổi đáp án và bấm xác nhận, hệ thống tính lại điểm.
+\end{enumerate}
+
+\textbf{Luồng sự kiện phát sinh - Không phát hiện được góc phiếu:}
+\begin{enumerate}
+    \item[a)] Tại bước 3, nếu hệ thống không phát hiện được góc phiếu sau 5 giây, hiển thị thông báo hướng dẫn điều chỉnh góc chụp.
+    \item[b)] Giáo viên điều chỉnh vị trí phiếu và góc camera, hệ thống tiếp tục phát hiện.
+\end{enumerate}
+
+\textbf{Hậu điều kiện:} Kết quả chấm thi được lưu thành công, kết quả được hiển thị cho giáo viên và có thể xem lại sau đó.
+
+\subsection{Đặc tả use case Phân tích kết quả bằng AI}
+\hfill
+
+\textbf{Tên use case:} Phân tích kết quả bằng AI
+
+\textbf{Tác nhân chính:} Giáo viên, Hệ thống (Generative AI)
+
+\textbf{Mô tả:} Cho phép giáo viên yêu cầu hệ thống phân tích kết quả bài thi của toàn lớp bằng Generative AI, nhận về báo cáo tổng hợp phổ điểm, các câu hỏi học sinh hay sai và nhận xét chi tiết.
+
+\textbf{Tiền điều kiện:} Giáo viên đã hoàn thành chấm thi cho một phiên thi với ít nhất 5 phiếu.
+
+\textbf{Luồng sự kiện chính:}
+\begin{enumerate}
+    \item Giáo viên chọn phiên thi đã chấm xong từ danh sách kết quả.
+    \item Giáo viên bấm nút Phân tích bằng AI.
+    \item Hệ thống tổng hợp toàn bộ dữ liệu điểm số, danh sách câu đúng sai của từng học sinh.
+    \item Hệ thống gửi dữ liệu tổng hợp tới API Generative AI kèm prompt định sẵn yêu cầu phân tích.
+    \item Generative AI trả về báo cáo phân tích bao gồm: phổ điểm, tỷ lệ đạt yêu cầu, danh sách các câu hỏi có tỷ lệ sai cao nhất, nguyên nhân phổ biến dẫn đến sai và đề xuất phương pháp cải thiện.
+    \item Hệ thống hiển thị báo cáo phân tích cho giáo viên dưới dạng văn bản và biểu đồ.
+    \item Giáo viên có thể lưu báo cáo hoặc chia sẻ với đồng nghiệp.
+\end{enumerate}
+
+\textbf{Hậu điều kiện:} Báo cáo phân tích AI được hiển thị cho giáo viên và có thể lưu trữ để tham khảo.
+
+\subsection{Đặc tả use case Xem kết quả thi}
+\hfill
+
+\textbf{Tên use case:} Xem kết quả thi
+
+\textbf{Tác nhân chính:} Giáo viên, Học sinh
+
+\textbf{Mô tả:} Cho phép người dùng xem chi tiết kết quả bài thi, bao gồm điểm số, số câu đúng sai và danh sách các câu đã làm.
+
+\textbf{Tiền điều kiện:} Người dùng đã đăng nhập và có kết quả thi trong hệ thống.
+
+\textbf{Luồng sự kiện chính:}
+\begin{enumerate}
+    \item Người dùng chọn chức năng Xem kết quả thi.
+    \item Hệ thống hiển thị danh sách các bài thi đã tham gia với thông tin cơ bản: tên đề thi, ngày thi, điểm số.
+    \item Người dùng chọn một bài thi cụ thể.
+    \item Hệ thống hiển thị chi tiết: tổng điểm, biểu đồ phổ điểm của lớp (nếu là giáo viên), danh sách từng câu với trạng thái đúng/sai.
+    \item Với mỗi câu sai, hệ thống hiển thị đáp án đúng và phương án học sinh đã chọn.
+\end{enumerate}
+
+\textbf{Luồng sự kiện phát sinh - Nộp phúc khảo (Học sinh):}
+\begin{enumerate}
+    \item[a)] Học sinh chọn một câu hỏi cụ thể mà em cho là bị chấm sai.
+    \item[b)] Hệ thống hiển thị biểu mẫu yêu cầu phúc khảo, cho phép học sinh nhập lý do.
+    \item[c)] Học sinh gửi yêu cầu phúc khảo, giáo viên nhận được thông báo và xem xét.
+\end{enumerate}
+
+\textbf{Hậu điều kiện:} Người dùng xem được chi tiết kết quả bài thi.
+
+\section{Yêu cầu phi chức năng}
+\label{section:2.4}
+Bên cạnh các yêu cầu chức năng đã đặc tả ở trên, hệ thống SMART GRADING cần đáp ứng các yêu cầu phi chức năng sau đây.
+
+Về hiệu năng, thời gian xử lý một ảnh phiếu thi từ lúc chụp đến khi hiển thị kết quả không quá 3 giây trên thiết bị có cấu hình trung bình. Thời gian phản hồi của API Generative AI không quá 10 giây cho mỗi yêu cầu phân tích. Hệ thống hỗ trợ đồng thời tối thiểu 50 người dùng truy cập cùng lúc.
+
+Về độ tin cậy, tỷ lệ nhận dạng đáp án đúng của module OCR/OMR đạt tối thiểu 95\% trong điều kiện ánh sáng bình thường và phiếu thi không bị nhàu nát nghiêm trọng. Hệ thống cần lưu trữ kết quả thi một cách an toàn, đảm bảo dữ liệu không bị mất khi có sự cố.
+
+Về tính dễ dùng, giao diện người dùng cần trực quan, dễ hiểu để giáo viên ở mọi lứa tuổi có thể sử dụng được mà không cần đào tạo nhiều. Quy trình quét phiếu thi được thiết kế đơn giản, tối đa 3 thao tác từ khi mở camera đến khi có kết quả.
+
+Về tính dễ bảo trì, hệ thống được thiết kế theo kiến trúc module hóa, cho phép dễ dàng nâng cấp và mở rộng. Mã nguồn được tổ chức rõ ràng, có tài liệu mô tả API và cấu trúc dữ liệu.
+
+Về yêu cầu kỹ thuật, ứng dụng di động hỗ trợ Android phiên bản 6.0 (API 23) trở lên và iOS phiên bản 12.0 trở lên. Backend sử dụng Node.js với cơ sở dữ liệu MongoDB. Module OCR sử dụng OpenCV cho xử lý ảnh và Google ML Kit hoặc Tesseract cho nhận dạng ký tự.
+
+Về bảo mật, toàn bộ dữ liệu truyền tải giữa ứng dụng và server sử dụng giao thức HTTPS. Thông tin đăng nhập và token xác thực được mã hóa và lưu trữ an toàn trên thiết bị. Phân quyền người dùng được kiểm soát chặt chẽ ở cả tầng ứng dụng và tầng backend.
+
+\end{document}

@@ -11,6 +11,10 @@ router
   .post(auth('scanSubmissions'), validate(submissionValidation.scanSubmission), submissionController.scan);
 
 router
+  .route('/me')
+  .get(auth(), validate(submissionValidation.getMySubmissions), submissionController.getMy);
+
+router
   .route('/')
   .get(auth(), validate(submissionValidation.getSubmissions), submissionController.getAll);
 

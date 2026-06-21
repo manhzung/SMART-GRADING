@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:smart_grading_mobile/core/network/user_service.dart';
 import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/auth/auth_bloc.dart';
+import 'package:smart_grading_mobile/presentation/pages/profile_display.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -39,17 +40,13 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
-    String name = 'Dr. Eleanor Vance';
-    String email = 'eleanor.vance@smartgrading.edu';
-    String role = 'Lead Curriculum Director';
-    String? avatarUrl;
-
-    if (authState is AuthAuthenticated) {
-      name = authState.user.role == 'teacher' ? 'Dr. ${authState.user.name}' : authState.user.name;
-      email = authState.user.email;
-      role = authState.user.role == 'teacher' ? 'Lead Curriculum Director' : authState.user.role.toUpperCase();
-      avatarUrl = authState.user.avatarUrl;
-    }
+    final User? user = authState is AuthAuthenticated ? authState.user : null;
+    final name = ProfileDisplay.displayName(user);
+    final email = ProfileDisplay.email(user);
+    final role = ProfileDisplay.roleLabel(user?.role);
+    final avatarUrl = ProfileDisplay.avatarUrl(user);
+    final phone = ProfileDisplay.phone(user);
+    final initials = _initialsFromName(name);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -78,13 +75,13 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(18),
-                        child: Image.network(
-                          avatarUrl ?? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Center(
-                            child: Icon(Icons.person, size: 50, color: Color(0xFF64748B)),
-                          ),
-                        ),
+                        child: avatarUrl != null
+                            ? Image.network(
+                                avatarUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => _AvatarFallback(initials: initials),
+                              )
+                            : _AvatarFallback(initials: initials),
                       ),
                     ),
                     Positioned(
@@ -289,47 +286,51 @@ class _ProfileViewState extends State<ProfileView> {
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             padding: const EdgeInsets.all(16),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Institution',
+                const Text(
+                  'School ID',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'St. Augustine Academy of Science',
-                  style: TextStyle(
+                  (user?.schoolId != null && user!.schoolId!.isNotEmpty)
+                      ? user.schoolId!
+                      : 'Not assigned',
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF0F172A),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(color: Color(0xFFE2E8F0), height: 1),
-                ),
-                Text(
-                  'School Code',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
+                if (phone != null) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(color: Color(0xFFE2E8F0), height: 1),
                   ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'STA-9923-CORE',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
+                  const Text(
+                    'Phone',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    phone,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -963,6 +964,40 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+String _initialsFromName(String name) {
+  final trimmed = name.trim();
+  if (trimmed.isEmpty || trimmed == 'Unnamed user') return '?';
+  final parts = trimmed.split(RegExp(r'\s+'));
+  if (parts.length == 1) {
+    return parts.first.characters.first.toUpperCase();
+  }
+  final first = parts.first.characters.first;
+  final last = parts.last.characters.first;
+  return (first + last).toUpperCase();
+}
+
+class _AvatarFallback extends StatelessWidget {
+  const _AvatarFallback({required this.initials});
+
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFE2E8F0),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF475569),
         ),
       ),
     );

@@ -98,6 +98,28 @@ class AppealService {
     };
   }
 
+  async getMy(studentId, query = {}) {
+    const { submissionId, examId, status, ...rest } = query;
+    const { page, limit, skip } = parsePagination(query);
+    const filter = { studentId: new mongoose.Types.ObjectId(studentId), ...rest };
+    if (submissionId) filter.submissionId = submissionId;
+    if (examId) filter.examId = examId;
+    if (status) filter.status = status;
+
+    const [results, total] = await Promise.all([
+      Appeal.find(filter)
+        .populate('examId', 'title')
+        .populate('questionId', 'content')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Appeal.countDocuments(filter),
+    ]);
+
+    return { results, page, limit, total, pages: Math.ceil(total / limit) };
+  }
+
   async getByExam(examId, query = {}) {
     const { status, ...rest } = query;
     const { page, limit, skip } = parsePagination(query);

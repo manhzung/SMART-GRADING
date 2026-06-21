@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/network/class_service.dart';
+import '../../core/network/user_service.dart';
 import '../../domain/entities/user.entity.dart';
 import '../blocs/auth/auth_bloc.dart';
-import '../blocs/school/school_bloc.dart';
 import '../blocs/class/class_bloc.dart';
 
 class CreateEditClassPage extends StatefulWidget {
@@ -22,18 +22,16 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
   late TextEditingController _nameController;
   late TextEditingController _codeController;
   late TextEditingController _academicYearController;
-  late TextEditingController _schoolController;
-  late TextEditingController _teacherController;
 
   int? _selectedGradeLevel;
+  String? _selectedTeacherId;
+  List<User> _teachers = [];
+  bool _isLoadingTeachers = false;
   bool _autovalidate = false;
 
   @override
   void initState() {
     super.initState();
-
-    // Fetch schools list if not loaded yet
-    context.read<SchoolBloc>().add(SchoolFetchRequested());
 
     // Prepopulate fields if in Edit mode
     final cls = widget.cls;
@@ -41,14 +39,15 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
     _codeController = TextEditingController(text: cls?.code ?? '');
     _academicYearController = TextEditingController(text: cls?.academicYear ?? '');
     _selectedGradeLevel = cls?.gradeLevel;
-    _schoolController = TextEditingController();
-    _teacherController = TextEditingController();
 
     // Auto-set academic year for new classes
     if (cls == null) {
       final now = DateTime.now();
       _academicYearController.text = '${now.year}-${now.year + 1}';
     }
+
+    // Load teachers list for homeroom teacher dropdown
+    _loadTeachers();
   }
 
   @override
@@ -56,9 +55,28 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
     _nameController.dispose();
     _codeController.dispose();
     _academicYearController.dispose();
-    _schoolController.dispose();
-    _teacherController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadTeachers() async {
+    setState(() => _isLoadingTeachers = true);
+    try {
+      final userService = GetIt.instance<UserService>();
+      final result = await userService.getTeachers(page: 1, limit: 100);
+      if (!mounted) return;
+      setState(() {
+        _teachers = result.results;
+        _isLoadingTeachers = false;
+        // Default homeroom teacher = current user
+        final authState = context.read<AuthBloc>().state;
+        if (authState is AuthAuthenticated) {
+          _selectedTeacherId = authState.user.id;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingTeachers = false);
+    }
   }
 
   String _getUserInitials(String name) {
@@ -80,6 +98,31 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
 
     if (_formKey.currentState!.validate()) {
       final isEdit = widget.cls != null;
+      final authState = context.read<AuthBloc>().state;
+      if (authState is! AuthAuthenticated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Phiên đăng nhập đã hết hạn'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      // Auto-fill schoolId from current user (matches web behavior)
+      final currentUser = authState.user;
+      final schoolId = currentUser.schoolId;
+      if (schoolId == null || schoolId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tài khoản chưa được gán trường học'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
 
       // Show loading dialog
       showDialog(
@@ -105,6 +148,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
             code: _codeController.text.trim(),
             gradeLevel: _selectedGradeLevel ?? 12,
             academicYear: _academicYearController.text.trim(),
+            schoolId: schoolId,
           );
         }
 
@@ -137,53 +181,6 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
         }
       }
     }
-  }
-
-  void _selectSchoolDialog(List<School> schools) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Chọn Trường học',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: schools.length,
-                  itemBuilder: (context, index) {
-                    final school = schools[index];
-                    return ListTile(
-                      title: Text(school.name),
-                      leading: const Icon(Icons.school_outlined, color: Color(0xFF081C43)),
-                      onTap: () {
-                        setState(() {
-                          _schoolController.text = school.name;
-                        });
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -395,45 +392,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Trường học
-                        const Text(
-                          'Trường học',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF334155),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        BlocBuilder<SchoolBloc, SchoolState>(
-                          builder: (context, state) {
-                            final schools = state is SchoolLoaded ? state.schools : <School>[];
-                            return TextFormField(
-                              controller: _schoolController,
-                              readOnly: true,
-                              onTap: () {
-                                if (schools.isNotEmpty) {
-                                  _selectSchoolDialog(schools);
-                                }
-                              },
-                              decoration: _buildInputDecoration(
-                                'Chọn trường học',
-                                prefixIcon: const Icon(
-                                  Icons.search,
-                                  color: Color(0xFF64748B),
-                                  size: 22,
-                                ),
-                              ),
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: Color(0xFF0F172A),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Giáo viên chủ nhiệm
+                        // Giáo viên chủ nhiệm (matches web: dropdown, default = current user)
                         const Text(
                           'Giáo viên chủ nhiệm',
                           style: TextStyle(
@@ -443,20 +402,34 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        TextFormField(
-                          controller: _teacherController,
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedTeacherId,
+                          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
                           decoration: _buildInputDecoration(
-                            'Tên giáo viên chủ nhiệm',
+                            _isLoadingTeachers ? 'Đang tải...' : 'Chọn giáo viên chủ nhiệm',
                             prefixIcon: const Icon(
                               Icons.person_outline,
                               color: Color(0xFF64748B),
                               size: 22,
                             ),
                           ),
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Color(0xFF0F172A),
-                          ),
+                          items: [
+                            const DropdownMenuItem<String>(
+                              value: '',
+                              child: Text('-- Chọn giáo viên --'),
+                            ),
+                            ..._teachers.map((t) => DropdownMenuItem<String>(
+                                  value: t.id,
+                                  child: Text('${t.name} (${t.email})'),
+                                )),
+                          ],
+                          onChanged: _isLoadingTeachers
+                              ? null
+                              : (val) {
+                                  setState(() {
+                                    _selectedTeacherId = val;
+                                  });
+                                },
                         ),
                         const SizedBox(height: 10),
                       ],

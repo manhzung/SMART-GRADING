@@ -95,17 +95,6 @@ Diem: ${exam.totalScore}
     );
   }
 
-  void _openScanner() {
-    Navigator.pushNamed(
-      context,
-      '/scan',
-      arguments: {
-        'examId': widget.exam.id,
-        'examName': widget.exam.title,
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final displayExam = _fullExam ?? widget.exam;
@@ -550,27 +539,6 @@ Diem: ${exam.totalScore}
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  FloatingActionButton.extended(
-                    onPressed: _openScanner,
-                    heroTag: 'scan_btn',
-                    elevation: 4,
-                    backgroundColor: const Color(0xFF16A34A),
-                    icon: const Icon(
-                      Icons.qr_code_scanner,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    label: const Text(
-                      'CHAM BAI',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
                   FloatingActionButton.extended(
                     onPressed: () {
                       Navigator.push(

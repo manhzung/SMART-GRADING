@@ -411,8 +411,10 @@ describe('Exam Service - getUpcomingExams', () => {
     const teacherOne = { id: teacherOneId.toString(), role: 'teacher' };
     const results = await examService.getUpcomingExams(teacherOne, 10);
 
-    expect(results[0].title).toBe('Math Test - Chapter 3'); // 7 days
-    expect(results[1].title).toBe('Draft Exam - Should Still Appear'); // 5 days - WAIT, should be first!
+    // Order by date: Draft (5d) < Math Ch.3 (7d) < Math Ch.4 (14d)
+    expect(results[0].title).toBe('Draft Exam - Should Still Appear');
+    expect(results[1].title).toBe('Math Test - Chapter 3');
+    expect(results[2].title).toBe('Math Test - Chapter 4');
   });
 
   it('should respect limit parameter', async () => {
