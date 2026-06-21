@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const fs = require('fs');
 const { ExamReport, Submission, Exam } = require('../models');
 const ApiError = require('../utils/ApiError');
 const schoolService = require('./school.service');
@@ -136,13 +137,30 @@ class ReportService {
       throw new ApiError(404, 'Report not found');
     }
 
-    // TODO: Generate PDF/Excel file
-    // For now, return the report data
-    return {
-      report,
-      format,
-      downloadUrl: null,
-    };
+    const exportService = require('./export.service');
+
+    try {
+      let filePath;
+      if (format === 'pdf') {
+        filePath = await exportService.generateExamReportPdf(examId);
+      } else if (format === 'excel') {
+        filePath = await exportService.generateExamReportExcel(examId);
+      } else {
+        throw new ApiError(400, 'Invalid format. Supported: pdf, excel');
+      }
+
+      const downloadUrl = await exportService.uploadToCloudinary(filePath, 'exam-reports');
+
+      try { fs.unlinkSync(filePath); } catch (e) { /* ignore cleanup error */ }
+
+      return {
+        report,
+        format,
+        downloadUrl,
+      };
+    } catch (error) {
+      throw new ApiError(500, `Export failed: ${error.message}`);
+    }
   }
 
   calculateStdDev(values) {

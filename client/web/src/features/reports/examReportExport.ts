@@ -5,7 +5,6 @@ import type { ExamReport } from './types';
 import type { Exam } from '../../presentation/store/examStore';
 import type { BackendSubmission } from '../../presentation/store/submissionStore';
 import { apiService } from '../../core/api';
-import { generateOmrSheetPdf, generateOmrVersionSheetsPdf, type OMRTemplateJson } from './omrSheetPdf';
 
 // ─── Type Definitions ──────────────────────────────────────────────────────────
 
@@ -470,19 +469,7 @@ export function prepareGradeDistribution(report: ExamReport): GradeDistributionR
   }));
 }
 
-// ─── OMR Template PDF Export (browser-side) ──────────────────────────────────────
-
-async function fetchOmrJson(templateId: string): Promise<OMRTemplateJson> {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/omr-templates/${templateId}/json`,
-    { headers: apiService.getHeaders() }
-  );
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ message: 'Không lấy được template' }));
-    throw new Error(err.message || `Lỗi ${response.status}`);
-  }
-  return response.json();
-}
+// ─── OMR Template PDF Export (server-side) ───────────────────────────────────────
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -500,14 +487,27 @@ export async function exportOmrTemplatePdf(
   examTitle: string,
   schoolName?: string
 ): Promise<void> {
-  const template = await fetchOmrJson(templateId);
+  // Fetch pre-rendered PDF from server. Server uses PDFKit — same coordinate
+  // path as the /json endpoint, guaranteeing alignment with mobile overlay.
+  const params = new URLSearchParams({ examTitle, schoolName: schoolName || '' });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/omr-templates/${templateId}/pdf?${params}`,
+    { headers: apiService.getHeaders() }
+  );
 
-  const blob = await generateOmrSheetPdf({
-    template,
-    examTitle,
-    schoolName: schoolName || 'SCHOOL',
-    versionCode: undefined,
-  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ message: 'Export failed' }));
+    throw new Error(err.message || `Lỗi ${response.status}: Xuất phiếu trả lời thất bại`);
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/pdf')) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Server trả về không phải PDF: ${contentType} — ${text.slice(0, 100)}`);
+  }
+
+  const blob = await response.blob();
+  if (blob.size === 0) throw new Error('File PDF rỗng (0 bytes)');
 
   const safe = examTitle?.replace(/[^a-zA-Z0-9\u00C0-\u024F\s]/g, '_') || 'OMR';
   downloadBlob(blob, `PhieuTraLoi_${safe}_${Date.now()}.pdf`);
@@ -519,31 +519,36 @@ export async function exportOmrTemplateVersionSheetsPdf(
   examTitle: string,
   schoolName?: string
 ): Promise<void> {
-  const template = await fetchOmrJson(templateId);
-
   if (versionCodes.length === 1) {
-    const blob = await generateOmrSheetPdf({
-      template,
-      examTitle,
-      schoolName: schoolName || 'SCHOOL',
-      versionCode: versionCodes[0],
-    });
-    const safe = examTitle?.replace(/[^a-zA-Z0-9\u00C0-\u024F\s]/g, '_') || 'OMR';
-    downloadBlob(blob, `PhieuTraLoi_${safe}_${Date.now()}.pdf`);
+    // Single version — same endpoint as regular PDF
+    await exportOmrTemplatePdf(templateId, examTitle, schoolName);
     return;
   }
 
-  const blobs = await generateOmrVersionSheetsPdf({
-    template,
-    examTitle,
-    schoolName: schoolName || 'SCHOOL',
-    versionCodes,
-  });
+  // Multiple versions — call the versions endpoint (returns ZIP)
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/omr-templates/${templateId}/pdf/versions`,
+    {
+      method: 'POST',
+      headers: { ...apiService.getHeaders(), 'content-type': 'application/json' },
+      body: JSON.stringify({ versions: versionCodes, examTitle, schoolName }),
+    }
+  );
 
-  // Bundle as ZIP using JSZip-like approach via Blob concatenation
-  // For simplicity, download each PDF sequentially
-  const safe = examTitle?.replace(/[^a-zA-Z0-9\u00C0-\u024F\s]/g, '_') || 'OMR';
-  for (let i = 0; i < blobs.length; i++) {
-    downloadBlob(blobs[i], `PhieuTraLoi_${safe}_v${versionCodes[i]}_${Date.now()}.pdf`);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ message: 'Export failed' }));
+    throw new Error(err.message || `Lỗi ${response.status}: Xuất phiếu trả lời nhiều đề thất bại`);
   }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('zip') && !contentType.includes('pdf')) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Server trả về không phải ZIP: ${contentType} — ${text.slice(0, 100)}`);
+  }
+
+  const blob = await response.blob();
+  if (blob.size === 0) throw new Error('File ZIP rỗng (0 bytes)');
+
+  const safe = examTitle?.replace(/[^a-zA-Z0-9\u00C0-\u024F\s]/g, '_') || 'OMR';
+  downloadBlob(blob, `PhieuTraLoi_${safe}_all_versions_${Date.now()}.zip`);
 }
