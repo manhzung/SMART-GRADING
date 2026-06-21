@@ -8,19 +8,54 @@ const scanSubmission = {
   body: Joi.object().keys({
     examId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
     classId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-    // Base64 encoded image
-    image: Joi.string().required(),
+    // Cloudinary flow
+    originalUrl: Joi.string().uri(),
+    originalPublicId: Joi.string(),
+    imageMeta: Joi.object().keys({
+      width: Joi.number().integer().min(1),
+      height: Joi.number().integer().min(1),
+      bytes: Joi.number().integer().min(1),
+      format: Joi.string().valid('jpg', 'jpeg', 'png', 'webp', 'heic'),
+    }),
+    // Legacy base64 flow (still allowed when UPLOAD_MODE=base64)
+    image: Joi.string(),
     deviceInfo: Joi.object().keys({
       platform: Joi.string().valid('ios', 'android', 'web'),
       deviceModel: Joi.string(),
       appVersion: Joi.string(),
     }),
+  }).or('originalUrl', 'image'),
+};
+
+const attachImage = {
+  params: id,
+  body: Joi.object().keys({
+    type: Joi.string().valid('original', 'preprocessed', 'annotated').required(),
+    url: Joi.string().uri().required(),
+    publicId: Joi.string().required(),
+    width: Joi.number().integer().min(1),
+    height: Joi.number().integer().min(1),
+    bytes: Joi.number().integer().min(1),
+    format: Joi.string().valid('jpg', 'jpeg', 'png', 'webp', 'heic'),
   }),
 };
 
-const getSubmission = {
-  params: id,
+const deleteImage = {
+  params: Joi.object().keys({
+    id: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    type: Joi.string().valid('original', 'preprocessed', 'annotated').required(),
+  }),
 };
+
+const getUploadSignature = {
+  query: Joi.object().keys({
+    examId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    submissionId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    type: Joi.string().valid('original', 'preprocessed', 'annotated').required(),
+  }),
+};
+
+const getSubmission = { params: id };
 
 const getSubmissions = {
   query: Joi.object().keys({
@@ -55,9 +90,7 @@ const manualOverride = {
   }),
 };
 
-const deleteSubmission = {
-  params: id,
-};
+const deleteSubmission = { params: id };
 
 const getStudentSubmissions = {
   params: Joi.object().keys({
@@ -70,12 +103,24 @@ const getStudentSubmissions = {
   }),
 };
 
+const getMySubmissions = {
+  query: Joi.object().keys({
+    status: Joi.string().valid('pending', 'scanning', 'scanned', 'manual_review', 'completed', 'appealed'),
+    limit: Joi.number().min(1).max(100),
+    page: Joi.number().min(1),
+  }),
+};
+
 module.exports = {
   scanSubmission,
+  attachImage,
+  deleteImage,
+  getUploadSignature,
   getSubmission,
   getSubmissions,
   getExamSubmissions,
   manualOverride,
   deleteSubmission,
   getStudentSubmissions,
+  getMySubmissions,
 };

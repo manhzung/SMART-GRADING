@@ -14,3 +14,4 @@ module.exports.AIChat = require('./aiChat.model');
 module.exports.Notification = require('./notification.model');
 module.exports.StudentProgress = require('./studentProgress.model');
 module.exports.ExamReport = require('./examReport.model');
+module.exports.UploadAuditLog = require('./uploadAuditLog.model');

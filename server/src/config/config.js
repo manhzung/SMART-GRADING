@@ -27,6 +27,9 @@ const envVarsSchema = Joi.object()
     CLOUDINARY_CLOUD_NAME: Joi.string().description('Cloudinary cloud name'),
     CLOUDINARY_API_KEY: Joi.string().description('Cloudinary API key'),
     CLOUDINARY_API_SECRET: Joi.string().description('Cloudinary API secret'),
+    UPLOAD_MODE: Joi.string().valid('cloudinary', 'base64').default('cloudinary'),
+    UPLOAD_SIGNATURE_TTL_SECONDS: Joi.number().default(300),
+    UPLOAD_MAX_BYTES: Joi.number().default(10 * 1024 * 1024),
   })
   .unknown();
 
@@ -70,5 +73,10 @@ module.exports = {
     cloud_name: envVars.CLOUDINARY_CLOUD_NAME,
     api_key: envVars.CLOUDINARY_API_KEY,
     api_secret: envVars.CLOUDINARY_API_SECRET,
+  },
+  upload: {
+    mode: envVars.UPLOAD_MODE,
+    signatureTtlSeconds: envVars.UPLOAD_SIGNATURE_TTL_SECONDS,
+    maxBytes: envVars.UPLOAD_MAX_BYTES,
   },
 };

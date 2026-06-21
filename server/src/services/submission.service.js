@@ -6,12 +6,43 @@ const { parsePagination } = require('../utils/parsePagination');
 
 class SubmissionService {
   async scan(data) {
-    const { examId, classId, image, deviceInfo } = data;
+    const { examId, classId, originalUrl, originalPublicId, imageMeta, image, deviceInfo } = data;
+    const config = require('../config/config');
+    const { assertIsCloudinaryUrl } = require('../utils/cloudinary.util');
 
     // Find exam
     const exam = await Exam.findById(examId);
     if (!exam) {
       throw new ApiError(404, 'Exam not found');
+    }
+
+    if (config.upload.mode === 'cloudinary') {
+      if (!originalUrl) {
+        throw new ApiError(400, 'originalUrl is required when UPLOAD_MODE=cloudinary');
+      }
+      assertIsCloudinaryUrl(originalUrl, config.cloudinary.cloud_name);
+    }
+
+    // If we have a Cloudinary URL, forward to python bridge for actual scanning
+    if (config.upload.mode === 'cloudinary' && originalUrl) {
+      const pythonBridge = require('./pythonBridge.service');
+      try {
+        const result = await pythonBridge.processImage({
+          imageUrl: originalUrl,
+          template: {},
+        });
+        return {
+          status: 'scanning',
+          examId,
+          originalUrl,
+          originalPublicId,
+          imageMeta: imageMeta || null,
+          deviceInfo: deviceInfo || null,
+          pythonResult: result,
+        };
+      } catch (err) {
+        // Fall through to pending response
+      }
     }
 
     // TODO: Implement actual OMR scanning here
@@ -21,7 +52,10 @@ class SubmissionService {
       message: 'OMR scanning service not yet implemented',
       examId,
       classId,
-    };
+      originalUrl: originalUrl || null,
+      originalPublicId: originalPublicId || null,
+      imageMeta: imageMeta || null,
+      deviceInfo: deviceInfo || null,
   }
 
   async createFromOMR(scanResult, userId) {
@@ -166,8 +200,127 @@ class SubmissionService {
   }
 
   async delete(id) {
-    const submission = await Submission.findByIdAndDelete(id);
+    const cloudinaryService = require('./cloudinary.service');
+    const submission = await Submission.findById(id);
+    if (!submission) return null;
+
+    for (const type of ['original', 'preprocessed', 'annotated']) {
+      const img = submission.images?.[type];
+      if (img?.publicId) {
+        try {
+          await cloudinaryService.destroy(img.publicId);
+        } catch (err) {
+          // best-effort; do not fail the deletion
+        }
+      }
+    }
+    await Submission.findByIdAndDelete(id);
     return submission;
+  }
+
+  async attachImage(submissionId, userId, payload, auditContext) {
+    const { UploadAuditLog } = require('../models');
+    const config = require('../config/config');
+    const { assertIsCloudinaryUrl } = require('../utils/cloudinary.util');
+
+    const submission = await Submission.findById(submissionId);
+    if (!submission) {
+      throw new ApiError(404, 'Submission not found');
+    }
+
+    const { type, url, publicId, width, height, bytes, format } = payload;
+
+    if (!['original', 'preprocessed', 'annotated'].includes(type)) {
+      throw new ApiError(400, 'Invalid image type');
+    }
+    if (bytes != null && bytes > config.upload.maxBytes) {
+      throw new ApiError(400, `Image exceeds max size of ${config.upload.maxBytes} bytes`);
+    }
+
+    assertIsCloudinaryUrl(url, config.cloudinary.cloud_name);
+
+    submission.images = submission.images || {};
+    submission.images[type] = {
+      publicId,
+      url,
+      width,
+      height,
+      bytes,
+      format,
+      uploadedAt: new Date(),
+    };
+    await submission.save();
+
+    if (UploadAuditLog) {
+      await UploadAuditLog.create({
+        userId,
+        action: 'attach_image',
+        submissionId: submission._id,
+        imageType: type,
+        publicId,
+        cloudinaryUrl: url,
+        bytes,
+        ipAddress: auditContext?.ip,
+        userAgent: auditContext?.userAgent,
+      });
+    }
+
+    return submission;
+  }
+
+  async deleteImage(submissionId, userId, type, auditContext) {
+    const { UploadAuditLog } = require('../models');
+    const cloudinaryService = require('./cloudinary.service');
+
+    const submission = await Submission.findById(submissionId);
+    if (!submission) {
+      throw new ApiError(404, 'Submission not found');
+    }
+    if (!['original', 'preprocessed', 'annotated'].includes(type)) {
+      throw new ApiError(400, 'Invalid image type');
+    }
+
+    const img = submission.images?.[type];
+    if (!img || !img.publicId) {
+      throw new ApiError(404, `No image of type "${type}" on this submission`);
+    }
+
+    let destroyResult;
+    try {
+      destroyResult = await cloudinaryService.destroy(img.publicId);
+    } catch (err) {
+      if (UploadAuditLog) {
+        await UploadAuditLog.create({
+          userId,
+          action: 'delete_image',
+          submissionId: submission._id,
+          imageType: type,
+          publicId: img.publicId,
+          error: err.message,
+          ipAddress: auditContext?.ip,
+          userAgent: auditContext?.userAgent,
+        });
+      }
+      // Continue to clear DB record even if Cloudinary fails
+    }
+
+    submission.images[type] = undefined;
+    await submission.save();
+
+    if (UploadAuditLog) {
+      await UploadAuditLog.create({
+        userId,
+        action: 'delete_image',
+        submissionId: submission._id,
+        imageType: type,
+        publicId: img.publicId,
+        cloudinaryUrl: img.url,
+        ipAddress: auditContext?.ip,
+        userAgent: auditContext?.userAgent,
+      });
+    }
+
+    return { submission, destroyResult };
   }
 
   async getStatistics(examId) {

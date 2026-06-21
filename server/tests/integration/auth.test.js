@@ -33,6 +33,7 @@ describe('Auth routes', () => {
         password: 'password1',
         schoolId: schoolA._id.toString(),
       };
+      jest.spyOn(emailService.transport, 'sendMail').mockResolvedValue();
     });
 
     test('should return 201 and successfully register user if request data is ok', async () => {

@@ -77,34 +77,39 @@ const submissionAnswerSchema = new mongoose.Schema({
   omrData: omrDataSchema,
 });
 
+const imageEntrySchema = new mongoose.Schema({
+  publicId: { type: String, index: true },
+  url: String,
+  width: Number,
+  height: Number,
+  bytes: Number,
+  format: {
+    type: String,
+    enum: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
+  },
+  dpi: Number,
+  uploadedAt: { type: Date, default: Date.now },
+}, { _id: false });
+
+const annotatedMarkerSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['correct', 'incorrect', 'double_fill', 'empty'],
+  },
+  x: Number,
+  y: Number,
+  radius: Number,
+  color: String,
+}, { _id: false });
+
 const imageSchema = new mongoose.Schema({
-  original: {
-    url: String,
-    width: Number,
-    height: Number,
-    dpi: Number,
-  },
-  preprocessed: {
-    url: String,
-    width: Number,
-    height: Number,
-  },
+  original: imageEntrySchema,
+  preprocessed: imageEntrySchema,
   annotated: {
-    url: String,
-    markers: [
-      {
-        type: {
-          type: String,
-          enum: ['correct', 'incorrect', 'double_fill', 'empty'],
-        },
-        x: Number,
-        y: Number,
-        radius: Number,
-        color: String,
-      },
-    ],
+    ...imageEntrySchema.obj,
+    markers: [annotatedMarkerSchema],
   },
-});
+}, { _id: false });
 
 const scanMetadataSchema = new mongoose.Schema({
   deviceInfo: {
@@ -237,6 +242,9 @@ submissionSchema.index({ studentId: 1, examId: 1 });
 submissionSchema.index({ status: 1 });
 submissionSchema.index({ omrTemplateId: 1 });
 submissionSchema.index({ scannedAt: -1 });
+submissionSchema.index({ 'images.original.publicId': 1 });
+submissionSchema.index({ 'images.preprocessed.publicId': 1 });
+submissionSchema.index({ 'images.annotated.publicId': 1 });
 
 submissionSchema.methods.recalculateScore = async function () {
   const total = this.answers.reduce((sum, a) => sum + a.score, 0);
