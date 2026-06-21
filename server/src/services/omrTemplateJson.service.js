@@ -226,9 +226,14 @@ function buildAnswerAreaBlocks(aa, layout) {
   const cellW = qNumW + questionGap + numOptions * bw + (numOptions - 1) * bGap;
   const rows = Math.ceil(totalQuestions / questionsPerRow);
 
-  // Apply vertical offset in the cells: cy + (cellH - bubbleH) / 2
-  const cellHOffset = Math.round(((bc.height || 4) + (bc.spacing?.betweenRows || 8) - (bc.height || 4)) / 2);
-  const oy = mmToPx(gridY + cellHOffset);
+  // Center bubble vertically in its cell: offset from cell top to bubble center
+  // = (cellH - bubbleH) / 2 = ((bh + lGap) - bh) / 2 = lGap / 2
+  // lGapMm is the row spacing in mm; divide by 2 to get the center offset.
+  // (bc.height || 4) gives the bubble height in mm; the +lGapMm -bc.height terms
+  // cancel out, leaving just lGapMm, so cellHOffsetMm = lGapMm / 2.
+  const lGapMm = bc.spacing?.betweenRows || 8;
+  const cellHOffsetMm = ((bc.height || 4) + lGapMm - (bc.height || 4)) / 2; // = lGapMm / 2
+  const oy = mmToPx(gridY + cellHOffsetMm);
 
   const blocks = [];
   for (let col = 0; col < questionsPerRow; col++) {

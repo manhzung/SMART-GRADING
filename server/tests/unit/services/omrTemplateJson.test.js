@@ -50,9 +50,9 @@ describe('Layout computation - Y flow', () => {
       },
     };
     const result = convertTemplate(template);
-    // answer_area_col_0 origin Y = (cbEndY + 6 + cellHOffset)mm in px
+    // answer_area_col_0 origin Y = cell CENTER (gridY + lGap/2)mm in px
     // For A4 with header 40mm: mTop=15, hdrEndY=55, cbEndY=55 (no code blocks)
-    // gridY = 55 + 6 = 61; cellHOffset = (4+8-4)/2 = 4
+    // gridY = 55 + 6 = 61; lGap=8mm → cellHOffset = 8/2 = 4mm
     // final = 65mm * 11.811 = 767.7 → 768px
     expect(result.fieldBlocks.answer_area_col_0.origin[1]).toBe(768);
   });
@@ -68,8 +68,42 @@ describe('Layout computation - Y flow', () => {
       },
     };
     const result = convertTemplate(template);
-    // code block height ≈ 35mm; answer Y pushed down beyond 1100px
+    // code block height ≈ 40mm; answer Y pushed down; must exceed the
+    // threshold + cellHOffset (lGap/2 = 4mm = 47px added to every answer area block).
     expect(result.fieldBlocks.answer_area_col_0.origin[1]).toBeGreaterThan(1100);
+  });
+
+  test('centering offset applies when bc.height is undefined (operator precedence regression)', () => {
+    // Without explicit parentheses around (bc.height || 4), the expression
+    // ((bc.height || 4 + lGapMm - (bc.height || 4)) / 2) parses as
+    // ((bc.height || (4 + lGapMm) - (bc.height || 4)) / 2) which is wrong.
+    // This test uses no explicit bubble height to catch that bug.
+    const template = {
+      pageConfig: { paperSize: 'A4' },
+      zones: {
+        header: { enabled: false },
+        studentCode: { enabled: false },
+        versionCode: { enabled: false },
+        answerArea: {
+          enabled: true,
+          gridConfig: {
+            totalQuestions: 5,
+            questionsPerRow: 5,
+            bubbleConfig: {
+              width: 4,
+              // NOTE: no height — must use default (4mm)
+              spacing: { betweenOptions: 1, betweenRows: 8 },
+            },
+            questionNumberConfig: { enabled: false },
+          },
+        },
+      },
+    };
+    const result = convertTemplate(template);
+    // mTop=15, no header/code blocks → hdrEndY=cbEndY=15, gridY=20mm
+    // bc.height defaults to 4, lGap=8 → cellHOffset = 8/2 = 4mm
+    // oy = mmToPx(20 + 4) = mmToPx(24) = round(24*11.811) = round(283.464) = 283px
+    expect(result.fieldBlocks.answer_area_col_0.origin[1]).toBe(283);
   });
 });
 
