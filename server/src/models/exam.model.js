@@ -62,6 +62,14 @@ const examSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
+    subjectName: {
+      type: String,
+      default: null,
+    },
+    subjectColor: {
+      type: String,
+      default: '#64748b',
+    },
     passingScore: {
       type: Number,
       default: 5,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/user.entity.dart';
 import '../../domain/entities/exam.entity.dart';
 import '../blocs/exam/exam_bloc.dart';
@@ -39,6 +40,13 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   void dispose() {
     _studentSearchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openEmail(String email) async {
+    final uri = Uri(scheme: 'mailto', path: email);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 
   Future<void> _refreshClass() async {
@@ -520,7 +528,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                     color: Color(0xFF0F172A),
                     size: 18,
                   ),
-                  onPressed: () {},
+                  onPressed: () => _openEmail(teacherEmail),
                 ),
               ),
             ],
@@ -1040,7 +1048,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                     color: Color(0xFF64748B),
                     size: 16,
                   ),
-                  onPressed: () {},
+                  onPressed: () => _openEmail(email),
                 ),
               ),
             ],

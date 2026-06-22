@@ -117,6 +117,83 @@ class UserService {
       parser: (_) {},
     );
   }
+
+  Future<User> createUser({
+    required String name,
+    required String email,
+    required String password,
+    required String role,
+    String? schoolId,
+    String? phone,
+  }) {
+    return _apiClient.post<User>(
+      ApiConstants.users,
+      data: {
+        'name': name,
+        'email': email,
+        'password': password,
+        'role': role,
+        if (schoolId != null) 'schoolId': schoolId,
+        if (phone != null) 'phone': phone,
+      },
+      parser: (data) {
+        final json = data is Map<String, dynamic> ? data : (data as Map<String, dynamic>)['data'] as Map<String, dynamic>?;
+        return User.fromJson(json!);
+      },
+    );
+  }
+
+  Future<User> updateUser({
+    required String userId,
+    String? name,
+    String? email,
+    String? role,
+    String? phone,
+    bool? isActive,
+  }) {
+    final data = <String, dynamic>{};
+    if (name != null) data['name'] = name;
+    if (email != null) data['email'] = email;
+    if (role != null) data['role'] = role;
+    if (phone != null) data['phone'] = phone;
+    if (isActive != null) data['isActive'] = isActive;
+
+    return _apiClient.patch<User>(
+      '${ApiConstants.users}/$userId',
+      data: data,
+      parser: (data) {
+        final json = data is Map<String, dynamic> ? data : (data as Map<String, dynamic>)['data'] as Map<String, dynamic>?;
+        return User.fromJson(json!);
+      },
+    );
+  }
+
+  Future<void> deleteUser(String userId) async {
+    await _apiClient.delete<void>(
+      '${ApiConstants.users}/$userId',
+      parser: (_) {},
+    );
+  }
+
+  Future<PaginatedUsers> getAllUsers({
+    int page = 1,
+    int limit = 100,
+    String? role,
+    String? search,
+  }) {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+    };
+    if (role != null && role.isNotEmpty) queryParams['role'] = role;
+    if (search != null && search.isNotEmpty) queryParams['name'] = search;
+
+    return _apiClient.get<PaginatedUsers>(
+      ApiConstants.users,
+      queryParameters: queryParams,
+      parser: (data) => PaginatedUsers.fromJson(data as Map<String, dynamic>),
+    );
+  }
 }
 
 class PaginatedUsers {

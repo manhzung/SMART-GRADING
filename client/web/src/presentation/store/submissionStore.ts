@@ -29,6 +29,9 @@ export interface BackendSubmission {
   };
   processingStatus?: 'pending' | 'processing' | 'completed' | 'failed';
   errorMessage?: string;
+  maxScore: number;
+  totalScore: number;
+  percentage: number;
   createdAt: string;
   updatedAt: string;
 }

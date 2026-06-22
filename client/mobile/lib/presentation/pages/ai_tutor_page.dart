@@ -64,6 +64,54 @@ class _AITutorPageState extends State<AITutorPage> {
     }
   }
 
+  Widget _buildTypingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDot(0),
+                const SizedBox(width: 4),
+                _buildDot(1),
+                const SizedBox(width: 4),
+                _buildDot(2),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDot(int index) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 600 + index * 200),
+      builder: (context, value, child) {
+        return Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: Color.lerp(
+              const Color(0xFF6366F1).withValues(alpha: 0.3),
+              const Color(0xFF6366F1),
+              value,
+            )!,
+            shape: BoxShape.circle,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
@@ -87,6 +135,32 @@ class _AITutorPageState extends State<AITutorPage> {
               icon: const Icon(Icons.history, color: Colors.white70),
               onPressed: () => _showHistory(context),
               tooltip: 'Conversation history',
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.white70),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Clear conversation?'),
+                    content: const Text('This will delete all messages in the current conversation.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _bloc.add(const AIChatClearConversation());
+                        },
+                        child: const Text('Clear'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              tooltip: 'Clear conversation',
             ),
           ],
         ),
@@ -121,15 +195,18 @@ class _AITutorPageState extends State<AITutorPage> {
                   }
 
                   if (state is AIChatLoaded) {
-                    if (state.messages.isEmpty) {
+                    if (state.messages.isEmpty && !state.isSending) {
                       return _buildEmptyState();
                     }
 
                     return ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      itemCount: state.messages.length,
+                      itemCount: state.messages.length + (state.isSending ? 1 : 0),
                       itemBuilder: (context, index) {
+                        if (state.isSending && index == state.messages.length) {
+                          return _buildTypingIndicator();
+                        }
                         return AIChatBubble(message: state.messages[index]);
                       },
                     );

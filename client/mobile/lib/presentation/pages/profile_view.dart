@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_grading_mobile/core/network/user_service.dart';
 import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/auth/auth_bloc.dart';
@@ -219,33 +220,36 @@ class _ProfileViewState extends State<ProfileView> {
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
 
                 // Language Row
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.language, color: Color(0xFF64748B), size: 22),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Text(
-                          'Language',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF0F172A),
+                InkWell(
+                  onTap: () => _showLanguageSheet(context),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.language, color: Color(0xFF64748B), size: 22),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Text(
+                            'Language',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF0F172A),
+                            ),
                           ),
                         ),
-                      ),
-                      Row(
-                        children: [
-                          const Text(
-                            'English',
-                            style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(Icons.keyboard_arrow_down, color: Colors.black.withValues(alpha: 0.5), size: 18),
-                        ],
-                      ),
-                    ],
+                        Row(
+                          children: [
+                            const Text(
+                              'English',
+                              style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.keyboard_arrow_down, color: Colors.black.withValues(alpha: 0.5), size: 18),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
@@ -356,20 +360,20 @@ class _ProfileViewState extends State<ProfileView> {
                   icon: Icons.article_outlined,
                   title: 'Terms of Service',
                   trailingIcon: Icons.open_in_new,
-                  onTap: () {},
+                  onTap: () => _openUrl('https://smartgrading.edu.vn/terms'),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
                 _buildRowTile(
                   icon: Icons.verified_user_outlined,
                   title: 'Privacy Policy',
                   trailingIcon: Icons.open_in_new,
-                  onTap: () {},
+                  onTap: () => _openUrl('https://smartgrading.edu.vn/privacy'),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
                 _buildRowTile(
                   icon: Icons.contact_support_outlined,
                   title: 'Contact Support',
-                  onTap: () {},
+                  onTap: () => _showContactSupportBottomSheet(context),
                 ),
               ],
             ),
@@ -432,6 +436,118 @@ class _ProfileViewState extends State<ProfileView> {
             color: Color(0xFF64748B),
             letterSpacing: 0.5,
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _openEmail(String email) async {
+    final uri = Uri(scheme: 'mailto', path: email);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open email: $email')),
+      );
+    }
+  }
+
+  void _showLanguageSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Select Language',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.check, color: Color(0xFF6366F1)),
+              title: const Text('English'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Tiếng Việt'),
+              onTap: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showContactSupportBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 20),
+            const Text('Lien he ho tro', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            const Text(
+              'Neu ban can ho tro, vui long lien he qua email: support@smartgrading.edu.vn',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _openEmail('support@smartgrading.edu.vn');
+                },
+                icon: const Icon(Icons.email_outlined),
+                label: const Text('Gui email ho tro'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Dong'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );

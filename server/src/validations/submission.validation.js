@@ -90,6 +90,13 @@ const manualOverride = {
   }),
 };
 
+const updateAnswers = {
+  params: id,
+  body: Joi.object().keys({
+    answers: Joi.object().pattern(Joi.string(), Joi.string().valid('A', 'B', 'C', 'D')).required(),
+  }),
+};
+
 const deleteSubmission = { params: id };
 
 const getStudentSubmissions = {
@@ -120,6 +127,7 @@ module.exports = {
   getSubmissions,
   getExamSubmissions,
   manualOverride,
+  updateAnswers,
   deleteSubmission,
   getStudentSubmissions,
   getMySubmissions,

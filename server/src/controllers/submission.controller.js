@@ -38,8 +38,13 @@ const getMy = catchAsync(async (req, res) => {
 });
 
 const manualOverride = catchAsync(async (req, res) => {
-  const submission = await submissionService.manualOverride(req.params.id, req.body);
+  const submission = await submissionService.manualOverride(req.params.id, req.body, req.user.id);
   res.send(submission);
+});
+
+const updateAnswers = catchAsync(async (req, res) => {
+  const result = await submissionService.updateAnswers(req.params.id, req.body.answers);
+  res.send(result);
 });
 
 const getStatistics = catchAsync(async (req, res) => {
@@ -77,6 +82,7 @@ module.exports = {
   getByStudent,
   getMy,
   manualOverride,
+  updateAnswers,
   getStatistics,
   remove,
   attachImage,

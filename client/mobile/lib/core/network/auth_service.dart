@@ -49,6 +49,16 @@ class AuthService {
     );
   }
 
+  Future<void> resendVerificationEmail({required String email}) async {
+    await _apiClient.post<void>(
+      '${ApiConstants.auth}/resend-verification-email',
+      data: {
+        'email': email,
+      },
+      parser: (_) {},
+    );
+  }
+
   Future<User> getMe() {
     return _apiClient.get<User>(
       '${ApiConstants.auth}/me',

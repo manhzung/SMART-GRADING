@@ -31,6 +31,7 @@ interface ScannedSheet {
   fileUrl: string;
   thumbnailUrl: string;
   status: ScanStatus;
+  submissionId?: string;
   detectedAnswers: Record<string, string>;
   matchedStudent?: {
     id: string;
@@ -94,7 +95,12 @@ export default function ScanPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedSheetForDetail, setSelectedSheetForDetail] = useState<ScannedSheet | null>(null);
 
+  // Exam selection state
+  const [selectedExamId, setSelectedExamId] = useState<string>('');
+  const [selectedExamTitle, setSelectedExamTitle] = useState<string>('');
+
   // Get selected sheet
+  const selectedSheet = uploadedFiles.find(f => f.id === selectedFileId);
   const selectedSheet = uploadedFiles.find(f => f.id === selectedFileId);
 
   useEffect(() => {
@@ -105,11 +111,19 @@ export default function ScanPage() {
     omrService.getTemplates()
       .then(templates => {
         if (templates.length > 0) {
-          setSelectedOMRTemplate({ id: templates[0].id, name: templates[0].name });
+          setSelectedOMRTemplate({ id: templates[0]._id, name: templates[0].name });
         }
       })
       .catch(console.error);
   }, [fetchExams, fetchClasses]);
+
+  // Auto-select first exam when exams load
+  useEffect(() => {
+    if (exams.length > 0 && !selectedExamId) {
+      setSelectedExamId(exams[0]._id);
+      setSelectedExamTitle(exams[0].title);
+    }
+  }, [exams, selectedExamId]);
 
   const scanHistory: ScanHistoryItem[] = useMemo(
     () => uploadedFiles
@@ -293,6 +307,14 @@ export default function ScanPage() {
     const sheet = uploadedFiles.find(s => s.id === sheetId);
     if (!sheet) return;
 
+    if (!selectedExamId) {
+      toast.error('Vui lòng chọn bài thi trước khi quét.');
+      setUploadedFiles(prev => prev.map(s =>
+        s.id === sheetId ? { ...s, status: 'error' as ScanStatus, processingProgress: 0 } : s
+      ));
+      return;
+    }
+
     setIsScanning(true);
     setScanProgress(0);
 
@@ -301,10 +323,10 @@ export default function ScanPage() {
       s.id === sheetId ? { ...s, status: 'scanning' as ScanStatus, processingProgress: 0 } : s
     ));
 
-    // Simulate progress updates while waiting for API
+    // Progress simulation
     const progressInterval = setInterval(() => {
       setScanProgress(prev => {
-        const next = Math.min(prev + 10, 90);
+        const next = Math.min(prev + 10, 85);
         setUploadedFiles(files => files.map(f =>
           f.id === sheetId ? { ...f, processingProgress: next } : f
         ));
@@ -313,39 +335,43 @@ export default function ScanPage() {
     }, 300);
 
     try {
-      const selectedTemplateId = selectedOMRTemplate?.id || '';
-
-      // 1. Upload and process OMR sheet
-      const uploadResult = await omrService.uploadAndProcess(sheet.file, selectedTemplateId);
-
-      // 2. Try to match with an exam
-      let matchedExam: { id: string; title: string } | undefined;
-      try {
-        const matchResult = await omrService.matchSheetToExam(uploadResult.id);
-        if (matchResult?.examId) {
-          matchedExam = { id: matchResult.examId, title: matchResult.title };
-        }
-      } catch {
-        // No matching exam found, continue without match
-      }
+      // Upload + scan via BE: POST /submissions/scan
+      const uploadResult = await omrService.scanSheet({
+        examId: selectedExamId,
+        imageUrl: sheet.fileUrl,
+      });
 
       clearInterval(progressInterval);
-
-      // 3. Update scanned sheet with results
       setScanProgress(100);
+
+      // Build detected answers from scan result
+      const detectedAnswers: Record<string, string> = {};
+      if (uploadResult.detectedAnswers) {
+        Object.assign(detectedAnswers, uploadResult.detectedAnswers);
+      }
+
+      // Extract exam title
+      const matchedExamObj = exams.find(e => e._id === selectedExamId);
+
+      // Update sheet with results
       setUploadedFiles(prev => prev.map(s => {
         if (s.id !== sheetId) return s;
         return {
           ...s,
           status: 'scanned' as ScanStatus,
-          detectedAnswers: uploadResult.detectedAnswers,
+          submissionId: uploadResult.submissionId,
+          detectedAnswers,
           processingProgress: 100,
           confidence: uploadResult.confidence,
-          matchedExam,
+          matchedExam: {
+            id: selectedExamId,
+            title: matchedExamObj?.title || selectedExamTitle,
+          },
+          score: uploadResult.totalScore,
         };
       }));
 
-      setEditingAnswers(uploadResult.detectedAnswers);
+      setEditingAnswers(detectedAnswers);
     } catch (error) {
       clearInterval(progressInterval);
       setUploadedFiles(prev => prev.map(s =>
@@ -355,18 +381,22 @@ export default function ScanPage() {
     } finally {
       setIsScanning(false);
     }
-  }, [uploadedFiles, selectedOMRTemplate]);
+  }, [uploadedFiles, selectedExamId, selectedExamTitle, exams]);
 
   const startScanning = useCallback((sheetId: string) => {
     processSheet(sheetId);
   }, [processSheet]);
 
   const processAllPending = useCallback(() => {
+    if (!selectedExamId) {
+      toast.error('Vui lòng chọn bài thi trước khi quét.');
+      return;
+    }
     const pendingSheets = uploadedFiles.filter(s => s.status === 'pending');
     pendingSheets.forEach((sheet, index) => {
       setTimeout(() => processSheet(sheet.id), index * 500);
     });
-  }, [uploadedFiles, processSheet]);
+  }, [uploadedFiles, selectedExamId, processSheet]);
 
   // Auto-process newly uploaded sheets
   useEffect(() => {
@@ -401,6 +431,10 @@ export default function ScanPage() {
       toast.error('Vui lòng khớp với bài thi trước khi lưu');
       return;
     }
+    if (!sheet.submissionId) {
+      toast.error('Chưa có kết quả quét. Vui lòng quét trước.');
+      return;
+    }
 
     // Update with edited answers first
     setUploadedFiles(prev => prev.map(s =>
@@ -410,10 +444,17 @@ export default function ScanPage() {
       } : s
     ));
 
-    omrService.submitSheet(sheetId, editingAnswers, sheet.matchedExam.id)
-      .then(() => {
+    omrService.submitCorrectedAnswers({
+      submissionId: sheet.submissionId,
+      answers: editingAnswers,
+    })
+      .then((result) => {
         setUploadedFiles(prev => prev.map(s =>
-          s.id === sheetId ? { ...s, status: 'matched' as ScanStatus } : s
+          s.id === sheetId ? {
+            ...s,
+            status: 'matched' as ScanStatus,
+            score: result.totalScore,
+          } : s
         ));
         toast.success('Đã lưu và chấm điểm thành công!');
       })
@@ -426,7 +467,8 @@ export default function ScanPage() {
     setUploadedFiles(prev => prev.map(sheet =>
       sheet.id === sheetId ? {
         ...sheet,
-        status: 'pending',
+        status: 'pending' as ScanStatus,
+        submissionId: undefined,
         detectedAnswers: {},
         processingProgress: 0,
       } : sheet
@@ -513,7 +555,36 @@ export default function ScanPage() {
               <span className={styles.uploadHint}>Hỗ trợ: JPG, PNG, PDF</span>
             </label>
 
-            <div className={styles.uploadActions}>
+            {/* Exam selector */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+            <label htmlFor="scan-exam-select" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#475569' }}>
+              Bài thi để quét <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <select
+              id="scan-exam-select"
+              value={selectedExamId}
+              onChange={(e) => {
+                const exam = exams.find(ex => ex._id === e.target.value);
+                setSelectedExamId(e.target.value);
+                setSelectedExamTitle(exam?.title || '');
+              }}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                background: '#fff',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">-- Chọn bài thi --</option>
+              {exams.map(ex => (
+                <option key={ex._id} value={ex._id}>{ex.title}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.uploadActions}>
               <button
                 className={styles.actionBtn}
                 onClick={() => fileInputRef.current?.click()}
@@ -613,7 +684,13 @@ export default function ScanPage() {
                   {selectedSheet.status === 'pending' ? (
                     <button
                       className={`${styles.smallBtn} ${styles.primaryBtn}`}
-                      onClick={() => startScanning(selectedSheet.id)}
+                      onClick={() => {
+                        if (!selectedExamId) {
+                          toast.error('Vui lòng chọn bài thi trước khi quét.');
+                          return;
+                        }
+                        startScanning(selectedSheet.id);
+                      }}
                       disabled={isScanning}
                     >
                       <Search size={14} />

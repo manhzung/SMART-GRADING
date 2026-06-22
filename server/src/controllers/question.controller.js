@@ -57,9 +57,18 @@ const generate = catchAsync(async (req, res) => {
   const { topicId, count, difficulty, requirements, gradeLevel } = req.body;
   const { Question } = require('../models');
 
+  let topicName = '';
+  if (topicId) {
+    const existingQuestion = await Question.findOne({ topicId })
+      .select('topicName')
+      .lean()
+      .sort({ createdAt: -1 });
+    topicName = existingQuestion?.topicName || '';
+  }
+
   const generated = await questionGenService.generateQuestions({
     topicId,
-    topicName: '',
+    topicName: topicName || requirements || '',
     count: count || 5,
     difficulty: difficulty || 'medium',
     requirements: requirements || '',

@@ -292,6 +292,16 @@ export default function CreateExamPage() {
       const result = await createExam(payload);
       if (result) {
         await fetchExams();
+
+        // Auto-generate versions if requested
+        if (numberOfVersions > 0) {
+          try {
+            await generateExamVersions(result._id, numberOfVersions);
+          } catch (genErr) {
+            console.warn('Version generation failed:', genErr);
+          }
+        }
+
         navigate('/exams');
       } else {
         setErrorMessage('Có lỗi xảy ra khi tạo đề thi.');

@@ -12,6 +12,8 @@ import 'exams_view.dart';
 import 'scan_view.dart';
 import 'classes_view.dart';
 import 'profile_view.dart';
+import 'my_scores_page.dart';
+import 'my_appeals_page.dart';
 import '../widgets/quick_create_exam_sheet.dart';
 import '../widgets/search_sheet.dart';
 
@@ -25,14 +27,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final getIt = GetIt.instance;
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = const [
-    DashboardView(),
-    ExamsView(),
-    ScanView(),
-    ClassesView(),
-    ProfileView(),
-  ];
 
   @override
   void initState() {
@@ -61,21 +55,180 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _setTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  List<Widget> _buildPages(String role) {
+    switch (role) {
+      case 'admin':
+        return [
+          DashboardView(onViewAllExams: () => _setTab(0)),
+          const AdminNavView(),
+          const SchoolsNavView(),
+          const AnalyticsNavView(),
+          const ProfileView(),
+        ];
+      case 'student':
+        return [
+          DashboardView(onViewAllExams: () => _setTab(0)),
+          const MyScoresPage(),
+          const MyAppealsPage(),
+          const ProfileView(),
+        ];
+      default: // teacher
+        return [
+          DashboardView(onViewAllExams: () => _setTab(1)),
+          ExamsView(),
+          ScanView(),
+          ClassesView(),
+          ProfileView(),
+        ];
+    }
+  }
+
+  List<BottomNavigationBarItem> _buildNavItems(String role) {
+    switch (role) {
+      case 'admin':
+        return const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people_outline),
+            activeIcon: Icon(Icons.people),
+            label: 'Users',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school_outlined),
+            activeIcon: Icon(Icons.school),
+            label: 'Schools',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart_outlined),
+            activeIcon: Icon(Icons.bar_chart),
+            label: 'Analytics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ];
+      case 'student':
+        return const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.score_outlined),
+            activeIcon: Icon(Icons.score),
+            label: 'Scores',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.rate_review_outlined),
+            activeIcon: Icon(Icons.rate_review),
+            label: 'Appeals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ];
+      default: // teacher
+        return const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.description_outlined),
+            activeIcon: Icon(Icons.description),
+            label: 'Exams',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fact_check_outlined),
+            activeIcon: Icon(Icons.fact_check),
+            label: 'Grading',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people_outline),
+            activeIcon: Icon(Icons.people),
+            label: 'Classes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ];
+    }
+  }
+
+  String _getAppBarTitle(int index, String role) {
+    switch (role) {
+      case 'admin':
+        switch (index) {
+          case 0: return 'Dashboard';
+          case 1: return 'Users';
+          case 2: return 'Schools';
+          case 3: return 'Analytics';
+          case 4: return 'Profile';
+          default: return 'Smart Grading';
+        }
+      case 'student':
+        switch (index) {
+          case 0: return 'Home';
+          case 1: return 'My Scores';
+          case 2: return 'My Appeals';
+          case 3: return 'Profile';
+          default: return 'Smart Grading';
+        }
+      default: // teacher
+        switch (index) {
+          case 0: return 'Home';
+          case 1: return 'Exams';
+          case 2: return 'Grading';
+          case 3: return 'Classes';
+          case 4: return 'Profile';
+          default: return 'Smart Grading';
+        }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
+    String role = 'teacher';
     String? avatarUrl;
     if (authState is AuthAuthenticated) {
+      role = authState.user.role;
       avatarUrl = authState.user.avatarUrl;
+    }
+
+    final pages = _buildPages(role);
+    final navItems = _buildNavItems(role);
+
+    if (_selectedIndex >= pages.length) {
+      _selectedIndex = 0;
     }
 
     Widget appBarTitle;
     List<Widget> appBarActions = [];
+    final title = _getAppBarTitle(_selectedIndex, role);
 
-    if (_selectedIndex == 1) {
-      appBarTitle = const Text(
-        'Exams',
-        style: TextStyle(
+    if (role == 'teacher' && _selectedIndex == 1) {
+      appBarTitle = Text(
+        title,
+        style: const TextStyle(
           color: Color(0xFF0F172A),
           fontWeight: FontWeight.bold,
           fontSize: 24,
@@ -83,63 +236,29 @@ class _HomePageState extends State<HomePage> {
       );
       appBarActions = [
         IconButton(
-          icon: const Icon(
-            Icons.search,
-            color: Color(0xFF0F172A),
-            size: 26,
-          ),
-            onPressed: () async {
-              await SearchSheet.show(
-                context: context,
-                title: 'Exams',
-                hint: 'Search exams...',
-              );
-              if (!mounted) return;
-              setState(() {
-                _selectedIndex = 1;
-              });
-            },
+          icon: const Icon(Icons.search, color: Color(0xFF0F172A), size: 26),
+          onPressed: () async {
+            await SearchSheet.show(context: context, title: 'Exams', hint: 'Search exams...');
+            if (!mounted) return;
+            setState(() {});
+          },
         ),
         IconButton(
           icon: const Icon(Icons.quiz_outlined, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pushNamed(context, '/question-bank'),
         ),
         IconButton(
-          icon: const Icon(
-            Icons.notifications_none_outlined,
-            color: Color(0xFF0F172A),
-            size: 26,
-          ),
+          icon: const Icon(Icons.notifications_none_outlined, color: Color(0xFF0F172A), size: 26),
           onPressed: () => Navigator.pushNamed(context, '/notifications'),
         ),
         const SizedBox(width: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Image.network(
-            avatarUrl ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=60',
-            width: 36,
-            height: 36,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              width: 36,
-              height: 36,
-              color: const Color(0xFF0F172A),
-              child: const Center(
-                child: Icon(Icons.person, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-        ),
+        _buildAvatar(avatarUrl),
         const SizedBox(width: 16),
       ];
-    } else if (_selectedIndex == 3) {
+    } else if (role == 'teacher' && _selectedIndex == 3) {
       appBarTitle = const Row(
         children: [
-          Icon(
-            Icons.school_outlined,
-            color: Color(0xFF0F172A),
-            size: 28,
-          ),
+          Icon(Icons.school_outlined, color: Color(0xFF0F172A), size: 28),
           SizedBox(width: 8),
           Text(
             'Smart Grading',
@@ -153,49 +272,21 @@ class _HomePageState extends State<HomePage> {
       );
       appBarActions = [
         IconButton(
-          icon: const Icon(
-            Icons.search,
-            color: Color(0xFF0F172A),
-            size: 26,
-          ),
-          onPressed: () => SearchSheet.show(
-            context: context,
-            title: 'Classes',
-            hint: 'Search classes...',
-          ),
+          icon: const Icon(Icons.search, color: Color(0xFF0F172A), size: 26),
+          onPressed: () => SearchSheet.show(context: context, title: 'Classes', hint: 'Search classes...'),
         ),
         const SizedBox(width: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Image.network(
-            avatarUrl ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=60',
-            width: 36,
-            height: 36,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              width: 36,
-              height: 36,
-              color: const Color(0xFF0F172A),
-              child: const Center(
-                child: Icon(Icons.person, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-        ),
+        _buildAvatar(avatarUrl),
         const SizedBox(width: 16),
       ];
     } else {
-      appBarTitle = const Row(
+      appBarTitle = Row(
         children: [
-          Icon(
-            Icons.school_outlined,
-            color: Color(0xFF0F172A),
-            size: 28,
-          ),
-          SizedBox(width: 8),
+          const Icon(Icons.school_outlined, color: Color(0xFF0F172A), size: 28),
+          const SizedBox(width: 8),
           Text(
-            'Smart Grading',
-            style: TextStyle(
+            title,
+            style: const TextStyle(
               color: Color(0xFF0F172A),
               fontWeight: FontWeight.bold,
               fontSize: 20,
@@ -205,31 +296,11 @@ class _HomePageState extends State<HomePage> {
       );
       appBarActions = [
         IconButton(
-          icon: const Icon(
-            Icons.notifications_none_outlined,
-            color: Color(0xFF0F172A),
-            size: 26,
-          ),
+          icon: const Icon(Icons.notifications_none_outlined, color: Color(0xFF0F172A), size: 26),
           onPressed: () => Navigator.pushNamed(context, '/notifications'),
         ),
         const SizedBox(width: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Image.network(
-            avatarUrl ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=60',
-            width: 36,
-            height: 36,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              width: 36,
-              height: 36,
-              color: const Color(0xFF0F172A),
-              child: const Center(
-                child: Icon(Icons.person, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-        ),
+        _buildAvatar(avatarUrl),
         const SizedBox(width: 16),
       ];
     }
@@ -245,29 +316,12 @@ class _HomePageState extends State<HomePage> {
         actions: appBarActions,
       ),
       body: SafeArea(
-        child: _pages[_selectedIndex],
+        child: pages[_selectedIndex],
       ),
-      floatingActionButton: (_selectedIndex == 0 || _selectedIndex == 1)
-          ? FloatingActionButton(
-              onPressed: () {
-                if (_selectedIndex == 0) {
-                  QuickCreateExamSheet.show(context);
-                } else {
-                  QuickCreateExamSheet.show(context);
-                }
-              },
-              backgroundColor: const Color(0xFF0F172A),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.add, color: Colors.white, size: 28),
-            )
-          : null,
+      floatingActionButton: _buildFab(role),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-          ),
+          border: Border(top: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
         ),
         child: BottomNavigationBar(
           backgroundColor: Colors.white,
@@ -283,34 +337,145 @@ class _HomePageState extends State<HomePage> {
               _selectedIndex = index;
             });
           },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.description_outlined),
-              activeIcon: Icon(Icons.description),
-              label: 'Exams',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.fact_check_outlined),
-              activeIcon: Icon(Icons.fact_check),
-              label: 'Grading',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline),
-              activeIcon: Icon(Icons.people),
-              label: 'Classes',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
+          items: navItems,
         ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String? avatarUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Image.network(
+        avatarUrl ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=60',
+        width: 36,
+        height: 36,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: 36,
+          height: 36,
+          color: const Color(0xFF0F172A),
+          child: const Center(child: Icon(Icons.person, color: Colors.white, size: 20)),
+        ),
+      ),
+    );
+  }
+
+  Widget? _buildFab(String role) {
+    if (role == 'student') return null;
+    if (role == 'admin') {
+      if (_selectedIndex == 0) {
+        return FloatingActionButton(
+          onPressed: () => QuickCreateExamSheet.show(context),
+          backgroundColor: const Color(0xFF0F172A),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: const Icon(Icons.add, color: Colors.white, size: 28),
+        );
+      }
+      return null;
+    }
+    // teacher
+    if (_selectedIndex == 0 || _selectedIndex == 1) {
+      return FloatingActionButton(
+        onPressed: () => QuickCreateExamSheet.show(context),
+        backgroundColor: const Color(0xFF0F172A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
+      );
+    }
+    return null;
+  }
+}
+
+class AdminNavView extends StatelessWidget {
+  const AdminNavView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.admin_panel_settings, size: 64, color: Color(0xFF6366F1)),
+          SizedBox(height: 16),
+          Text('Admin Navigation', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 8),
+          Text('Select a section from the menu above', style: TextStyle(color: Color(0xFF64748B))),
+        ],
+      ),
+    );
+  }
+}
+
+class SchoolsNavView extends StatelessWidget {
+  const SchoolsNavView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.school, size: 64, color: Color(0xFF10B981)),
+          ),
+          const SizedBox(height: 16),
+          const Text('Schools Management', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text('Manage school institutions', style: TextStyle(color: Color(0xFF64748B))),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/admin/schools'),
+            icon: const Icon(Icons.open_in_new),
+            label: const Text('Open Schools Manager'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AnalyticsNavView extends StatelessWidget {
+  const AnalyticsNavView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.bar_chart, size: 64, color: Color(0xFFF59E0B)),
+          ),
+          const SizedBox(height: 16),
+          const Text('Analytics', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text('View system statistics and reports', style: TextStyle(color: Color(0xFF64748B))),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/analytics'),
+            icon: const Icon(Icons.open_in_new),
+            label: const Text('Open Analytics'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF59E0B),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }

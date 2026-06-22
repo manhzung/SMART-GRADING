@@ -18,6 +18,7 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
     on<AIChatLoadConversations>(_onLoadConversations);
     on<AIChatLoadReports>(_onLoadReports);
     on<AIChatClearError>(_onClearError);
+    on<AIChatClearConversation>(_onClearConversation);
   }
 
   final AIService _aiService;
@@ -142,5 +143,12 @@ class AIChatBloc extends Bloc<AIChatEvent, AIChatState> {
     } else {
       emit(const AIChatLoaded(messages: [], isSending: false));
     }
+  }
+
+  void _onClearConversation(
+    AIChatClearConversation event,
+    Emitter<AIChatState> emit,
+  ) {
+    emit(const AIChatLoaded(messages: [], isSending: false));
   }
 }

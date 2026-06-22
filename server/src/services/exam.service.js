@@ -137,10 +137,45 @@ class ExamService {
     if (exam.status !== 'draft') {
       throw new ApiError(400, 'Only draft exams can be published');
     }
+    if (!exam.questionIds || exam.questionIds.length === 0) {
+      throw new ApiError(400, 'Exam must have at least one question before publishing');
+    }
 
     exam.status = 'published';
     exam.publishedAt = new Date();
     await exam.save();
+
+    // Notify all students in assigned classes
+    const { Class, User } = require('../models');
+    const { User: UserModel } = require('../models');
+    const notificationService = require('./notification.service');
+
+    const classDocs = await Class.find({ _id: { $in: exam.classIds } }).select('studentIds');
+    const studentIds = [];
+    for (const cls of classDocs) {
+      for (const sid of cls.studentIds || []) {
+        if (!studentIds.includes(sid.toString())) {
+          studentIds.push(sid.toString());
+        }
+      }
+    }
+
+    if (studentIds.length > 0) {
+      await notificationService.notifyExamPublished(
+        exam._id,
+        studentIds,
+        exam.title,
+        exam.examDate
+      );
+      // Schedule reminder for 1 day before exam
+      await notificationService.scheduleExamReminder(
+        studentIds,
+        exam._id,
+        exam.title,
+        exam.examDate
+      );
+    }
+
     return exam;
   }
 
@@ -153,6 +188,16 @@ class ExamService {
     exam.status = 'completed';
     exam.completedAt = new Date();
     await exam.save();
+
+    // Auto-generate exam report
+    const reportService = require('./report.service');
+    try {
+      await reportService.generateExamReport(id, exam.createdBy);
+    } catch (err) {
+      const logger = require('../config/logger');
+      logger.error('Auto-report generation failed on exam complete', { examId: id, error: err.message });
+    }
+
     return exam;
   }
 

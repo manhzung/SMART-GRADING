@@ -445,9 +445,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildFooterLink('Privacy Policy'),
-                    _buildFooterLink('Terms of Service'),
-                    _buildFooterLink('Institutional Support'),
+                    _buildFooterLink('Privacy Policy', onTap: () => _showLegalBottomSheet(context, 'Privacy Policy')),
+                    _buildFooterLink('Terms of Service', onTap: () => _showLegalBottomSheet(context, 'Terms of Service')),
+                    _buildFooterLink('Institutional Support', onTap: () => _showLegalBottomSheet(context, 'Institutional Support')),
                   ],
                 ),
               ],
@@ -483,13 +483,53 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     );
   }
 
-  Widget _buildFooterLink(String text) {
+  Widget _buildFooterLink(String text, {VoidCallback? onTap}) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap ?? () => _showLegalBottomSheet(context, text),
       child: Text(
         text,
         textAlign: TextAlign.center,
         style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+      ),
+    );
+  }
+
+  void _showLegalBottomSheet(BuildContext context, String title) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Text(
+              'Noi dung cua $title se duoc cap nhat sau.\nVui long lien he ho tro neu ban can ho tro ngay lap tuc.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Dong')),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }

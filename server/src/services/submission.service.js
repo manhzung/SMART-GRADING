@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { Submission, Exam, ExamVersion, Question, User, StudentProgress } = require('../models');
 const ApiError = require('../utils/ApiError');
 const questionService = require('./question.service');
+const notificationService = require('./notification.service');
 const { parsePagination } = require('../utils/parsePagination');
 
 class SubmissionService {
@@ -16,52 +17,212 @@ class SubmissionService {
       throw new ApiError(404, 'Exam not found');
     }
 
-    if (config.upload.mode === 'cloudinary') {
-      if (!originalUrl) {
-        throw new ApiError(400, 'originalUrl is required when UPLOAD_MODE=cloudinary');
-      }
-      assertIsCloudinaryUrl(originalUrl, config.cloudinary.cloud_name);
-    }
+    let pythonResult = null;
 
     // If we have a Cloudinary URL, forward to python bridge for actual scanning
     if (config.upload.mode === 'cloudinary' && originalUrl) {
+      assertIsCloudinaryUrl(originalUrl, config.cloudinary.cloud_name);
       const pythonBridge = require('./pythonBridge.service');
       try {
-        const result = await pythonBridge.processImage({
+        const template = exam.omrTemplateId
+          ? await (require('./omrTemplate.service')).getById(exam.omrTemplateId)
+          : {};
+        pythonResult = await pythonBridge.processImage({
           imageUrl: originalUrl,
-          template: {},
+          template: template?.zones || {},
         });
-        return {
-          status: 'scanning',
-          examId,
-          originalUrl,
-          originalPublicId,
-          imageMeta: imageMeta || null,
-          deviceInfo: deviceInfo || null,
-          pythonResult: result,
-        };
       } catch (err) {
-        // Fall through to pending response
+        throw new ApiError(500, `OMR processing failed: ${err.message}`);
+      }
+    } else if (image) {
+      // base64 mode
+      const pythonBridge = require('./pythonBridge.service');
+      try {
+        const template = exam.omrTemplateId
+          ? await (require('./omrTemplate.service')).getById(exam.omrTemplateId)
+          : {};
+        pythonResult = await pythonBridge.processImage({
+          image,
+          template: template?.zones || {},
+        });
+      } catch (err) {
+        throw new ApiError(500, `OMR processing failed: ${err.message}`);
+      }
+    } else {
+      throw new ApiError(400, 'originalUrl or image is required');
+    }
+
+    if (!pythonResult || !pythonResult.success) {
+      throw new ApiError(500, pythonResult?.error || 'OMR scanning returned no result');
+    }
+
+    // Parse python result
+    const {
+      answers: rawAnswers = [],
+      versionCode,
+      studentCode,
+      metadata: scanMeta = {},
+    } = pythonResult;
+
+    // Match to the correct exam version
+    let versionId = null;
+    if (versionCode) {
+      const version = await ExamVersion.findOne({ examId, versionCode: versionCode.toString() });
+      if (version) {
+        versionId = version._id;
       }
     }
 
-    // TODO: Implement actual OMR scanning here
-    // For now, return a placeholder
-    return {
-      status: 'pending',
-      message: 'OMR scanning service not yet implemented',
-      examId,
-      classId,
-      originalUrl: originalUrl || null,
-      originalPublicId: originalPublicId || null,
-      imageMeta: imageMeta || null,
-      deviceInfo: deviceInfo || null,
-    };
+    // If no version matched, use the first version
+    if (!versionId) {
+      const firstVersion = await ExamVersion.findOne({ examId }).sort({ versionCode: 1 });
+      if (firstVersion) versionId = firstVersion._id;
+    }
 
+    // Resolve student by studentCode or classId
+    let studentId = null;
+    const classDoc = classId
+      ? await (require('../models')).Class.findById(classId).select('studentIds').lean()
+      : null;
+    if (studentCode && classDoc?.studentIds) {
+      const students = await User.find({
+        _id: { $in: classDoc.studentIds },
+        studentCode: studentCode.toString(),
+      }).select('_id');
+      if (students.length > 0) {
+        studentId = students[0]._id;
+      }
+    }
+
+    // Build graded answers
+    const answerKey = versionId
+      ? await this._getAnswerKey(versionId)
+      : {};
+
+    const gradedAnswers = rawAnswers.map((raw, idx) => {
+      const pos = idx + 1;
+      const selected = raw.optionId || null;
+      const correct = answerKey[pos] || null;
+      const isCorrect = selected !== null && selected === correct;
+      const scorePerQuestion = exam.totalScore / exam.numberOfQuestions;
+      return {
+        position: pos,
+        questionId: raw.questionId || null,
+        selectedAnswer: selected,
+        correctAnswer: correct,
+        isCorrect,
+        score: isCorrect ? scorePerQuestion : 0,
+        omrData: raw.omrData || null,
+      };
+    });
+
+    const totalScore = gradedAnswers.reduce((sum, a) => sum + a.score, 0);
+
+    // Check if submission already exists (upsert logic)
+    const existingFilter = studentId
+      ? { examId: new mongoose.Types.ObjectId(examId), studentId }
+      : { examId: new mongoose.Types.ObjectId(examId), studentCode: studentCode?.toString() };
+
+    const existing = await Submission.findOne(existingFilter);
+
+    let submission;
+    if (existing) {
+      // Update existing submission
+      existing.answers = gradedAnswers;
+      existing.totalScore = totalScore;
+      existing.maxScore = exam.totalScore;
+      existing.finalScore = totalScore;
+      existing.status = 'scanned';
+      existing.versionId = versionId || existing.versionId;
+      existing.images = {
+        ...existing.images,
+        original: originalUrl ? { publicId: originalPublicId, url: originalUrl } : undefined,
+      };
+      existing.scanMetadata = {
+        ...existing.scanMetadata,
+        deviceInfo: deviceInfo || null,
+        scannedAt: new Date(),
+        processingTimeMs: scanMeta.processingTimeMs || 0,
+        ocr: scanMeta.ocr || {},
+      };
+      await existing.save();
+      submission = existing;
+    } else {
+      // Create new submission
+      submission = new Submission({
+        examId,
+        versionId: versionId || undefined,
+        omrTemplateId: exam.omrTemplateId,
+        studentId: studentId || undefined,
+        studentCode: studentCode?.toString() || `anon-${Date.now()}`,
+        classId: classId || undefined,
+        answers: gradedAnswers,
+        totalScore,
+        maxScore: exam.totalScore,
+        finalScore: totalScore,
+        status: 'scanned',
+        images: {
+          original: originalUrl ? { publicId: originalPublicId, url: originalUrl } : undefined,
+        },
+        scanMetadata: {
+          deviceInfo: deviceInfo || null,
+          scannedAt: new Date(),
+          processingTimeMs: scanMeta.processingTimeMs || 0,
+          ocr: scanMeta.ocr || {},
+        },
+      });
+      await submission.save();
+    }
+
+    // Update question difficulty stats
+    for (const answer of gradedAnswers) {
+      if (answer.questionId) {
+        await questionService.updateDifficultyStats(answer.questionId, answer.isCorrect);
+      }
+    }
+
+    // Notify student of score
+    if (submission.studentId) {
+      await notificationService.notifyScoreAvailable(
+        submission.studentId.toString(),
+        submission._id.toString(),
+        examId,
+        exam.title,
+        Math.round(totalScore * 10) / 10,
+        exam.totalScore
+      );
+    }
+
+    return {
+      status: 'scanned',
+      submissionId: submission._id,
+      examId,
+      totalScore: Math.round(totalScore * 10) / 10,
+      maxScore: exam.totalScore,
+      answerCount: gradedAnswers.length,
+      pythonResult,
+    };
+  }
+
+  async _getAnswerKey(versionId) {
+    const version = await ExamVersion.findById(versionId).lean();
+    if (!version || !version.answerKey) return {};
+    const map = version.answerKey instanceof Map
+      ? version.answerKey
+      : new Map(Object.entries(version.answerKey || {}));
+    const result = {};
+    for (const [pos, optId] of map.entries()) {
+      result[parseInt(pos, 10)] = optId;
+    }
+    return result;
   }
 
   async createFromOMR(scanResult, userId) {
     const { examId, versionId, studentCode, answers, totalScore } = scanResult;
+
+    const exam = await Exam.findById(examId).select('totalScore numberOfQuestions').lean();
+    const maxScore = exam?.totalScore || 10;
+    const scorePerQuestion = maxScore / (exam?.numberOfQuestions || answers.length || 1);
 
     const submission = new Submission({
       examId,
@@ -70,7 +231,7 @@ class SubmissionService {
       studentCode,
       answers,
       totalScore,
-      maxScore: 10, // TODO: Get from exam
+      maxScore,
       finalScore: totalScore,
       status: 'scanned',
     });
@@ -82,7 +243,9 @@ class SubmissionService {
 
     // Update question difficulty stats
     for (const answer of answers) {
-      await questionService.updateDifficultyStats(answer.questionId, answer.isCorrect);
+      if (answer.questionId) {
+        await questionService.updateDifficultyStats(answer.questionId, answer.isCorrect);
+      }
     }
 
     return submission;
@@ -150,9 +313,44 @@ class SubmissionService {
     };
   }
 
-  async manualOverride(id, data) {
+  async updateAnswers(id, answers) {
+    const submission = await Submission.findById(id);
+    if (!submission) {
+      throw new ApiError(404, 'Submission not found');
+    }
+
+    const { Exam, ExamVersion } = require('../models');
+    const exam = await Exam.findById(submission.examId).select('totalScore numberOfQuestions').lean();
+
+    for (const [posStr, selectedAnswer] of Object.entries(answers)) {
+      const position = parseInt(posStr, 10);
+      const answer = submission.answers.find(a => a.position === position);
+      if (!answer) continue;
+
+      answer.selectedAnswer = selectedAnswer;
+
+      // Re-grade
+      if (answer.correctAnswer) {
+        answer.isCorrect = selectedAnswer === answer.correctAnswer;
+        const scorePerQuestion = (exam?.totalScore || 10) / (exam?.numberOfQuestions || 1);
+        answer.score = answer.isCorrect ? scorePerQuestion : 0;
+      }
+    }
+
+    submission.totalScore = submission.answers.reduce((sum, a) => sum + a.score, 0);
+    submission.finalScore = submission.totalScore;
+    submission.status = 'scanned';
+    await submission.save();
+
+    return {
+      success: true,
+      totalScore: Math.round(submission.totalScore * 10) / 10,
+      maxScore: submission.maxScore,
+    };
+  }
+
+  async manualOverride(id, data, userId) {
     const { position, correctedAnswer, reason } = data;
-    const userId = 'current-user'; // TODO: Get from auth
 
     const submission = await Submission.findById(id);
     if (!submission) {
@@ -197,6 +395,27 @@ class SubmissionService {
         .skip(skip)
         .limit(limit),
       Submission.countDocuments({ studentId: new mongoose.Types.ObjectId(studentId) }),
+    ]);
+    return { results, page, limit, total, pages: Math.ceil(total / limit) };
+  }
+
+  async getMy(studentId, query = {}) {
+    const { page, limit, skip } = parsePagination(query);
+    const { startDate, endDate, status, ...rest } = query;
+    const filter = { studentId: new mongoose.Types.ObjectId(studentId), ...rest };
+    if (status) filter.status = status;
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate + 'T23:59:59.999Z');
+    }
+    const [results, total] = await Promise.all([
+      Submission.find(filter)
+        .populate('examId', 'title examDate duration subjectName subjectColor')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Submission.countDocuments(filter),
     ]);
     return { results, page, limit, total, pages: Math.ceil(total / limit) };
   }
@@ -344,7 +563,7 @@ class SubmissionService {
       ]),
       Submission.aggregate([
         matchStage,
-        { $match: { status: { $in: ['graded', 'completed'] } } },
+        { $match: { status: { $in: ['scanned', 'completed', 'graded', 'manual_review'] } } },
         {
           $bucket: {
             groupBy: '$totalScore',

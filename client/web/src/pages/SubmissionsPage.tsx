@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Search,
   ChevronDown,
@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { useSubmissionStore, type BackendSubmission } from '../presentation/store/submissionStore';
 import { useExamStore } from '../presentation/store/examStore';
 import { useClassStore } from '../presentation/store/classStore';
+import { apiService } from '../core/api';
 import styles from './SubmissionsPage.module.css';
 
 // Status configuration
@@ -73,6 +74,10 @@ export default function SubmissionsPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+
+  // Override modal state
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [overrideScore, setOverrideScore] = useState('');
 
   // Modal state
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithDetails | null>(null);
@@ -374,8 +379,7 @@ export default function SubmissionsPage() {
                     setSelectedExam('all');
                     setShowExamDropdown(false);
                     setCurrentPage(1);
-                  }}
-                >
+                  }}>
                   Tất cả bài thi
                 </button>
                 {exams.map((exam) => (
@@ -386,8 +390,7 @@ export default function SubmissionsPage() {
                       setSelectedExam(exam._id);
                       setShowExamDropdown(false);
                       setCurrentPage(1);
-                    }}
-                  >
+                    }}>
                     {exam.title}
                   </button>
                 ))}
@@ -413,8 +416,7 @@ export default function SubmissionsPage() {
                     setSelectedClass('all');
                     setShowClassDropdown(false);
                     setCurrentPage(1);
-                  }}
-                >
+                  }}>
                   Tất cả lớp
                 </button>
                 {classes.map((cls) => (
@@ -425,8 +427,7 @@ export default function SubmissionsPage() {
                       setSelectedClass(cls.name);
                       setShowClassDropdown(false);
                       setCurrentPage(1);
-                    }}
-                  >
+                    }}>
                     Lớp {cls.name}
                   </button>
                 ))}
@@ -456,8 +457,7 @@ export default function SubmissionsPage() {
                     setSelectedStatus('all');
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
-                  }}
-                >
+                  }}>
                   Tất cả trạng thái
                 </button>
                 <button
@@ -466,8 +466,7 @@ export default function SubmissionsPage() {
                     setSelectedStatus('submitted');
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
-                  }}
-                >
+                  }}>
                   Đã nộp
                 </button>
                 <button
@@ -476,8 +475,7 @@ export default function SubmissionsPage() {
                     setSelectedStatus('graded');
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
-                  }}
-                >
+                  }}>
                   Đã chấm
                 </button>
                 <button
@@ -486,8 +484,7 @@ export default function SubmissionsPage() {
                     setSelectedStatus('reviewed');
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
-                  }}
-                >
+                  }}>
                   Đã phúc tra
                 </button>
               </div>
@@ -807,10 +804,85 @@ export default function SubmissionsPage() {
                 <Download size={16} />
                 Tải xuống phiếu trả lời
               </button>
+              <button
+                className={styles.downloadBtn}
+                style={{ borderColor: '#7c3aed', color: '#7c3aed' }}
+                onClick={() => {
+                  setOverrideScore(String(selectedSubmission.score ?? 0));
+                  setShowOverrideModal(true);
+                }}>
+                Điều chỉnh điểm
+              </button>
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
+
+      {/* Override Score Modal */}
+      {showOverrideModal && selectedSubmission && (
+        <div className={styles.modalOverlay} onClick={() => setShowOverrideModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <div className={styles.modalHeader}>
+              <h2 style={{ margin: 0, fontSize: '16px' }}>Điều chỉnh điểm</h2>
+              <button className={styles.closeBtn} onClick={() => setShowOverrideModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+                Học sinh: <strong>{selectedSubmission.studentName}</strong><br />
+                Điểm hiện tại: <strong>{(selectedSubmission.score ?? 0).toFixed(1)} / {selectedSubmission.maxScore}</strong>
+              </p>
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Điểm mới (0 - {selectedSubmission.maxScore})</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={selectedSubmission.maxScore}
+                  step={0.5}
+                  value={overrideScore}
+                  onChange={(e) => setOverrideScore(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.btnSecondary} onClick={() => setShowOverrideModal(false)}>
+                Hủy
+              </button>
+              <button
+                className={styles.downloadBtn}
+                style={{ backgroundColor: '#7c3aed', color: '#ffffff' }}
+                onClick={async () => {
+                  const newScore = parseFloat(overrideScore);
+                  if (isNaN(newScore) || newScore < 0 || newScore > selectedSubmission.maxScore) {
+                    toast.error('Điểm không hợp lệ');
+                    return;
+                  }
+                  try {
+                    await apiService.patch(`/submissions/${selectedSubmission._id}/override`, {
+                      newScore,
+                      reason: 'Manual override by teacher',
+                    });
+                    toast.success('Điều chỉnh điểm thành công');
+                    setShowOverrideModal(false);
+                    fetchSubmissionsByExam(selectedSubmission.examId as string);
+                    setSelectedSubmission(null);
+                  } catch {
+                    toast.error('Điều chỉnh điểm thất bại');
+                  }
+                }}>
+                Lưu điểm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}

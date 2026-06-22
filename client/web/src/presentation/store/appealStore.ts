@@ -11,6 +11,9 @@ export interface BackendAppeal {
   questionPosition: number;
   reason: string;
   evidenceImageUrl?: string;
+  currentAnswer?: string;
+  expectedAnswer?: string;
+  scoreAdjustment?: number;
   status: 'pending' | 'under_review' | 'approved' | 'rejected';
   teacherResponse?: {
     reviewedBy: { _id: string; name: string } | string;

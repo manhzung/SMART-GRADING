@@ -473,9 +473,9 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildFooterLink('Privacy\nPolicy'),
-                          _buildFooterLink('Terms of\nService'),
-                          _buildFooterLink('Institutional\nSupport'),
+                          _buildFooterLink('Privacy\nPolicy', onTap: () => _showLegalBottomSheet(context, 'Privacy Policy')),
+                          _buildFooterLink('Terms of\nService', onTap: () => _showLegalBottomSheet(context, 'Terms of Service')),
+                          _buildFooterLink('Institutional\nSupport', onTap: () => _showLegalBottomSheet(context, 'Institutional Support')),
                         ],
                       ),
                     ],
@@ -489,9 +489,9 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildFooterLink(String text) {
+  Widget _buildFooterLink(String text, {VoidCallback? onTap}) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap ?? () => _showLegalBottomSheet(context, text),
       child: Text(
         text,
         textAlign: TextAlign.center,
@@ -499,6 +499,52 @@ class _LoginPageState extends State<LoginPage> {
           fontSize: 13,
           height: 1.3,
           color: Color(0xFF64748B),
+        ),
+      ),
+    );
+  }
+
+  void _showLegalBottomSheet(BuildContext context, String title) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Noi dung cua $title se duoc cap nhat sau.\nVui long lien he ho tro neu ban can ho tro ngay lap tuc.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Dong'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );

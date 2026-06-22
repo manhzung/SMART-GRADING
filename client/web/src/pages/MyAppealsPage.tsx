@@ -49,9 +49,11 @@ export default function MyAppealsPage() {
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
       page: currentPage,
       limit: pageSize,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStatus, currentPage, pageSize]);
+  }, [selectedStatus, currentPage, pageSize, startDate, endDate]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

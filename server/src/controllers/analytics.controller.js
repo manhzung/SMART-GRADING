@@ -37,25 +37,26 @@ const getDashboardStats = catchAsync(async (req, res) => {
     Class.countDocuments(classFilter),
     Exam.countDocuments({ ...baseFilter }),
     User.countDocuments({ role: 'student', isActive: true, ...(schoolId ? { schoolId } : {}) }),
-    Submission.countDocuments(),
-    Appeal.countDocuments({ status: 'pending' }),
+    Submission.countDocuments({ ...baseFilter }),
+    Appeal.countDocuments({ status: 'pending', ...(schoolId ? { schoolId } : {}) }),
     Exam.countDocuments({ status: 'published', ...baseFilter }),
   ]);
 
-  const recentSubmissions = await Submission.find()
+  const recentSubmissions = await Submission.find(baseFilter)
     .sort({ createdAt: -1 })
     .limit(10)
     .populate('studentId', 'name email')
     .populate('examId', 'title');
 
   const avgScoreResult = await Submission.aggregate([
-    { $match: { totalScore: { $exists: true } } },
+    { $match: { ...baseFilter, totalScore: { $exists: true } } },
     { $group: { _id: null, avg: { $avg: '$totalScore' }, max: { $max: '$totalScore' } } },
   ]);
 
   const avgScore = avgScoreResult[0] ? Math.round((avgScoreResult[0].avg + Number.EPSILON) * 100) / 100 : 0;
 
   const passRateResult = await Submission.aggregate([
+    { $match: baseFilter },
     {
       $lookup: {
         from: 'exams',
@@ -123,7 +124,9 @@ const getAnalytics = catchAsync(async (req, res) => {
     startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   }
 
-  const filter = schoolId ? { createdAt: { $gte: startDate } } : { createdAt: { $gte: startDate } };
+  const baseFilter = schoolId ? { schoolId } : {};
+  const dateFilter = { createdAt: { $gte: startDate } };
+  const filter = { ...baseFilter, ...dateFilter };
 
   const subjectPerformance = await Exam.aggregate([
     { $match: { ...filter } },
@@ -173,6 +176,7 @@ const getAnalytics = catchAsync(async (req, res) => {
   ]);
 
   const gradeDistribution = await Submission.aggregate([
+    { $match: baseFilter },
     {
       $addFields: {
         scorePercent: {
@@ -206,6 +210,7 @@ const getAnalytics = catchAsync(async (req, res) => {
   });
 
   const recentTrends = await Submission.aggregate([
+    { $match: baseFilter },
     {
       $group: {
         _id: {
@@ -220,6 +225,7 @@ const getAnalytics = catchAsync(async (req, res) => {
   ]);
 
   const studentRankings = await Submission.aggregate([
+    { $match: baseFilter },
     {
       $lookup: {
         from: 'users',
@@ -253,16 +259,16 @@ const getAnalytics = catchAsync(async (req, res) => {
   ]);
 
   const summary = {
-    totalExams: await Exam.countDocuments({ ...filter }),
-    totalSubmissions: await Submission.countDocuments({ createdAt: { $gte: startDate } }),
+    totalExams: await Exam.countDocuments({ ...baseFilter }),
+    totalSubmissions: await Submission.countDocuments({ ...baseFilter, createdAt: { $gte: startDate } }),
     avgScore:
       (
         await Submission.aggregate([
-          { $match: { createdAt: { $gte: startDate }, finalScore: { $exists: true } } },
+          { $match: { ...baseFilter, createdAt: { $gte: startDate }, finalScore: { $exists: true } } },
           { $group: { _id: null, avg: { $avg: '$finalScore' } } },
         ])
       )[0]?.avg || 0,
-    totalStudents: await User.countDocuments({ role: 'student', isActive: true }),
+    totalStudents: await User.countDocuments({ role: 'student', isActive: true, ...(schoolId ? { schoolId } : {}) }),
   };
 
   res.send({

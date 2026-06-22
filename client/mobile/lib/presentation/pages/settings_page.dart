@@ -416,7 +416,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               'Tiếng Việt',
               style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
             ),
-            onTap: () {},
+            onTap: () => _showLanguageBottomSheet(context),
           ),
           const SizedBox(height: 16),
 
@@ -425,7 +425,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
             icon: Icons.tonality_outlined,
             title: 'Giao diện',
             trailing: _buildAppearanceToggle(),
-            onTap: () {},
+            onTap: () => _showAppearanceBottomSheet(context),
           ),
           const SizedBox(height: 16),
 
@@ -606,6 +606,79 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               color: Colors.black.withValues(alpha: 0.3),
               size: 20,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLanguageBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 20),
+            const Text('Chon ngon ngu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            ListTile(
+              title: const Text('Tiếng Việt'),
+              leading: const Icon(Icons.check, color: Color(0xFF6366F1)),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              title: const Text('English'),
+              onTap: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAppearanceBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 20),
+            const Text('Chon giao dien', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            ListTile(
+              title: const Text('Sang'),
+              leading: const Icon(Icons.light_mode_outlined),
+              onTap: () {
+                setState(() => _appearance = 'Light');
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('Toi'),
+              leading: const Icon(Icons.dark_mode_outlined),
+              onTap: () {
+                setState(() => _appearance = 'Dark');
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

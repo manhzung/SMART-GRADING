@@ -57,3 +57,12 @@ class AuthProfileUpdated extends AuthEvent {
   @override
   List<Object?> get props => [user];
 }
+
+class AuthResendVerificationEmailRequested extends AuthEvent {
+  final String email;
+
+  const AuthResendVerificationEmailRequested({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}

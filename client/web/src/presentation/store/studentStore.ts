@@ -11,9 +11,9 @@ export interface StudentSubmission {
     title: string;
     examDate?: string;
     duration?: number;
+    subjectName?: string | null;
+    subjectColor?: string | null;
   };
-  subjectName?: string | null;
-  subjectColor?: string | null;
   totalScore: number;
   maxScore: number;
   status: 'pending' | 'scanning' | 'scanned' | 'manual_review' | 'completed' | 'appealed';
@@ -75,13 +75,15 @@ interface StudentState {
   isLoadingSubmissionAppeals: boolean;
 
   // Actions
-  fetchSubmissions: (filters?: { status?: string; page?: number; limit?: number }) => Promise<void>;
+  fetchSubmissions: (filters?: { status?: string; page?: number; limit?: number; startDate?: string; endDate?: string }) => Promise<void>;
   fetchAppeals: (filters?: {
     status?: string;
     submissionId?: string;
     examId?: string;
     page?: number;
     limit?: number;
+    startDate?: string;
+    endDate?: string;
   }) => Promise<void>;
   fetchSubmissionAppeals: (submissionId: string) => Promise<void>;
   clearError: () => void;
@@ -122,6 +124,8 @@ export const useStudentStore = create<StudentState>((set) => ({
       if (filters?.status && filters.status !== 'all') params.status = filters.status;
       if (filters?.page) params.page = filters.page;
       if (filters?.limit) params.limit = filters.limit;
+      if (filters?.startDate) params.startDate = filters.startDate;
+      if (filters?.endDate) params.endDate = filters.endDate;
 
       const response = await apiService.get<{
         results: StudentSubmission[];
@@ -159,6 +163,8 @@ export const useStudentStore = create<StudentState>((set) => ({
       if (filters?.examId && filters.examId !== 'all') params.examId = filters.examId;
       if (filters?.page) params.page = filters.page;
       if (filters?.limit) params.limit = filters.limit;
+      if (filters?.startDate) params.startDate = filters.startDate;
+      if (filters?.endDate) params.endDate = filters.endDate;
 
       const response = await apiService.get<{
         results: any[];

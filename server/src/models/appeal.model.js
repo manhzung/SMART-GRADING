@@ -32,6 +32,9 @@ const appealSchema = mongoose.Schema(
       maxlength: 1000,
     },
     evidenceImageUrl: String,
+    currentAnswer: String,
+    expectedAnswer: String,
+    scoreAdjustment: Number,
     status: {
       type: String,
       enum: ['pending', 'under_review', 'approved', 'rejected'],

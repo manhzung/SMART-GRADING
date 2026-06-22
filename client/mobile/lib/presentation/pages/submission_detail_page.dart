@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:photo_view/photo_view.dart';
 import '../../core/network/submission_service.dart';
+import '../../core/network/appeal_service.dart';
 import '../../domain/entities/exam.entity.dart';
 
 class SubmissionDetailPage extends StatefulWidget {
@@ -14,7 +16,9 @@ class SubmissionDetailPage extends StatefulWidget {
 
 class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
   late SubmissionService _submissionService;
+  late AppealService _appealService;
   bool _isLoading = true;
+  bool _isSubmittingAppeal = false;
   Submission? _fullSubmission;
   Map<String, dynamic>? _answerDetails;
 
@@ -22,6 +26,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
   void initState() {
     super.initState();
     _submissionService = GetIt.instance<SubmissionService>();
+    _appealService = GetIt.instance<AppealService>();
     _loadSubmissionDetails();
   }
 
@@ -69,6 +74,58 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
       const Color(0xFF065F46),
     ];
     return colors[name.hashCode.abs() % colors.length];
+  }
+
+  Future<void> _requestAppeal() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Yêu cầu phúc khảo'),
+        content: const Text('Bạn có chắc chắn muốn gửi yêu cầu phúc khảo cho bài thi này không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Gửi'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != true || !mounted) return;
+
+    setState(() => _isSubmittingAppeal = true);
+    try {
+      await _appealService.createAppeal(
+        examId: widget.submission.examId,
+        questionNumber: 0,
+        reason: 'Student requests re-grading for exam ${widget.submission.examId}',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã gửi yêu cầu phúc khảo thành công'),
+            backgroundColor: Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmittingAppeal = false);
+    }
   }
 
   String _formatDate(DateTime? dt) {
@@ -155,6 +212,12 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
           ),
         ),
         actions: [
+          if (_fullSubmission?.imageUrl != null && _fullSubmission!.imageUrl!.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.image_outlined, color: Color(0xFF0F172A)),
+              onPressed: () => _showImageGallery(context, _fullSubmission!.imageUrl!),
+              tooltip: 'View scanned sheet',
+            ),
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -463,19 +526,13 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Đã gửi yêu cầu phúc khảo'),
-                                backgroundColor: Color(0xFF16A34A),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.rate_review_outlined, size: 18),
-                          label: const Text(
-                            'Yêu cầu phúc khảo',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          onPressed: _isSubmittingAppeal ? null : _requestAppeal,
+                          icon: _isSubmittingAppeal
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.rate_review_outlined, size: 18),
+                          label: Text(
+                            _isSubmittingAppeal ? 'Đang gửi...' : 'Yêu cầu phúc khảo',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF7C3AED),
@@ -742,5 +799,56 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
     if (pct >= 80) return const Color(0xFF16A34A);
     if (pct >= 60) return const Color(0xFFD97706);
     return const Color(0xFFDC2626);
+  }
+
+  void _showImageGallery(BuildContext context, String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+            title: const Text(
+              'Scanned Sheet',
+              style: TextStyle(color: Colors.white),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share, color: Colors.white),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Share feature coming soon')),
+                  );
+                },
+              ),
+            ],
+          ),
+          body: PhotoView(
+            imageProvider: NetworkImage(imageUrl),
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 3,
+            backgroundDecoration: const BoxDecoration(color: Colors.black),
+            loadingBuilder: (context, event) => const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
+            errorBuilder: (context, error, stackTrace) => const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.broken_image, size: 64, color: Colors.white54),
+                  SizedBox(height: 16),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

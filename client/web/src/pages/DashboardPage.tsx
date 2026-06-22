@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuthStore } from '../presentation/store/authStore';
 import { useAnalyticsStore } from '../services/analyticsStore';
 import {
@@ -10,12 +10,14 @@ import {
   Clock,
   BookOpen,
   AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import styles from './DashboardPage.module.css';
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const { dashboardStats, isLoading, error, fetchDashboardStats } = useAnalyticsStore();
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'semester'>('month');
 
   const greetingName = user?.name || 'Professor';
 
@@ -112,10 +114,59 @@ export default function DashboardPage() {
     <div className={styles.container}>
       {/* Title Section */}
       <div className={styles.titleSection}>
-        <h1 className={styles.title}>Tổng quan giáo viên</h1>
-        <p className={styles.subtitle}>
-          Chào mừng, {greetingName}. Đây là tình trạng học vụ hôm nay.
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 className={styles.title}>Tổng quan giáo viên</h1>
+            <p className={styles.subtitle}>
+              Chào mừng, {greetingName}. Đây là tình trạng học vụ hôm nay.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {/* Period Filter */}
+            <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+              {(['week', 'month', 'semester'] as const).map(period => (
+                <button
+                  key={period}
+                  onClick={() => setSelectedPeriod(period)}
+                  style={{
+                    padding: '6px 14px',
+                    border: 'none',
+                    background: selectedPeriod === period ? '#0b2240' : '#ffffff',
+                    color: selectedPeriod === period ? '#ffffff' : '#64748b',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {period === 'week' ? '7 ngày' : period === 'month' ? '30 ngày' : 'Học kỳ'}
+                </button>
+              ))}
+            </div>
+            {/* Refresh Button */}
+            <button
+              onClick={() => fetchDashboardStats()}
+              disabled={isLoading}
+              style={{
+                padding: '6px 12px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                background: '#ffffff',
+                color: '#334155',
+                fontSize: '12px',
+                fontWeight: 500,
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                opacity: isLoading ? 0.6 : 1,
+              }}
+            >
+              <RefreshCw size={14} style={{ animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
+              Làm mới
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Statistics Cards Row */}
@@ -249,6 +300,12 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

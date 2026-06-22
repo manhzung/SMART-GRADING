@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useExamStore } from '../presentation/store/examStore';
 import { useSubmissionStore } from '../presentation/store/submissionStore';
+import { apiService } from '../core/api';
 import { mapExamDetailData } from './examPageAdapters';
 import { exportOmrTemplatePdf, exportOmrTemplateVersionSheetsPdf } from '../features/reports/examReportExport';
 import styles from './ExamDetailPage.module.css';
@@ -61,6 +62,7 @@ export default function ExamDetailPage() {
     isLoading: isSubLoading,
     fetchByExam,
     fetchStatistics,
+    submissions,
   } = useSubmissionStore();
 
   const [isSystemConfigOpen, setIsSystemConfigOpen] = useState(false);
@@ -208,13 +210,25 @@ export default function ExamDetailPage() {
     }
   };
 
-  const handleExportResults = async () => {
+  const handleExportResults = async (format: 'pdf' | 'excel' = 'pdf') => {
     if (!id) return;
     try {
-      await exportResults(id, 'pdf');
+      await exportResults(id, format);
     } catch (err: any) {
-        alert(err.message || 'Lỗi khi xuất kết quả');
-      }
+      alert(err.message || 'Lỗi khi xuất kết quả');
+    }
+  };
+
+  const handleGenerateReport = async () => {
+    if (!id) return;
+    if (!window.confirm('Tạo báo cáo phân tích cho bài thi này?')) return;
+    try {
+      const response = await apiService.post(`/reports/exam/${id}/generate`);
+      alert('Báo cáo đã được tạo thành công!');
+      await fetchStatistics(id);
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi tạo báo cáo');
+    }
   };
 
   const handleExportOmrSheet = async () => {
@@ -718,6 +732,92 @@ export default function ExamDetailPage() {
               </div>
             ))
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Section: Danh sách bài nộp */}
+      <div className={styles.sectionCard}>
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.headerTitle}>
+              <h2>Danh sách bài nộp ({submissions.length})</h2>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {examData.status === 'completed' && (
+                <button className={styles.btnOutlineCompact} onClick={handleGenerateReport}>
+                  Tạo báo cáo
+                </button>
+              )}
+              <button className={styles.btnOutlineCompact} onClick={() => handleExportResults('pdf')}>
+                <FileDown size={14} />
+                Xuất PDF
+              </button>
+              <button className={styles.btnSolidCompact} onClick={() => handleExportResults('excel')}>
+                Xuất Excel
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{ width: '50px' }}>STT</th>
+                  <th style={{ width: '180px' }}>HỌC SINH</th>
+                  <th style={{ width: '100px' }}>MÃ HS</th>
+                  <th style={{ width: '100px' }}>MÃ ĐỀ</th>
+                  <th style={{ width: '80px' }}>ĐIỂM</th>
+                  <th style={{ width: '80px' }}>TỶ LỆ</th>
+                  <th style={{ width: '100px' }}>TRẠNG THÁI</th>
+                  <th style={{ width: '140px' }}>THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {submissions.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#999' }}>
+                      Chưa có bài nộp nào.
+                    </td>
+                  </tr>
+                ) : (
+                  submissions.map((sub, idx) => {
+                    const pct = sub.maxScore ? ((sub.score || 0) / sub.maxScore * 100) : 0;
+                    return (
+                      <tr key={sub._id || idx}>
+                        <td style={{ textAlign: 'center' }}>{idx + 1}</td>
+                        <td>{(sub as any).studentId?.name || (sub as any).studentName || '—'}</td>
+                        <td>{(sub as any).studentCode || '—'}</td>
+                        <td>{(sub as any).versionCode || '—'}</td>
+                        <td style={{ textAlign: 'center', fontWeight: 600 }}>
+                          {sub.score != null ? sub.score.toFixed(1) : '—'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>{pct > 0 ? `${pct.toFixed(0)}%` : '—'}</td>
+                        <td>
+                          <span className={`${styles.difficultyLabel} ${
+                            sub.status === 'graded' || sub.status === 'reviewed'
+                              ? styles.diffGreen
+                              : sub.status === 'submitted'
+                              ? styles.diffBlue
+                              : ''
+                          }`}>
+                            {sub.status === 'graded' ? 'Đã chấm'
+                              : sub.status === 'reviewed' ? 'Đã phúc tra'
+                              : sub.status === 'submitted' ? 'Đã nộp'
+                              : sub.status === 'pending' ? 'Chưa chấm' : sub.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button className={styles.actionIconButton} title="Xem chi tiết">
+                            <FileText size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

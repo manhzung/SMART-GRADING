@@ -97,6 +97,116 @@ class ReportService {
       // Calculate score distribution (histogram)
       report.scoreDistribution = this.calculateScoreDistribution(scores);
 
+      // ─── Populate questionAnalysis ───────────────────────────────────────
+      const { Question } = require('../models');
+      const { Class } = require('../models');
+
+      const examQuestions = await Question.find({ _id: { $in: exam.questionIds } }).lean();
+      const questionMap = {};
+      for (const q of examQuestions) {
+        questionMap[q._id.toString()] = q;
+      }
+
+      // Per-question stats from submissions
+      const questionStats = {};
+      for (const qId of exam.questionIds) {
+        const key = qId.toString();
+        questionStats[key] = { correct: 0, incorrect: 0, empty: 0, total: 0 };
+      }
+
+      for (const sub of submissions) {
+        for (const answer of sub.answers || []) {
+          const key = answer.questionId?.toString();
+          if (!key || !questionStats[key]) continue;
+          questionStats[key].total++;
+          if (answer.selectedAnswer == null) {
+            questionStats[key].empty++;
+          } else if (answer.isCorrect) {
+            questionStats[key].correct++;
+          } else {
+            questionStats[key].incorrect++;
+          }
+        }
+      }
+
+      const questionAnalysis = [];
+      for (const qId of exam.questionIds) {
+        const key = qId.toString();
+        const stats = questionStats[key] || { correct: 0, incorrect: 0, empty: 0, total: 0 };
+        const total = stats.total || 1;
+        const accuracy = Math.round((stats.correct / total) * 100);
+        const question = questionMap[key];
+        questionAnalysis.push({
+          questionId: qId,
+          position: questionAnalysis.length + 1,
+          difficulty: question?.difficulty || 'medium',
+          correctCount: stats.correct,
+          incorrectCount: stats.incorrect,
+          emptyCount: stats.empty,
+          accuracy,
+          topicId: question?.topicId,
+          topicName: question?.topic?.name,
+        });
+      }
+
+      report.questionAnalysis = questionAnalysis;
+
+      // hardestQuestions: lowest accuracy
+      const sortedHardest = [...questionAnalysis]
+        .sort((a, b) => a.accuracy - b.accuracy)
+        .slice(0, 5)
+        .map(q => ({
+          questionId: q.questionId,
+          position: q.position,
+          accuracy: q.accuracy,
+          incorrectCount: q.incorrectCount,
+        }));
+      report.hardestQuestions = sortedHardest;
+
+      // easiestQuestions: highest accuracy
+      const sortedEasiest = [...questionAnalysis]
+        .sort((a, b) => b.accuracy - a.accuracy)
+        .slice(0, 5)
+        .map(q => ({
+          questionId: q.questionId,
+          position: q.position,
+          accuracy: q.accuracy,
+          correctCount: q.correctCount,
+        }));
+      report.easiestQuestions = sortedEasiest;
+
+      // ─── Populate classSummary ────────────────────────────────────────
+      const classSummaries = [];
+      for (const classId of exam.classIds || []) {
+        const classDoc = await Class.findById(classId).select('name code studentIds').lean();
+        if (!classDoc) continue;
+
+        const classSubmissions = submissions.filter(
+          s => s.classId && s.classId.toString() === classId.toString()
+        );
+        const classScores = classSubmissions.map(s => ({
+          score: s.totalScore,
+          maxScore: s.maxScore,
+          percentage: (s.totalScore / s.maxScore) * 100,
+        }));
+
+        const submittedCount = classSubmissions.length;
+        const avgScore = submittedCount > 0
+          ? classScores.reduce((sum, s) => sum + s.percentage, 0) / submittedCount
+          : 0;
+
+        classSummaries.push({
+          classId,
+          className: classDoc.name || classDoc.code || classId.toString(),
+          totalStudents: classDoc.studentIds?.length || 0,
+          submittedCount,
+          averageScore: Math.round((avgScore / 100) * (exam.totalScore || 10) * 10) / 10,
+          highestScore: submittedCount > 0 ? Math.max(...classScores.map(s => s.score)) : 0,
+          lowestScore: submittedCount > 0 ? Math.min(...classScores.map(s => s.score)) : 0,
+        });
+      }
+      report.classSummary = classSummaries;
+
       // Get top and bottom students
       const studentScores = submissions
         .map(s => ({

@@ -22,6 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
     on<AuthProfileUpdated>(_onProfileUpdated);
+    on<AuthResendVerificationEmailRequested>(_onResendVerificationEmail);
   }
 
   final ApiClient _apiClient;
@@ -178,5 +179,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       'createdAt': event.user.createdAt.toIso8601String(),
     });
     emit(AuthAuthenticated(event.user));
+  }
+
+  Future<void> _onResendVerificationEmail(
+    AuthResendVerificationEmailRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      await _authService.resendVerificationEmail(email: event.email);
+      emit(AuthVerificationEmailResent(email: event.email));
+    } catch (e) {
+      emit(AuthError(message: _getErrorMessage(e)));
+    }
   }
 }

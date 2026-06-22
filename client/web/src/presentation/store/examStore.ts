@@ -475,6 +475,34 @@ export const useExamStore = create<ExamState>((set) => ({
     }
 
     const contentType = response.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+
+    if (isJson) {
+      // Excel: backend returns JSON with results array
+      const data = await response.json();
+      await import('../features/reports/examReportExport').then(m => {
+        const wb = XLSX.utils.book_new();
+        const rows = [
+          ['STT', 'Họ tên', 'Mã HS', 'Điểm', 'Trạng thái', 'Ngày nộp'],
+        ];
+        (data.results || []).forEach((r, i) => {
+          rows.push([
+            i + 1,
+            r.studentName || '—',
+            r.studentCode || '—',
+            r.score ?? 0,
+            r.status === 'graded' ? 'Đạt' : r.status === 'reviewed' ? 'Đã duyệt' : 'Chưa chấm',
+            r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('vi-VN') : '—',
+          ]);
+        });
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [{ wch: 6 }, { wch: 30 }, { wch: 12 }, { wch: 8 }, { wch: 15 }, { wch: 15 }];
+        XLSX.utils.book_append_sheet(wb, ws, 'Ket qua');
+        XLSX.writeFile(wb, `KetQua_${id}_${Date.now()}.xlsx`);
+      });
+      return;
+    }
+
     if (!contentType.includes('application/pdf')) {
       const text = await response.text().catch(() => '');
       throw new Error(`Server trả về không phải PDF: ${contentType || 'unknown'} — ${text.slice(0, 100)}`);
@@ -485,7 +513,7 @@ export const useExamStore = create<ExamState>((set) => ({
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = objectUrl;
-    a.download = `exam_results.pdf`;
+    a.download = `KetQua_${id}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

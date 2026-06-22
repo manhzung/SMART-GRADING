@@ -98,7 +98,7 @@ function mapDifficulty(d: string): 'Easy' | 'Medium' | 'Hard' {
   return map[d] ?? 'Medium';
 }
 
-function toFrontendQuestion(bq: BackendQuestion): Question {
+export function toFrontendQuestion(bq: BackendQuestion): Question {
   const qId = bq.id || bq._id || '';
   return {
     _id: qId,
@@ -225,6 +225,7 @@ interface QuestionState {
   setFilters: (filters: Partial<QuestionState['filters']>) => void;
   clearError: () => void;
   clearCreateError: () => void;
+  generateAiQuestions: (params: { topic: string; count: number; difficulty?: string; requirements?: string }) => Promise<BackendQuestion[]>;
 }
 
 export const useQuestionStore = create<QuestionState>((set, get) => ({
@@ -402,4 +403,20 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
 
   clearError: () => set({ error: null }),
   clearCreateError: () => set({ createError: null }),
+
+  generateAiQuestions: async (params) => {
+    set({ isCreating: true, createError: null });
+    try {
+      const response = await apiService.post<{ questions: BackendQuestion[] }>('/questions/generate', {
+        requirements: params.requirements || params.topic,
+        count: params.count,
+        difficulty: params.difficulty || 'medium',
+      });
+      set({ isCreating: false });
+      return response.questions || [];
+    } catch (error) {
+      set({ createError: (error as Error).message || 'AI generation failed', isCreating: false });
+      throw error;
+    }
+  },
 }));

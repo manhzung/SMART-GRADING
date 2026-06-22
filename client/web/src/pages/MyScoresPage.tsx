@@ -57,9 +57,11 @@ export default function MyScoresPage() {
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
       page: currentPage,
       limit: pageSize,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStatus, currentPage, pageSize]);
+  }, [selectedStatus, currentPage, pageSize, startDate, endDate]);
 
   useEffect(() => {
     if (selectedId) {
@@ -81,12 +83,7 @@ export default function MyScoresPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, startDate, endDate]);
-
-  // Reset page when status changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedStatus]);
+  }, [searchQuery, startDate, endDate, selectedStatus]);
 
   const stats = useMemo(() => {
     const total = submissionsPagination.total;
@@ -336,12 +333,12 @@ export default function MyScoresPage() {
                       </div>
                     </td>
                     <td>
-                      <span className={styles.subjectBadge}>
+                        <span className={styles.subjectBadge}>
                         <span
                           className={styles.subjectDot}
-                          style={{ backgroundColor: submission.subjectColor || '#64748b' }}
+                          style={{ backgroundColor: submission.examId?.subjectColor || '#64748b' }}
                         />
-                        {submission.subjectName || 'Chưa phân loại'}
+                        {submission.examId?.subjectName || 'Chưa phân loại'}
                       </span>
                     </td>
                     <td>

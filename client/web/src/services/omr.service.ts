@@ -4,33 +4,29 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
 export interface OMRUploadResult {
   id: string;
+  status: string;
+  submissionId: string;
+  totalScore: number;
+  maxScore: number;
+  answerCount: number;
   detectedAnswers: Record<string, string>;
   confidence: number;
   templateId: string;
   imageUrl?: string;
 }
 
-export interface OMRMatchResult {
-  examId: string;
-  title: string;
-  matchScore: number;
-}
-
-export interface OMRSubmitResult {
-  submissionId: string;
-  status: string;
-}
-
 export interface OMRTemplate {
-  id: string;
+  _id: string;
   name: string;
-  questionCount: number;
-  rowCount: number;
+  code: string;
+  zones?: Record<string, unknown>;
+  questionCount?: number;
+  rowCount?: number;
 }
 
-export interface OMRProcessingStatus {
-  status: string;
-  progress: number;
+export interface SubmissionAnswer {
+  position: number;
+  selectedAnswer: string;
 }
 
 interface ApiResponse<T> {
@@ -41,7 +37,6 @@ interface ApiResponse<T> {
 
 export class OMRService {
   private getToken(): string | null {
-    // Match the key used by authStore persist middleware
     const stored = localStorage.getItem('auth-storage');
     if (stored) {
       try {
@@ -69,28 +64,42 @@ export class OMRService {
     if (response.status === 204 || response.status === 205) {
       return undefined as T;
     }
-
     if (!response.ok) {
       const data = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new ApiException(data.message || 'Server error', response.status);
+      throw new ApiException(data.message || `Server error: ${response.status}`, response.status);
     }
-
     const text = await response.text();
     if (!text) return undefined as T;
     try {
       const json: ApiResponse<T> = JSON.parse(text);
-      return json.data;
+      return json.data ?? (json as unknown as T);
     } catch {
       throw new ApiException('Invalid JSON response', 500);
     }
   }
 
-  async uploadAndProcess(file: File, templateId: string): Promise<OMRUploadResult> {
+  /**
+   * Scan an OMR sheet image and get results.
+   * BE endpoint: POST /submissions/scan
+   * Requires examId. Optionally pass classId if known.
+   */
+  async scanSheet(params: {
+    examId: string;
+    classId?: string;
+    imageUrl: string;
+    originalPublicId?: string;
+    deviceInfo?: { platform: string; deviceModel?: string; appVersion?: string };
+  }): Promise<OMRUploadResult> {
     const formData = new FormData();
-    formData.append('image', file);
-    formData.append('templateId', templateId);
+    formData.append('examId', params.examId);
+    if (params.classId) formData.append('classId', params.classId);
+    formData.append('originalUrl', params.imageUrl);
+    if (params.originalPublicId) formData.append('originalPublicId', params.originalPublicId);
+    if (params.deviceInfo) {
+      formData.append('deviceInfo', JSON.stringify(params.deviceInfo));
+    }
 
-    const response = await fetch(`${API_BASE}/omr/upload`, {
+    const response = await fetch(`${API_BASE}/submissions/scan`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: formData,
@@ -99,48 +108,122 @@ export class OMRService {
     return this.handleResponse<OMRUploadResult>(response);
   }
 
-  async matchSheetToExam(sheetId: string): Promise<OMRMatchResult> {
-    const response = await fetch(`${API_BASE}/omr/match-exam`, {
+  /**
+   * Scan with base64 image instead of Cloudinary URL.
+   */
+  async scanSheetBase64(params: {
+    examId: string;
+    classId?: string;
+    imageBase64: string;
+    deviceInfo?: { platform: string; deviceModel?: string; appVersion?: string };
+  }): Promise<OMRUploadResult> {
+    const body = {
+      examId: params.examId,
+      ...(params.classId ? { classId: params.classId } : {}),
+      image: params.imageBase64,
+      ...(params.deviceInfo ? { deviceInfo: params.deviceInfo } : {}),
+    };
+
+    const response = await fetch(`${API_BASE}/submissions/scan`, {
       method: 'POST',
       headers: {
         ...this.getHeaders(),
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ sheetId }),
+      body: JSON.stringify(body),
     });
 
-    return this.handleResponse<OMRMatchResult>(response);
+    return this.handleResponse<OMRUploadResult>(response);
   }
 
-  async submitSheet(sheetId: string, answers: Record<string, string>, examId: string): Promise<OMRSubmitResult> {
-    const response = await fetch(`${API_BASE}/omr/submit`, {
-      method: 'POST',
+  /**
+   * Submit corrected answers for a submission after manual editing.
+   * BE endpoint: PATCH /submissions/:id/answers
+   */
+  async submitCorrectedAnswers(params: {
+    submissionId: string;
+    answers: Record<string, string>; // { "1": "A", "2": "B", ... }
+  }): Promise<{ success: boolean; totalScore: number; maxScore: number }> {
+    const response = await fetch(`${API_BASE}/submissions/${params.submissionId}/answers`, {
+      method: 'PATCH',
       headers: {
         ...this.getHeaders(),
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ sheetId, answers, examId }),
+      body: JSON.stringify({ answers: params.answers }),
     });
 
-    return this.handleResponse<OMRSubmitResult>(response);
+    return this.handleResponse<{ success: boolean; totalScore: number; maxScore: number }>(response);
   }
 
+  /**
+   * Get OMR templates list.
+   * BE endpoint: GET /omr-templates/
+   */
   async getTemplates(): Promise<OMRTemplate[]> {
-    const response = await fetch(`${API_BASE}/omr/templates`, {
+    const response = await fetch(`${API_BASE}/omr-templates/`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
-
     return this.handleResponse<OMRTemplate[]>(response);
   }
 
-  async getProcessingStatus(sheetId: string): Promise<OMRProcessingStatus> {
-    const response = await fetch(`${API_BASE}/omr/status/${sheetId}`, {
+  /**
+   * Get OMR templates for a specific exam.
+   * BE endpoint: GET /omr-templates/exam/:examId
+   */
+  async getTemplatesForExam(examId: string): Promise<OMRTemplate[]> {
+    const response = await fetch(`${API_BASE}/omr-templates/exam/${examId}`, {
       method: 'GET',
       headers: this.getHeaders(),
     });
+    return this.handleResponse<OMRTemplate[]>(response);
+  }
 
-    return this.handleResponse<OMRProcessingStatus>(response);
+  /**
+   * Get a single submission by ID.
+   * BE endpoint: GET /submissions/:id
+   */
+  async getSubmission(submissionId: string): Promise<Record<string, unknown>> {
+    const response = await fetch(`${API_BASE}/submissions/${submissionId}`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+    return this.handleResponse<Record<string, unknown>>(response);
+  }
+
+  /**
+   * Get submissions for an exam.
+   * BE endpoint: GET /submissions/exam/:examId
+   */
+  async getSubmissionsByExam(examId: string, params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ results: Record<string, unknown>[]; total: number }> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.page) searchParams.set('page', String(params.page));
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    const response = await fetch(`${API_BASE}/submissions/exam/${examId}${query}`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+    return this.handleResponse<{ results: Record<string, unknown>[]; total: number }>(response);
+  }
+
+  /**
+   * Get submission statistics for an exam.
+   * BE endpoint: GET /submissions/exam/:examId/statistics
+   */
+  async getExamStatistics(examId: string): Promise<Record<string, unknown>> {
+    const response = await fetch(`${API_BASE}/submissions/exam/${examId}/statistics`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+    return this.handleResponse<Record<string, unknown>>(response);
   }
 }
 

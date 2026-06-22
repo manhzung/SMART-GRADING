@@ -15,6 +15,7 @@ import 'core/network/user_service.dart';
 import 'core/network/appeal_service.dart';
 import 'core/network/analytics_service.dart';
 import 'core/network/question_service.dart';
+import 'core/network/school_service.dart';
 import 'core/constants/app_constants.dart';
 import 'presentation/pages/splash_page.dart';
 import 'presentation/pages/login_page.dart';
@@ -48,6 +49,13 @@ import 'presentation/blocs/submission/submission_bloc.dart';
 import 'presentation/blocs/school/school_bloc.dart';
 import 'presentation/blocs/class/class_bloc.dart';
 import 'presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
+import 'presentation/blocs/admin/admin_bloc.dart';
+import 'presentation/pages/email_verification_pending_page.dart';
+import 'presentation/pages/my_scores_page.dart';
+import 'presentation/pages/my_appeals_page.dart';
+import 'presentation/pages/admin/admin_dashboard_page.dart';
+import 'presentation/pages/admin/schools_management_page.dart';
+import 'presentation/pages/admin/users_management_page.dart';
 import 'domain/entities/exam.entity.dart';
 import 'domain/entities/user.entity.dart';
 import 'domain/omr/models/grading_result.dart';
@@ -89,6 +97,9 @@ void setupDependencies() {
   getIt.registerLazySingleton<AIService>(
     () => AIService(apiClient: getIt<ApiClient>()),
   );
+  getIt.registerLazySingleton<SchoolService>(
+    () => SchoolService(apiClient: getIt<ApiClient>()),
+  );
 }
 
 void main() {
@@ -121,6 +132,9 @@ class SmartGradingApp extends StatelessWidget {
         ),
         BlocProvider<ClassBloc>(
           create: (_) => ClassBloc(apiClient: getIt<ApiClient>()),
+        ),
+        BlocProvider<AdminBloc>(
+          create: (_) => AdminBloc(apiClient: getIt<ApiClient>()),
         ),
       ],
       child: MaterialApp(
@@ -298,6 +312,15 @@ class SmartGradingApp extends StatelessWidget {
                 processingSteps: const [],
               ),
             );
+          },
+          '/admin': (context) => const AdminDashboardPage(),
+          '/admin/schools': (context) => const SchoolsManagementPage(),
+          '/admin/users': (context) => const UsersManagementPage(),
+          '/my-scores': (context) => const MyScoresPage(),
+          '/my-appeals': (context) => const MyAppealsPage(),
+          '/email-verification-pending': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            return EmailVerificationPendingPage(email: args?['email'] ?? '');
           },
         },
       ),

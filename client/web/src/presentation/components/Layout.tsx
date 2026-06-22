@@ -17,6 +17,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import NotificationPanel from './NotificationPanel';
 import styles from './Layout.module.css';
 
 // Admin nav items — only visible to admin/school-admin
@@ -153,10 +154,7 @@ export default function Layout() {
           {/* Right menu icons and avatar */}
           <div className={styles.headerRight}>
             <div className={styles.headerIcons}>
-              <button className={styles.headerIconBtn}>
-                <Bell size={18} />
-                <span className={styles.notificationDot} />
-              </button>
+              <NotificationPanel />
               <button className={styles.headerIconBtn} onClick={() => navigate('/settings')}>
                 <Settings size={18} />
               </button>

@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import styles from './QuestionBankPage.module.css';
-import { useQuestionStore, questionService } from '../presentation/store/questionStore';
+import { useQuestionStore, questionService, toFrontendQuestion, type BackendQuestion, type Question } from '../presentation/store/questionStore';
 import { useQuestionPermissions } from '../hooks/useQuestionPermissions';
 
 // ─── LaTeX renderer ────────────────────────────────────────────────────────────
@@ -114,6 +114,7 @@ export default function QuestionBankPage() {
     clearError,
     clearCreateError,
     approveQuestion,
+    generateAiQuestions,
   } = useQuestionStore();
 
   const permissions = useQuestionPermissions();
@@ -133,6 +134,10 @@ export default function QuestionBankPage() {
   const [approvalFilter, setApprovalFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState('');
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiForm, setAiForm] = useState({ topic: '', count: 5, difficulty: 'medium' as 'easy' | 'medium' | 'hard', requirements: '' });
+  const [aiPreview, setAiPreview] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
   // Explanation modal - use a flexible type since Question from store has `text` not `content`
   const [activeExplanation, setActiveExplanation] = useState<{
@@ -306,10 +311,16 @@ export default function QuestionBankPage() {
           <p>Create, manage, and filter academic questions and equations</p>
         </div>
         {canManage && (
-          <button className={styles.createBtn} onClick={() => setIsAddModalOpen(true)}>
-            <Plus size={18} />
-            <span>Add Question</span>
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className={styles.createBtn} style={{ backgroundColor: '#7c3aed' }} onClick={() => setIsAiModalOpen(true)}>
+              <Sparkles size={18} />
+              <span>Tạo bằng AI</span>
+            </button>
+            <button className={styles.createBtn} onClick={() => setIsAddModalOpen(true)}>
+              <Plus size={18} />
+              <span>Add Question</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -1005,6 +1016,203 @@ export default function QuestionBankPage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ─── MODAL: AI Generate Questions ──────────────────────────────────────── */}
+      {isAiModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => { if (!isGeneratingAi) setIsAiModalOpen(false); }}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px', width: '100%' }}>
+            <div className={styles.modalHeader}>
+              <h2>
+                <Sparkles size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                Tạo câu hỏi bằng AI
+              </h2>
+              <button className={styles.closeBtn} onClick={() => !isGeneratingAi && setIsAiModalOpen(false)} disabled={isGeneratingAi}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className={styles.modalForm}>
+              <div className={styles.formGroup}>
+                <label>Chủ đề / Yêu cầu *</label>
+                <input
+                  type="text"
+                  placeholder="VD: Phương trình bậc 2, Hàm số lượng giác, Từ vựng Tiếng Anh..."
+                  value={aiForm.topic}
+                  onChange={(e) => setAiForm({ ...aiForm, topic: e.target.value })}
+                  className={styles.formInput}
+                  required
+                  disabled={isGeneratingAi}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className={styles.formGroup}>
+                  <label>Số lượng câu hỏi</label>
+                  <select
+                    value={aiForm.count}
+                    onChange={(e) => setAiForm({ ...aiForm, count: Number(e.target.value) })}
+                    className={styles.formInput}
+                    disabled={isGeneratingAi}
+                  >
+                    {[3, 5, 10, 15, 20].map(n => <option key={n} value={n}>{n} câu</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Độ khó</label>
+                  <select
+                    value={aiForm.difficulty}
+                    onChange={(e) => setAiForm({ ...aiForm, difficulty: e.target.value as 'easy' | 'medium' | 'hard' })}
+                    className={styles.formInput}
+                    disabled={isGeneratingAi}
+                  >
+                    <option value="easy">Dễ</option>
+                    <option value="medium">Trung bình</option>
+                    <option value="hard">Khó</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Yêu cầu bổ sung (tùy chọn)</label>
+                <textarea
+                  placeholder="VD: Có công thức toán, ưu tiên câu hỏi thực tế..."
+                  value={aiForm.requirements}
+                  onChange={(e) => setAiForm({ ...aiForm, requirements: e.target.value })}
+                  className={styles.formInput}
+                  rows={3}
+                  disabled={isGeneratingAi}
+                />
+              </div>
+
+              {isGeneratingAi && (
+                <div style={{ textAlign: 'center', padding: '16px', color: '#7c3aed' }}>
+                  <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
+                  <p>AI đang tạo câu hỏi, vui lòng chờ...</p>
+                </div>
+              )}
+
+              {/* Preview Section */}
+              {aiPreview.length > 0 && !isGeneratingAi && (
+                <div style={{ marginTop: '16px' }}>
+                  <h4 style={{ marginBottom: '12px', color: '#0b2240', fontSize: '14px' }}>
+                    Xem trước ({aiPreview.length} câu hỏi)
+                  </h4>
+                  <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                    {aiPreview.map((q, idx) => (
+                      <div key={idx} style={{ padding: '12px 0', borderBottom: idx < aiPreview.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                          <span style={{ fontWeight: 600, fontSize: '13px', color: '#334155' }}>Câu {idx + 1}.</span>
+                          <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: q.difficulty === 'Easy' ? '#f0fdf4' : q.difficulty === 'Hard' ? '#fef2f2' : '#fffbeb', color: q.difficulty === 'Easy' ? '#16a34a' : q.difficulty === 'Hard' ? '#dc2626' : '#d97706' }}>
+                            {q.difficulty}
+                          </span>
+                          {q.isAiGenerated && <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#f5f3ff', color: '#7c3aed' }}>AI</span>}
+                        </div>
+                        <p style={{ fontSize: '13px', color: '#475569', marginBottom: '6px' }}>{q.text}</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                          {q.options.map((opt) => (
+                            <div key={opt.letter} style={{ fontSize: '12px', color: '#64748b', padding: '2px 0' }}>
+                              <span style={{ fontWeight: 600 }}>{opt.letter}.</span> {opt.text}
+                              {opt.isCorrect && <span style={{ color: '#16a34a', marginLeft: '4px' }}>✓</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {createError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', color: '#dc2626', fontSize: '13px' }}>
+                  <AlertCircle size={14} />
+                  <span>{createError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                onClick={() => !isGeneratingAi && setIsAiModalOpen(false)}
+                disabled={isGeneratingAi}
+              >
+                Hủy
+              </button>
+              {aiPreview.length === 0 ? (
+                <button
+                  type="button"
+                  className={styles.submitBtn}
+                  style={{ backgroundColor: '#7c3aed' }}
+                  onClick={async () => {
+                    if (!aiForm.topic.trim()) {
+                      toast.error('Vui lòng nhập chủ đề');
+                      return;
+                    }
+                    setIsGeneratingAi(true);
+                    try {
+                      const rawQuestions = await generateAiQuestions({
+                        topic: aiForm.topic,
+                        count: aiForm.count,
+                        difficulty: aiForm.difficulty,
+                        requirements: aiForm.requirements,
+                      });
+                      setAiPreview(rawQuestions.map(toFrontendQuestion));
+                      toast.success(`Đã tạo ${rawQuestions.length} câu hỏi! Vui lòng xem trước và lưu.`);
+                    } catch {
+                      toast.error('Tạo câu hỏi thất bại');
+                    } finally {
+                      setIsGeneratingAi(false);
+                    }
+                  }}
+                  disabled={isGeneratingAi || !aiForm.topic.trim()}
+                >
+                  <Sparkles size={14} />
+                  Tạo câu hỏi
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={styles.submitBtn}
+                    style={{ backgroundColor: '#16a34a' }}
+                    onClick={async () => {
+                      for (const q of aiPreview) {
+                        try {
+                          await createQuestion({
+                            content: q.text,
+                            type: 'single_choice',
+                            options: q.options.map(o => ({ id: o.letter as 'A' | 'B' | 'C' | 'D', content: o.text, isCorrect: !!o.isCorrect })),
+                            difficulty: q.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
+                            source: 'ai',
+                            tags: q.tags,
+                          });
+                        } catch { /* individual error handled by store */ }
+                      }
+                      toast.success(`Đã lưu ${aiPreview.length} câu hỏi vào ngân hàng!`);
+                      setIsAiModalOpen(false);
+                      setAiPreview([]);
+                      setAiForm({ topic: '', count: 5, difficulty: 'medium', requirements: '' });
+                      fetchQuestions({ page: 1, limit: 20 });
+                    }}
+                  >
+                    <CheckCircle size={14} />
+                    Lưu tất cả ({aiPreview.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.cancelBtn}
+                    onClick={() => setAiPreview([])}
+                  >
+                    Tạo lại
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

@@ -237,7 +237,8 @@ const submissionSchema = mongoose.Schema(
   }
 );
 
-submissionSchema.index({ examId: 1, studentCode: 1 }, { unique: true });
+submissionSchema.index({ examId: 1, studentId: 1 }, { unique: true });
+submissionSchema.index({ examId: 1, studentCode: 1 }, { unique: true, sparse: true });
 submissionSchema.index({ studentId: 1, examId: 1 });
 submissionSchema.index({ status: 1 });
 submissionSchema.index({ omrTemplateId: 1 });

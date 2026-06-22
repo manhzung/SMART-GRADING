@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
-const { Appeal, Submission, Exam } = require('../models');
+const { Appeal, Submission, Exam, User } = require('../models');
 const ApiError = require('../utils/ApiError');
 const submissionService = require('./submission.service');
+const notificationService = require('./notification.service');
 const { parsePagination } = require('../utils/parsePagination');
 
 class AppealService {
@@ -21,9 +22,16 @@ class AppealService {
       throw new ApiError(400, 'Appeal already exists for this question');
     }
 
+    // Find the specific answer from the submission
+    const answer = submission.answers?.find(
+      (a) => a.questionId?.toString() === data.questionId.toString()
+    );
+
     const appeal = new Appeal({
       ...data,
       status: 'pending',
+      currentAnswer: answer?.selectedAnswer != null ? String.fromCharCode(65 + answer.selectedAnswer) : undefined,
+      expectedAnswer: answer?.correctAnswer != null ? String.fromCharCode(65 + answer.correctAnswer) : undefined,
     });
 
     await appeal.save();
@@ -31,6 +39,21 @@ class AppealService {
     // Update submission status
     submission.status = 'appealed';
     await submission.save();
+
+    // Notify the teacher of this exam
+    const [exam, student] = await Promise.all([
+      Exam.findById(data.examId).select('createdBy title').lean(),
+      User.findById(data.studentId).select('name').lean(),
+    ]);
+    if (exam?.createdBy && student) {
+      await notificationService.notifyAppealSubmitted(
+        exam._id,
+        exam.createdBy,
+        student.name || 'Một học sinh',
+        exam.title || 'Bài thi',
+        data.questionPosition || 1
+      );
+    }
 
     return appeal;
   }
@@ -194,6 +217,22 @@ class AppealService {
     };
 
     await appeal.save();
+
+    // Notify the student of the decision
+    if (appeal.studentId) {
+      const [exam, student] = await Promise.all([
+        Exam.findById(appeal.examId).select('title').lean(),
+        User.findById(appeal.studentId).select('name').lean(),
+      ]);
+      await notificationService.notifyAppealResolved(
+        appeal.studentId.toString(),
+        appeal.examId?.toString(),
+        exam?.title || 'Bài thi',
+        decision,
+        appeal.questionPosition || 1
+      );
+    }
+
     return appeal;
   }
 

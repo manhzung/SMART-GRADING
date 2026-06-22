@@ -46,3 +46,7 @@ class AIChatLoadReports extends AIChatEvent {
 class AIChatClearError extends AIChatEvent {
   const AIChatClearError();
 }
+
+class AIChatClearConversation extends AIChatEvent {
+  const AIChatClearConversation();
+}

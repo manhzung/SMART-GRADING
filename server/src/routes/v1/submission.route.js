@@ -28,6 +28,10 @@ router
   .post(auth('scanSubmissions'), validate(submissionValidation.manualOverride), submissionController.manualOverride);
 
 router
+  .route('/:id/answers')
+  .patch(auth('scanSubmissions'), validate(submissionValidation.updateAnswers), submissionController.updateAnswers);
+
+router
   .route('/exam/:examId')
   .get(auth(), validate(submissionValidation.getExamSubmissions), submissionController.getByExam);
 

@@ -65,8 +65,8 @@ class _RegisterPageState extends State<RegisterPage> {
               if (state is AuthAuthenticated) {
                 Navigator.pushReplacementNamed(
                   context,
-                  '/verify-email',
-                  arguments: _emailController.text.trim(),
+                  '/email-verification-pending',
+                  arguments: {'email': _emailController.text.trim()},
                 );
               } else if (state is AuthError) {
                 ScaffoldMessenger.of(

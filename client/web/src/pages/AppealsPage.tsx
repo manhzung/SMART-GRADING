@@ -62,8 +62,8 @@ function mapBackendAppeal(a: import('../presentation/store/appealStore').Backend
     questionPosition: a.questionPosition,
     questionContent: questionIdObj?.content || '',
     reason: a.reason,
-    currentAnswer: '',
-    expectedAnswer: '',
+    currentAnswer: a.currentAnswer || '',
+    expectedAnswer: a.expectedAnswer || '',
     status: a.status === 'under_review' ? 'reviewing' : (a.status as AppealStatus),
     resolvedBy: typeof a.teacherResponse?.reviewedBy === 'object'
       ? (a.teacherResponse.reviewedBy as { _id: string })._id
@@ -743,6 +743,25 @@ export default function AppealsPage() {
                     <span className={styles.questionLabel}>Nội dung câu hỏi:</span>
                     <p className={styles.questionText}>{selectedAppeal.questionContent || `Câu hỏi số ${selectedAppeal.questionPosition}`}</p>
                   </div>
+                  {(selectedAppeal.currentAnswer || selectedAppeal.expectedAnswer) && (
+                    <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', padding: '10px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#c2410c', marginBottom: '4px', textTransform: 'uppercase' }}>Đáp án học sinh đã chọn</div>
+                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#ea580c' }}>
+                          {selectedAppeal.currentAnswer
+                            ? `${selectedAppeal.currentAnswer} ${selectedAppeal.expectedAnswer && selectedAppeal.currentAnswer !== selectedAppeal.expectedAnswer ? '✗' : '✓'}`
+                            : <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#9ca3af' }}>Không trả lời</span>
+                          }
+                        </div>
+                      </div>
+                      <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '10px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#15803d', marginBottom: '4px', textTransform: 'uppercase' }}>Đáp án đúng</div>
+                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#16a34a' }}>
+                          {selectedAppeal.expectedAnswer || '—'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

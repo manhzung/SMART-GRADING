@@ -38,6 +38,26 @@ class AppealService {
     );
   }
 
+  Future<Appeal> createAppeal({
+    required String examId,
+    required int questionNumber,
+    String? reason,
+    String? studentAnswer,
+    String? correctAnswer,
+  }) {
+    return _apiClient.post<Appeal>(
+      ApiConstants.appeals,
+      data: {
+        'examId': examId,
+        'questionNumber': questionNumber,
+        if (reason != null) 'reason': reason,
+        if (studentAnswer != null) 'studentAnswer': studentAnswer,
+        if (correctAnswer != null) 'correctAnswer': correctAnswer,
+      },
+      parser: (data) => Appeal.fromJson(data as Map<String, dynamic>),
+    );
+  }
+
   Future<Appeal> reviewAppeal(String appealId, {String? status, String? resolutionNote}) {
     return _apiClient.post<Appeal>(
       '${ApiConstants.appeals}/$appealId/review',
@@ -59,5 +79,25 @@ class AppealService {
     } catch (_) {
       return 0;
     }
+  }
+
+  Future<PaginatedAppeals> getMyAppeals({
+    int page = 1,
+    int limit = 20,
+    String? examId,
+    String? status,
+  }) {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+    };
+    if (examId != null && examId.isNotEmpty) queryParams['examId'] = examId;
+    if (status != null && status.isNotEmpty) queryParams['status'] = status;
+
+    return _apiClient.get<PaginatedAppeals>(
+      '${ApiConstants.appeals}/me',
+      queryParameters: queryParams,
+      parser: (data) => PaginatedAppeals.fromJson(data as Map<String, dynamic>),
+    );
   }
 }

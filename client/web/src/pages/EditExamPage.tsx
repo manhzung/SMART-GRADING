@@ -8,7 +8,8 @@ import {
   FilePlus, 
   Info, 
   X,
-  GraduationCap
+  GraduationCap,
+  AlertCircle
 } from 'lucide-react';
 import { useClassStore } from '../presentation/store/classStore';
 import { useExamStore, type Exam } from '../presentation/store/examStore';
@@ -62,12 +63,17 @@ export default function EditExamPage() {
   const [examDate, setExamDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [_examStatus, setExamStatus] = useState<'draft' | 'published' | 'in_progress' | 'completed' | 'archived'>('draft');
+  const [isLoadingExam, setIsLoadingExam] = useState(false);
 
   // Preview modal state
   const [showPreview, setShowPreview] = useState(false);
 
   // Current exam for preview
   const [currentExamData, setCurrentExamData] = useState<Exam | null>(null);
+
+  // Lock form fields for published/completed exams (computed after data loads)
+  const isPublished = _examStatus === 'published' || _examStatus === 'in_progress' || _examStatus === 'completed';
+  const isLocked = isPublished;
 
   // Load classes and OMR templates on mount
   useEffect(() => {
@@ -96,8 +102,9 @@ export default function EditExamPage() {
       // Set current exam data for preview
       setCurrentExamData(exam);
       
-      // Attempt to load more detail from store
-      fetchExamById(id)
+    // Attempt to load more detail from store
+    setIsLoadingExam(true);
+    fetchExamById(id)
         .then(() => {
           // Read back from store after it updates
           const res = useExamStore.getState().currentExam;
@@ -129,6 +136,7 @@ export default function EditExamPage() {
               totalScore: res.totalScore || exam.totalScore || 10,
               passingScore: res.passingScore || exam.passingScore || 5,
             });
+            setIsLoadingExam(false);
             // Fetch exam versions full to get questions
             if ((res as any).questionIds?.length > 0) {
               fetchExamVersionsFull(id);
@@ -230,8 +238,12 @@ export default function EditExamPage() {
 
       {/* ─── PAGE TITLE ─── */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Sửa bài kiểm tra (Bản nháp)</h1>
-        <span className={styles.statusBadge}>Nháp</span>
+        <h1 className={styles.title}>
+          {isLoadingExam ? 'Đang tải...' : isPublished ? `Xem chi tiết bài kiểm tra` : 'Sửa bài kiểm tra'}
+        </h1>
+        <span className={styles.statusBadge}>
+          {isLoadingExam ? '...' : isPublished ? _examStatus === 'completed' ? 'Hoàn thành' : _examStatus === 'in_progress' ? 'Đang diễn ra' : 'Đã xuất bản' : 'Nháp'}
+        </span>
       </div>
 
       {errorMessage && (
@@ -248,6 +260,24 @@ export default function EditExamPage() {
         <div className={styles.successBanner}>
           <Info size={18} />
           <span>{successMessage}</span>
+        </div>
+      )}
+
+      {isPublished && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '10px 16px',
+          backgroundColor: '#fffbeb',
+          border: '1px solid #fde68a',
+          borderRadius: '8px',
+          color: '#92400e',
+          fontSize: '13px',
+          marginBottom: '16px',
+        }}>
+          <AlertCircle size={16} />
+          <span>Bài kiểm tra đã được xuất bản. Một số trường bị khóa và không thể chỉnh sửa.</span>
         </div>
       )}
 
@@ -279,6 +309,7 @@ export default function EditExamPage() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className={styles.inputField}
+                    disabled={isLocked}
                   />
                 </div>
 
@@ -292,6 +323,7 @@ export default function EditExamPage() {
                       onChange={(e) => setSelectedClassId(e.target.value)}
                       className={styles.selectField}
                       required
+                      disabled={isLocked}
                     >
                       <option value="">-- Chọn lớp học --</option>
                       {classes.map(cls => (
@@ -310,6 +342,7 @@ export default function EditExamPage() {
                       value={selectedSubject}
                       onChange={(e) => setSelectedSubject(e.target.value)}
                       className={styles.selectField}
+                      disabled={isLocked}
                     >
                       {SUBJECTS.map(sub => (
                         <option key={sub} value={sub}>{sub}</option>
@@ -328,6 +361,7 @@ export default function EditExamPage() {
                     onChange={(e) => setDescription(e.target.value)}
                     className={styles.textareaField}
                     rows={4}
+                    disabled={isLocked}
                   />
                 </div>
 
@@ -340,6 +374,7 @@ export default function EditExamPage() {
                     value={examDate}
                     onChange={(e) => setExamDate(e.target.value)}
                     className={styles.inputField}
+                    disabled={isLocked}
                   />
                 </div>
 
@@ -352,6 +387,7 @@ export default function EditExamPage() {
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     className={styles.inputField}
+                    disabled={isLocked}
                   />
                 </div>
               </div>
@@ -369,6 +405,8 @@ export default function EditExamPage() {
                   type="button" 
                   onClick={() => alert('Thêm câu hỏi thành công!')}
                   className={styles.addQuestionBtn}
+                  disabled={isLocked}
+                  style={{ opacity: isLocked ? 0.5 : 1, cursor: isLocked ? 'not-allowed' : 'pointer' }}
                 >
                   + Thêm câu hỏi
                 </button>
@@ -427,6 +465,7 @@ export default function EditExamPage() {
                       value={numberOfQuestions}
                       onChange={(e) => setNumberOfQuestions(Number(e.target.value))}
                       className={styles.inputField}
+                      disabled={isLocked}
                     />
                     <span className={styles.inputSuffix}>Câu</span>
                   </div>
@@ -441,6 +480,7 @@ export default function EditExamPage() {
                     onChange={(e) => setOmrTemplateId(e.target.value)}
                     className={styles.selectField}
                     required
+                    disabled={isLocked}
                   >
                     {omrTemplatesList.length === 0 ? (
                       <>
@@ -467,6 +507,7 @@ export default function EditExamPage() {
                     value={examCode}
                     onChange={(e) => setExamCode(e.target.value)}
                     className={styles.inputField}
+                    disabled={isLocked}
                   />
                 </div>
               </div>
@@ -489,6 +530,7 @@ export default function EditExamPage() {
                     checked={shuffleQuestions}
                     onChange={(e) => setShuffleQuestions(e.target.checked)}
                     className={styles.checkboxInput}
+                    disabled={isLocked}
                   />
                   <span>Xáo trộn thứ tự câu hỏi</span>
                 </label>
@@ -500,6 +542,7 @@ export default function EditExamPage() {
                     checked={shuffleOptions}
                     onChange={(e) => setShuffleOptions(e.target.checked)}
                     className={styles.checkboxInput}
+                    disabled={isLocked}
                   />
                   <span>Xáo trộn các phương án trả lời</span>
                 </label>
@@ -511,6 +554,7 @@ export default function EditExamPage() {
                     checked={keepHardAtEnd}
                     onChange={(e) => setKeepHardAtEnd(e.target.checked)}
                     className={styles.checkboxInput}
+                    disabled={isLocked}
                   />
                   <span>Giữ cố định các câu hỏi khó ở cuối</span>
                 </label>
@@ -523,15 +567,8 @@ export default function EditExamPage() {
                     value={numberOfVersions}
                     onChange={(e) => setNumberOfVersions(Number(e.target.value))}
                     className={styles.selectField}
+                    disabled={isLocked}
                   >
-                    <option value={2}>2 mã đề</option>
-                    <option value={4}>4 mã đề</option>
-                    <option value={8}>8 mã đề</option>
-                    <option value={10}>10 mã đề</option>
-                  </select>
-                </div>
-              </div>
-            </section>
 
             {/* Card 5: Xem trước đề thi */}
             <section className={styles.previewCard}>
@@ -579,10 +616,11 @@ export default function EditExamPage() {
               
               <button 
                 type="submit" 
-                disabled={isSubmitLoading}
+                disabled={isSubmitLoading || isLocked}
                 className={styles.submitBtn}
+                style={isLocked ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
               >
-                {isSubmitLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                {isSubmitLoading ? 'Đang lưu...' : isLocked ? 'Khóa (đã xuất bản)' : 'Lưu thay đổi'}
               </button>
             </div>
           </div>
