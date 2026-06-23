@@ -18,6 +18,7 @@ import {
 import { useExamStore } from '../presentation/store/examStore';
 import { useClassStore } from '../presentation/store/classStore';
 import { omrService } from '../services/omr.service';
+import { cloudinaryService } from '../services/cloudinary.service';
 import styles from './ScanPage.module.css';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -62,8 +63,8 @@ interface ScanHistoryItem {
 // ─── Component ──────────────────────────────────────────────────────────────────
 
 export default function ScanPage() {
-  const { fetchExams } = useExamStore();
-  const { fetchClasses } = useClassStore();
+  const { exams, fetchExams } = useExamStore();
+  const { classes, fetchClasses } = useClassStore();
 
   // File upload state
   const [isDragOver, setIsDragOver] = useState(false);
@@ -98,9 +99,9 @@ export default function ScanPage() {
   // Exam selection state
   const [selectedExamId, setSelectedExamId] = useState<string>('');
   const [selectedExamTitle, setSelectedExamTitle] = useState<string>('');
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
 
   // Get selected sheet
-  const selectedSheet = uploadedFiles.find(f => f.id === selectedFileId);
   const selectedSheet = uploadedFiles.find(f => f.id === selectedFileId);
 
   useEffect(() => {
@@ -335,10 +336,31 @@ export default function ScanPage() {
     }, 300);
 
     try {
-      // Upload + scan via BE: POST /submissions/scan
+      // Step 1: Upload image to Cloudinary first
+      let cloudinaryUrl = sheet.fileUrl;
+      let cloudinaryPublicId = '';
+
+      if (sheet.fileUrl.startsWith('blob:') || sheet.fileUrl.startsWith('data:')) {
+        // Local blob/data URL — need to upload to Cloudinary
+        try {
+          const signature = await cloudinaryService.getUploadSignature({
+            examId: selectedExamId,
+            type: 'original',
+          });
+          const uploadResult = await cloudinaryService.uploadImage(sheet.file, signature);
+          cloudinaryUrl = uploadResult.secureUrl;
+          cloudinaryPublicId = uploadResult.publicId;
+        } catch (uploadErr) {
+          console.warn('Cloudinary upload failed, using local URL:', uploadErr);
+        }
+      }
+
+      // Step 2: Call BE scan endpoint
       const uploadResult = await omrService.scanSheet({
         examId: selectedExamId,
-        imageUrl: sheet.fileUrl,
+        classId: selectedClassId || undefined,
+        imageUrl: cloudinaryUrl,
+        originalPublicId: cloudinaryPublicId || undefined,
       });
 
       clearInterval(progressInterval);
@@ -368,6 +390,7 @@ export default function ScanPage() {
             title: matchedExamObj?.title || selectedExamTitle,
           },
           score: uploadResult.totalScore,
+          scannedAt: new Date().toISOString(),
         };
       }));
 
@@ -381,7 +404,7 @@ export default function ScanPage() {
     } finally {
       setIsScanning(false);
     }
-  }, [uploadedFiles, selectedExamId, selectedExamTitle, exams]);
+  }, [uploadedFiles, selectedExamId, selectedExamTitle, selectedClassId, exams]);
 
   const startScanning = useCallback((sheetId: string) => {
     processSheet(sheetId);
@@ -556,7 +579,7 @@ export default function ScanPage() {
             </label>
 
             {/* Exam selector */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px' }}>
             <label htmlFor="scan-exam-select" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#475569' }}>
               Bài thi để quét <span style={{ color: '#ef4444' }}>*</span>
             </label>
@@ -580,6 +603,31 @@ export default function ScanPage() {
               <option value="">-- Chọn bài thi --</option>
               {exams.map(ex => (
                 <option key={ex._id} value={ex._id}>{ex.title}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Class selector */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+            <label htmlFor="scan-class-select" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#475569' }}>
+              Lớp <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>(tùy chọn)</span>
+            </label>
+            <select
+              id="scan-class-select"
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                background: '#fff',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">-- Tất cả lớp --</option>
+              {classes.map(cls => (
+                <option key={cls._id} value={cls._id}>{cls.name}</option>
               ))}
             </select>
           </div>

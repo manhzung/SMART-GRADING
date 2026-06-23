@@ -127,7 +127,8 @@ export default function AppealsPage() {
   // Fetch exam list for filter dropdown
   const { exams, fetchExams } = useExamStore();
   useEffect(() => {
-    fetchExams({ status: 'completed' });
+    // Fetch all non-archived exams so teachers can review appeals for any exam in progress
+    fetchExams({});
   }, [fetchExams]);
 
   const showToastNotification = (message: string) => {

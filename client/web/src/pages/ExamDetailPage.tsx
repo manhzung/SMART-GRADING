@@ -199,12 +199,7 @@ export default function ExamDetailPage() {
   const handleVersionDownload = async (versionCode: string) => {
     if (!id) return;
     try {
-      const version = examVersions.find(v => v.versionCode === versionCode);
-      if (!version) {
-        alert('Không tìm thấy phiên bản đề.');
-        return;
-      }
-      await exportVersionPdf(id, version.versionCode);
+      await exportVersionPdf(id, versionCode);
     } catch (err: any) {
       alert(err.message || 'Lỗi khi tải đề thi');
     }
@@ -782,29 +777,43 @@ export default function ExamDetailPage() {
                   </tr>
                 ) : (
                   submissions.map((sub, idx) => {
-                    const pct = sub.maxScore ? ((sub.score || 0) / sub.maxScore * 100) : 0;
+                    // Handle both BE format (with nested objects) and local format
+                    const studentId = (sub as any).studentId;
+                    const studentName = typeof studentId === 'object' && studentId !== null
+                      ? (studentId as any).name
+                      : (sub as any).studentName || '';
+                    const studentCode = typeof studentId === 'object' && studentId !== null
+                      ? (studentId as any).studentCode
+                      : (sub as any).studentCode || '';
+                    const versionCode = (sub as any).versionId
+                      ? (typeof (sub as any).versionId === 'object'
+                        ? (sub as any).versionId?.versionCode
+                        : (sub as any).versionId)
+                      : (sub as any).versionCode || '';
+                    const pct = sub.maxScore ? ((sub.score || sub.totalScore || 0) / sub.maxScore * 100) : 0;
                     return (
                       <tr key={sub._id || idx}>
                         <td style={{ textAlign: 'center' }}>{idx + 1}</td>
-                        <td>{(sub as any).studentId?.name || (sub as any).studentName || '—'}</td>
-                        <td>{(sub as any).studentCode || '—'}</td>
-                        <td>{(sub as any).versionCode || '—'}</td>
+                        <td>{studentName || '—'}</td>
+                        <td>{studentCode || '—'}</td>
+                        <td>{versionCode || '—'}</td>
                         <td style={{ textAlign: 'center', fontWeight: 600 }}>
-                          {sub.score != null ? sub.score.toFixed(1) : '—'}
+                          {sub.totalScore != null ? sub.totalScore.toFixed(1) : '—'}
                         </td>
                         <td style={{ textAlign: 'center' }}>{pct > 0 ? `${pct.toFixed(0)}%` : '—'}</td>
                         <td>
                           <span className={`${styles.difficultyLabel} ${
-                            sub.status === 'graded' || sub.status === 'reviewed'
+                            sub.status === 'completed' || sub.status === 'scanned'
                               ? styles.diffGreen
-                              : sub.status === 'submitted'
+                              : sub.status === 'pending'
                               ? styles.diffBlue
                               : ''
                           }`}>
-                            {sub.status === 'graded' ? 'Đã chấm'
-                              : sub.status === 'reviewed' ? 'Đã phúc tra'
-                              : sub.status === 'submitted' ? 'Đã nộp'
-                              : sub.status === 'pending' ? 'Chưa chấm' : sub.status}
+                            {sub.status === 'completed' ? 'Hoàn thành'
+                              : sub.status === 'scanned' ? 'Đã quét'
+                              : sub.status === 'pending' ? 'Chờ quét'
+                              : sub.status === 'appealed' ? 'Phúc tra'
+                              : sub.status}
                           </span>
                         </td>
                         <td style={{ textAlign: 'center' }}>

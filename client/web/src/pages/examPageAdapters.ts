@@ -41,6 +41,8 @@ export interface ExamDetailData {
   passingScore: number;
   monitoring: string;
   omrTemplateName: string;
+  subjectId?: string;
+  subjectName?: string;
   classes: Array<{ _id: string; name: string; description: string; studentCount: number; isPrimary: boolean }>;
   questions: Array<{ stt: string; content: string; correctAnswer: string; difficulty: 'easy' | 'medium' | 'hard'; score: number; type: string }>;
   versions: Array<{ code: string; status: string; updatedAt: string }>;
@@ -141,6 +143,8 @@ export function mapExamDetailData(exam: Exam | null, versions: ExamVersion[]): E
     passingScore: exam.passingScore || 5,
     monitoring: 'Bật AI',
     omrTemplateName: exam.omrTemplateId?.name || '',
+    subjectId: typeof exam.subjectId === 'object' ? (exam.subjectId as any)?._id : (exam.subjectId as string),
+    subjectName: typeof exam.subjectId === 'object' ? (exam.subjectId as any)?.name : '',
     classes: mappedClasses,
     questions: mappedQuestions,
     versions: versions.map((version) => ({

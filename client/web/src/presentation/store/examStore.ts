@@ -475,45 +475,60 @@ export const useExamStore = create<ExamState>((set) => ({
     }
 
     const contentType = response.headers.get('content-type') || '';
-    const isJson = contentType.includes('application/json');
 
-    if (isJson) {
-      // Excel: backend returns JSON with results array
+    if (contentType.includes('application/json')) {
+      // Backend returns JSON with submissions array for non-PDF formats
       const data = await response.json();
       await import('../features/reports/examReportExport').then(m => {
-        const wb = XLSX.utils.book_new();
+        const XLSX = (window as any).XLSX || {};
+        const wb = { SheetNames: [], Sheets: {} };
         const rows = [
-          ['STT', 'Họ tên', 'Mã HS', 'Điểm', 'Trạng thái', 'Ngày nộp'],
+          ['STT', 'Ho ten', 'Ma HS', 'Diem', 'Trang thai', 'Ngay nop'],
         ];
-        (data.results || []).forEach((r, i) => {
+        (data.submissions || []).forEach((r: any, i: number) => {
           rows.push([
             i + 1,
             r.studentName || '—',
             r.studentCode || '—',
-            r.score ?? 0,
-            r.status === 'graded' ? 'Đạt' : r.status === 'reviewed' ? 'Đã duyệt' : 'Chưa chấm',
+            r.percentage != null ? r.percentage.toFixed(1) + '%' : '—',
+            r.status === 'completed' ? 'Hoan thanh' : r.status === 'scanned' ? 'Da quet' : 'Chua cham',
             r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('vi-VN') : '—',
           ]);
         });
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        ws['!cols'] = [{ wch: 6 }, { wch: 30 }, { wch: 12 }, { wch: 8 }, { wch: 15 }, { wch: 15 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Ket qua');
-        XLSX.writeFile(wb, `KetQua_${id}_${Date.now()}.xlsx`);
+        // Use dynamic XLSX import if available
+        import('xlsx').then(XLSXModule => {
+          const XLSX = XLSXModule.utils;
+          const ws = XLSX.aoa_to_sheet(rows);
+          (ws as any)['!cols'] = [{ wch: 6 }, { wch: 30 }, { wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 15 }];
+          const sheetName = 'Ket qua';
+          const finalWb = { SheetNames: [sheetName], Sheets: { [sheetName]: ws } };
+          XLSXModule.utils.book_append_sheet(finalWb as any, ws, sheetName);
+          XLSXModule.writeFile(finalWb as any, `KetQua_${id}_${Date.now()}.xlsx`);
+        });
       });
       return;
     }
 
-    if (!contentType.includes('application/pdf')) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Server trả về không phải PDF: ${contentType || 'unknown'} — ${text.slice(0, 100)}`);
+    const blob = await response.blob();
+    if (blob.size === 0) throw new Error('File rong (0 bytes)');
+
+    let filename;
+    if (contentType.includes('application/pdf')) {
+      filename = `KetQua_${id}.pdf`;
+    } else if (
+      contentType.includes('spreadsheetml') ||
+      contentType.includes('excel') ||
+      contentType.includes('openxmlformats')
+    ) {
+      filename = `KetQua_${id}.xlsx`;
+    } else {
+      filename = `KetQua_${id}.bin`;
     }
 
-    const blob = await response.blob();
-    if (blob.size === 0) throw new Error('File PDF rỗng (0 bytes)');
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = objectUrl;
-    a.download = `KetQua_${id}.pdf`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

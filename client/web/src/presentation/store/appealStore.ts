@@ -151,7 +151,13 @@ export const useAppealStore = create<AppealState>((set, get) => ({
   reviewAppeal: async (id, data) => {
     set({ isReviewing: true, error: null });
     try {
-      await apiService.post(`/appeals/${id}/review`, data);
+      await apiService.post(`/appeals/${id}/review`, {
+        decision: data.decision,
+        note: data.note,
+        ...(data.newScore !== undefined && data.oldScore !== undefined
+          ? { oldScore: data.oldScore, newScore: data.newScore }
+          : {}),
+      });
       set({ isReviewing: false });
       set((state) => ({
         appeals: state.appeals.map((a) =>
