@@ -2,7 +2,10 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:smart_grading_mobile/core/network/api_client.dart';
+import 'package:smart_grading_mobile/core/network/exam_template_service.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/domain/omr/models/evaluation_config.dart';
 import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
@@ -20,6 +23,7 @@ class CameraScannerPage extends StatefulWidget {
   final String? className;
   final String? studentId;
   final String? studentName;
+  final bool useNewEngine;
 
   const CameraScannerPage({
     super.key,
@@ -31,6 +35,7 @@ class CameraScannerPage extends StatefulWidget {
     this.className,
     this.studentId,
     this.studentName,
+    this.useNewEngine = true,
   });
 
   @override
@@ -40,12 +45,18 @@ class CameraScannerPage extends StatefulWidget {
 class _CameraScannerPageState extends State<CameraScannerPage> {
   late CameraBloc _cameraBloc;
   final ImagePicker _imagePicker = ImagePicker();
+  late ExamTemplateService _examTemplateService;
+  Map<String, dynamic>? _cachedTemplateJson;
 
   @override
   void initState() {
     super.initState();
     _cameraBloc = CameraBloc();
     _cameraBloc.add(CameraInitialize());
+
+    final apiClient = GetIt.instance<ApiClient>();
+    _examTemplateService = ExamTemplateService(apiClient);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadTemplate();
     });
@@ -68,6 +79,9 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         classId: widget.classId,
         className: widget.className,
       ));
+      if (widget.useNewEngine && widget.examId != null) {
+        _fetchTemplateJson();
+      }
     } else {
       final template = OMRTemplate.simpleMcq(
         numQuestions: 20,
@@ -91,6 +105,15 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         classId: widget.classId,
         className: widget.className,
       ));
+    }
+  }
+
+  Future<void> _fetchTemplateJson() async {
+    if (widget.examId == null) return;
+    try {
+      _cachedTemplateJson = await _examTemplateService.getTemplate(widget.examId!);
+    } catch (e) {
+      debugPrint('Failed to fetch template: $e');
     }
   }
 
@@ -138,6 +161,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                     processingResult: state.processingResult,
                     examId: widget.examId,
                     examName: widget.examName,
+                    questionScores: state.questionScores,
                   ),
                 ),
               );
@@ -552,11 +576,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
             child: SizedBox(
               height: 56,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  context.read<OMRScannerBloc>().add(
-                    OMRScannerProcessStarted(imageBytes: imageBytes),
-                  );
-                },
+                onPressed: () => _processImage(imageBytes),
                 icon: const Icon(Icons.auto_fix_high),
                 label: const Text('Scan & Grade'),
                 style: ElevatedButton.styleFrom(
@@ -572,6 +592,21 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _processImage(Uint8List imageBytes) async {
+    if (widget.useNewEngine && _cachedTemplateJson != null) {
+      context.read<OMRScannerBloc>().add(
+        OMRScannerProcessWithNewEngine(
+          imageBytes: imageBytes,
+          templateJson: _cachedTemplateJson!,
+        ),
+      );
+    } else {
+      context.read<OMRScannerBloc>().add(
+        OMRScannerProcessStarted(imageBytes: imageBytes),
+      );
+    }
   }
 
   Widget _buildProcessingState(OMRScannerProcessing state) {

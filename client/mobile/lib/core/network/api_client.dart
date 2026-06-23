@@ -5,11 +5,11 @@ import '../constants/app_constants.dart';
 import '../errors/app_exceptions.dart';
 
 class ApiClient {
-  late final Dio _dio;
+  late final Dio dio;
   String? _token;
 
   ApiClient() {
-    _dio = Dio(
+    dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
         connectTimeout: ApiConstants.connectionTimeout,
@@ -21,7 +21,7 @@ class ApiClient {
       ),
     );
 
-    _dio.interceptors.add(
+    dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
           if (_token != null) {
@@ -35,7 +35,7 @@ class ApiClient {
             try {
               final refreshToken = await _getRefreshToken();
               if (refreshToken != null) {
-                final refreshResponse = await _dio.post(
+                final refreshResponse = await dio.post(
                   '/auth/refresh-tokens',
                   data: {'refreshToken': refreshToken},
                 );
@@ -44,7 +44,7 @@ class ApiClient {
                 _token = newAccessToken;
 
                 error.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-                final retryResponse = await _dio.fetch(error.requestOptions);
+                final retryResponse = await dio.fetch(error.requestOptions);
                 return handler.resolve(retryResponse);
               }
             } catch (_) {}
@@ -81,7 +81,7 @@ class ApiClient {
     T Function(dynamic)? parser,
   }) async {
     try {
-      final response = await _dio.get(path, queryParameters: queryParameters);
+      final response = await dio.get(path, queryParameters: queryParameters);
       return parser != null ? parser(response.data) : response.data as T;
     } on DioException catch (e) {
       throw _handleError(e);
@@ -94,7 +94,7 @@ class ApiClient {
     T Function(dynamic)? parser,
   }) async {
     try {
-      final response = await _dio.post(path, data: data);
+      final response = await dio.post(path, data: data);
       return parser != null ? parser(response.data) : response.data as T;
     } on DioException catch (e) {
       throw _handleError(e);
@@ -107,7 +107,7 @@ class ApiClient {
     T Function(dynamic)? parser,
   }) async {
     try {
-      final response = await _dio.put(path, data: data);
+      final response = await dio.put(path, data: data);
       return parser != null ? parser(response.data) : response.data as T;
     } on DioException catch (e) {
       throw _handleError(e);
@@ -119,7 +119,7 @@ class ApiClient {
     T Function(dynamic)? parser,
   }) async {
     try {
-      final response = await _dio.delete(path);
+      final response = await dio.delete(path);
       return parser != null ? parser(response.data) : response.data as T;
     } on DioException catch (e) {
       throw _handleError(e);
@@ -132,7 +132,7 @@ class ApiClient {
     T Function(dynamic)? parser,
   }) async {
     try {
-      final response = await _dio.patch(path, data: data);
+      final response = await dio.patch(path, data: data);
       return parser != null ? parser(response.data) : response.data as T;
     } on DioException catch (e) {
       throw _handleError(e);

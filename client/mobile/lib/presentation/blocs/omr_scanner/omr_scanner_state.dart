@@ -58,15 +58,17 @@ class OMRScannerSuccess extends OMRScannerState {
   final Uint8List imageBytes;
   final OMRProcessingResult processingResult;
   final OMRGradingResult gradingResult;
+  final List<QuestionScoreResult>? questionScores;
 
   const OMRScannerSuccess({
     required this.imageBytes,
     required this.processingResult,
     required this.gradingResult,
+    this.questionScores,
   });
 
   @override
-  List<Object?> get props => [imageBytes, processingResult, gradingResult];
+  List<Object?> get props => [imageBytes, processingResult, gradingResult, questionScores];
 }
 
 class OMRScannerSubmitting extends OMRScannerState {

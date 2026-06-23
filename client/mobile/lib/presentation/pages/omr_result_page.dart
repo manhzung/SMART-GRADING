@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_grading_mobile/domain/omr/engine/omr_engine.dart';
+import 'package:smart_grading_mobile/domain/omr/engine_v2/omr_models.dart';
 import 'package:smart_grading_mobile/domain/omr/models/grading_result.dart';
 import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
 
@@ -11,6 +12,7 @@ class OMRResultPage extends StatelessWidget {
   final OMRProcessingResult processingResult;
   final String? examId;
   final String? examName;
+  final List<QuestionScoreResult>? questionScores;
 
   const OMRResultPage({
     super.key,
@@ -19,6 +21,7 @@ class OMRResultPage extends StatelessWidget {
     required this.processingResult,
     this.examId,
     this.examName,
+    this.questionScores,
   });
 
   @override
@@ -72,7 +75,10 @@ class OMRResultPage extends StatelessWidget {
               if (processingResult.annotatedImageBytes != null)
                 _buildAnnotatedImage(),
               _buildScoreCard(),
-              _buildAnswerBreakdown(),
+              if (questionScores != null && questionScores!.isNotEmpty)
+                _buildPerQuestionScores()
+              else
+                _buildAnswerBreakdown(),
               _buildProcessingInfo(),
               const SizedBox(height: 24),
             ],
@@ -366,6 +372,118 @@ class OMRResultPage extends StatelessWidget {
                       _getVerdictIcon(verdict.verdict),
                       size: 12,
                       color: color,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPerQuestionScores() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.format_list_numbered, size: 20, color: Color(0xFF0F172A)),
+              SizedBox(width: 8),
+              Text(
+                'Per-Question Scores (Engine v2)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: questionScores!.length,
+            itemBuilder: (context, index) {
+              final q = questionScores![index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: q.isCorrect
+                      ? const Color(0xFFDCFCE7)
+                      : (q.isUnmarked ? const Color(0xFFFEF3C7) : const Color(0xFFFEE2E2)),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: q.isCorrect
+                        ? const Color(0xFF16A34A)
+                        : (q.isUnmarked ? const Color(0xFFD97706) : const Color(0xFFDC2626)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: q.isCorrect
+                            ? const Color(0xFF16A34A)
+                            : (q.isUnmarked ? const Color(0xFFD97706) : const Color(0xFFDC2626)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          q.isCorrect ? Icons.check : (q.isUnmarked ? Icons.help : Icons.close),
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Câu ${q.position}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${q.detectedAnswer ?? '?'} vs ${q.correctAnswer ?? '?'}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: q.isCorrect
+                                  ? const Color(0xFF16A34A)
+                                  : (q.isUnmarked ? const Color(0xFFD97706) : const Color(0xFFDC2626)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '+${q.score.toStringAsFixed(1)}/${q.maxScore.toStringAsFixed(1)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: q.isCorrect
+                            ? const Color(0xFF16A34A)
+                            : (q.isUnmarked ? const Color(0xFFD97706) : const Color(0xFFDC2626)),
+                      ),
                     ),
                   ],
                 ),

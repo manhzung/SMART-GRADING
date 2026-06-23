@@ -65,6 +65,19 @@ class OMRScannerProcessStarted extends OMRScannerEvent {
   List<Object?> get props => [imageBytes];
 }
 
+class OMRScannerProcessWithNewEngine extends OMRScannerEvent {
+  final Uint8List imageBytes;
+  final Map<String, dynamic> templateJson;
+
+  const OMRScannerProcessWithNewEngine({
+    required this.imageBytes,
+    required this.templateJson,
+  });
+
+  @override
+  List<Object?> get props => [imageBytes, templateJson];
+}
+
 class OMRScannerSubmit extends OMRScannerEvent {}
 
 class OMRScannerReset extends OMRScannerEvent {}

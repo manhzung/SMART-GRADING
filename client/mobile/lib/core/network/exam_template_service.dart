@@ -1,9 +1,9 @@
-import 'package:dio/dio.dart';
+import '../network/api_client.dart';
 
 class ExamTemplateService {
-  final Dio _dio;
+  final ApiClient _apiClient;
 
-  ExamTemplateService(this._dio);
+  ExamTemplateService(this._apiClient);
 
   Future<Map<String, dynamic>> getTemplate(
     String examId, {
@@ -14,10 +14,10 @@ class ExamTemplateService {
       queryParams['versionCode'] = versionCode;
     }
 
-    final response = await _dio.get(
+    final response = await _apiClient.get<dynamic>(
       '/exams/$examId/template',
       queryParameters: queryParams,
     );
-    return response.data as Map<String, dynamic>;
+    return response as Map<String, dynamic>;
   }
 }
