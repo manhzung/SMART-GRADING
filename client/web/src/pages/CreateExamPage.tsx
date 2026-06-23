@@ -80,7 +80,7 @@ export default function CreateExamPage() {
   const navigate = useNavigate();
   const { classes, fetchClasses } = useClassStore();
   const { questions: storeQuestions, pagination: questionPagination, fetchQuestions } = useQuestionStore();
-  const { fetchExams, createExam } = useExamStore();
+  const { fetchExams, createExam, generateExamVersions } = useExamStore();
   const { templates: omrTemplates, isLoading: isOmrLoading, fetchTemplates: fetchOmrTemplates } = useOMRTemplateStore();
   const { subjects, fetchSubjects } = useSubjectStore();
 
@@ -111,6 +111,7 @@ export default function CreateExamPage() {
 
   // Print Layout Formatting
   const [paperSize, setPaperSize] = useState<'A4' | 'A5'>('A4');
+  const [paperEngine, setPaperEngine] = useState<'auto' | 'amc' | 'pdfkit'>('auto');
   const [questionsPerPage, setQuestionsPerPage] = useState(20);
   const [schoolHeader, setSchoolHeader] = useState(true);
   const [includeInstructions, setIncludeInstructions] = useState(true);
@@ -284,6 +285,7 @@ export default function CreateExamPage() {
         questionsPerPage: Math.min(Number(questionsPerPage), 10),
         includeAnswerSheet: true,
         schoolHeader,
+        paperEngine,
       },
       questionIds: finalQuestionIds,
     };
@@ -651,7 +653,7 @@ export default function CreateExamPage() {
                 {/* Paper Size */}
                 <div className={styles.formGroup}>
                   <label htmlFor="paper-size-select" className={styles.fieldLabel}>Khổ giấy</label>
-                  <select 
+                  <select
                     id="paper-size-select"
                     value={paperSize}
                     onChange={(e) => setPaperSize(e.target.value as 'A4' | 'A5')}
@@ -660,6 +662,22 @@ export default function CreateExamPage() {
                     <option value="A4">A4</option>
                     <option value="A5">A5</option>
                   </select>
+                </div>
+
+                {/* Paper Engine */}
+                <div className={styles.formGroup}>
+                  <label htmlFor="paper-engine-select" className={styles.fieldLabel}>Engine tạo đề thi</label>
+                  <select
+                    id="paper-engine-select"
+                    value={paperEngine}
+                    onChange={(e) => setPaperEngine(e.target.value as 'auto' | 'amc' | 'pdfkit')}
+                    className={styles.selectField}
+                  >
+                    <option value="auto">Tự động (AMC nếu có sẵn)</option>
+                    <option value="amc">AMC (LaTeX, chuẩn quốc tế)</option>
+                    <option value="pdfkit">PDFKit (legacy)</option>
+                  </select>
+                  <p className={styles.fieldHelper}>AMC sinh đề chuẩn với OMR sheet chính xác hơn.</p>
                 </div>
 
                 {/* Questions Per Page */}
