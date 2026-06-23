@@ -66,6 +66,24 @@ const examVersionSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    paperEngine: {
+      type: String,
+      enum: ['pdfkit', 'amc'],
+      default: null,
+    },
+    amcProjectPath: {
+      type: String,
+      default: null,
+    },
+    generatedAt: {
+      type: Date,
+      default: null,
+    },
+    generationErrors: [
+      {
+        type: String,
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,

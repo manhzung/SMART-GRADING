@@ -66,6 +66,11 @@ const examSchema = mongoose.Schema(
       type: String,
       default: null,
     },
+    subjectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subject',
+      default: null,
+    },
     subjectColor: {
       type: String,
       default: '#64748b',
@@ -133,6 +138,11 @@ const examSchema = mongoose.Schema(
         type: Boolean,
         default: true,
       },
+    },
+    paperEngine: {
+      type: String,
+      enum: ['pdfkit', 'amc', 'auto'],
+      default: 'auto',
     },
     notifiedUsers: [
       {

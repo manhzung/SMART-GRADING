@@ -1,3 +1,9 @@
+/**
+ * @deprecated since 2026-06-23
+ * This module is kept for backward compatibility and fallback.
+ * Use server/src/amc/ modules for new exam paper generation.
+ */
+
 const PDFDocument = require('pdfkit');
 
 class PDFGenerator {
@@ -175,62 +181,234 @@ class PDFGenerator {
   }
 
   addAnswerSheet(questions) {
-    this.checkNewPage();
+    this.addOMRSheet({ questions });
+    return this;
+  }
+
+  addOMRSheet({ questions = [], versionCode = '', totalScore = 0, examTitle = '' }) {
+    this.doc.addPage();
+    this.currentY = 50;
+
+    const pageW = this.doc.page.width;
+    const marginL = 40;
+    const marginR = pageW - 40;
+    const availW = marginR - marginL;
 
     this.doc
-      .fontSize(14)
+      .fontSize(13)
       .font('Helvetica-Bold')
       .fillColor('#000')
-      .text('PHIẾU TRẢ LỜI TRẮC NGHIỆM', this.doc.page.width / 2, this.currentY, {
-        align: 'center',
-        width: this.pageWidth,
-      })
-      .moveDown(0.5);
+      .text('PHIẾU TRẢ LỜI TRẮC NGHIỆM', marginL, this.currentY, { align: 'center', width: availW });
+    this.currentY += 22;
 
-    this.currentY = this.doc.y + 10;
+    if (versionCode) {
+      this.doc
+        .fontSize(10)
+        .font('Helvetica')
+        .fillColor('#000')
+        .text(`Mã đề: ${versionCode}`, marginL, this.currentY, { width: availW });
+      this.currentY += 16;
+    }
 
-    const colWidth = 70;
-    const startX = 60;
-    const boxSize = 14;
+    this.currentY += 4;
+    this._drawOmrHorizontalLine(marginL, marginR);
+    this.currentY += 8;
 
-    const cols = 4;
-    const rowsPerCol = Math.ceil(questions.length / cols);
+    this._drawStudentCodeSection(marginL, availW);
+    this.currentY += 8;
+    this._drawOmrHorizontalLine(marginL, marginR);
+    this.currentY += 10;
 
-    for (let row = 0; row < rowsPerCol; row++) {
-      let x = startX;
-      for (let col = 0; col < cols; col++) {
-        const qNum = col * rowsPerCol + row + 1;
-        if (qNum > questions.length) break;
+    this._drawAnswerGrid(marginL, availW, questions);
+    this.currentY += 10;
+    this._drawOmrHorizontalLine(marginL, marginR);
+
+    this.doc
+      .fontSize(8)
+      .font('Helvetica-Oblique')
+      .fillColor('#666')
+      .text(
+        'Hướng dẫn: Tô đậm bong A, B, C hoặc D tương ứng với đáp án em chọn. Mỗi câu chỉ tô một đáp án.',
+        marginL,
+        this.currentY + 4,
+        { width: availW, align: 'center' }
+      );
+    return this;
+  }
+
+  _drawOmrHorizontalLine(x1, x2) {
+    this.doc
+      .strokeColor('#000')
+      .lineWidth(0.75)
+      .moveTo(x1, this.currentY)
+      .lineTo(x2, this.currentY)
+      .stroke();
+  }
+
+  _drawStudentCodeSection(marginL, availW) {
+    this.doc
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .fillColor('#000')
+      .text('Mã sinh viên:', marginL, this.currentY, { width: 110 });
+    this.doc
+      .font('Helvetica')
+      .fontSize(9)
+      .fillColor('#444')
+      .text('(Tô bong từ trái sang)', marginL + 110, this.currentY, { width: 160 });
+
+    const digits = 5;
+    const bubbleSize = 18;
+    const spacing = 26;
+    const startX = marginL + 110 + 165;
+    this.currentY += 4;
+
+    for (let pos = 0; pos < digits; pos++) {
+      const x = startX + pos * spacing;
+      this.doc
+        .fontSize(7)
+        .font('Helvetica')
+        .fillColor('#000')
+        .text(String(pos + 1), x, this.currentY, { width: bubbleSize, align: 'center' });
+      this.doc
+        .fontSize(9)
+        .font('Helvetica')
+        .fillColor('#444')
+        .text('0-9', x, this.currentY + 8, { width: bubbleSize, align: 'center' });
+    }
+    this.currentY += 22;
+
+    for (let digit = 0; digit < 10; digit++) {
+      const rowY = this.currentY + digit * 18;
+      const label = digit < 10 ? String(digit) : '';
+      this.doc
+        .fontSize(9)
+        .font('Helvetica-Bold')
+        .fillColor('#000')
+        .text(label, startX - 18, rowY + 2, { width: 14, align: 'right' });
+
+      for (let pos = 0; pos < digits; pos++) {
+        const x = startX + pos * spacing;
+        this.doc
+          .rect(x, rowY, bubbleSize, bubbleSize)
+          .stroke('#555');
+      }
+    }
+    this.currentY += 10 * 18 + 4;
+
+    this.doc
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .fillColor('#000')
+      .text('Mã đề:', marginL, this.currentY, { width: 110 });
+    this.doc
+      .fontSize(9)
+      .font('Helvetica')
+      .fillColor('#444')
+      .text('(Tô bong 2 chữ số)', marginL + 110, this.currentY, { width: 160 });
+    this.currentY += 4;
+
+    const versionDigits = 2;
+    for (let pos = 0; pos < versionDigits; pos++) {
+      const x = startX + pos * spacing;
+      this.doc
+        .fontSize(7)
+        .font('Helvetica')
+        .fillColor('#000')
+        .text(String(pos + 1), x, this.currentY, { width: bubbleSize, align: 'center' });
+      this.doc
+        .fontSize(9)
+        .font('Helvetica')
+        .fillColor('#444')
+        .text('0-9', x, this.currentY + 8, { width: bubbleSize, align: 'center' });
+    }
+    this.currentY += 22;
+
+    for (let digit = 0; digit < 10; digit++) {
+      const rowY = this.currentY + digit * 18;
+      const label = digit < 10 ? String(digit) : '';
+      this.doc
+        .fontSize(9)
+        .font('Helvetica-Bold')
+        .fillColor('#000')
+        .text(label, startX - 18, rowY + 2, { width: 14, align: 'right' });
+
+      for (let pos = 0; pos < versionDigits; pos++) {
+        const x = startX + pos * spacing;
+        this.doc
+          .rect(x, rowY, bubbleSize, bubbleSize)
+          .stroke('#555');
+      }
+    }
+    this.currentY += 10 * 18 + 4;
+  }
+
+  _drawAnswerGrid(marginL, availW, questions) {
+    const Q_PER_ROW = 5;
+    const NUM_ROWS = 4;
+    const bubbleSize = 13;
+    const qColW = availW / Q_PER_ROW;
+    const rowH = 80;
+
+    this.doc
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .fillColor('#000')
+      .text('PHẦN TRẢ LỜI', marginL, this.currentY, { width: availW, align: 'center' });
+    this.currentY += 14;
+
+    const labelColW = 22;
+    const gridStartX = marginL + labelColW;
+    const colW = (availW - labelColW) / Q_PER_ROW;
+    const optLabels = ['A', 'B', 'C', 'D'];
+
+    for (let row = 0; row < NUM_ROWS; row++) {
+      const rowY = this.currentY;
+
+      for (let col = 0; col < Q_PER_ROW; col++) {
+        const qNum = row * Q_PER_ROW + col + 1;
+        const colX = gridStartX + col * colW;
+
+        if (qNum > questions.length) {
+          this.doc
+            .rect(colX + 2, rowY, colW - 4, rowH)
+            .fillAndStroke('#f5f5f5', '#ccc');
+          continue;
+        }
 
         this.doc
-          .rect(x, this.currentY, boxSize, boxSize)
-          .stroke('#000');
+          .rect(colX + 2, rowY, colW - 4, rowH)
+          .stroke('#999');
 
         this.doc
           .fontSize(9)
-          .font('Helvetica')
+          .font('Helvetica-Bold')
           .fillColor('#000')
-          .text(String(qNum), x + 3, this.currentY + 2, { width: boxSize });
+          .text(String(qNum), colX + 2, rowY + 2, { width: colW - 4, align: 'center' });
 
-        const optStartX = x + boxSize + 2;
-        const optLabels = ['A', 'B', 'C', 'D'];
-        for (let j = 0; j < optLabels.length; j++) {
+        const optH = (rowH - 16) / optLabels.length;
+        for (let o = 0; o < optLabels.length; o++) {
+          const optY = rowY + 16 + o * optH;
+          const bubbleX = colX + (colW - 4) / 2 - bubbleSize / 2;
           this.doc
-            .fontSize(9)
-            .text(optLabels[j], optStartX + j * 11, this.currentY + 2, { width: 12 });
+            .rect(bubbleX, optY + (optH - bubbleSize) / 2, bubbleSize, bubbleSize)
+            .stroke('#888');
+
+          this.doc
+            .fontSize(8)
+            .font('Helvetica-Bold')
+            .fillColor('#333')
+            .text(optLabels[o], colX + 4, optY + (optH - 10) / 2, { width: 12 });
         }
-
-        x += colWidth;
       }
-      this.currentY += boxSize + 10;
 
-      if (this.currentY > this.doc.page.height - 80) {
+      this.currentY += rowH;
+
+      if (this.currentY > this.doc.page.height - 60) {
         this.doc.addPage();
-        this.currentY = 60;
+        this.currentY = 50;
       }
     }
-
-    return this;
   }
 
   addFooter(pageLabel = '') {

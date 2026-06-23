@@ -8,6 +8,8 @@ const createExam = {
   body: Joi.object().keys({
     title: Joi.string().min(3).max(200).trim().required(),
     description: Joi.string().allow(''),
+    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    subjectName: Joi.string().allow(''),
     classIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
     primaryClassId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
     omrTemplateId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
@@ -37,6 +39,8 @@ const updateExam = {
   body: Joi.object().keys({
     title: Joi.string().min(3).max(200).trim(),
     description: Joi.string().allow(''),
+    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    subjectName: Joi.string().allow(''),
     examDate: Joi.date().iso(),
     startTime: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/),
     duration: Joi.number().min(5).max(300),
@@ -45,6 +49,7 @@ const updateExam = {
     numberOfQuestions: Joi.number().min(1),
     numberOfVersions: Joi.number().min(1).max(50),
     primaryClassId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    questionIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1),
     status: Joi.string().valid('draft', 'published', 'in_progress', 'completed', 'archived'),
     shuffleConfig: Joi.object().keys({
       shuffleQuestions: Joi.boolean(),
@@ -84,6 +89,7 @@ const getExam = {
 const getExams = {
   query: Joi.object().keys({
     classId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
     status: Joi.string().valid('draft', 'published', 'in_progress', 'completed', 'archived'),
     fromDate: Joi.date().iso(),
     toDate: Joi.date().iso(),
@@ -119,6 +125,16 @@ const getUpcoming = {
   }),
 };
 
+const validateGeneratePapers = {
+  params: Joi.object({
+    id: Joi.object().keys({ id: Joi.string().regex(/^[0-9a-fA-F]{24}$/) }),
+  }),
+  body: Joi.object({
+    paperEngine: Joi.string().valid('pdfkit', 'amc', 'auto').default('auto'),
+    forceRegenerate: Joi.boolean().default(false),
+  }),
+};
+
 module.exports = {
   createExam,
   updateExam,
@@ -131,4 +147,5 @@ module.exports = {
   getExamVersions,
   generateVersions,
   exportExam,
+  validateGeneratePapers,
 };
