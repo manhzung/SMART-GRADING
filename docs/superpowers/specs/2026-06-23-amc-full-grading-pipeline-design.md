@@ -466,6 +466,8 @@ Câu 3  [C] ✓  +1.5 / 1.5
 
 ## Open Questions
 
-1. **opencv4dart availability**: opencv4dart có stable trên Flutter không? Cần verify trước khi implement.
-2. **AMC CSV exact format**: AMC CSV format có thể thay đổi giữa các phiên bản. Cần test với AMC version thực tế.
-3. **DPI assumption**: Template coords giả sử 300 DPI. Cần verify AMC export DPI.
+| # | Question | Resolution |
+|---|----------|------------|
+| 1 | **opencv4dart availability** | ✅ Resolved: dùng `opencv_dart` v2.x (pub.dev), stable, hỗ trợ Android/iOS/Windows/macOS/Linux, modules `imgproc` + `imgcodecs` + `core` đủ cho OMR |
+| 2 | **AMC CSV exact format** | Cần test với AMC version thực tế — plan sẽ dùng CSV parser với fallback |
+| 3 | **DPI assumption** | 300 DPI là standard AMC output — verify khi test với AMC thực |
