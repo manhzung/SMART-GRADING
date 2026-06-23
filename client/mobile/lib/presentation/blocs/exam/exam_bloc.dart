@@ -102,6 +102,8 @@ class ExamBloc extends Bloc<ExamEvent, ExamState> {
         examDate: event.exam.examDate,
         duration: event.exam.duration,
         totalScore: event.exam.totalScore,
+        numberOfQuestions: event.exam.numberOfQuestions,
+        numberOfVersions: event.exam.numberOfVersions,
       );
 
       final result = await _examService.getExams(page: 1, limit: 20);

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:smart_grading_mobile/core/network/api_client.dart';
 import 'package:smart_grading_mobile/core/network/omr_template_service.dart';
@@ -58,7 +59,9 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
       _templateLoadError = null;
     });
     try {
-      final apiClient = ApiClient();
+      // Use the shared authenticated ApiClient from GetIt so requests
+      // carry the user's access token (Bearer auth).
+      final apiClient = GetIt.instance<ApiClient>();
       final service = OMRTemplateService(apiClient: apiClient);
       // Fetch all templates (metadata only)
       final metadataList = await service.getAll();

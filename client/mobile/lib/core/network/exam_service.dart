@@ -68,7 +68,7 @@ class ExamService {
   }) {
     final data = <String, dynamic>{'title': title};
     if (description != null) data['description'] = description;
-    if (classIds != null) data['classIds'] = classIds;
+    if (classIds != null && classIds.isNotEmpty) data['classIds'] = classIds;
     if (primaryClassId != null) data['primaryClassId'] = primaryClassId;
     if (subjectId != null) data['subjectId'] = subjectId;
     if (omrTemplateId != null) data['omrTemplateId'] = omrTemplateId;

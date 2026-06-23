@@ -28,7 +28,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
   late TextEditingController _passingScoreController;
   late TextEditingController _dateController;
 
-  Class? _selectedClass;
+  List<Class> _selectedClasses = [];
+  Class? _primaryClass;
   int _numberOfVersions = 1;
   String? _selectedOmrTemplate;
   bool _shuffleQuestions = false;
@@ -126,73 +127,185 @@ class _CreateExamPageState extends State<CreateExamPage> {
   void _showClassSelector(List<Class> classes) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Chọn lớp học',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (classes.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(
-                    child: Text(
-                      'Không có lớp học nào',
-                      style: TextStyle(color: Color(0xFF64748B)),
-                    ),
-                  ),
-                )
-              else
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: classes.length,
-                    itemBuilder: (context, index) {
-                      final cls = classes[index];
-                      return ListTile(
-                        title: Text(
-                          cls.name,
-                          style: const TextStyle(
-                            color: Color(0xFF0F172A),
-                            fontWeight: FontWeight.w500,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (_, scrollController) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFCBD5E1),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        subtitle: Text(
-                          '${cls.code} • ${cls.studentCount} học sinh',
-                          style: const TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 12,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Chọn lớp học',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(sheetCtx),
+                            child: const Text(
+                              'Xong',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF081C43),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_selectedClasses.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          child: Text(
+                            '${_selectedClasses.length} lớp đã chọn'
+                            '${_primaryClass != null ? " • ${_primaryClass!.name} làm lớp chính" : ""}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF16A34A),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                        leading: const Icon(
-                          Icons.class_outlined,
-                          color: Color(0xFF081C43),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: classes.length,
+                          itemBuilder: (_, index) {
+                            final cls = classes[index];
+                            final isSelected = _selectedClasses.any((c) => c.id == cls.id);
+                            final isPrimary = _primaryClass?.id == cls.id;
+                            return ListTile(
+                              leading: Checkbox(
+                                value: isSelected,
+                                activeColor: const Color(0xFF081C43),
+                                onChanged: (val) {
+                                  setSheetState(() {
+                                    setState(() {
+                                      if (val == true) {
+                                        _selectedClasses = [..._selectedClasses, cls];
+                                        if (_primaryClass == null) {
+                                          _primaryClass = cls;
+                                        }
+                                      } else {
+                                        _selectedClasses = _selectedClasses.where((c) => c.id != cls.id).toList();
+                                        if (_primaryClass?.id == cls.id) {
+                                          _primaryClass = _selectedClasses.isNotEmpty ? _selectedClasses.first : null;
+                                        }
+                                      }
+                                    });
+                                  });
+                                },
+                              ),
+                              title: Text(
+                                cls.name,
+                                style: TextStyle(
+                                  color: const Color(0xFF0F172A),
+                                  fontWeight: isPrimary ? FontWeight.bold : FontWeight.w500,
+                                ),
+                              ),
+                              subtitle: Row(
+                                children: [
+                                  Text(
+                                    '${cls.code} • ${cls.studentCount ?? 0} học sinh',
+                                    style: const TextStyle(
+                                      color: Color(0xFF64748B),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  if (isPrimary) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF081C43),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        'CHÍNH',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              trailing: isSelected && !isPrimary
+                                  ? TextButton(
+                                      onPressed: () {
+                                        setSheetState(() {
+                                          setState(() {
+                                            _primaryClass = cls;
+                                          });
+                                        });
+                                      },
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      child: const Text(
+                                        'Làm chính',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
+                                    )
+                                  : null,
+                              onTap: () {
+                                setSheetState(() {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedClasses = _selectedClasses.where((c) => c.id != cls.id).toList();
+                                      if (_primaryClass?.id == cls.id) {
+                                        _primaryClass = _selectedClasses.isNotEmpty ? _selectedClasses.first : null;
+                                      }
+                                    } else {
+                                      _selectedClasses = [..._selectedClasses, cls];
+                                      if (_primaryClass == null) {
+                                        _primaryClass = cls;
+                                      }
+                                    }
+                                  });
+                                });
+                              },
+                            );
+                          },
                         ),
-                        onTap: () {
-                          setState(() {
-                            _selectedClass = cls;
-                          });
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
+                      ),
+                    ],
                   ),
-                ),
-            ],
-          ),
+                );
+              },
+            );
+          },
         );
       },
     );
@@ -204,10 +317,10 @@ class _CreateExamPageState extends State<CreateExamPage> {
     });
 
     if (_formKey.currentState!.validate()) {
-      if (_selectedClass == null) {
+      if (_selectedClasses.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Vui lòng chọn lớp học'),
+            content: Text('Vui lòng chọn ít nhất một lớp học'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -217,7 +330,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
 
       final duration = int.tryParse(_durationController.text) ?? 90;
       final totalScore = int.tryParse(_totalScoreController.text) ?? 10;
-                            final numberOfQuestions = int.tryParse(_numberOfQuestionsController.text) ?? 50;
+      final numberOfQuestions = int.tryParse(_numberOfQuestionsController.text) ?? 50;
 
       final exam = Exam(
         id: '',
@@ -225,14 +338,22 @@ class _CreateExamPageState extends State<CreateExamPage> {
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-        classIds: [],
-        primaryClassId: _selectedClass != null
+        classIds: _selectedClasses
+            .map((c) => ExamClass(id: c.id, name: c.name, code: c.code))
+            .toList(),
+        primaryClassId: _primaryClass != null
             ? ExamClass(
-                id: _selectedClass!.id,
-                name: _selectedClass!.name,
-                code: _selectedClass!.code,
+                id: _primaryClass!.id,
+                name: _primaryClass!.name,
+                code: _primaryClass!.code,
               )
-            : null,
+            : (_selectedClasses.isNotEmpty
+                ? ExamClass(
+                    id: _selectedClasses.first.id,
+                    name: _selectedClasses.first.name,
+                    code: _selectedClasses.first.code,
+                  )
+                : null),
         omrTemplateId: _selectedOmrTemplate,
         examDate: _selectedDate,
         duration: duration,
@@ -434,23 +555,29 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         BlocBuilder<ClassBloc, ClassState>(
                           builder: (context, state) {
                             final classes = state is ClassLoaded ? state.classes : <Class>[];
+                            final displayText = _selectedClasses.isEmpty
+                                ? ''
+                                : _selectedClasses.length == 1
+                                    ? _selectedClasses.first.name
+                                    : '${_selectedClasses.length} lớp đã chọn';
+                            final hintText = _selectedClasses.isEmpty ? 'Chọn lớp học' : null;
                             return TextFormField(
                               readOnly: true,
-                              controller: TextEditingController(
-                                text: _selectedClass?.name ?? '',
-                              ),
+                              controller: TextEditingController(text: displayText),
                               onTap: () => _showClassSelector(classes),
                               decoration: _buildInputDecoration(
-                                'Chọn lớp học',
+                                hintText ?? displayText,
                                 prefixIcon: const Icon(
                                   Icons.class_outlined,
                                   color: Color(0xFF64748B),
                                   size: 22,
                                 ),
                               ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
-                                color: Color(0xFF0F172A),
+                                color: _selectedClasses.isEmpty
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF0F172A),
                               ),
                             );
                           },

@@ -14,7 +14,6 @@ import 'classes_view.dart';
 import 'profile_view.dart';
 import 'my_scores_page.dart';
 import 'my_appeals_page.dart';
-import '../widgets/quick_create_exam_sheet.dart';
 import '../widgets/search_sheet.dart';
 
 class HomePage extends StatefulWidget {
@@ -366,7 +365,7 @@ class _HomePageState extends State<HomePage> {
     if (role == 'admin') {
       if (_selectedIndex == 0) {
         return FloatingActionButton(
-          onPressed: () => QuickCreateExamSheet.show(context),
+          onPressed: () => Navigator.pushNamed(context, '/create-exam'),
           backgroundColor: const Color(0xFF0F172A),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: const Icon(Icons.add, color: Colors.white, size: 28),
@@ -377,7 +376,7 @@ class _HomePageState extends State<HomePage> {
     // teacher
     if (_selectedIndex == 0 || _selectedIndex == 1) {
       return FloatingActionButton(
-        onPressed: () => QuickCreateExamSheet.show(context),
+        onPressed: () => Navigator.pushNamed(context, '/create-exam'),
         backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.add, color: Colors.white, size: 28),
