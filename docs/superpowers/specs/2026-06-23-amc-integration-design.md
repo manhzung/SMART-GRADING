@@ -34,6 +34,18 @@ Mục tiêu: tích hợp AMC (Auto-Multiple-Choice) để sinh đề thi LaTeX c
 
 ## Architecture
 
+### Environment: WSL2
+
+AMC không có Windows native installer. Trên Windows Server, chạy AMC trong **WSL2 (Windows Subsystem for Linux với Ubuntu)**. Node.js gọi `wsl` command để tương tác với AMC CLI trong WSL.
+
+**Prerequisites trên WSL2 (Ubuntu):**
+- TeXLive (LaTeX distribution)
+- AMC (`auto-multiple-choice`)
+- Ghostscript
+- ImageMagick
+
+**WSL2 storage:** AMC working files sống trong WSL2 filesystem (`/home/<user>/amc-projects/`). PDFs được copy ra Windows filesystem qua `/mnt/c/`.
+
 ### Data Flow
 
 ```
@@ -392,7 +404,9 @@ if (exam.paperEngine === 'amc' || exam.paperEngine === 'auto') {
 
 ## Open Questions
 
-1. **AMC trên Windows:** AMC có Windows native installer hay cần WSL/Cygwin? (Cần xác minh)
-2. **Math rendering:** Question content có chứa công thức toán (KaTeX) không? Nếu có, cần chuyển đổi LaTeX math syntax trong `amcSourceGenerator`.
-3. **OMR combined vs separate:** AMC sinh đề thi + OMR trong cùng 1 file hay tách? Ảnh hưởng đến `answerSheetPdfUrl` strategy.
-4. **Version code mapping:** AMC sinh `001.pdf`, `002.pdf`... cần map với `ExamVersion.versionCode` trong DB.
+| # | Question | Resolution |
+|---|----------|------------|
+| 1 | AMC trên Windows | **WSL2** — AMC không có Windows native. Chạy trong Ubuntu WSL2. Node.js gọi `wsl` command để tương tác với AMC CLI trong WSL. |
+| 2 | Math rendering | **Không cần** — question.content là plain text, không có math field. Nếu cần trong tương lai, thêm sau. |
+| 3 | OMR combined vs separate | **Combined** — giữ format giống hệt hệ thống cũ (đề + OMR trong 1 PDF). Tách `answerSheetPdfUrl` bằng page splitting sau khi generate. |
+| 4 | Version code mapping | AMC sinh `001.pdf`, `002.pdf`... → Map với `ExamVersion.versionCode` theo thứ tự index. |
