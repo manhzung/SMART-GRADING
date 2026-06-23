@@ -19,16 +19,24 @@ class SubmissionService {
 
     let pythonResult = null;
 
-    // If we have a Cloudinary URL, forward to python bridge for actual scanning
+    // Cloudinary flow: download image from Cloudinary, then pass base64 to Python
     if (config.upload.mode === 'cloudinary' && originalUrl) {
       assertIsCloudinaryUrl(originalUrl, config.cloudinary.cloud_name);
+      let imageBase64;
+      try {
+        const axios = require('axios');
+        const imageResponse = await axios.get(originalUrl, { responseType: 'arraybuffer' });
+        imageBase64 = Buffer.from(imageResponse.data).toString('base64');
+      } catch (downloadErr) {
+        throw new ApiError(500, `Failed to download image from Cloudinary: ${downloadErr.message}`);
+      }
       const pythonBridge = require('./pythonBridge.service');
       try {
         const template = exam.omrTemplateId
           ? await (require('./omrTemplate.service')).getById(exam.omrTemplateId)
           : {};
         pythonResult = await pythonBridge.processImage({
-          imageUrl: originalUrl,
+          image: imageBase64,
           template: template?.zones || {},
         });
       } catch (err) {
@@ -42,7 +50,7 @@ class SubmissionService {
           ? await (require('./omrTemplate.service')).getById(exam.omrTemplateId)
           : {};
         pythonResult = await pythonBridge.processImage({
-          image,
+          image: image,
           template: template?.zones || {},
         });
       } catch (err) {
@@ -94,20 +102,26 @@ class SubmissionService {
       }
     }
 
-    // Build graded answers
-    const answerKey = versionId
-      ? await this._getAnswerKey(versionId)
-      : {};
+    // Build graded answers - map positions to questionIds using version data
+    const [versionQuestions, answerKey] = await Promise.all([
+      versionId ? this._getVersionQuestions(versionId) : [],
+      versionId ? this._getAnswerKey(versionId) : {},
+    ]);
 
     const gradedAnswers = rawAnswers.map((raw, idx) => {
       const pos = idx + 1;
       const selected = raw.optionId || null;
+      // Find the questionId at this position from the version
+      const versionQ = versionQuestions.find(vq => vq.position === pos);
+      const questionId = versionQ?.questionId || null;
+      // Find correct answer from answerKey using position
       const correct = answerKey[pos] || null;
+      // If correct answer is an option letter, find which option letter it corresponds to
       const isCorrect = selected !== null && selected === correct;
       const scorePerQuestion = exam.totalScore / exam.numberOfQuestions;
       return {
         position: pos,
-        questionId: raw.questionId || null,
+        questionId,
         selectedAnswer: selected,
         correctAnswer: correct,
         isCorrect,
@@ -174,6 +188,12 @@ class SubmissionService {
       await submission.save();
     }
 
+    // Auto-transition exam to in_progress after first scan (if still published)
+    if (exam.status === 'published') {
+      exam.status = 'in_progress';
+      await exam.save();
+    }
+
     // Update question difficulty stats
     for (const answer of gradedAnswers) {
       if (answer.questionId) {
@@ -200,8 +220,23 @@ class SubmissionService {
       totalScore: Math.round(totalScore * 10) / 10,
       maxScore: exam.totalScore,
       answerCount: gradedAnswers.length,
+      detectedAnswers: gradedAnswers.reduce((acc, a) => {
+        if (a.selectedAnswer) acc[a.position.toString()] = a.selectedAnswer;
+        return acc;
+      }, {}),
       pythonResult,
     };
+  }
+
+  async _getVersionQuestions(versionId) {
+    const version = await ExamVersion.findById(versionId)
+      .select('questions')
+      .lean();
+    if (!version || !version.questions) return [];
+    return version.questions.map(vq => ({
+      position: vq.position,
+      questionId: vq.questionId,
+    }));
   }
 
   async _getAnswerKey(versionId) {

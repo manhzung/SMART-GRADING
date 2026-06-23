@@ -30,6 +30,7 @@ class ExamService {
         .populate('primaryClassId', 'name code')
         .populate('createdBy', 'name email')
         .populate('omrTemplateId', 'name code zones')
+        .populate('subjectId', 'name color')
         .populate('questionIds', 'content options imageUrl difficulty score type correctAnswer topic'),
       Submission.aggregate([
         { $match: { examId: new mongoose.Types.ObjectId(id) } },
@@ -56,6 +57,7 @@ class ExamService {
   async getAll(query = {}, user) {
     const {
       classId,
+      subjectId,
       status,
       fromDate,
       toDate,
@@ -70,6 +72,7 @@ class ExamService {
 
     const filter = {};
     if (classId) filter.classIds = classId;
+    if (subjectId) filter.subjectId = subjectId;
     if (status) filter.status = status;
     if (fromDate || toDate) {
       filter.examDate = {};
@@ -96,6 +99,7 @@ class ExamService {
       Exam.find(filter)
         .populate('classIds', 'name code')
         .populate('primaryClassId', 'name code')
+        .populate('subjectId', 'name color')
         .sort({ [sortBy]: sortOrder })
         .skip(skip)
         .limit(limit),
@@ -121,6 +125,7 @@ class ExamService {
       .limit(limit)
       .populate('classIds', 'name code')
       .populate('primaryClassId', 'name code')
+      .populate('subjectId', 'name color')
       .lean();
   }
 
@@ -339,107 +344,6 @@ class ExamService {
     };
   }
 
-  async exportVersionPdf(examId, versionId, user) {
-    const { Exam, ExamVersion } = require('../models');
-
-    const [exam, version] = await Promise.all([
-      Exam.findById(examId)
-        .populate('createdBy', 'name')
-        .populate('omrTemplateId', 'name code zones'),
-      ExamVersion.findById(versionId)
-        .populate('questions.questionId', 'content options difficulty score type'),
-    ]);
-
-    if (!exam) {
-      throw new ApiError(404, 'Exam not found');
-    }
-    if (!version) {
-      throw new ApiError(404, 'Exam version not found');
-    }
-    if (version.examId.toString() !== examId) {
-      throw new ApiError(400, 'Version does not belong to this exam');
-    }
-
-    return {
-      exam: {
-        _id: exam._id,
-        title: exam.title,
-        examDate: exam.examDate,
-        duration: exam.duration,
-        totalScore: exam.totalScore,
-        omrTemplate: exam.omrTemplateId,
-        creator: exam.createdBy?.name,
-      },
-      version: {
-        _id: version._id,
-        versionCode: version.versionCode,
-        questions: version.questions,
-        answerKey: Object.fromEntries(version.answerKey || new Map()),
-      },
-      printConfig: exam.printConfig,
-      generatedAt: new Date().toISOString(),
-      generatedBy: user?.name || 'System',
-    };
-  }
-
-  async exportResults(examId, format = 'pdf', user) {
-    const { Exam, Submission } = require('../models');
-
-    const exam = await Exam.findById(examId)
-      .populate('classIds', 'name code')
-      .populate('createdBy', 'name');
-
-    if (!exam) {
-      throw new ApiError(404, 'Exam not found');
-    }
-
-    const submissions = await Submission.find({ examId, status: 'completed' })
-      .populate('studentId', 'name studentCode');
-
-    const scores = submissions.map(s => ({
-      studentId: s.studentId?._id,
-      studentName: s.studentId?.name || 'Unknown',
-      studentCode: s.studentId?.studentCode || '',
-      totalScore: s.totalScore,
-      maxScore: s.maxScore,
-      percentage: s.percentage || 0,
-      submittedAt: s.submittedAt,
-    }));
-
-    const averageScore = scores.length > 0
-      ? scores.reduce((sum, s) => sum + s.percentage, 0) / scores.length
-      : 0;
-
-    const gradeDist = {
-      excellent: scores.filter(s => s.percentage >= 85).length,
-      good: scores.filter(s => s.percentage >= 70 && s.percentage < 85).length,
-      average: scores.filter(s => s.percentage >= 50 && s.percentage < 70).length,
-      poor: scores.filter(s => s.percentage < 50).length,
-    };
-
-    return {
-      exam: {
-        _id: exam._id,
-        title: exam.title,
-        examDate: exam.examDate,
-        totalScore: exam.totalScore,
-        classes: exam.classIds,
-        creator: exam.createdBy?.name,
-      },
-      statistics: {
-        totalStudents: scores.length,
-        averageScore: Math.round(averageScore * 100) / 100,
-        highestScore: scores.length > 0 ? Math.max(...scores.map(s => s.percentage)) : 0,
-        lowestScore: scores.length > 0 ? Math.min(...scores.map(s => s.percentage)) : 0,
-        gradeDistribution: gradeDist,
-      },
-      submissions: scores,
-      format,
-      generatedAt: new Date().toISOString(),
-      generatedBy: user?.name || 'System',
-    };
-  }
-
   async delete(id) {
     const exam = await Exam.findByIdAndUpdate(id, { status: 'archived' }, { new: true });
     return exam;
@@ -456,6 +360,7 @@ class ExamService {
       .populate('classIds', 'name')
       .populate('primaryClassId', 'name')
       .populate('createdBy', 'name schoolId')
+      .populate('subjectId', 'name')
       .populate('questionIds', 'content options difficulty score type');
 
     if (!exam) {
@@ -514,6 +419,7 @@ class ExamService {
 
     const exam = await Exam.findById(examId)
       .populate('createdBy', 'schoolId')
+      .populate('subjectId', 'name')
       .select('title subjectId duration totalScore examDate createdBy classIds primaryClassId printConfig')
       .lean();
 
@@ -558,6 +464,7 @@ class ExamService {
         schoolHeader: exam.printConfig?.schoolHeader !== false,
         questions,
       },
+      printConfig: exam.printConfig,
     };
   }
 
@@ -565,24 +472,56 @@ class ExamService {
     const exam = await Exam.findById(examId)
       .populate('classIds', 'name')
       .populate('createdBy', 'name')
+      .populate('subjectId', 'name')
       .lean();
 
     if (!exam) {
       throw new ApiError(404, 'Exam not found');
     }
 
-    const submissions = await Submission.find({ examId }).populate('studentId', 'name studentCode').lean();
+    const submissions = await Submission.find({ examId, status: 'completed' }).populate('studentId', 'name studentCode').lean();
 
-    const results = submissions.map((sub) => ({
+    const scores = submissions.map((sub) => ({
       studentName: sub.studentId?.name || 'Unknown',
       studentCode: sub.studentId?.studentCode || '',
-      score: sub.score ?? 0,
+      percentage: sub.maxScore > 0 ? (sub.totalScore / sub.maxScore) * 100 : 0,
       submittedAt: sub.submittedAt,
       status: sub.status,
     }));
 
+    const averageScore = scores.length > 0
+      ? scores.reduce((sum, s) => sum + s.percentage, 0) / scores.length
+      : 0;
+
+    const gradeDist = {
+      excellent: scores.filter((s) => s.percentage >= 85).length,
+      good: scores.filter((s) => s.percentage >= 70 && s.percentage < 85).length,
+      average: scores.filter((s) => s.percentage >= 50 && s.percentage < 70).length,
+      poor: scores.filter((s) => s.percentage < 50).length,
+    };
+
     if (format !== 'pdf') {
-      return { exam: { title: exam.title }, results };
+      return {
+        exam: {
+          _id: exam._id,
+          title: exam.title,
+          examDate: exam.examDate,
+          totalScore: exam.totalScore,
+          classes: exam.classIds,
+          creator: exam.createdBy?.name,
+        },
+        statistics: {
+          totalStudents: scores.length,
+          averageScore: Math.round(averageScore * 100) / 100,
+          highestScore: scores.length > 0 ? Math.max(...scores.map(s => s.percentage)) : 0,
+          lowestScore: scores.length > 0 ? Math.min(...scores.map(s => s.percentage)) : 0,
+          gradeDistribution: gradeDist,
+        },
+        submissions: scores,
+        format,
+        generatedAt: new Date().toISOString(),
+        generatedBy: 'System',
+      };
     }
 
     // Generate real PDF buffer
@@ -607,19 +546,16 @@ class ExamService {
 
     // Summary stats
     const totalStudents = submissions.length;
-    const gradedCount = submissions.filter(s => s.status === 'graded' || s.status === 'reviewed').length;
-    const avgScore = gradedCount > 0
-      ? (submissions.filter(s => s.status === 'graded' || s.status === 'reviewed')
-          .reduce((sum, s) => sum + (s.score || 0), 0) / gradedCount).toFixed(2)
-      : 'N/A';
+    const gradedCount = submissions.length;
+    const avgScore = gradedCount > 0 ? averageScore.toFixed(2) : 'N/A';
 
-    doc.font('Helvetica-Bold').fontSize(11).fillColor('#1e40af').text('THÔNG TIN TỔNG QUAN', 50, y);
+    doc.font('Helvetica-Bold').fontSize(11).fillColor('#1e40af').text('THONG TIN TONG QUAN', 50, y);
     y += 15;
 
     const stats = [
-      ['Tổng bài nộp', String(totalStudents)],
-      ['Đã chấm', String(gradedCount)],
-      ['Điểm trung bình', avgScore],
+      ['Tong bai nop', String(totalStudents)],
+      ['Da cham', String(gradedCount)],
+      ['Diem trung binh', avgScore],
     ];
     stats.forEach(([label, value]) => {
       doc.rect(50, y, 200, 20).fill('#f8fafc').stroke('#e2e8f0');
@@ -629,21 +565,21 @@ class ExamService {
     });
 
     y += 10;
-    doc.font('Helvetica-Bold').fontSize(11).fillColor('#1e40af').text('BẢNG ĐIỂM', 50, y);
+    doc.font('Helvetica-Bold').fontSize(11).fillColor('#1e40af').text('BANG DIEM', 50, y);
     y += 12;
 
     // Table header
     doc.rect(50, y, usableW, 18).fill('#1e40af');
     doc.font('Helvetica-Bold').fontSize(9).fillColor('#ffffff');
     doc.text('STT', 55, y + 5, { width: 30 });
-    doc.text('Họ tên', 85, y + 5, { width: 150 });
-    doc.text('Số báo danh', 235, y + 5, { width: 80 });
-    doc.text('Điểm', 315, y + 5, { width: 50 });
-    doc.text('Trạng thái', 365, y + 5, { width: 80 });
+    doc.text('Ho ten', 85, y + 5, { width: 150 });
+    doc.text('So bao danh', 235, y + 5, { width: 80 });
+    doc.text('Diem', 315, y + 5, { width: 50 });
+    doc.text('Ty le', 365, y + 5, { width: 50 });
     y += 20;
 
     // Table rows
-    results.forEach((r, i) => {
+    scores.forEach((r, i) => {
       if (y > pageH - 60) {
         doc.addPage();
         y = 50;
@@ -654,8 +590,8 @@ class ExamService {
       doc.text(String(i + 1), 55, y + 4, { width: 30 });
       doc.text(r.studentName, 85, y + 4, { width: 150 });
       doc.text(r.studentCode, 235, y + 4, { width: 80 });
-      doc.text(String(r.score), 315, y + 4, { width: 50 });
-      doc.text(r.status === 'graded' ? 'Đạt' : r.status === 'reviewed' ? 'Đã duyệt' : 'Chưa chấm', 365, y + 4, { width: 80 });
+      doc.text(r.percentage.toFixed(1) + '%', 315, y + 4, { width: 50 });
+      doc.text(r.status === 'completed' ? 'Hoan thanh' : 'Chua cham', 365, y + 4, { width: 80 });
       y += 18;
     });
 

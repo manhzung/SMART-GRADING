@@ -4,7 +4,17 @@ const catchAsync = require('../utils/catchAsync');
 
 const scan = catchAsync(async (req, res) => {
   const result = await submissionService.scan(req.body);
-  res.status(httpStatus.ACCEPTED).send(result);
+  res.status(httpStatus.ACCEPTED).send({
+    id: result.submissionId,
+    status: result.status,
+    submissionId: result.submissionId,
+    totalScore: result.totalScore,
+    maxScore: result.maxScore,
+    answerCount: result.answerCount,
+    detectedAnswers: result.detectedAnswers || {},
+    confidence: result.pythonResult?.metadata?.confidence ?? 0,
+    templateId: result.examId,
+  });
 });
 
 const getById = catchAsync(async (req, res) => {

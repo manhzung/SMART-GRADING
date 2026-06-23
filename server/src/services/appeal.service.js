@@ -27,11 +27,16 @@ class AppealService {
       (a) => a.questionId?.toString() === data.questionId.toString()
     );
 
+    // selectedAnswer is already 'A'/'B'/'C'/'D' or null in the model
+    const currentAnswer = answer?.selectedAnswer != null ? String(answer.selectedAnswer) : undefined;
+    // correctAnswer is 'A'/'B'/'C'/'D' or null
+    const expectedAnswer = answer?.correctAnswer != null ? String(answer.correctAnswer) : undefined;
+
     const appeal = new Appeal({
       ...data,
       status: 'pending',
-      currentAnswer: answer?.selectedAnswer != null ? String.fromCharCode(65 + answer.selectedAnswer) : undefined,
-      expectedAnswer: answer?.correctAnswer != null ? String.fromCharCode(65 + answer.correctAnswer) : undefined,
+      currentAnswer,
+      expectedAnswer,
     });
 
     await appeal.save();
@@ -169,7 +174,7 @@ class AppealService {
   }
 
   async review(id, data, reviewerId) {
-    const { decision, note, newScore, oldScore } = data;
+    const { decision, note, newScore, oldScore, scoreAdjustment } = data;
 
     const appeal = await Appeal.findById(id);
     if (!appeal) {
@@ -180,41 +185,55 @@ class AppealService {
       throw new ApiError(400, 'Appeal already reviewed');
     }
 
-    let finalOldScore = oldScore;
-    let finalNewScore = newScore;
-
     if (decision === 'approved') {
       const submission = await Submission.findById(appeal.submissionId);
-      if (submission) {
-        const answer = submission.answers.find(
-          a => a.position === appeal.questionPosition
-        );
-        if (answer) {
-          finalOldScore = finalOldScore ?? answer.score;
-          finalNewScore = finalNewScore ?? answer.score;
-          answer.selectedAnswer = finalNewScore.toString();
-          answer.score = finalNewScore;
-          submission.totalScore = submission.answers.reduce((sum, a) => sum + a.score, 0);
-          submission.finalScore = submission.totalScore;
-          await submission.save();
-        }
+      if (!submission) {
+        throw new ApiError(404, 'Submission not found');
       }
 
-      if (finalOldScore === undefined || finalNewScore === undefined) {
-        throw new ApiError(400, 'Score values could not be determined from submission');
+      // Find answer by questionId
+      const answer = submission.answers.find(
+        a => a.questionId?.toString() === appeal.questionId.toString()
+      );
+      if (answer) {
+        // Score adjustment: the DIFFERENCE in score (newScore - oldScore)
+        const adjustment = scoreAdjustment !== undefined
+          ? scoreAdjustment
+          : (newScore !== undefined && oldScore !== undefined)
+            ? (newScore - oldScore)
+            : 0;
+
+        // The answer's score should be the NEW score (not the adjustment amount)
+        answer.score = newScore !== undefined ? newScore : answer.score;
+        answer.isCorrect = true; // teacher confirmed correct via approval
+
+        // Recalculate total score with the new answer score
+        submission.totalScore = submission.answers.reduce((sum, a) => sum + a.score, 0);
+        submission.finalScore = submission.totalScore;
+        submission.status = 'appealed';
+        await submission.save();
       }
+
+      appeal.teacherResponse = {
+        reviewedBy: reviewerId,
+        reviewedAt: new Date(),
+        decision: 'approved',
+        note,
+        scoreAdjustment: (oldScore !== undefined && newScore !== undefined)
+          ? { oldScore, newScore }
+          : undefined,
+      };
+    } else {
+      // rejected
+      appeal.teacherResponse = {
+        reviewedBy: reviewerId,
+        reviewedAt: new Date(),
+        decision: 'rejected',
+        note,
+      };
     }
 
-    appeal.status = decision === 'approved' ? 'approved' : 'rejected';
-    appeal.teacherResponse = {
-      reviewedBy: reviewerId,
-      reviewedAt: new Date(),
-      decision,
-      note,
-      scoreAdjustment: (decision === 'approved' && finalOldScore !== undefined)
-        ? { oldScore: finalOldScore, newScore: finalNewScore }
-        : undefined,
-    };
+    appeal.status = decision;
 
     await appeal.save();
 
