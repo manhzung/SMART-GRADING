@@ -288,21 +288,22 @@ Template định nghĩa cấu trúc tờ phiếu trả lời: kích thước tra
 
 | Method | Endpoint | Auth | Mô tả |
 |--------|----------|------|--------|
-| POST | `/` | admin | Tạo đề thi |
-| GET | `/` | JWT | Liệt kê đề thi |
+| POST | `/` | manageExams | Tạo đề thi |
+| GET | `/` | JWT | Liệt kê đề thi (filter: classId, subjectId, status, search, pagination) |
 | GET | `/upcoming` | JWT | Đề thi sắp tới |
 | GET | `/:id` | JWT | Chi tiết đề thi |
-| PATCH | `/:id` | admin | Cập nhật đề thi |
-| DELETE | `/:id` | admin | Xóa đề thi (archive) |
-| POST | `/:id/publish` | admin | **Publish đề thi** → gửi notification |
-| POST | `/:id/complete` | admin | **Hoàn thành đề thi** |
-| POST | `/:id/classes` | admin | Gán lớp vào đề thi |
-| DELETE | `/:id/classes` | admin | Gỡ lớp khỏi đề thi |
+| PATCH | `/:id` | manageExams | Cập nhật đề thi (questionIds, subjectId, classIds, metadata) |
+| DELETE | `/:id` | manageExams | Xóa đề thi (archive) |
+| POST | `/:id/publish` | manageExams | **Publish đề thi** → gửi notification |
+| POST | `/:id/complete` | manageExams | **Hoàn thành đề thi** |
+| POST | `/:id/classes` | manageExams | Gán lớp vào đề thi |
+| DELETE | `/:id/classes` | manageExams | Gỡ lớp khỏi đề thi |
 | GET | `/:id/versions` | JWT | Lấy các phiên bản đề thi |
-| POST | `/:id/versions` | admin | **Tạo phiên bản đề** (xáo trộn câu hỏi + đáp án) |
+| POST | `/:id/versions` | manageExams | **Tạo phiên bản đề** (xáo trộn câu hỏi + đáp án) |
 | GET | `/:id/versions/full` | JWT | Phiên bản đề + questions đầy đủ |
 | GET | `/:id/export` | JWT | Xuất đề thi ra PDF |
-| GET | `/:id/versions/:versionCode/pdf` | JWT | Xuất phiên bản ra PDF |
+| GET | `/:id/versions/:versionCode/pdf` | JWT | Xuất phiên bản ra PDF (đề thi + OMR sheet) |
+| GET | `/:id/versions/export` | JWT | Xuất tất cả phiên bản đề ra 1 file ZIP |
 | GET | `/:id/results/export` | JWT | **Xuất kết quả** (PDF/Excel) |
 | GET | `/:id/submissions` | JWT | Lấy danh sách bài thi |
 | GET | `/:id/submissions/statistics` | JWT | Thống kê bài thi |
@@ -995,6 +996,7 @@ User (1) ──→ (N) AIChat
 │      Body: {                                                               │
 │        title: "Kiểm tra HK1 - Toán 10",                                   │
 │        description: "Đề kiểm tra 15 phút",                                │
+│        subjectId: "subjectId",  // ObjectId môn học                       │
 │        classIds: ["classId1", "classId2"],                                 │
 │        omrTemplateId: "templateId",                                        │
 │        totalScore: 10,                                                     │
@@ -1193,8 +1195,8 @@ User (1) ──→ (N) AIChat
 │      Filename: "{examTitle}_made_{versionCode}.pdf"                       │
 │                                                                             │
 │  [1.5.5] Xuất nhiều phiên bản (zip)                                      │
-│      POST /api/v1/omr-templates/:id/pdf/versions                          │
-│      → Tạo PDF cho tất cả mã đề, nén thành 1 file zip                    │
+│      GET /api/v1/exams/:id/versions/export                             │
+│      → Tạo PDF cho tất cả mã đề (đề thi + OMR sheet), nén thành zip│
 │                                                                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
@@ -2394,6 +2396,8 @@ Exam {
   description: String,
   classIds: [ObjectId],          // Nhiều lớp cùng 1 đề
   primaryClassId: ObjectId,
+  subjectId: ObjectId (ref: Subject),  // Liên kết môn học
+  subjectName: String,
   createdBy: ObjectId (ref: User),
   omrTemplateId: ObjectId (ref: OMRTemplate),
   omrOverrides: Object,
