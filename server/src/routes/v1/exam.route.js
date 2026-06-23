@@ -4,7 +4,6 @@ const examValidation = require('../../validations/exam.validation');
 const examController = require('../../controllers/exam.controller');
 const submissionController = require('../../controllers/submission.controller');
 const auth = require('../../middlewares/auth');
-const asyncHandler = require('../../utils/asyncHandler');
 
 const { validateGeneratePapers } = examValidation;
 
@@ -73,7 +72,7 @@ router.post(
   '/:id/generate-papers',
   auth(),
   validate(validateGeneratePapers),
-  asyncHandler(examController.generatePapers)
+  examController.generatePapers
 );
 
 module.exports = router;
