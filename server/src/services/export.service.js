@@ -5,6 +5,7 @@ const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const cloudinary = require('cloudinary').v2;
 const config = require('../config/config');
+const ApiError = require('../utils/ApiError');
 const { ExamReport, Submission, Exam } = require('../models');
 
 cloudinary.config({
@@ -366,6 +367,81 @@ class ExportService {
 
     await workbook.xlsx.writeFile(filePath);
     return filePath;
+  }
+
+  /**
+   * Export exam results to Excel buffer
+   * Returns a buffer directly for streaming response
+   */
+  async exportExamResultsExcel(examId, user) {
+    const { Exam, Submission } = require('../models');
+
+    const exam = await Exam.findById(examId)
+      .populate('classIds', 'name')
+      .lean();
+    if (!exam) {
+      throw new ApiError(404, 'Exam not found');
+    }
+
+    const submissions = await Submission.find({
+      examId,
+      status: 'completed',
+    }).populate('studentId', 'name studentCode').lean();
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Smart Grading System';
+
+    // Sheet 1: Summary
+    const summarySheet = workbook.addWorksheet('Tong Quan');
+    summarySheet.columns = [
+      { header: 'Chỉ tiêu', key: 'label', width: 25 },
+      { header: 'Giá trị', key: 'value', width: 20 },
+    ];
+    const avgScore = submissions.length > 0
+      ? submissions.reduce((sum, sub) => sum + sub.totalScore, 0) / submissions.length
+      : 0;
+    summarySheet.addRows([
+      { label: 'Tên bài thi', value: exam.title },
+      { label: 'Tổng bài nộp', value: submissions.length },
+      { label: 'Điểm trung bình', value: avgScore.toFixed(2) },
+      { label: 'Ngày thi', value: exam.examDate ? new Date(exam.examDate).toLocaleDateString('vi-VN') : 'N/A' },
+    ]);
+    summarySheet.getRow(1).font = { bold: true };
+
+    // Sheet 2: Scores
+    const scoresSheet = workbook.addWorksheet('Diem');
+    scoresSheet.columns = [
+      { header: 'STT', key: 'stt', width: 6 },
+      { header: 'Họ tên', key: 'name', width: 25 },
+      { header: 'MSSV', key: 'code', width: 12 },
+      { header: 'Điểm', key: 'score', width: 8 },
+      { header: 'Điểm TB', key: 'maxScore', width: 8 },
+      { header: 'Tỷ lệ %', key: 'pct', width: 10 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+    ];
+    // Header row style
+    scoresSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    scoresSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E40AF' } };
+
+    submissions.forEach((sub, idx) => {
+      const pct = sub.maxScore > 0 ? ((sub.totalScore / sub.maxScore) * 100) : 0;
+      const statusLabel = sub.status === 'completed' ? 'Hoàn thành'
+        : sub.status === 'scanned' ? 'Đã quét'
+        : sub.status === 'appealed' ? 'Phúc tra'
+        : sub.status;
+      scoresSheet.addRow({
+        stt: idx + 1,
+        name: sub.studentId?.name || 'Unknown',
+        code: sub.studentId?.studentCode || '',
+        score: sub.totalScore,
+        maxScore: sub.maxScore,
+        pct: `${pct.toFixed(1)}%`,
+        status: statusLabel,
+      });
+    });
+
+    // Write buffer
+    return workbook.xlsx.writeBuffer();
   }
 
   /**

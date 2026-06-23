@@ -12,6 +12,15 @@ const allRoles = {
     'viewReports',
     'manageAI',
   ],
+  'school-admin': [
+    'getUsers',
+    'manageUsers',
+    'manageClasses',
+    'manageQuestions',
+    'manageExams',
+    'exportOMRTemplates',
+    'viewReports',
+  ],
   teacher: [
     'manageClasses',
     'manageQuestions',

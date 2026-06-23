@@ -11,8 +11,11 @@ const verifyCallback = (req, resolve, reject, requiredRights) => async (err, use
 
   if (requiredRights.length) {
     const userRights = roleRights.get(user.role);
-    const hasRequiredRights = requiredRights.every((requiredRight) => userRights.includes(requiredRight));
+    const hasRequiredRights = userRights
+      ? requiredRights.every((requiredRight) => userRights.includes(requiredRight))
+      : false;
     if (!hasRequiredRights && req.params.userId !== user.id) {
+      console.error(`[AUTH DEBUG] Forbidden: user.role=${user.role}, user.id=${user.id}, requiredRights=${JSON.stringify(requiredRights)}, userRights=${JSON.stringify(userRights)}`);
       return reject(new ApiError(httpStatus.FORBIDDEN, 'Forbidden'));
     }
   }
