@@ -1,38 +1,37 @@
-// Mock child_process module with factory before any imports
-const mockSpawn = jest.fn();
-jest.mock('child_process', () => ({
-  spawn: mockSpawn,
-}));
-
-jest.mock('fs', () => ({
-  existsSync: jest.fn(),
-  mkdirSync: jest.fn(),
-  writeFileSync: jest.fn(),
-}));
+// Mock child_process and fs
+jest.mock('child_process');
+jest.mock('fs');
 
 const { spawn } = require('child_process');
+const mockSpawn = spawn;
 
 describe('amcRunnerService', () => {
   let amcRunner;
+  let mockProc;
 
   beforeEach(() => {
-    // Clear all mocks but keep jest.mock factories
     jest.clearAllMocks();
-    // Reset spawn mock
-    mockSpawn.mockReset();
-    // Re-require service to get fresh instance
-    jest.isolateModules(() => {
-      amcRunner = require('../../src/amc/amcRunner.service');
-    });
+
+    mockProc = {
+      stdout: { on: jest.fn(), setEncoding: jest.fn() },
+      stderr: { on: jest.fn(), setEncoding: jest.fn() },
+      on: jest.fn(),
+      kill: jest.fn(),
+    };
+    mockSpawn.mockImplementation(() => mockProc);
+
+    delete require.cache[require.resolve('../../src/amc/amcRunner.service')];
+    amcRunner = require('../../src/amc/amcRunner.service');
   });
 
   describe('validateEnvironment', () => {
     it('should return isValid true when all tools are available', async () => {
-      mockSpawn.mockImplementation(() => ({
-        stdout: { on: jest.fn((e, cb) => { if (e === 'data') cb('pdfTeX 3.14159265'); }) },
-        stderr: { on: jest.fn() },
-        on: jest.fn((e, cb) => { if (e === 'close') cb(0); }),
-      }));
+      mockProc.on.mockImplementation((e, cb) => {
+        if (e === 'close') cb(0);
+      });
+      mockProc.stdout.on.mockImplementation((e, cb) => {
+        if (e === 'data') cb('pdfTeX 3.14159265');
+      });
 
       const result = await amcRunner.validateEnvironment();
 
@@ -43,11 +42,9 @@ describe('amcRunnerService', () => {
     });
 
     it('should return isValid false when AMC is not found', async () => {
-      mockSpawn.mockImplementation(() => ({
-        stdout: { on: jest.fn() },
-        stderr: { on: jest.fn() },
-        on: jest.fn((e, cb) => { if (e === 'close') cb(127); }),
-      }));
+      mockProc.on.mockImplementation((e, cb) => {
+        if (e === 'close') cb(127);
+      });
 
       const result = await amcRunner.validateEnvironment();
 
@@ -56,11 +53,9 @@ describe('amcRunnerService', () => {
     });
 
     it('should call wsl with correct distro name', async () => {
-      mockSpawn.mockImplementation(() => ({
-        stdout: { on: jest.fn() },
-        stderr: { on: jest.fn() },
-        on: jest.fn((e, cb) => { if (e === 'close') cb(0); }),
-      }));
+      mockProc.on.mockImplementation((e, cb) => {
+        if (e === 'close') cb(0);
+      });
 
       await amcRunner.validateEnvironment();
 
@@ -73,16 +68,15 @@ describe('amcRunnerService', () => {
   });
 
   describe('backendScan', () => {
+    const validProjectDir = '/home/amc/amc-projects/test-exam';
+
     it('should call wsl amc-check --backend with project dir', async () => {
-      mockSpawn.mockImplementation(() => ({
-        stdout: { on: jest.fn() },
-        stderr: { on: jest.fn() },
-        on: jest.fn((e, cb) => { if (e === 'close') cb(0); }),
-      }));
+      mockProc.on.mockImplementation((e, cb) => {
+        if (e === 'close') cb(0);
+      });
 
-      await amcRunner.backendScan('/home/amc/amc-projects/test-exam');
+      await amcRunner.backendScan(validProjectDir);
 
-      // Command is passed as single string after -c
       expect(mockSpawn).toHaveBeenCalledWith(
         'wsl',
         expect.arrayContaining(['Ubuntu', '--', 'bash', '-c', expect.stringContaining('amc-check')]),
@@ -91,31 +85,40 @@ describe('amcRunnerService', () => {
     });
 
     it('should throw when backend scan fails', async () => {
-      mockSpawn.mockImplementation(() => ({
-        stdout: { on: jest.fn() },
-        stderr: { on: jest.fn((e, cb) => { if (e === 'data') cb('Error: bad input'); }) },
-        on: jest.fn((e, cb) => { if (e === 'close') cb(1); }),
-      }));
+      mockProc.on.mockImplementation((e, cb) => {
+        if (e === 'close') cb(1);
+      });
+      mockProc.stderr.on.mockImplementation((e, cb) => {
+        if (e === 'data') cb('Error: bad input');
+      });
 
       await expect(
-        amcRunner.backendScan('/home/amc/amc-projects/test-exam')
+        amcRunner.backendScan(validProjectDir)
       ).rejects.toThrow();
+    });
+
+    it('should throw for invalid project path', async () => {
+      await expect(
+        amcRunner.backendScan('/etc/passwd')
+      ).rejects.toThrow('Invalid project path');
     });
   });
 
   describe('compileVersions', () => {
-    it('should call amc-compile with correct n-copies', async () => {
-      mockSpawn.mockImplementation(() => ({
-        stdout: { on: jest.fn((e, cb) => { if (e === 'data') cb('Compiling...'); }) },
-        stderr: { on: jest.fn() },
-        on: jest.fn((e, cb) => { if (e === 'close') cb(0); }),
-      }));
+    const validProjectDir = '/home/amc/amc-projects/test';
 
-      const result = await amcRunner.compileVersions('/home/amc/amc-projects/test', 4, 120);
+    it('should call amc-compile with correct n-copies', async () => {
+      mockProc.on.mockImplementation((e, cb) => {
+        if (e === 'close') cb(0);
+      });
+      mockProc.stdout.on.mockImplementation((e, cb) => {
+        if (e === 'data') cb('Compiling...');
+      });
+
+      const result = await amcRunner.compileVersions(validProjectDir, 4, 120);
 
       expect(result.success).toBe(true);
       expect(result.numVersions).toBe(4);
-      // Command is passed as single string after -c
       expect(mockSpawn).toHaveBeenCalledWith(
         'wsl',
         expect.arrayContaining(['Ubuntu', '--', 'bash', '-c', expect.stringContaining('amc-compile')]),
@@ -124,16 +127,20 @@ describe('amcRunnerService', () => {
     });
 
     it('should include compilationTime in result', async () => {
-      mockSpawn.mockImplementation(() => ({
-        stdout: { on: jest.fn() },
-        stderr: { on: jest.fn() },
-        on: jest.fn((e, cb) => { if (e === 'close') cb(0); }),
-      }));
+      mockProc.on.mockImplementation((e, cb) => {
+        if (e === 'close') cb(0);
+      });
 
-      const result = await amcRunner.compileVersions('/path', 2, 60);
+      const result = await amcRunner.compileVersions(validProjectDir, 2, 60);
 
       expect(result.compilationTime).toBeDefined();
       expect(typeof result.compilationTime).toBe('number');
+    });
+
+    it('should throw for invalid project path', async () => {
+      await expect(
+        amcRunner.compileVersions('/etc/passwd', 1, 60)
+      ).rejects.toThrow('Invalid project path');
     });
   });
 
@@ -146,21 +153,26 @@ describe('amcRunnerService', () => {
   });
 
   describe('cleanup', () => {
+    const validProjectDir = '/home/amc/amc-projects/test-exam';
+
     it('should call rm -rf on project dir', async () => {
-      mockSpawn.mockImplementation(() => ({
-        stdout: { on: jest.fn() },
-        stderr: { on: jest.fn() },
-        on: jest.fn((e, cb) => { if (e === 'close') cb(0); }),
-      }));
+      mockProc.on.mockImplementation((e, cb) => {
+        if (e === 'close') cb(0);
+      });
 
-      await amcRunner.cleanup('/home/amc/amc-projects/test-exam');
+      await amcRunner.cleanup(validProjectDir);
 
-      // Command is passed as single string after -c
       expect(mockSpawn).toHaveBeenCalledWith(
         'wsl',
         expect.arrayContaining(['Ubuntu', '--', 'bash', '-c', expect.stringContaining('rm')]),
         expect.any(Object)
       );
+    });
+
+    it('should throw for invalid project path', async () => {
+      await expect(
+        amcRunner.cleanup('/etc/passwd')
+      ).rejects.toThrow('Invalid project path');
     });
   });
 });

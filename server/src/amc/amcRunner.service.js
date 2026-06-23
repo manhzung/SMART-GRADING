@@ -5,6 +5,7 @@
  */
 
 const { spawn } = require('child_process');
+const path = require('path');
 
 const WSL_DISTRO = process.env.WSL_DISTRO || 'Ubuntu';
 const AMC_PROJECTS_DIR = '/home/amc/amc-projects';
@@ -76,6 +77,7 @@ class AmcRunnerService {
    * @returns {Promise<void>}
    */
   async backendScan(projectDir) {
+    this._validateProjectPath(projectDir);
     const cmd = `cd ${projectDir} && amc-check --backend .`;
     const result = await this.wslExec(cmd);
 
@@ -94,6 +96,7 @@ class AmcRunnerService {
    * @returns {Promise<CompilationResult>}
    */
   async compileVersions(projectDir, numVersions, timeoutSeconds = 120) {
+    this._validateProjectPath(projectDir);
     const startTime = Date.now();
 
     const cmd = `cd ${projectDir} && amc-compile --n-copies ${numVersions} .`;
@@ -120,6 +123,7 @@ class AmcRunnerService {
    * @param {string} projectDir - WSL path
    */
   async cleanup(projectDir) {
+    this._validateProjectPath(projectDir);
     try {
       await this.wslExec(`rm -rf ${projectDir}`);
     } catch (err) {
@@ -134,6 +138,19 @@ class AmcRunnerService {
    */
   getProjectDir(examId) {
     return `${AMC_PROJECTS_DIR}/${examId}`;
+  }
+
+  /**
+   * Validate that projectDir stays within AMC_PROJECTS_DIR
+   * @param {string} projectDir
+   */
+  _validateProjectPath(projectDir) {
+    const normalized = path.normalize(projectDir).replace(/\\/g, '/');
+    const baseDir = AMC_PROJECTS_DIR.replace(/\\/g, '/');
+    if (!normalized.startsWith(baseDir)) {
+      throw new Error(`Invalid project path: ${projectDir} is outside AMC projects directory`);
+    }
+    return normalized;
   }
 
   /**
@@ -152,6 +169,12 @@ class AmcRunnerService {
       const timer = setTimeout(() => {
         killed = true;
         proc.kill('SIGTERM');
+        // Grace period: escalate to SIGKILL after 5s
+        setTimeout(() => {
+          if (!proc.killed) {
+            proc.kill('SIGKILL');
+          }
+        }, 5000);
       }, timeoutMs);
 
       proc.stdout.on('data', (d) => { stdout += d.toString(); });
