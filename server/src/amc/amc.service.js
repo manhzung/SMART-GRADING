@@ -7,6 +7,8 @@ const path = require('path');
 const fs = require('fs');
 const amcRunner = require('./amcRunner.service');
 const amcCompiler = require('./amcCompiler.service');
+const amcCsvParser = require('./amcCsvParser');
+const amcTemplateBridge = require('./amcTemplateBridge');
 const { Exam, ExamVersion } = require('../models');
 
 const UPLOADS_DIR = path.join(__dirname, '../../../uploads/amc');
@@ -102,6 +104,35 @@ class AmcService {
         examVersion.generatedAt = new Date();
         examVersion.generationErrors = vp.errors || [];
         await examVersion.save();
+
+        // Generate template JSON for this version
+        const parser = new amcCsvParser();
+        const bridge = new amcTemplateBridge();
+
+        const csvData = parser.parse(''); // Empty for now, coords come from AMC CSV
+        const answerKey = {};
+        const questionScores = {};
+        (examVersion.questions || []).forEach((q, idx) => {
+          const qId = `q${idx + 1}`;
+          const correct = (q.shuffledOptions || []).find(o => o.isCorrect);
+          answerKey[qId] = correct ? correct.id : null;
+          questionScores[qId] = q.questionId?.score || 1;
+        });
+
+        const templateJson = bridge.generate({
+          csvData,
+          versionData: { versionCode: vCode, answerKey },
+          examData: {
+            _id: examId,
+            totalScore: exam.totalScore,
+            questionIds: examVersion.questions,
+          },
+        });
+
+        await ExamVersion.updateOne(
+          { _id: examVersion._id },
+          { $set: { templateJson } }
+        );
 
         versionResults.push({
           versionCode: vCode,
