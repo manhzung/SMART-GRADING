@@ -27,11 +27,11 @@ import { apiService } from '../core/api';
 import styles from './SubmissionsPage.module.css';
 
 // Status configuration
-const STATUS_CONFIG = {
-  pending: { text: 'Chưa chấm', class: styles.statusPending },
-  submitted: { text: 'Đã nộp', class: styles.statusPending },
-  graded: { text: 'Đã chấm', class: styles.statusGraded },
-  reviewed: { text: 'Đã phúc tra', class: styles.statusAppealed },
+const STATUS_CONFIG: Record<string, { text: string; class: string }> = {
+  scanned: { text: 'Đã quét', class: styles.statusPending },
+  completed: { text: 'Hoàn thành', class: styles.statusGraded },
+  manual_review: { text: 'Phúc tra', class: styles.statusAppealed },
+  appealed: { text: 'Đã phúc tra', class: styles.statusAppealed },
 };
 
 interface SubmissionWithDetails extends BackendSubmission {
@@ -51,6 +51,8 @@ interface SubmissionAnswerDetail {
   studentAnswer: string;
   correctAnswer: string;
   isCorrect: boolean;
+  score: number;
+  maxScore: number;
 }
 
 export default function SubmissionsPage() {
@@ -77,7 +79,9 @@ export default function SubmissionsPage() {
 
   // Override modal state
   const [showOverrideModal, setShowOverrideModal] = useState(false);
-  const [overrideScore, setOverrideScore] = useState('');
+  const [overrideQuestionId, setOverrideQuestionId] = useState<string>('');
+  const [overrideNewAnswer, setOverrideNewAnswer] = useState<string>('');
+  const [overrideReason, setOverrideReason] = useState<string>('Manual override by teacher');
 
   // Modal state
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithDetails | null>(null);
@@ -107,16 +111,17 @@ export default function SubmissionsPage() {
       const exam = exams.find((e) => e._id === submission.examId);
       const cls = classes.find((c) => c._id === submission.classId);
 
-      const maxScore = exam?.totalScore || 10;
-      const score = submission.score ?? 0;
+      const maxScore = submission.maxScore || exam?.totalScore || 10;
+      const score = submission.totalScore ?? submission.score ?? 0;
       const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-      const correctCount = submission.gradingResult?.correctCount || 0;
-      const totalQuestions = submission.gradingResult?.totalQuestions || Object.keys(submission.answers).length || 0;
+      const answersArray = Array.isArray(submission.answers) ? submission.answers : [];
+      const correctCount = answersArray.filter((a: any) => a.isCorrect).length;
+      const totalQuestions = answersArray.length || submission.gradingResult?.totalQuestions || 0;
 
       return {
         ...submission,
-        studentName: submission.studentId?.name || 'Unknown',
-        studentEmail: submission.studentId?.email || '',
+        studentName: (submission.studentId as any)?.name || 'Unknown',
+        studentEmail: (submission.studentId as any)?.email || '',
         examTitle: exam?.title || 'Không xác định',
         className: cls?.name || submission.classId || 'Không xác định',
         maxScore,
@@ -265,16 +270,20 @@ export default function SubmissionsPage() {
 
   // Get answers with question details for modal
   const getAnswerDetails = (submission: SubmissionWithDetails): SubmissionAnswerDetail[] => {
+    const answersArray = Array.isArray(submission.answers) ? submission.answers : [];
     const answerKey = submission.gradingResult?.answerKey ?? {};
 
-    return Object.entries(submission.answers).map(([questionId, answer], index) => {
+    return answersArray.map((answer: any) => {
+      const questionId = String(answer.position);
       const correctAnswer = answerKey[questionId] || '';
       return {
         questionId,
-        questionContent: `Câu hỏi ${index + 1}`,
-        studentAnswer: answer,
+        questionContent: `Câu hỏi ${answer.position}`,
+        studentAnswer: answer.selectedAnswer || '',
         correctAnswer,
-        isCorrect: correctAnswer !== '' ? correctAnswer === answer : false,
+        isCorrect: correctAnswer !== '' ? answer.selectedAnswer === correctAnswer : false,
+        score: answer.score ?? 0,
+        maxScore: answer.maxScore ?? 1,
       };
     });
   };
@@ -293,12 +302,13 @@ export default function SubmissionsPage() {
 
   // Get status badge
   const getStatusBadge = (status: string) => {
-    const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.submitted;
+    const config = STATUS_CONFIG[status] || { text: status, class: styles.statusPending };
     return (
       <span className={`${styles.statusBadge} ${config.class}`}>
-        {status === 'graded' && <CheckCircle size={12} />}
-        {status === 'submitted' && <Clock size={12} />}
-        {status === 'reviewed' && <AlertCircle size={12} />}
+        {status === 'completed' && <CheckCircle size={12} />}
+        {status === 'scanned' && <Clock size={12} />}
+        {status === 'manual_review' && <AlertCircle size={12} />}
+        {status === 'appealed' && <AlertCircle size={12} />}
         {config.text}
       </span>
     );
@@ -326,15 +336,15 @@ export default function SubmissionsPage() {
           </div>
           <div className={styles.statItem}>
             <span className={styles.statValue}>
-              {selectedExam === 'all' ? 0 : filteredSubmissions.filter((s) => s.status === 'graded').length}
+              {selectedExam === 'all' ? 0 : filteredSubmissions.filter((s) => s.status === 'completed').length}
             </span>
-            <span className={styles.statLabel}>Đã chấm</span>
+            <span className={styles.statLabel}>Hoàn thành</span>
           </div>
           <div className={styles.statItem}>
             <span className={styles.statValue}>
-              {selectedExam === 'all' ? 0 : filteredSubmissions.filter((s) => s.status === 'submitted').length}
+              {selectedExam === 'all' ? 0 : filteredSubmissions.filter((s) => s.status === 'scanned').length}
             </span>
-            <span className={styles.statLabel}>Chưa chấm</span>
+            <span className={styles.statLabel}>Đã quét</span>
           </div>
         </div>
       </div>
@@ -461,27 +471,36 @@ export default function SubmissionsPage() {
                   Tất cả trạng thái
                 </button>
                 <button
-                  className={`${styles.dropdownItem} ${selectedStatus === 'submitted' ? styles.dropdownItemActive : ''}`}
+                  className={`${styles.dropdownItem} ${selectedStatus === 'scanned' ? styles.dropdownItemActive : ''}`}
                   onClick={() => {
-                    setSelectedStatus('submitted');
+                    setSelectedStatus('scanned');
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Đã nộp
+                  Đã quét
                 </button>
                 <button
-                  className={`${styles.dropdownItem} ${selectedStatus === 'graded' ? styles.dropdownItemActive : ''}`}
+                  className={`${styles.dropdownItem} ${selectedStatus === 'completed' ? styles.dropdownItemActive : ''}`}
                   onClick={() => {
-                    setSelectedStatus('graded');
+                    setSelectedStatus('completed');
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Đã chấm
+                  Hoàn thành
                 </button>
                 <button
-                  className={`${styles.dropdownItem} ${selectedStatus === 'reviewed' ? styles.dropdownItemActive : ''}`}
+                  className={`${styles.dropdownItem} ${selectedStatus === 'manual_review' ? styles.dropdownItemActive : ''}`}
                   onClick={() => {
-                    setSelectedStatus('reviewed');
+                    setSelectedStatus('manual_review');
+                    setShowStatusDropdown(false);
+                    setCurrentPage(1);
+                  }}>
+                  Phúc tra
+                </button>
+                <button
+                  className={`${styles.dropdownItem} ${selectedStatus === 'appealed' ? styles.dropdownItemActive : ''}`}
+                  onClick={() => {
+                    setSelectedStatus('appealed');
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
                   }}>
@@ -586,10 +605,10 @@ export default function SubmissionsPage() {
                   </td>
                   <td>
                     <div className={styles.scoreCell}>
-                      {submission.score !== undefined ? (
+                      {(submission.totalScore ?? submission.score) !== undefined ? (
                         <>
                           <span className={styles.scoreValue}>
-                            {submission.score.toFixed(1)}/{submission.maxScore}
+                            {(submission.totalScore ?? submission.score).toFixed(1)}/{submission.maxScore}
                           </span>
                           <span className={styles.scorePercentage}>{submission.percentage}%</span>
                         </>
@@ -781,6 +800,12 @@ export default function SubmissionsPage() {
                             {answer.correctAnswer}
                           </span>
                         </div>
+                        <div className={styles.answerOption}>
+                          <span className={styles.optionLabel}>Điểm:</span>
+                          <span className={`${styles.optionValue} ${answer.isCorrect ? styles.correctAnswer : styles.wrongAnswer}`}>
+                            +{answer.score.toFixed(1)}/{answer.maxScore.toFixed(1)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -808,7 +833,9 @@ export default function SubmissionsPage() {
                 className={styles.downloadBtn}
                 style={{ borderColor: '#7c3aed', color: '#7c3aed' }}
                 onClick={() => {
-                  setOverrideScore(String(selectedSubmission.score ?? 0));
+                  setOverrideQuestionId('');
+                  setOverrideNewAnswer('');
+                  setOverrideReason('Manual override by teacher');
                   setShowOverrideModal(true);
                 }}>
                 Điều chỉnh điểm
@@ -831,17 +858,62 @@ export default function SubmissionsPage() {
             <div className={styles.modalBody}>
               <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
                 Học sinh: <strong>{selectedSubmission.studentName}</strong><br />
-                Điểm hiện tại: <strong>{(selectedSubmission.score ?? 0).toFixed(1)} / {selectedSubmission.maxScore}</strong>
+                Điểm hiện tại: <strong>{((selectedSubmission.totalScore ?? selectedSubmission.score) ?? 0).toFixed(1)} / {selectedSubmission.maxScore}</strong>
               </p>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Điểm mới (0 - {selectedSubmission.maxScore})</label>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Câu hỏi cần sửa</label>
+                <select
+                  value={overrideQuestionId}
+                  onChange={(e) => setOverrideQuestionId(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <option value="">-- Chọn câu hỏi --</option>
+                  {getAnswerDetails(selectedSubmission).map((ans) => (
+                    <option key={ans.questionId} value={ans.questionId}>
+                      Câu {ans.questionId}: Đáp án hiện tại "{ans.studentAnswer || 'Không trả lời'}"
+                      {ans.isCorrect ? ' (Đúng)' : ' (Sai)'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Đáp án mới</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {['A', 'B', 'C', 'D'].map(opt => (
+                    <button
+                      key={opt}
+                      onClick={() => setOverrideNewAnswer(opt)}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        border: `1px solid ${overrideNewAnswer === opt ? '#7c3aed' : '#cbd5e1'}`,
+                        borderRadius: '6px',
+                        background: overrideNewAnswer === opt ? '#7c3aed' : '#fff',
+                        color: overrideNewAnswer === opt ? '#fff' : '#334155',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Lý do</label>
                 <input
-                  type="number"
-                  min={0}
-                  max={selectedSubmission.maxScore}
-                  step={0.5}
-                  value={overrideScore}
-                  onChange={(e) => setOverrideScore(e.target.value)}
+                  type="text"
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="Nhập lý do điều chỉnh"
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -862,19 +934,23 @@ export default function SubmissionsPage() {
                 className={styles.downloadBtn}
                 style={{ backgroundColor: '#7c3aed', color: '#ffffff' }}
                 onClick={async () => {
-                  const newScore = parseFloat(overrideScore);
-                  if (isNaN(newScore) || newScore < 0 || newScore > selectedSubmission.maxScore) {
-                    toast.error('Điểm không hợp lệ');
+                  if (!overrideQuestionId) {
+                    toast.error('Vui lòng chọn câu hỏi cần sửa');
+                    return;
+                  }
+                  if (!overrideNewAnswer) {
+                    toast.error('Vui lòng chọn đáp án mới');
                     return;
                   }
                   try {
-                    await apiService.patch(`/submissions/${selectedSubmission._id}/override`, {
-                      newScore,
-                      reason: 'Manual override by teacher',
+                    await apiService.post(`/submissions/${selectedSubmission._id}/override`, {
+                      position: parseInt(overrideQuestionId, 10),
+                      correctedAnswer: overrideNewAnswer,
+                      reason: overrideReason,
                     });
                     toast.success('Điều chỉnh điểm thành công');
                     setShowOverrideModal(false);
-                    fetchSubmissionsByExam(selectedSubmission.examId as string);
+                    fetchByExam(selectedSubmission.examId);
                     setSelectedSubmission(null);
                   } catch {
                     toast.error('Điều chỉnh điểm thất bại');

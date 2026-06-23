@@ -13,9 +13,18 @@ export interface BackendSubmission {
   };
   classId: string;
   versionCode: string;
-  answers: Record<string, string>;
+  answers: Array<{
+    position: number;
+    selectedAnswer: string | null;
+    isCorrect: boolean;
+    score: number;
+    maxScore: number;
+  }>;
   score?: number;
-  status: 'submitted' | 'graded' | 'reviewed';
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
+  status: 'scanned' | 'completed' | 'manual_review' | 'appealed';
   submittedAt: string;
   gradedAt?: string;
   gradingResult?: {
@@ -29,9 +38,6 @@ export interface BackendSubmission {
   };
   processingStatus?: 'pending' | 'processing' | 'completed' | 'failed';
   errorMessage?: string;
-  maxScore: number;
-  totalScore: number;
-  percentage: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -64,9 +70,18 @@ export interface Submission {
   studentEmail: string;
   className: string;
   versionCode: string;
-  answers: Record<string, string>;
+  answers: Array<{
+    position: number;
+    selectedAnswer: string | null;
+    isCorrect: boolean;
+    score: number;
+    maxScore: number;
+  }>;
   score?: number;
-  status: 'submitted' | 'graded' | 'reviewed';
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
+  status: 'scanned' | 'completed' | 'manual_review' | 'appealed';
   submittedAt: string;
   gradedAt?: string;
 }
