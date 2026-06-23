@@ -73,6 +73,12 @@ const submissionAnswerSchema = new mongoose.Schema({
   score: {
     type: Number,
     required: true,
+    default: 0,
+  },
+  maxScore: {
+    type: Number,
+    required: true,
+    default: 1,
   },
   omrData: omrDataSchema,
 });

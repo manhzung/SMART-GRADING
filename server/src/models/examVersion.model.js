@@ -84,6 +84,10 @@ const examVersionSchema = mongoose.Schema(
         type: String,
       },
     ],
+    templateJson: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
     isActive: {
       type: Boolean,
       default: true,

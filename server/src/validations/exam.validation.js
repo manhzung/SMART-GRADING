@@ -135,6 +135,15 @@ const validateGeneratePapers = {
   }),
 };
 
+const getExamTemplate = {
+  params: Joi.object({
+    id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+  }),
+  query: Joi.object({
+    versionCode: Joi.string().optional(),
+  }),
+};
+
 module.exports = {
   createExam,
   updateExam,
@@ -148,4 +157,5 @@ module.exports = {
   generateVersions,
   exportExam,
   validateGeneratePapers,
+  getExamTemplate,
 };

@@ -5,6 +5,7 @@ const exportService = require('../services/export.service');
 const PDFGenerator = require('../utils/pdfGenerator');
 const catchAsync = require('../utils/catchAsync');
 const amcService = require('../amc/amc.service');
+const ApiError = require('../utils/ApiError');
 
 const create = catchAsync(async (req, res) => {
   const exam = await examService.create({
@@ -341,6 +342,50 @@ const exportVersionsZip = catchAsync(async (req, res) => {
   archive.finalize();
 });
 
+const getExamTemplate = catchAsync(async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { versionCode } = req.query;
+
+    const { Exam, ExamVersion } = require('../models');
+
+    // Find the exam
+    const exam = await Exam.findById(id);
+    if (!exam) throw new ApiError(404, 'Exam not found');
+
+    // Find matching version
+    let version;
+    if (versionCode) {
+      version = await ExamVersion.findOne({ examId: id, versionCode });
+    } else {
+      version = await ExamVersion.findOne({ examId: id });
+    }
+
+    if (!version) throw new ApiError(404, 'ExamVersion not found');
+
+    // Convert Map answerKey to plain object if needed
+    let answerKeyObj = {};
+    if (version.answerKey) {
+      if (version.answerKey instanceof Map) {
+        answerKeyObj = Object.fromEntries(version.answerKey);
+      } else if (typeof version.answerKey === 'object') {
+        answerKeyObj = version.answerKey;
+      }
+    }
+
+    res.json({
+      template: version.templateJson || null,
+      examId: exam._id.toString(),
+      versionCode: version.versionCode,
+      answerKey: answerKeyObj,
+      totalScore: exam.totalScore,
+      numberOfQuestions: exam.numberOfQuestions,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = {
   create,
   getAll,
@@ -360,4 +405,5 @@ module.exports = {
   exportResults,
   remove,
   generatePapers,
+  getExamTemplate,
 };

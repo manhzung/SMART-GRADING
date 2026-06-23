@@ -75,4 +75,11 @@ router.post(
   examController.generatePapers
 );
 
+router.get(
+  '/:id/template',
+  auth(),
+  validate(examValidation.getExamTemplate),
+  examController.getExamTemplate
+);
+
 module.exports = router;
