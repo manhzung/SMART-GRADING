@@ -1,22 +1,22 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  Edit, 
-  Trash2, 
-  Printer, 
-  Copy, 
-  Radio, 
-  Info, 
-  Calendar, 
-  Clock, 
-  Timer, 
-  Star, 
-  Shield, 
-  BookOpen, 
-  Layers, 
-  ChevronLeft, 
-  ChevronRight, 
-  X, 
+import {
+  Edit,
+  Trash2,
+  Printer,
+  Copy,
+  Radio,
+  Info,
+  Calendar,
+  Clock,
+  Timer,
+  Star,
+  Shield,
+  BookOpen,
+  Layers,
+  ChevronLeft,
+  ChevronRight,
+  X,
   ChevronDown,
   ChevronUp,
   CheckCircle2,
@@ -25,7 +25,13 @@ import {
   MoreVertical,
   Check,
   Settings,
-  FileDown
+  FileDown,
+  AlertTriangle,
+  Loader2,
+  Cpu,
+  RefreshCw,
+  CheckCircle,
+  Download,
 } from 'lucide-react';
 import { useExamStore } from '../presentation/store/examStore';
 import { useSubmissionStore } from '../presentation/store/submissionStore';
@@ -55,6 +61,8 @@ export default function ExamDetailPage() {
     exportExamPdf,
     exportVersionPdf,
     exportResults,
+    generatePapers,
+    isCompiling,
   } = useExamStore();
 
   const {
@@ -70,6 +78,7 @@ export default function ExamDetailPage() {
   const [isCompleting, setIsCompleting] = useState(false);
   const [currentQuestionPage, setCurrentQuestionPage] = useState(1);
   const questionsPerPage = 3;
+  const [isCompileModalOpen, setIsCompileModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -143,6 +152,28 @@ export default function ExamDetailPage() {
     }
   };
 
+  const getEngineBadge = (engine: string) => {
+    return (
+      <span className={`${styles.engineBadge} ${styles.engineBadgeAMC}`}>
+        <Cpu size={9} />
+        AMC
+      </span>
+    );
+  };
+
+  const getVersionStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Đã sinh PDF':
+        return <span className={`${styles.statusBadgeAMC} ${styles.statusReady}`}><CheckCircle2 size={10} />Đã sinh</span>;
+      case 'Chưa sinh':
+        return <span className={`${styles.statusBadgeAMC} ${styles.statusPending}`}>Chưa sinh</span>;
+      case 'Lỗi':
+        return <span className={`${styles.statusBadgeAMC} ${styles.statusError}`}><AlertTriangle size={10} />Lỗi</span>;
+      default:
+        return <span className={`${styles.statusBadgeAMC} ${styles.statusReady}`}><CheckCircle2 size={10} />{status}</span>;
+    }
+  };
+
   const handlePublish = async () => {
     if (!id) return;
     if (window.confirm('Bạn có chắc chắn muốn xuất bản đề thi này? Học sinh sẽ có thể xem thông tin bài thi.')) {
@@ -187,12 +218,53 @@ export default function ExamDetailPage() {
     }
   };
 
+  const handleCompile = async (forceRegenerate: boolean) => {
+    if (!id) return;
+    try {
+      await generatePapers(id, { forceRegenerate });
+      await fetchExamVersions(id);
+      setIsCompileModalOpen(false);
+      alert('Compile hoàn tất! Kiểm tra trạng thái các mã đề bên dưới.');
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi compile: ' + err.message);
+    }
+  };
+
   const handleExportPdf = async () => {
     if (!id) return;
     try {
       await exportExamPdf(id);
     } catch (err: any) {
       alert(err.message || 'Lỗi khi xuất đề thi');
+    }
+  };
+
+  const handleDownloadPdf = async (pdfUrl: string | null | undefined, filename: string) => {
+    if (!pdfUrl) return;
+
+    // Cloudinary (or any absolute http URL): open directly in new tab
+    if (/^https?:\/\//i.test(pdfUrl)) {
+      window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Local server path: fetch with auth header, then trigger browser download
+    try {
+      const token = localStorage.getItem('token') || '';
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${apiBase}${pdfUrl}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Tải thất bại');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi tải file');
     }
   };
 
@@ -287,9 +359,10 @@ export default function ExamDetailPage() {
   };
 
   return (
-    <div className={styles.container}>
-      {/* Breadcrumbs */}
-      <nav className={styles.breadcrumb}>
+    <Fragment>
+      <div className={styles.container}>
+        {/* Breadcrumbs */}
+        <nav className={styles.breadcrumb}>
         <Link to="/exams" className={styles.breadcrumbLink}>Quản lý bài kiểm tra</Link>
         <span className={styles.breadcrumbSeparator}>&gt;</span>
         <span className={styles.breadcrumbActive}>{examData.title}</span>
@@ -682,52 +755,153 @@ export default function ExamDetailPage() {
       {/* Section: Phiên bản đề thi */}
       <div className={styles.sectionCard}>
         <div className={styles.card}>
-          <div className={styles.cardHeader}>
+          <div className={styles.amcHeader}>
             <div className={styles.headerTitle}>
               <h2>Phiên bản đề thi</h2>
             </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                className={styles.btnSolidCompact}
+                onClick={() => setIsCompileModalOpen(true)}
+                disabled={isCompiling || examData.versions.length === 0}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                {isCompiling ? (
+                  <>
+                    <span className={styles.compilingSpinner} />
+                    Đang compile...
+                  </>
+                ) : (
+                  <>
+                    <Cpu size={13} />
+                    Compile AMC
+                  </>
+                )}
+              </button>
+              <button className={styles.btnOutlineCompact} onClick={handleGenerateVersions} disabled={isGeneratingVersions}>
+                <Copy size={13} style={{ marginRight: '4px' }} />
+                {isGeneratingVersions ? 'Đang sinh...' : 'Sinh mã đề'}
+              </button>
+            </div>
           </div>
-          
-          <div className={styles.versionsGrid}>
-            {examData.versions.length === 0 ? (
-              <p style={{ color: '#999', textAlign: 'center', padding: '32px', gridColumn: '1 / -1' }}>
-                Chưa có phiên bản đề thi nào.
-              </p>
-            ) : (
-              examData.versions.map((ver, idx) => (
-              <div key={idx} className={styles.versionCard}>
-                <div className={styles.verCardHeader}>
-                  <span className={styles.verCardTitle}>MÃ ĐỀ: {ver.code}</span>
-                  <div className={styles.checkIconWrapper}>
-                    <Check size={12} strokeWidth={3} />
-                  </div>
-                </div>
-                
-                <div className={styles.verCardBody}>
-                  <div className={styles.verField}>
-                    <span className={styles.verLabel}>Trạng thái:</span>
-                    <span className={styles.verValueActive}>{ver.status}</span>
-                  </div>
-                  <div className={styles.verField}>
-                    <span className={styles.verLabel}>Cập nhật:</span>
-                    <span className={styles.verValue}>{ver.updatedAt}</span>
-                  </div>
-                </div>
 
-                <div className={styles.verCardFooter}>
-                  <button className={styles.verActionBtn} onClick={() => handleVersionDownload(ver.code)}>
-                    <FileText size={14} />
-                    <span>Đề thi</span>
-                  </button>
-                  <button className={styles.verActionBtn} onClick={() => handleExportResults()}>
-                    <Key size={14} />
-                    <span>Đáp án</span>
-                  </button>
-                </div>
-              </div>
-            ))
-            )}
-          </div>
+          {examData.versions.length === 0 ? (
+            <p style={{ color: '#999', textAlign: 'center', padding: '32px', gridColumn: '1 / -1' }}>
+              Chưa có phiên bản đề thi nào. Nhấn "Sinh mã đề" để tạo.
+            </p>
+          ) : (
+            <div className={styles.versionsGrid}>
+              {examData.versions.map((ver) => {
+                const hasErrors = ver.hasErrors;
+                return (
+                  <div
+                    key={ver.code}
+                    className={`${styles.versionCard} ${hasErrors ? styles.versionCardWithError : ''}`}
+                  >
+                    <div className={styles.verCardHeader}>
+                      <span className={styles.verCardTitle}>MÃ ĐỀ: {ver.code}</span>
+                      {ver.status === 'Đã sinh PDF' && (
+                        <div className={styles.checkIconWrapper}>
+                          <Check size={12} strokeWidth={3} />
+                        </div>
+                      )}
+                      {ver.status === 'Chưa sinh' && (
+                        <div style={{ width: 18, height: 18 }} />
+                      )}
+                    </div>
+
+                    <div className={styles.verCardBody}>
+                      <div className={styles.verField}>
+                        <span className={styles.verLabel}>Trạng thái:</span>
+                        {getVersionStatusBadge(ver.status)}
+                      </div>
+                      <div className={styles.verField}>
+                        <span className={styles.verLabel}>Engine:</span>
+                        <div className={styles.versionBadges}>
+                          {getEngineBadge(ver.engine)}
+                        </div>
+                      </div>
+                      <div className={styles.verField}>
+                        <span className={styles.verLabel}>Cập nhật:</span>
+                        <span className={styles.verValue}>{ver.updatedAt}</span>
+                      </div>
+                      {ver.generatedAt && (
+                        <div className={styles.verField}>
+                          <span className={styles.verLabel}>Đã compile:</span>
+                          <span className={styles.verValue}>{ver.generatedAt}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.versionAmcRow}>
+                      <div className={styles.versionBadges}>
+                        {ver.templateReady ? (
+                          <span className={`${styles.templateBadge} ${styles.templateReady}`}>
+                            Coords: Ready
+                          </span>
+                        ) : (
+                          <span className={`${styles.templateBadge} ${styles.templatePlaceholder}`}>
+                            Coords: Placeholder
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {hasErrors && ver.errors.length > 0 && (
+                      <div className={styles.versionErrors}>
+                        <AlertTriangle size={13} />
+                        <span>{ver.errors[0]}</span>
+                      </div>
+                    )}
+
+                    <div className={styles.versionCardActions}>
+                      {ver.pdfUrl ? (
+                        <>
+                          <button
+                            className={styles.verCompileBtn}
+                            onClick={() => handleCompile(true)}
+                            disabled={isCompiling}
+                            title="Compile lại"
+                          >
+                            <RefreshCw size={11} />
+                            Compile lại
+                          </button>
+                          <button
+                            className={styles.verRecompileBtn}
+                            onClick={() => handleDownloadPdf(ver.pdfUrl, `De_${ver.code}.pdf`)}
+                            title="Tải đề thi"
+                          >
+                            <Download size={11} />
+                            Tải đề
+                          </button>
+                          {ver.answerSheetPdfUrl && (
+                            <button
+                              className={styles.verRecompileBtn}
+                              onClick={() => handleDownloadPdf(ver.answerSheetPdfUrl, `Phieu_TL_${ver.code}.pdf`)}
+                              title="Tải phiếu trả lời OMR"
+                            >
+                              <FileDown size={11} />
+                              Tải phiếu
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          className={styles.verCompileBtn}
+                          onClick={() => handleCompile(false)}
+                          disabled={isCompiling}
+                          title="Compile với AMC"
+                        >
+                          <Cpu size={11} />
+                          Compile AMC
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -912,7 +1086,95 @@ export default function ExamDetailPage() {
           </div>
         </div>
       </div>
+      </div>
 
+      {/* ── Compile AMC Modal ── */}
+      {isCompileModalOpen && (
+        <CompileModal
+          examId={id || ''}
+          onClose={() => setIsCompileModalOpen(false)}
+          onCompile={handleCompile}
+          isCompiling={isCompiling}
+        />
+      )}
+    </Fragment>
+  );
+}
+
+function CompileModal({
+  examId,
+  onClose,
+  onCompile,
+  isCompiling,
+}: {
+  examId: string;
+  onClose: () => void;
+  onCompile: (force: boolean) => void;
+  isCompiling: boolean;
+}) {
+  const [forceRegenerate, setForceRegenerate] = useState(false);
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitle}>Compile đề thi với AMC</h3>
+          <button className={styles.modalClose} onClick={onClose} disabled={isCompiling}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className={styles.modalBody}>
+          <div className={styles.engineOptions}>
+            <div className={styles.engineOption} style={{ cursor: 'default' }}>
+              <div className={styles.engineOptionLabel}>
+                <span className={styles.engineOptionName}>AMC (LaTeX)</span>
+                <span className={styles.engineOptionDesc}>Sinh đề chuẩn OMR với WSL2</span>
+              </div>
+            </div>
+          </div>
+
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={forceRegenerate}
+              onChange={(e) => setForceRegenerate(e.target.checked)}
+              disabled={isCompiling}
+            />
+            <span>Buộc tạo lại (xóa PDF cũ)</span>
+          </label>
+
+          <div className={styles.modalWarning}>
+            <AlertTriangle size={14} />
+            <span>
+              Quá trình compile có thể mất 1–3 phút tùy số lượng mã đề. Vui lòng không đóng cửa sổ này trong khi đang xử lý.
+            </span>
+          </div>
+        </div>
+
+        <div className={styles.modalFooter}>
+          <button className={styles.btnCancel} onClick={onClose} disabled={isCompiling}>
+            Hủy
+          </button>
+          <button
+            className={styles.btnCompile}
+            onClick={() => onCompile(forceRegenerate)}
+            disabled={isCompiling}
+          >
+            {isCompiling ? (
+              <>
+                <span className={styles.compilingSpinner} />
+                Đang compile...
+              </>
+            ) : (
+              <>
+                <Cpu size={14} />
+                Bắt đầu Compile
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

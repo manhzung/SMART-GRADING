@@ -45,7 +45,18 @@ export interface ExamDetailData {
   subjectName?: string;
   classes: Array<{ _id: string; name: string; description: string; studentCount: number; isPrimary: boolean }>;
   questions: Array<{ stt: string; content: string; correctAnswer: string; difficulty: 'easy' | 'medium' | 'hard'; score: number; type: string }>;
-  versions: Array<{ code: string; status: string; updatedAt: string }>;
+  versions: Array<{
+    code: string;
+    status: string;
+    updatedAt: string;
+    engine: 'amc';
+    pdfUrl: string | null;
+    answerSheetPdfUrl: string | null;
+    generatedAt: string | null;
+    hasErrors: boolean;
+    errors: string[];
+    templateReady: boolean;
+  }>;
   history: Array<{ action: string; timestamp: string; user: string; type: 'edit' | 'class' | 'create' }>;
 }
 
@@ -147,11 +158,32 @@ export function mapExamDetailData(exam: Exam | null, versions: ExamVersion[]): E
     subjectName: typeof exam.subjectId === 'object' ? (exam.subjectId as any)?.name : '',
     classes: mappedClasses,
     questions: mappedQuestions,
-    versions: versions.map((version) => ({
-      code: version.versionCode,
-      status: 'Sẵn sàng',
-      updatedAt: formatDate(version.createdAt),
-    })),
+    versions: versions.map((version) => {
+      const hasErrors = (version.generationErrors?.length ?? 0) > 0;
+      const pdfReady = !!version.pdfUrl;
+      let status = 'Sẵn sàng';
+      if (hasErrors) status = 'Lỗi';
+      else if (pdfReady) status = 'Đã sinh PDF';
+      else status = 'Chưa sinh';
+
+      const templateReady = !!(
+        version.templateJson &&
+        (version.templateJson as any)?.studentId?.coords?.length > 0
+      );
+
+      return {
+        code: version.versionCode,
+        status,
+        updatedAt: formatDate(version.createdAt),
+        engine: 'amc',
+        pdfUrl: version.pdfUrl || null,
+        answerSheetPdfUrl: version.answerSheetPdfUrl || null,
+        generatedAt: version.generatedAt ? formatDate(version.generatedAt) : null,
+        hasErrors,
+        errors: version.generationErrors || [],
+        templateReady,
+      };
+    }),
     history: [],
   };
 }
