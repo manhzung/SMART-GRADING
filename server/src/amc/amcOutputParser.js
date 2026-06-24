@@ -12,9 +12,10 @@ class AmcOutputParser {
    * @param {string} stderr - AMC stderr
    * @param {string[]} pdfPaths - Array of generated PDF paths
    * @param {number} numVersions - Expected number of versions
+   * @param {string} csvContent - Optional CSV content for version codes
    * @returns {AmcOutput}
    */
-  parse(stdout, stderr, pdfPaths, numVersions) {
+  parse(stdout, stderr, pdfPaths, versionCodes) {
     const errors = [];
 
     // Extract errors from stderr
@@ -29,8 +30,19 @@ class AmcOutputParser {
       line.includes('LaTeX Warning') && !line.includes('file')
     );
 
+    // Support both legacy (number) and new (string[]) formats
+    const isLegacyCall = typeof versionCodes === 'number';
+    const numVersions = isLegacyCall ? versionCodes : (Array.isArray(versionCodes) ? versionCodes.length : 0);
+
     const parsedPdfs = pdfPaths.map((pdfPath, index) => {
-      const versionCode = (101 + index).toString();
+      let versionCode;
+      if (Array.isArray(versionCodes) && versionCodes[index] !== undefined) {
+        versionCode = versionCodes[index];
+      } else if (isLegacyCall) {
+        versionCode = (101 + index).toString();
+      } else {
+        versionCode = (index + 1).toString();
+      }
       return {
         versionCode,
         pdfPath,

@@ -20,10 +20,12 @@ class AmcCompilerService {
     const {
       examId,
       examData,
-      numVersions,
+      versionCodes,
       outputDir,
       timeoutSeconds = 120,
     } = options;
+
+    const numVersions = versionCodes.length;
 
     // Ensure output dir exists
     if (!fs.existsSync(outputDir)) {
@@ -58,26 +60,50 @@ class AmcCompilerService {
       // Step 2: Create WSL2 project
       await amcRunner.createProject(projectDir, texSource);
 
-      // Step 3: Backend scan
-      await amcRunner.backendScan(projectDir);
+      // Step 3: AMC prepare --mode s: creates amc-compiled.pdf (subject) + exam-data/report.sqlite
+      // Use --mode s with --prefix to set output location
+      await amcRunner.amcPrepare(projectDir);
 
-      // Step 4: Compile versions
-      const compileResult = await amcRunner.compileVersions(
+      // Step 4: AMC print - generates N copy PDFs
+      const printResult = await amcRunner.amcPrint(
         projectDir,
         numVersions,
         timeoutSeconds
       );
 
-      // Step 5: Export PDFs
-      const pdfPaths = await amcRunner.exportPdfs(projectDir, outputDir, numVersions);
+      // Step 5: Export PDFs from WSL to Windows output dir
+      const pdfPaths = [];
+      for (let i = 0; i < printResult.outputFiles.length; i++) {
+        const wslPdfPath = printResult.outputFiles[i];
+        const pdfBasename = `v${i + 1}.pdf`;
+        const winPdfPath = path.join(outputDir, pdfBasename);
+        const wslWinPdfPath = amcRunner._toWslPath(winPdfPath);
 
-      // Step 6: Parse output
+        const copyResult = await amcRunner.wslExec(
+          `cp '${wslPdfPath}' '${wslWinPdfPath}'`
+        );
+
+        if (copyResult.exitCode === 0) {
+          pdfPaths.push(winPdfPath);
+        }
+      }
+
+      // Step 6: Export AMC CSV for OMR coordinates
+      await amcRunner.exportCsv(projectDir, outputDir);
+
+      // Step 7: Parse output (zip with what we have)
       const parseResult = amcOutputParser.parse(
-        compileResult.output || '',
+        `Generated ${pdfPaths.length} copies`,
         '',
         pdfPaths,
-        numVersions
+        versionCodes
       );
+
+      // Apply actual version codes from request
+      parseResult.versionPdfs.forEach((vp, i) => {
+        vp.versionCode = versionCodes[i] || vp.versionCode;
+      });
+
       parseResult.compilationTime = Date.now() - startTime;
 
       // Step 7: Validate PDFs

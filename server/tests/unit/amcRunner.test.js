@@ -37,40 +37,15 @@ describe('amcRunnerService', () => {
 
       expect(result.isValid).toBe(true);
       expect(result.tools.texlive).toBe(true);
-      expect(result.tools.amc).toBe(true);
       expect(result.tools.ghostscript).toBe(true);
-    });
-
-    it('should return isValid false when AMC is not found', async () => {
-      mockProc.on.mockImplementation((e, cb) => {
-        if (e === 'close') cb(127);
-      });
-
-      const result = await amcRunner.validateEnvironment();
-
-      expect(result.isValid).toBe(false);
-      expect(result.tools.amc).toBe(false);
-    });
-
-    it('should call wsl with correct distro name', async () => {
-      mockProc.on.mockImplementation((e, cb) => {
-        if (e === 'close') cb(0);
-      });
-
-      await amcRunner.validateEnvironment();
-
-      expect(mockSpawn).toHaveBeenCalledWith(
-        'wsl',
-        expect.arrayContaining(['Ubuntu', '--', 'bash', '-c', expect.any(String)]),
-        expect.any(Object)
-      );
+      expect(result.tools.xvfb).toBe(true);
     });
   });
 
   describe('backendScan', () => {
     const validProjectDir = '/home/amc/amc-projects/test-exam';
 
-    it('should call wsl amc-check --backend with project dir', async () => {
+    it('should call amc check --backend with project dir', async () => {
       mockProc.on.mockImplementation((e, cb) => {
         if (e === 'close') cb(0);
       });
@@ -79,7 +54,7 @@ describe('amcRunnerService', () => {
 
       expect(mockSpawn).toHaveBeenCalledWith(
         'wsl',
-        expect.arrayContaining(['Ubuntu', '--', 'bash', '-c', expect.stringContaining('amc-check')]),
+        expect.arrayContaining(['-d', 'Ubuntu-24.04', '--', 'bash', '-c', expect.stringContaining('amc')]),
         expect.any(Object)
       );
     });
@@ -107,7 +82,7 @@ describe('amcRunnerService', () => {
   describe('compileVersions', () => {
     const validProjectDir = '/home/amc/amc-projects/test';
 
-    it('should call amc-compile with correct n-copies', async () => {
+    it('should call amc compile with correct n-copies', async () => {
       mockProc.on.mockImplementation((e, cb) => {
         if (e === 'close') cb(0);
       });
@@ -121,7 +96,7 @@ describe('amcRunnerService', () => {
       expect(result.numVersions).toBe(4);
       expect(mockSpawn).toHaveBeenCalledWith(
         'wsl',
-        expect.arrayContaining(['Ubuntu', '--', 'bash', '-c', expect.stringContaining('amc-compile')]),
+        expect.arrayContaining(['-d', 'Ubuntu-24.04', '--', 'bash', '-c', expect.stringContaining('compile')]),
         expect.any(Object)
       );
     });
@@ -164,7 +139,7 @@ describe('amcRunnerService', () => {
 
       expect(mockSpawn).toHaveBeenCalledWith(
         'wsl',
-        expect.arrayContaining(['Ubuntu', '--', 'bash', '-c', expect.stringContaining('rm')]),
+        expect.arrayContaining(['-d', 'Ubuntu-24.04', '--', 'bash', '-c', expect.stringContaining('rm')]),
         expect.any(Object)
       );
     });

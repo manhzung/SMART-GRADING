@@ -14,6 +14,15 @@ const buildFolder = (examId, submissionId, type) => {
 };
 
 /**
+ * Build the canonical Cloudinary folder for exam PDFs (de thi + answer sheet).
+ * Pattern: exams/{examId}/pdfs
+ */
+const buildExamFolder = (examId) => {
+  const safeExam = String(examId).replace(/[^a-zA-Z0-9_-]/g, '');
+  return `exams/${safeExam}/pdfs`;
+};
+
+/**
  * Extract the publicId from a Cloudinary delivery URL.
  * Supports both versioned (v1234/) and unversioned URLs.
  * Returns null if the URL is not a Cloudinary URL.
@@ -45,6 +54,7 @@ const assertIsCloudinaryUrl = (url, cloudName) => {
 
 module.exports = {
   buildFolder,
+  buildExamFolder,
   extractPublicIdFromUrl,
   assertIsCloudinaryUrl,
 };

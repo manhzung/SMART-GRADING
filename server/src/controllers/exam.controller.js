@@ -1,6 +1,7 @@
 const httpStatus = require('http-status');
 const archiver = require('archiver');
 const examService = require('../services/exam.service');
+const examPaperService = require('../services/examPaper.service');
 const exportService = require('../services/export.service');
 const PDFGenerator = require('../utils/pdfGenerator');
 const catchAsync = require('../utils/catchAsync');
@@ -129,6 +130,7 @@ const exportExamPDF = catchAsync(async (req, res) => {
   );
 
   const docStream = pdfGen.generate();
+  pdfGen.end();
   docStream.on('error', (err) => {
     console.error('PDF stream error (exportExamPDF):', err.message);
     if (!res.headersSent) {
@@ -141,50 +143,70 @@ const exportExamPDF = catchAsync(async (req, res) => {
 const exportVersionPDF = catchAsync(async (req, res) => {
   const { versionCode } = req.params;
 
-  let version;
+  const { ExamVersion } = require('../models');
+  const version = await ExamVersion.findOne({ examId: req.params.id, versionCode });
+  if (!version) {
+    return res.status(404).send({ message: 'Phiên bản đề thi không tồn tại' });
+  }
+
+    // Serve pre-generated AMC PDF if available
+  if (version.pdfUrl) {
+    const fs = require('fs');
+    const path = require('path');
+    // Resolve: server/src/controllers → server → server/uploads/amc/<examId>/v1.pdf
+    const filePath = path.join(__dirname, '../../../uploads/amc', req.params.id, path.basename(version.pdfUrl));
+    if (fs.existsSync(filePath)) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="De_${versionCode}.pdf"`);
+      return fs.createReadStream(filePath).pipe(res);
+    }
+  }
+
+  let data;
   try {
-    const data = await examService.exportVersionPDF(req.params.id, versionCode);
-    version = data.version;
+    data = await examService.exportVersionPDF(req.params.id, versionCode);
   } catch (err) {
     return res.status(400).send({ message: err.message || 'Không thể xuất phiên bản đề thi' });
   }
 
-  if (!version || !version.questions) {
-    return res.status(400).send({ message: 'Phiên bản đề thi không có câu hỏi hoặc không tồn tại' });
+  const versionData = data.version;
+  if (!versionData || !versionData.questions) {
+    return res.status(400).send({ message: 'Phiên bản đề thi không có câu hỏi' });
   }
 
   const pdfGen = new PDFGenerator({
-    title: `${version.title} - Mã đề ${version.versionCode}`,
+    title: `${versionData.title} - Mã đề ${versionData.versionCode}`,
   });
-  pdfGen.addHeader({ ...version, schoolName: version.schoolName, title: version.title });
-  pdfGen.addMetadata(version);
+  pdfGen.addHeader({ ...versionData, schoolName: versionData.schoolName, title: versionData.title });
+  pdfGen.addMetadata(versionData);
   pdfGen.addHorizontalLine();
   pdfGen.addStudentInfoBlock();
   pdfGen.addInstructions();
   pdfGen.addHorizontalLine();
   pdfGen.currentY += 10;
 
-  version.questions.forEach((q, idx) => {
+  versionData.questions.forEach((q, idx) => {
     pdfGen.addQuestion(q, idx);
   });
 
   const printConfig = data.printConfig || {};
   if (printConfig.includeAnswerSheet !== false) {
     pdfGen.addOMRSheet({
-      questions: version.questions,
-      versionCode: version.versionCode,
-      totalScore: version.totalScore,
-      examTitle: version.title,
+      questions: versionData.questions,
+      versionCode: versionData.versionCode,
+      totalScore: versionData.totalScore,
+      examTitle: versionData.title,
     });
   }
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename="${(version.title || 'exam').replace(/[^a-zA-Z0-9\u00C0-\u024F]/g, '_')}_${version.versionCode}.pdf"`
+    `attachment; filename="${(versionData.title || 'exam').replace(/[^a-zA-Z0-9\u00C0-\u024F]/g, '_')}_${versionData.versionCode}.pdf"`
   );
 
   const docStream = pdfGen.generate();
+  pdfGen.end();
   docStream.on('error', (err) => {
     console.error('PDF stream error (exportVersionPDF):', err.message);
     if (!res.headersSent) {
@@ -228,40 +250,16 @@ const remove = catchAsync(async (req, res) => {
 const generatePapers = catchAsync(async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { paperEngine, forceRegenerate } = req.body;
 
-    const { ExamVersion } = require('../models');
-    const ApiError = require('../utils/ApiError');
-
-    const versions = await ExamVersion.find({ examId: id }).select('versionCode pdfUrl');
-    const versionCodes = versions.map((v) => v.versionCode);
-
-    if (versionCodes.length === 0) {
-      throw new ApiError(400, 'No exam versions found. Generate versions first.');
+    const exam = await examService.getById(id);
+    if (!exam) {
+      throw new ApiError(404, 'Exam not found');
+    }
+    if (!exam.questionIds || exam.questionIds.length === 0) {
+      throw new ApiError(400, 'Exam must have at least one question');
     }
 
-    if (forceRegenerate) {
-      await ExamVersion.updateMany({ examId: id }, { $set: { pdfUrl: null, answerSheetPdfUrl: null } });
-    }
-
-    let engine = paperEngine || 'auto';
-    if (engine === 'auto') {
-      const amcAvailable = await amcService.isAvailable();
-      engine = amcAvailable ? 'amc' : 'pdfkit';
-    }
-
-    let result;
-    if (engine === 'amc') {
-      result = await amcService.generateExamPapers(id, versionCodes);
-    } else {
-      result = {
-        success: false,
-        engine: 'pdfkit',
-        fallback: false,
-        message: 'PDFKit generation not implemented in this route — use AMC',
-      };
-    }
-
+    const result = await examPaperService.generateAllPapers(id);
     res.json(result);
   } catch (err) {
     next(err);
@@ -326,6 +324,7 @@ const exportVersionsZip = catchAsync(async (req, res) => {
       }
 
       const doc = pdfGen.generate();
+      pdfGen.end();
       const chunks = [];
       for await (const chunk of doc) {
         chunks.push(chunk);

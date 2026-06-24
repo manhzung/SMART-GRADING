@@ -68,8 +68,6 @@ class AmcService {
       score: q.score || 1,
     }));
 
-    const numVersions = versionCodes.length;
-
     // Run compilation
     const result = await amcCompiler.compile({
       examId: examId.toString(),
@@ -85,7 +83,7 @@ class AmcService {
         schoolHeader: exam.schoolHeader || '',
         shuffleConfig: exam.shuffleConfig,
       },
-      numVersions,
+      versionCodes,
       outputDir,
       timeoutSeconds,
     });
@@ -106,10 +104,17 @@ class AmcService {
         await examVersion.save();
 
         // Generate template JSON for this version
-        const parser = new amcCsvParser();
+        const CsvParser = require('./amcCsvParser');
         const bridge = new amcTemplateBridge();
 
-        const csvData = parser.parse(''); // Empty for now, coords come from AMC CSV
+        const csvPath = path.join(outputDir, 'exam-answers.csv');
+        let csvContent = '';
+        if (fs.existsSync(csvPath)) {
+          csvContent = fs.readFileSync(csvPath, 'utf8');
+        }
+
+        const parser = new CsvParser();
+        const csvData = parser.parse(csvContent);
         const answerKey = {};
         const questionScores = {};
         (examVersion.questions || []).forEach((q, idx) => {
@@ -127,6 +132,8 @@ class AmcService {
             totalScore: exam.totalScore,
             questionIds: examVersion.questions,
           },
+          paperSize: exam.printConfig?.paperSize || 'A4',
+          scanDpi: exam.printConfig?.scanDpi || 300,
         });
 
         await ExamVersion.updateOne(

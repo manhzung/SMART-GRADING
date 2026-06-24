@@ -102,6 +102,43 @@ class CloudinaryService {
     );
   }
 
+  /**
+   * Upload a PDF file (or any raw/non-image file) to Cloudinary.
+   * Uses resource_type: 'raw' which is required for PDFs.
+   *
+   * @param {Buffer|string} input - PDF buffer or path/URL
+   * @param {Object} options
+   * @param {string} options.folder - Cloudinary folder path (e.g. 'exams/abc123')
+   * @param {string} options.publicId - Public ID for the file
+   * @returns {Promise<Object>} Upload result
+   */
+  async uploadPdf(input, options) {
+    this._ensureConfigured();
+    let attempt = 0;
+    let lastErr;
+    while (attempt <= MAX_RETRIES) {
+      try {
+        const result = await cloudinary.uploader.upload(input, {
+          folder: options.folder,
+          public_id: options.publicId,
+          overwrite: true,
+          resource_type: 'raw',
+          format: 'pdf',
+        });
+        return this._mapUploadResult(result);
+      } catch (err) {
+        lastErr = err;
+        if (!isTransient(err) || attempt === MAX_RETRIES) break;
+        await sleep(RETRY_DELAY_MS * (attempt + 1));
+        attempt += 1;
+      }
+    }
+    throw new CloudinaryError(
+      `Cloudinary PDF upload failed: ${lastErr?.message || 'unknown'}`,
+      lastErr?.http_code
+    );
+  }
+
   async uploadBase64(dataUri, options) {
     this._ensureConfigured();
     const stripped = dataUri.replace(/^data:[^;]+;base64,/, '');
