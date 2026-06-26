@@ -234,6 +234,7 @@ class OmrEngineService {
   }
   
   /// Create field blocks for Student ID from templateJson
+  /// Each digit is a separate block with 10 values (0-9)
   List<AppOmrFieldBlock> _createStudentIdBlocks(
     Map<String, dynamic>? templateJson,
     StudentIdField? studentIdField,
@@ -246,13 +247,41 @@ class OmrEngineService {
     final coords = studentId['coords'] as List<dynamic>?;
     if (coords == null || coords.isEmpty) return [];
     
-    // Parse all coords into AppBubbleCoord list
-    final allCoords = <AppBubbleCoord>[];
+    // Parse all coords
+    final allCoords = <Map<String, dynamic>>[];
     for (final c in coords) {
       if (c is Map) {
-        final coord = Map<String, dynamic>.from(c);
-        allCoords.add(AppBubbleCoord(
-          label: 'student_code',
+        allCoords.add(Map<String, dynamic>.from(c));
+      }
+    }
+    
+    if (allCoords.isEmpty) return [];
+    
+    // Group coords by x coordinate (each digit has its own x)
+    final coordsByX = <int, List<Map<String, dynamic>>>{};
+    for (final coord in allCoords) {
+      final x = (coord['x'] as num?)?.toInt() ?? 0;
+      coordsByX.putIfAbsent(x, () => []).add(coord);
+    }
+    
+    // Sort x values to get digit order (left to right)
+    final sortedXValues = coordsByX.keys.toList()..sort();
+    
+    final fieldBlocks = <AppOmrFieldBlock>[];
+    
+    for (int digitIndex = 0; digitIndex < sortedXValues.length; digitIndex++) {
+      final x = sortedXValues[digitIndex];
+      final digitCoords = coordsByX[x]!;
+      
+      // Sort by y to get value order (top to bottom: 1, 2, 3, ... 10)
+      digitCoords.sort((a, b) => ((a['y'] as num?)?.toInt() ?? 0)
+          .compareTo((b['y'] as num?)?.toInt() ?? 0));
+      
+      // Create bubble coords for this digit
+      final bubbleCoords = <AppBubbleCoord>[];
+      for (final coord in digitCoords) {
+        bubbleCoords.add(AppBubbleCoord(
+          label: 'sbd${digitIndex + 1}',
           value: (coord['value'] ?? 0).toString(),
           x: (coord['x'] as num?)?.toInt() ?? 0,
           y: (coord['y'] as num?)?.toInt() ?? 0,
@@ -260,46 +289,33 @@ class OmrEngineService {
           h: (coord['h'] as num?)?.toInt() ?? 46,
         ));
       }
-    }
-    
-    if (allCoords.isEmpty) return [];
-    
-    // Sort by x then y to get proper layout
-    allCoords.sort((a, b) {
-      final xDiff = a.x.compareTo(b.x);
-      if (xDiff != 0) return xDiff;
-      return a.y.compareTo(b.y);
-    });
-    
-    // Find spacing from coords
-    int xGap = 46;
-    int yGap = 71;
-    if (allCoords.length >= 2) {
-      // Check if same x (vertical stack) or same y (horizontal row)
-      if (allCoords[0].x == allCoords[1].x) {
-        yGap = allCoords[1].y - allCoords[0].y;
-      } else {
-        xGap = allCoords[1].x - allCoords[0].x;
+      
+      if (bubbleCoords.isNotEmpty) {
+        // Find y gap between values (vertical spacing)
+        int yGap = 71;
+        if (bubbleCoords.length >= 2) {
+          yGap = bubbleCoords[1].y - bubbleCoords[0].y;
+        }
+        
+        fieldBlocks.add(AppOmrFieldBlock(
+          name: 'student_code',
+          originX: bubbleCoords.first.x,
+          originY: bubbleCoords.first.y,
+          shift: 0,
+          bubbleWidth: bubbleCoords.first.w,
+          bubbleHeight: bubbleCoords.first.h,
+          fieldLabels: ['sbd${digitIndex + 1}'],
+          bubbleValues: List.generate(10, (i) => i.toString()),
+          bubblesGap: yGap.toDouble(),
+          labelsGap: 0,
+          direction: 'vertical',
+          emptyValue: '',
+          exactCoords: bubbleCoords,
+        ));
       }
     }
     
-    return [
-      AppOmrFieldBlock(
-        name: 'student_code',
-        originX: allCoords.first.x,
-        originY: allCoords.first.y,
-        shift: 0,
-        bubbleWidth: allCoords.first.w,
-        bubbleHeight: allCoords.first.h,
-        fieldLabels: List.generate(allCoords.length, (i) => 'roll$i'),
-        bubbleValues: List.generate(10, (i) => i.toString()),
-        bubblesGap: yGap.toDouble(),
-        labelsGap: xGap.toDouble(),
-        direction: 'vertical',
-        emptyValue: '',
-        exactCoords: allCoords,
-      ),
-    ];
+    return fieldBlocks;
   }
   
   /// Create field blocks for Version Code from templateJson
