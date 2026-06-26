@@ -23,8 +23,7 @@ export default function SchoolDashboard() {
 
   useEffect(() => {
     fetchStats(userSchoolId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchStats]);
+  }, [fetchStats, userSchoolId]);
 
   const handleRefresh = () => {
     fetchStats(userSchoolId);
