@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { apiService } from '../../core/api';
+import { Exam, Question } from '../../types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -129,7 +130,7 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
   updateClass: async (id, data) => {
     const schoolClass = await apiService.patch<SchoolClass>(`/classes/${id}`, data);
     const { classes } = get();
-    set({ classes: classes.map((c) => (c._id === id ? schoolClass : c)) });
+    set({ classes: classes.map((c) => ((c._id || c.id) === id ? schoolClass : c)) });
     return schoolClass;
   },
 
@@ -137,7 +138,7 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
     await apiService.delete(`/classes/${id}`);
     const { classes, classesPagination } = get();
     set({
-      classes: classes.filter((c) => c._id !== id),
+      classes: classes.filter((c) => (c._id || c.id) !== id),
       classesPagination: { ...classesPagination, total: Math.max(0, classesPagination.total - 1) },
     });
   },
@@ -152,6 +153,7 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
       if (search) query['search'] = search;
       if (classId) query['classId'] = classId;
       if (schoolId) query['schoolId'] = schoolId;
+      query['role'] = 'student';
       const res = await apiService.get<PaginatedResult<Student>>('/users', { params: query });
       set({
         students: res.results,
@@ -176,7 +178,7 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
   updateStudent: async (id, data) => {
     const student = await apiService.patch<Student>(`/users/${id}`, data);
     const { students } = get();
-    set({ students: students.map((s) => (s._id === id ? student : s)) });
+    set({ students: students.map((s) => ((s._id || s.id) === id ? student : s)) });
     return student;
   },
 
@@ -184,7 +186,7 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
     await apiService.delete(`/users/${id}`);
     const { students, studentsPagination } = get();
     set({
-      students: students.filter((s) => s._id !== id),
+      students: students.filter((s) => (s._id || s.id) !== id),
       studentsPagination: { ...studentsPagination, total: Math.max(0, studentsPagination.total - 1) },
     });
   },
@@ -197,8 +199,8 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
       const [classesRes, studentsRes, questionsRes, examsRes] = await Promise.allSettled([
         apiService.get<PaginatedResult<SchoolClass>>('/classes', { params: { limit: 1, ...(schoolId ? { schoolId } : {}) } }),
         apiService.get<PaginatedResult<Student>>('/users', { params: { limit: 1, role: 'student', ...(schoolId ? { schoolId } : {}) } }),
-        apiService.get<PaginatedResult<any>>('/questions', { params: { limit: 1, ...(schoolId ? { schoolId } : {}) } }),
-        apiService.get<PaginatedResult<any>>('/exams', { params: { limit: 1, ...(schoolId ? { schoolId } : {}) } }),
+        apiService.get<PaginatedResult<Question>>('/questions', { params: { limit: 1, ...(schoolId ? { schoolId } : {}) } }),
+        apiService.get<PaginatedResult<Exam>>('/exams', { params: { limit: 1, ...(schoolId ? { schoolId } : {}) } }),
       ]);
       set({
         stats: {
