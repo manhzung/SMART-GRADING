@@ -1,7 +1,7 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../engine/app_omr_engine.dart';
 import '../engine/app_omr_models.dart';
+import '../models/omr_template.dart';
 import 'omr_models.dart';
 
 class OmScanAndGradeResult {
@@ -96,272 +96,261 @@ class OmrEngineService {
     );
   }
 
-  /// Convert server template JSON to AppOmrTemplate
   AppOmrTemplate _convertToAppOmrTemplate(Map<String, dynamic> json) {
-    final t = json['template'] != null
-        ? json['template'] as Map<String, dynamic>
-        : json;
-
-    // Try FieldBlock format first
-    if (t['fieldBlocks'] != null) {
-      return _convertFieldBlockToAppTemplate(t);
-    }
-
-    // Fallback to simple default template
-    return _createDefaultTemplate(t);
+    // Check if this is the full server response with templateJson inside
+    final hasNestedTemplate = json.containsKey('templateJson');
+    
+    // Parse using OMRTemplate.fromServerJson (same as TestLab uses)
+    final serverTemplate = hasNestedTemplate
+        ? OMRTemplate.fromServerJson(json)
+        : OMRTemplate.fromServerJson({'templateJson': json});
+    
+    // Convert to AppOmrTemplate using exact coords from templateJson
+    return _serverTemplateToAppTemplate(serverTemplate);
   }
-
-  AppOmrTemplate _convertFieldBlockToAppTemplate(Map<String, dynamic> t) {
-    final pageDims = t['pageDimensions'] as List?;
-    final pageWidth = pageDims != null && pageDims.isNotEmpty
-        ? (pageDims[0] as num).toInt()
-        : 2480;
-    final pageHeight = pageDims != null && pageDims.length >= 2
-        ? (pageDims[1] as num).toInt()
-        : 3508;
-
-    final bubbleDims = t['bubbleDimensions'] as List?;
-    final defaultBw = bubbleDims != null && bubbleDims.isNotEmpty
-        ? (bubbleDims[0] as num).toDouble()
-        : 47.0;
-    final defaultBh = bubbleDims != null && bubbleDims.length >= 2
-        ? (bubbleDims[1] as num).toDouble()
-        : 47.0;
-
+  
+  /// Convert OMRTemplate to AppOmrTemplate using exact coords from templateJson
+  /// This replicates OMREngine._toAppTemplate logic
+  AppOmrTemplate _serverTemplateToAppTemplate(OMRTemplate serverTemplate) {
+    // Extract exact coordinates from templateJson.answers if available
+    final Map<String, Map<String, Map<String, dynamic>>>? exactCoords =
+        _extractExactCoords(serverTemplate.templateJson);
+    
     final fieldBlocks = <AppOmrFieldBlock>[];
-    final fieldBlocksMap = t['fieldBlocks'] as Map<String, dynamic>? ?? {};
-
-    for (final entry in fieldBlocksMap.entries) {
-      final name = entry.key;
-      final block = entry.value as Map<String, dynamic>;
-      final fieldType = block['fieldType'] as String? ?? 'QTYPE_MCQ4';
-
-      final origin = (block['origin'] as List?)?.cast<num>() ?? [0, 0];
-      final ox = origin[0].toInt();
-      final oy = origin[1].toInt();
-
-      final bw = (block['bubbleWidth'] as num?)?.toDouble() ?? defaultBw;
-      final bh = (block['bubbleHeight'] as num?)?.toDouble() ?? defaultBh;
-      final bubblesGap = (block['bubblesGap'] as num?)?.toDouble() ?? (bh + 10);
-      final labelsGap = (block['labelsGap'] as num?)?.toDouble() ?? (bh + 25);
-      final labels = (block['fieldLabels'] as List?)?.cast<String>() ?? [];
-      final direction = block['direction'] as String? ?? 'horizontal';
-
-      // Determine bubble values based on field type
-      List<String> bubbleValues;
-      if (fieldType == 'QTYPE_INT') {
-        bubbleValues = List.generate(10, (i) => i.toString());
-      } else if (fieldType == 'QTYPE_MCQ4') {
-        bubbleValues = ['A', 'B', 'C', 'D'];
-      } else if (fieldType == 'QTYPE_MCQ5') {
-        bubbleValues = ['A', 'B', 'C', 'D', 'E'];
-      } else {
-        bubbleValues = ['A', 'B', 'C', 'D'];
+    
+    // Convert existing field blocks
+    for (final fb in serverTemplate.fieldBlocks) {
+      // Get exact coords for this block if available
+      List<AppBubbleCoord>? exactBubbleCoords;
+      if (exactCoords != null) {
+        exactBubbleCoords = <AppBubbleCoord>[];
+        for (final label in fb.fieldLabels) {
+          final labelCoords = exactCoords[label];
+          if (labelCoords != null) {
+            for (final entry in labelCoords.entries) {
+              final value = entry.key;
+              final coord = entry.value;
+              exactBubbleCoords.add(AppBubbleCoord(
+                label: label,
+                value: value,
+                x: (coord['x'] as num?)?.toInt() ?? 0,
+                y: (coord['y'] as num?)?.toInt() ?? 0,
+                w: (coord['w'] as num?)?.toInt() ?? fb.bubbleWidth,
+                h: (coord['h'] as num?)?.toInt() ?? fb.bubbleHeight,
+              ));
+            }
+          }
+        }
       }
-
+      
       fieldBlocks.add(AppOmrFieldBlock(
-        name: name,
-        originX: ox,
-        originY: oy,
-        bubbleWidth: bw.toInt(),
-        bubbleHeight: bh.toInt(),
-        fieldLabels: labels,
-        bubbleValues: bubbleValues,
-        bubblesGap: bubblesGap,
-        labelsGap: labelsGap,
-        direction: direction,
-        emptyValue: '',
+        name: fb.name,
+        originX: fb.originX,
+        originY: fb.originY,
+        shift: 0,
+        bubbleWidth: fb.bubbleWidth,
+        bubbleHeight: fb.bubbleHeight,
+        fieldLabels: fb.fieldLabels,
+        bubbleValues: fb.bubbleValues,
+        bubblesGap: fb.bubblesGap.toDouble(),
+        labelsGap: fb.labelsGap.toDouble(),
+        direction: fb.direction.name,
+        emptyValue: fb.emptyValue,
+        exactCoords: exactBubbleCoords,
       ));
     }
-
-    // Add CropPage preprocessor for corner detection
-    final preprocessors = [
-      const AppOmrPreProcessor(
-        name: 'GaussianBlur',
-        options: {'kSize': [5, 5]},
-      ),
-      const AppOmrPreProcessor(
-        name: 'CropPage',
-        options: {},
-      ),
-    ];
-
+    
+    // Add Student ID field block
+    fieldBlocks.addAll(_createStudentIdBlocks(serverTemplate.templateJson, serverTemplate.studentId));
+    
+    // Add Version Code field block
+    fieldBlocks.addAll(_createVersionCodeBlocks(serverTemplate.templateJson, serverTemplate.versionCodeZone));
+    
+    final preprocessors = serverTemplate.preProcessors.map((pp) {
+      return AppOmrPreProcessor(
+        name: pp.name,
+        options: pp.options,
+      );
+    }).toList();
+    
     return AppOmrTemplate(
-      pageWidth: pageWidth,
-      pageHeight: pageHeight,
-      bubbleWidth: defaultBw.toInt(),
-      bubbleHeight: defaultBh.toInt(),
+      pageWidth: serverTemplate.pageWidth,
+      pageHeight: serverTemplate.pageHeight,
+      bubbleWidth: serverTemplate.bubbleWidth,
+      bubbleHeight: serverTemplate.bubbleHeight,
       fieldBlocks: fieldBlocks,
       preprocessors: preprocessors,
-      autoAlign: true,
+      procWidth: null,
+      procHeight: null,
+      minJump: 8.0,
+      autoAlign: serverTemplate.autoAlign,
+      useMarkers: false,
     );
   }
-
-  AppOmrTemplate _createDefaultTemplate(Map<String, dynamic> t) {
-    final pageWidth = (t['pageWidth'] as num?)?.toInt() ?? 2480;
-    final pageHeight = (t['pageHeight'] as num?)?.toInt() ?? 3508;
-    final bubbleWidth = (t['bubbleWidth'] as num?)?.toInt() ?? 46;
-    final bubbleHeight = (t['bubbleHeight'] as num?)?.toInt() ?? 46;
-    final autoAlign = t['autoAlign'] as bool? ?? false;
-
-    // Parse existing coordinates if available
-    final fieldBlocks = <AppOmrFieldBlock>[];
-
-    // Student ID block - parse coords with proper spacing
-    final studentId = t['studentId'] as Map<String, dynamic>?;
-    if (studentId != null) {
-      final coords = studentId['coords'] as List?;
-      if (coords != null && coords.isNotEmpty) {
-        // Calculate spacing from actual coords
-        final sortedByX = List<Map<String, dynamic>>.from(
-          coords.map((c) => Map<String, dynamic>.from(c as Map))
-        )..sort((a, b) => (a['x'] as num).compareTo(b['x'] as num));
-        
-        final sortedByY = List<Map<String, dynamic>>.from(
-          coords.map((c) => Map<String, dynamic>.from(c as Map))
-        )..sort((a, b) => (a['y'] as num).compareTo(b['y'] as num));
-        
-        int xGap = 0;
-        if (sortedByX.length >= 2) {
-          xGap = ((sortedByX[1]['x'] as num) - (sortedByX[0]['x'] as num)).toInt();
-        }
-        
-        int yGap = 0;
-        if (sortedByY.length >= 2) {
-          yGap = ((sortedByY[1]['y'] as num) - (sortedByY[0]['y'] as num)).toInt();
-        }
-
-        // Student ID is vertical (digits stacked), use yGap as bubblesGap
-        fieldBlocks.add(AppOmrFieldBlock(
-          name: 'student_code',
-          originX: (coords.first['x'] as num).toInt(),
-          originY: (coords.first['y'] as num).toInt(),
-          bubbleWidth: (coords.first['w'] as num?)?.toInt() ?? bubbleWidth,
-          bubbleHeight: (coords.first['h'] as num?)?.toInt() ?? bubbleHeight,
-          fieldLabels: List.generate(coords.length, (i) => 'roll$i'),
-          bubbleValues: List.generate(10, (i) => i.toString()),
-          bubblesGap: yGap > 0 ? yGap.toDouble() : bubbleHeight + 10,
-          labelsGap: xGap > 0 ? xGap.toDouble() : bubbleWidth + 10,
-          direction: 'vertical', // digits go vertically
-        ));
-      }
-    }
-
-    // Version code block
-    final versionCode = t['versionCodeZone'] as Map<String, dynamic>? ?? t['versionCode'] as Map<String, dynamic>?;
-    if (versionCode != null) {
-      final coords = versionCode['coords'] as List?;
-      if (coords != null && coords.isNotEmpty) {
-        final sortedByX = List<Map<String, dynamic>>.from(
-          coords.map((c) => Map<String, dynamic>.from(c as Map))
-        )..sort((a, b) => (a['x'] as num).compareTo(b['x'] as num));
-        
-        final sortedByY = List<Map<String, dynamic>>.from(
-          coords.map((c) => Map<String, dynamic>.from(c as Map))
-        )..sort((a, b) => (a['y'] as num).compareTo(b['y'] as num));
-        
-        int xGap = 0;
-        if (sortedByX.length >= 2) {
-          xGap = ((sortedByX[1]['x'] as num) - (sortedByX[0]['x'] as num)).toInt();
-        }
-        
-        int yGap = 0;
-        if (sortedByY.length >= 2) {
-          yGap = ((sortedByY[1]['y'] as num) - (sortedByY[0]['y'] as num)).toInt();
-        }
-
-        fieldBlocks.add(AppOmrFieldBlock(
-          name: 'version_code',
-          originX: (coords.first['x'] as num).toInt(),
-          originY: (coords.first['y'] as num).toInt(),
-          bubbleWidth: (coords.first['w'] as num?)?.toInt() ?? bubbleWidth,
-          bubbleHeight: (coords.first['h'] as num?)?.toInt() ?? bubbleHeight,
-          fieldLabels: List.generate(coords.length, (i) => 'ver$i'),
-          bubbleValues: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-          bubblesGap: yGap > 0 ? yGap.toDouble() : bubbleHeight + 10,
-          labelsGap: xGap > 0 ? xGap.toDouble() : bubbleWidth + 10,
-          direction: 'vertical',
-        ));
-      }
-    }
-
-    // Answer blocks - each question has 4 options (A, B, C, D) in horizontal row
-    final answers = t['answers'] as Map<String, dynamic>?;
-    if (answers != null) {
-      // Get option keys sorted (A, B, C, D)
-      final sortedQIds = answers.keys.toList()..sort();
-      
-      for (final qId in sortedQIds) {
-        final options = answers[qId] as Map<String, dynamic>;
-        if (options.isNotEmpty) {
-          // Get sorted options by x position
-          final sortedOpts = options.entries.toList()
-            ..sort((a, b) {
-              final aX = (a.value as Map)['x'] as num;
-              final bX = (b.value as Map)['x'] as num;
-              return aX.compareTo(bX);
-            });
-          
-          final firstOpt = sortedOpts.first.value as Map<String, dynamic>;
-          final optionKeys = sortedOpts.map((e) => e.key).toList();
-          
-          // Calculate horizontal spacing between options
-          int xGap = 0;
-          if (sortedOpts.length >= 2) {
-            final firstX = (sortedOpts[0].value as Map)['x'] as num;
-            final secondX = (sortedOpts[1].value as Map)['x'] as num;
-            xGap = (secondX - firstX).toInt();
+  
+  /// Extract exact coordinates from templateJson.answers format
+  Map<String, Map<String, Map<String, dynamic>>>? _extractExactCoords(Map<String, dynamic>? templateJson) {
+    if (templateJson == null) return null;
+    
+    final answers = templateJson['answers'];
+    if (answers is! Map) return null;
+    
+    final result = <String, Map<String, Map<String, dynamic>>>{};
+    
+    for (final entry in answers.entries) {
+      final qId = entry.key.toString();
+      final options = entry.value;
+      if (options is Map) {
+        result[qId] = <String, Map<String, dynamic>>{};
+        for (final optEntry in options.entries) {
+          final optKey = optEntry.key.toString();
+          if (optEntry.value is Map) {
+            result[qId]![optKey] = Map<String, dynamic>.from(optEntry.value as Map);
+          } else {
+            result[qId]![optKey] = {};
           }
-          
-          // For answers: bubblesGap = spacing between A,B,C,D (horizontal)
-          // labelsGap = spacing between questions (vertical) - use bubbleHeight + 10 as default
-          fieldBlocks.add(AppOmrFieldBlock(
-            name: qId,
-            originX: (firstOpt['x'] as num).toInt(),
-            originY: (firstOpt['y'] as num).toInt(),
-            bubbleWidth: (firstOpt['w'] as num?)?.toInt() ?? bubbleWidth,
-            bubbleHeight: (firstOpt['h'] as num?)?.toInt() ?? bubbleHeight,
-            fieldLabels: [qId],
-            bubbleValues: optionKeys,
-            bubblesGap: xGap > 0 ? xGap.toDouble() : bubbleWidth + 25, // spacing between options
-            labelsGap: (bubbleHeight + 20).toDouble(), // spacing between questions (estimated)
-            direction: 'horizontal',
-          ));
         }
       }
     }
-
-    // Parse preprocessors from template
-    final preprocessorList = t['preProcessors'] as List?;
-    final preprocessors = <AppOmrPreProcessor>[];
-    if (preprocessorList != null) {
-      for (final pp in preprocessorList) {
-        final ppMap = pp as Map<String, dynamic>;
-        final options = Map<String, dynamic>.from(ppMap['options'] as Map? ?? {});
-        preprocessors.add(AppOmrPreProcessor(
-          name: ppMap['name'] as String,
-          options: options,
+    
+    return result.isEmpty ? null : result;
+  }
+  
+  /// Create field blocks for Student ID from templateJson
+  List<AppOmrFieldBlock> _createStudentIdBlocks(
+    Map<String, dynamic>? templateJson,
+    StudentIdField? studentIdField,
+  ) {
+    if (templateJson == null) return [];
+    
+    final studentId = templateJson['studentId'] as Map<String, dynamic>?;
+    if (studentId == null) return [];
+    
+    final coords = studentId['coords'] as List<dynamic>?;
+    if (coords == null || coords.isEmpty) return [];
+    
+    // Parse all coords into AppBubbleCoord list
+    final allCoords = <AppBubbleCoord>[];
+    for (final c in coords) {
+      if (c is Map) {
+        final coord = Map<String, dynamic>.from(c);
+        allCoords.add(AppBubbleCoord(
+          label: 'student_code',
+          value: (coord['value'] ?? 0).toString(),
+          x: (coord['x'] as num?)?.toInt() ?? 0,
+          y: (coord['y'] as num?)?.toInt() ?? 0,
+          w: (coord['w'] as num?)?.toInt() ?? 46,
+          h: (coord['h'] as num?)?.toInt() ?? 46,
         ));
       }
     }
     
-    // Default preprocessors if none specified
-    if (preprocessors.isEmpty) {
-      preprocessors.addAll([
-        const AppOmrPreProcessor(name: 'GaussianBlur', options: {'kSize': [3, 3]}),
-        const AppOmrPreProcessor(name: 'CropPage', options: {}),
-      ]);
+    if (allCoords.isEmpty) return [];
+    
+    // Sort by x then y to get proper layout
+    allCoords.sort((a, b) {
+      final xDiff = a.x.compareTo(b.x);
+      if (xDiff != 0) return xDiff;
+      return a.y.compareTo(b.y);
+    });
+    
+    // Find spacing from coords
+    int xGap = 46;
+    int yGap = 71;
+    if (allCoords.length >= 2) {
+      // Check if same x (vertical stack) or same y (horizontal row)
+      if (allCoords[0].x == allCoords[1].x) {
+        yGap = allCoords[1].y - allCoords[0].y;
+      } else {
+        xGap = allCoords[1].x - allCoords[0].x;
+      }
     }
-
-    return AppOmrTemplate(
-      pageWidth: pageWidth,
-      pageHeight: pageHeight,
-      bubbleWidth: bubbleWidth,
-      bubbleHeight: bubbleHeight,
-      fieldBlocks: fieldBlocks,
-      preprocessors: preprocessors,
-      autoAlign: autoAlign,
-    );
+    
+    return [
+      AppOmrFieldBlock(
+        name: 'student_code',
+        originX: allCoords.first.x,
+        originY: allCoords.first.y,
+        shift: 0,
+        bubbleWidth: allCoords.first.w,
+        bubbleHeight: allCoords.first.h,
+        fieldLabels: List.generate(allCoords.length, (i) => 'roll$i'),
+        bubbleValues: List.generate(10, (i) => i.toString()),
+        bubblesGap: yGap.toDouble(),
+        labelsGap: xGap.toDouble(),
+        direction: 'vertical',
+        emptyValue: '',
+        exactCoords: allCoords,
+      ),
+    ];
+  }
+  
+  /// Create field blocks for Version Code from templateJson
+  List<AppOmrFieldBlock> _createVersionCodeBlocks(
+    Map<String, dynamic>? templateJson,
+    VersionCodeField? versionCodeField,
+  ) {
+    if (templateJson == null) return [];
+    
+    final versionCodeZone = templateJson['versionCodeZone'] as Map<String, dynamic>?;
+    if (versionCodeZone == null) return [];
+    
+    final coords = versionCodeZone['coords'] as List<dynamic>?;
+    if (coords == null || coords.isEmpty) return [];
+    
+    // Parse all coords into AppBubbleCoord list
+    final allCoords = <AppBubbleCoord>[];
+    for (final c in coords) {
+      if (c is Map) {
+        final coord = Map<String, dynamic>.from(c);
+        allCoords.add(AppBubbleCoord(
+          label: 'version_code',
+          value: (coord['value'] ?? 0).toString(),
+          x: (coord['x'] as num?)?.toInt() ?? 0,
+          y: (coord['y'] as num?)?.toInt() ?? 0,
+          w: (coord['w'] as num?)?.toInt() ?? 46,
+          h: (coord['h'] as num?)?.toInt() ?? 46,
+        ));
+      }
+    }
+    
+    if (allCoords.isEmpty) return [];
+    
+    // Sort by x then y
+    allCoords.sort((a, b) {
+      final xDiff = a.x.compareTo(b.x);
+      if (xDiff != 0) return xDiff;
+      return a.y.compareTo(b.y);
+    });
+    
+    // Find spacing
+    int xGap = 46;
+    int yGap = 71;
+    if (allCoords.length >= 2) {
+      if (allCoords[0].x == allCoords[1].x) {
+        yGap = allCoords[1].y - allCoords[0].y;
+      } else {
+        xGap = allCoords[1].x - allCoords[0].x;
+      }
+    }
+    
+    return [
+      AppOmrFieldBlock(
+        name: 'version_code',
+        originX: allCoords.first.x,
+        originY: allCoords.first.y,
+        shift: 0,
+        bubbleWidth: allCoords.first.w,
+        bubbleHeight: allCoords.first.h,
+        fieldLabels: List.generate(allCoords.length, (i) => 'ver$i'),
+        bubbleValues: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+        bubblesGap: yGap.toDouble(),
+        labelsGap: xGap.toDouble(),
+        direction: 'vertical',
+        emptyValue: '',
+        exactCoords: allCoords,
+      ),
+    ];
   }
 
   OmrScanResult _convertToOmrScanResult(AppOmrResult result, Uint8List? annotatedBytes) {
