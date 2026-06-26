@@ -97,13 +97,30 @@ class OmrEngineService {
   }
 
   AppOmrTemplate _convertToAppOmrTemplate(Map<String, dynamic> json) {
-    // Check if this is the full server response with templateJson inside
-    final hasNestedTemplate = json.containsKey('templateJson');
+    // Check if this is the new API format with 'template' key (flat structure)
+    // or the old format with 'templateJson' key (nested structure)
+    final hasTemplate = json.containsKey('template');
+    final hasTemplateJson = json.containsKey('templateJson');
     
-    // Parse using OMRTemplate.fromServerJson (same as TestLab uses)
-    final serverTemplate = hasNestedTemplate
-        ? OMRTemplate.fromServerJson(json)
-        : OMRTemplate.fromServerJson({'templateJson': json});
+    OMRTemplate serverTemplate;
+    
+    if (hasTemplate) {
+      // New format: { template: {...}, examId: ..., answerKey: ... }
+      // Convert to OMRTemplate.fromServerJson compatible format
+      final inner = json['template'] as Map<String, dynamic>;
+      final compatibleJson = {
+        '_id': {'\$oid': 'generated_${DateTime.now().millisecondsSinceEpoch}'},
+        'name': json['name'] ?? json['examId'] ?? 'Server Template',
+        'templateJson': inner,
+      };
+      serverTemplate = OMRTemplate.fromServerJson(compatibleJson);
+    } else if (hasTemplateJson) {
+      // Old format: { _id: {...}, templateJson: {...}, name: ... }
+      serverTemplate = OMRTemplate.fromServerJson(json);
+    } else {
+      // Direct format: treat whole JSON as templateJson
+      serverTemplate = OMRTemplate.fromServerJson({'templateJson': json});
+    }
     
     // Convert to AppOmrTemplate using exact coords from templateJson
     return _serverTemplateToAppTemplate(serverTemplate);
