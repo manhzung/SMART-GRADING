@@ -8,41 +8,28 @@ import {
   Settings,
   HelpCircle,
   LogOut,
-  Bell,
-  MessageSquare,
   Brain,
   ClipboardList,
   Scale,
-  Building2,
-  Users,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import NotificationPanel from './NotificationPanel';
 import styles from './Layout.module.css';
 
-// Admin nav items — only visible to admin/school-admin
-const adminNavItems = [
-  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'school-admin'], group: 'admin' },
-  { path: '/admin/schools', icon: Building2, label: 'Schools', roles: ['admin'], group: 'admin' },
-  { path: '/admin/users', icon: Users, label: 'Users', roles: ['admin', 'school-admin'], group: 'admin' },
-];
-
-const allNavItems = [
-  ...adminNavItems,
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'teacher'] },
-  { path: '/classes', icon: GraduationCap, label: 'Classes', roles: ['admin', 'teacher'] },
-  { path: '/question-bank', icon: Database, label: 'Question Bank', roles: ['admin', 'teacher'] },
-  { path: '/exams', icon: FileText, label: 'Exams', roles: ['admin', 'teacher'] },
-  { path: '/appeals', icon: MessageSquare, label: 'Appeals', roles: ['admin', 'teacher'] },
-  { path: '/analytics', icon: BarChart3, label: 'Analytics', roles: ['admin', 'teacher'] },
-  { path: '/ai-tutor', icon: Brain, label: 'AI Tutor', roles: ['admin', 'teacher'] },
+const navItems = [
+  { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['teacher'] },
+  { path: '/classes', icon: GraduationCap, label: 'Classes', roles: ['teacher'] },
+  { path: '/question-bank', icon: Database, label: 'Question Bank', roles: ['teacher'] },
+  { path: '/exams', icon: FileText, label: 'Exams', roles: ['teacher'] },
+  { path: '/appeals', icon: FileText, label: 'Appeals', roles: ['teacher'] },
+  { path: '/analytics', icon: BarChart3, label: 'Analytics', roles: ['teacher'] },
+  { path: '/ai-tutor', icon: Brain, label: 'AI Tutor', roles: ['teacher'] },
   { path: '/my-scores', icon: ClipboardList, label: 'Điểm của tôi', roles: ['student'] },
   { path: '/my-appeals', icon: Scale, label: 'Phúc khảo', roles: ['student'] },
-  { path: '/settings', icon: Settings, label: 'Settings', roles: ['admin', 'teacher', 'student'] },
+  { path: '/settings', icon: Settings, label: 'Settings', roles: ['teacher', 'student'] },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: 'ADMINISTRATOR',
   teacher: 'PROFESSOR',
   student: 'STUDENT',
   parent: 'PARENT',
@@ -55,7 +42,7 @@ export default function Layout() {
   const user = useAuthStore((state) => state.user);
 
   const userRole = (user?.role as string) || 'teacher';
-  const navItems = allNavItems.filter((item) => item.roles.includes(userRole));
+  const visibleNavItems = navItems.filter((item) => item.roles.includes(userRole));
 
   const displayName = user?.name || (userRole === 'student' ? 'Học sinh' : 'Dr. Sarah Miller');
   const displayRole = ROLE_LABELS[userRole] || 'USER';
@@ -76,57 +63,19 @@ export default function Layout() {
         </div>
         
         <nav className={styles.nav}>
-          {(() => {
-            const adminItems = navItems.filter((item) => (item as any).group === 'admin');
-            const mainItems = navItems.filter((item) => !(item as any).group);
-            if (adminItems.length === 0) {
-              return mainItems.map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                  >
-                    <item.icon size={18} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              });
-            }
+          {visibleNavItems.map((item) => {
+            const isActive = location.pathname === item.path;
             return (
-              <>
-                <div className={styles.navGroupLabel}>Admin</div>
-                {adminItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                    >
-                      <item.icon size={18} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-                <div className={styles.navDivider} />
-                {mainItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                    >
-                      <item.icon size={18} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </>
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`${styles.navItem} ${isActive ? styles.active : ''}`}
+              >
+                <item.icon size={18} />
+                <span>{item.label}</span>
+              </Link>
             );
-          })()}
+          })}
         </nav>
 
         <div className={styles.sidebarBottom}>
