@@ -50,6 +50,16 @@
   flex: 1;
 }
 
+.navGroupLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 14px;
+  margin-bottom: 4px;
+}
+
 .navItem {
   display: flex;
   align-items: center;

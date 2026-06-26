@@ -11,11 +11,11 @@ import { useAuthStore } from '../store/authStore';
 import styles from './SchoolLayout.module.css';
 
 const schoolNavItems = [
-  { path: '/school', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/school/classes', icon: GraduationCap, label: 'Classes' },
-  { path: '/school/students', icon: Users, label: 'Students' },
-  { path: '/school/questions', icon: Database, label: 'Questions' },
-  { path: '/school/exams', icon: FileText, label: 'Exams' },
+  { path: '/school', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+  { path: '/school/classes', icon: GraduationCap, label: 'Lớp học' },
+  { path: '/school/students', icon: Users, label: 'Học sinh' },
+  { path: '/school/questions', icon: Database, label: 'Câu hỏi' },
+  { path: '/school/exams', icon: FileText, label: 'Bài kiểm tra' },
 ];
 
 export default function SchoolSidebar() {
@@ -35,9 +35,11 @@ export default function SchoolSidebar() {
       </div>
       
       <nav className={styles.nav}>
+        <div className={styles.navGroupLabel}>Quản lý Trường</div>
         {schoolNavItems.map((item) => {
-          const isActive = location.pathname === item.path || 
-            (item.path !== '/school' && location.pathname.startsWith(item.path));
+          const isActive = item.exact 
+            ? location.pathname === item.path 
+            : location.pathname === item.path || location.pathname.startsWith(item.path);
           return (
             <Link
               key={item.path}

@@ -8,14 +8,6 @@ import SchoolSidebar from './SchoolSidebar';
 import NotificationPanel from './NotificationPanel';
 import styles from './SchoolLayout.module.css';
 
-const ROLE_LABELS: Record<string, string> = {
-  'school-admin': 'SCHOOL ADMIN',
-  admin: 'ADMINISTRATOR',
-  teacher: 'PROFESSOR',
-  student: 'STUDENT',
-  parent: 'PARENT',
-};
-
 export default function SchoolLayout() {
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
@@ -23,7 +15,7 @@ export default function SchoolLayout() {
 
   const userRole = (user?.role as string) || 'school-admin';
   const displayName = user?.name || 'School Admin';
-  const displayRole = ROLE_LABELS[userRole] || 'SCHOOL ADMIN';
+  const displayRole = 'SCHOOL ADMIN';
   const avatarUrl = user?.avatarUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150';
 
   const handleLogout = async () => {
