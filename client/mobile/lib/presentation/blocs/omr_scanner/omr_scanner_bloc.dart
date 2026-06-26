@@ -90,23 +90,28 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImageCaptured event,
     Emitter<OMRScannerState> emit,
   ) async {
-    // Re-emit TemplateReady first to preserve state, then ImageReady
     final current = state;
     final hasTemplate = current is OMRScannerTemplateReady;
     
     if (hasTemplate) {
-      // Re-emit TemplateReady to keep it in state
       final templateState = current;
-      emit(OMRScannerImageReady(imageBytes: event.imageBytes));
-      // Re-emit TemplateReady again so _onProcessStarted can find it
-      emit(OMRScannerTemplateReady(
+      
+      // Emit processing state directly with template info
+      emit(OMRScannerProcessing(
+        imageBytes: event.imageBytes,
+        steps: const ['Starting OMR processing with Engine v2...'],
+      ));
+      
+      // Process directly since we have the template
+      await _processWithTemplate(
+        imageBytes: event.imageBytes,
         templateJson: templateState.templateJson,
         examId: templateState.examId,
         examName: templateState.examName,
         classId: templateState.classId,
         className: templateState.className,
-      ));
-      add(OMRScannerProcessStarted(imageBytes: event.imageBytes));
+        emit: emit,
+      );
     } else {
       emit(OMRScannerImageReady(imageBytes: event.imageBytes));
       developer.log(
@@ -116,64 +121,21 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
       );
     }
   }
-
-  Future<void> _onImagePicked(
-    OMRScannerImagePicked event,
-    Emitter<OMRScannerState> emit,
-  ) async {
-    // Re-emit TemplateReady first to preserve state, then ImageReady
-    final current = state;
-    final hasTemplate = current is OMRScannerTemplateReady;
-    
-    if (hasTemplate) {
-      // Re-emit TemplateReady to keep it in state
-      final templateState = current;
-      emit(OMRScannerImageReady(imageBytes: event.imageBytes));
-      // Re-emit TemplateReady again so _onProcessStarted can find it
-      emit(OMRScannerTemplateReady(
-        templateJson: templateState.templateJson,
-        examId: templateState.examId,
-        examName: templateState.examName,
-        classId: templateState.classId,
-        className: templateState.className,
-      ));
-      add(OMRScannerProcessStarted(imageBytes: event.imageBytes));
-    } else {
-      emit(OMRScannerImageReady(imageBytes: event.imageBytes));
-      developer.log(
-        '[OMRScanner] ERROR: Template not ready. State: ${current.runtimeType}',
-        name: 'OMRScanner',
-        error: 'Template not ready',
-      );
-    }
-  }
-
-  Future<void> _onProcessStarted(
-    OMRScannerProcessStarted event,
-    Emitter<OMRScannerState> emit,
-  ) async {
-    final current = state;
-    if (current is! OMRScannerTemplateReady) {
-      developer.log(
-        '[OMRScanner] ERROR: No template. State: ${current.runtimeType}',
-        name: 'OMRScanner',
-      );
-      emit(OMRScannerError(
-        message: 'No template loaded. Current state: ${current.runtimeType}',
-      ));
-      return;
-    }
-
-    emit(OMRScannerProcessing(
-      imageBytes: event.imageBytes,
-      steps: const ['Starting OMR processing with Engine v2...'],
-    ));
-
+  
+  Future<void> _processWithTemplate({
+    required Uint8List imageBytes,
+    required Map<String, dynamic> templateJson,
+    String? examId,
+    String? examName,
+    String? classId,
+    String? className,
+    required Emitter<OMRScannerState> emit,
+  }) async {
     try {
       final omrEngineService = OmrEngineService();
       final result = await omrEngineService.scanAndGrade(
-        imageBytes: event.imageBytes.toList(),
-        templateJson: current.templateJson,
+        imageBytes: imageBytes.toList(),
+        templateJson: templateJson,
       );
 
       final convertedGradingResult = _convertToOldGradingResult(result.gradingResult);
@@ -191,7 +153,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
         processingTime: result.scanResult.processingTime,
         processingSteps: result.scanResult.processingSteps,
         wasWarped: result.scanResult.wasWarped,
-        annotatedImageBytes: result.annotatedBytes ?? event.imageBytes,
+        annotatedImageBytes: result.annotatedBytes ?? imageBytes,
       );
 
       // Try to find student by studentCode
@@ -201,7 +163,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
       }
 
       emit(OMRScannerSuccess(
-        imageBytes: event.imageBytes,
+        imageBytes: imageBytes,
         processingResult: processingResult,
         gradingResult: convertedGradingResult,
         questionScores: result.gradingResult.questionScores,
@@ -212,6 +174,73 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     } catch (e) {
       emit(OMRScannerError(message: 'Processing failed: $e'));
     }
+  }
+
+  Future<void> _onImagePicked(
+    OMRScannerImagePicked event,
+    Emitter<OMRScannerState> emit,
+  ) async {
+    final current = state;
+    final hasTemplate = current is OMRScannerTemplateReady;
+    
+    if (hasTemplate) {
+      final templateState = current;
+      
+      emit(OMRScannerProcessing(
+        imageBytes: event.imageBytes,
+        steps: const ['Starting OMR processing with Engine v2...'],
+      ));
+      
+      await _processWithTemplate(
+        imageBytes: event.imageBytes,
+        templateJson: templateState.templateJson,
+        examId: templateState.examId,
+        examName: templateState.examName,
+        classId: templateState.classId,
+        className: templateState.className,
+        emit: emit,
+      );
+    } else {
+      emit(OMRScannerImageReady(imageBytes: event.imageBytes));
+      developer.log(
+        '[OMRScanner] ERROR: Template not ready. State: ${current.runtimeType}',
+        name: 'OMRScanner',
+        error: 'Template not ready',
+      );
+    }
+  }
+
+  Future<void> _onProcessStarted(
+    OMRScannerProcessStarted event,
+    Emitter<OMRScannerState> emit,
+  ) async {
+    // Get template from the state - state should be OMRScannerTemplateReady
+    final current = state;
+    if (current is! OMRScannerTemplateReady) {
+      developer.log(
+        '[OMRScanner] ERROR: No template. State: ${current.runtimeType}',
+        name: 'OMRScanner',
+      );
+      emit(OMRScannerError(
+        message: 'No template loaded. Current state: ${current.runtimeType}',
+      ));
+      return;
+    }
+
+    emit(OMRScannerProcessing(
+      imageBytes: event.imageBytes,
+      steps: const ['Starting OMR processing with Engine v2...'],
+    ));
+
+    await _processWithTemplate(
+      imageBytes: event.imageBytes,
+      templateJson: current.templateJson,
+      examId: current.examId,
+      examName: current.examName,
+      classId: current.classId,
+      className: current.className,
+      emit: emit,
+    );
   }
 
   ClassStudent? _findStudentByCode(String studentCode) {
