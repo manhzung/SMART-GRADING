@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_grading_mobile/domain/entities/exam.entity.dart';
-import 'package:smart_grading_mobile/presentation/pages/student_list_page.dart';
+import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
+import 'package:smart_grading_mobile/presentation/pages/camera_scanner_page.dart';
 
 class ClassSelectionPage extends StatelessWidget {
   final Exam exam;
@@ -49,10 +51,14 @@ class ClassSelectionPage extends StatelessWidget {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => StudentListPage(
-                          exam: exam,
-                          classId: cls.id,
-                          className: cls.name,
+                        builder: (_) => BlocProvider(
+                          create: (_) => OMRScannerBloc(),
+                          child: CameraScannerPage(
+                            examId: exam.id,
+                            examName: exam.title,
+                            classId: cls.id,
+                            className: cls.name,
+                          ),
                         ),
                       ),
                     );
