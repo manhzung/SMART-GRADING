@@ -1,0 +1,59 @@
+% Test file for AMC compile pipeline
+% Kien truc file dung chuan AMC 1.6.0
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{automultiplechoice}
+
+\begin{document}
+
+% Cau hinh AMC
+\onecopy{1}{
+
+%%% HEADER %%%
+\noindent\hrulefill
+
+\begin{center}
+\Large\textbf{Test exam - AMC compile pipeline}\par
+\end{center}
+
+\hrulefill
+
+\vspace{0.5cm}
+
+%%% QUESTIONS %%%
+\begin{question}{q1}
+Cau 1: 1 + 1 bang may?
+\begin{choices}
+  \correctchoice{2}
+  \wrongchoice{1}
+  \wrongchoice{3}
+  \wrongchoice{4}
+\end{choices}
+\end{question}
+
+\begin{question}{q2}
+Cau 2: Thu do cua Phap la gi?
+\begin{choices}
+  \wrongchoice{London}
+  \wrongchoice{Berlin}
+  \correctchoice{Paris}
+  \wrongchoice{Madrid}
+\end{choices}
+\end{question}
+
+\begin{question}{q3}
+Cau 3: 5 x 5 bang may?
+\begin{choices}
+  \wrongchoice{10}
+  \wrongchoice{15}
+  \wrongchoice{20}
+  \correctchoice{25}
+\end{choices}
+\end{question}
+
+}
+
+\end{document}
