@@ -90,15 +90,25 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImageCaptured event,
     Emitter<OMRScannerState> emit,
   ) async {
-    // Check template BEFORE emitting new state
+    // Re-emit TemplateReady first to preserve state, then ImageReady
     final current = state;
     final hasTemplate = current is OMRScannerTemplateReady;
     
-    emit(OMRScannerImageReady(imageBytes: event.imageBytes));
-
     if (hasTemplate) {
+      // Re-emit TemplateReady to keep it in state
+      final templateState = current;
+      emit(OMRScannerImageReady(imageBytes: event.imageBytes));
+      // Re-emit TemplateReady again so _onProcessStarted can find it
+      emit(OMRScannerTemplateReady(
+        templateJson: templateState.templateJson,
+        examId: templateState.examId,
+        examName: templateState.examName,
+        classId: templateState.classId,
+        className: templateState.className,
+      ));
       add(OMRScannerProcessStarted(imageBytes: event.imageBytes));
     } else {
+      emit(OMRScannerImageReady(imageBytes: event.imageBytes));
       developer.log(
         '[OMRScanner] ERROR: Template not ready. State: ${current.runtimeType}',
         name: 'OMRScanner',
@@ -111,15 +121,25 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImagePicked event,
     Emitter<OMRScannerState> emit,
   ) async {
-    // Check template BEFORE emitting new state
+    // Re-emit TemplateReady first to preserve state, then ImageReady
     final current = state;
     final hasTemplate = current is OMRScannerTemplateReady;
     
-    emit(OMRScannerImageReady(imageBytes: event.imageBytes));
-
     if (hasTemplate) {
+      // Re-emit TemplateReady to keep it in state
+      final templateState = current;
+      emit(OMRScannerImageReady(imageBytes: event.imageBytes));
+      // Re-emit TemplateReady again so _onProcessStarted can find it
+      emit(OMRScannerTemplateReady(
+        templateJson: templateState.templateJson,
+        examId: templateState.examId,
+        examName: templateState.examName,
+        classId: templateState.classId,
+        className: templateState.className,
+      ));
       add(OMRScannerProcessStarted(imageBytes: event.imageBytes));
     } else {
+      emit(OMRScannerImageReady(imageBytes: event.imageBytes));
       developer.log(
         '[OMRScanner] ERROR: Template not ready. State: ${current.runtimeType}',
         name: 'OMRScanner',
