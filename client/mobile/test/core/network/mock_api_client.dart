@@ -2,9 +2,19 @@ import 'package:dio/dio.dart';
 import 'package:smart_grading_mobile/core/network/api_client.dart';
 import 'package:smart_grading_mobile/core/errors/app_exceptions.dart';
 
+/// Mock response object that mimics Dio's Response structure.
+class MockResponse {
+  MockResponse(this.data);
+  final dynamic data;
+}
+
+/// Mock ApiClient for testing.
+///
+/// Returns MockResponse when no parser is provided (to mimic Dio's Response structure).
+/// Returns parser(result) when parser is provided.
 class MockApiClient implements ApiClient {
   MockApiClient({
-    Map<String, dynamic>? mockResponse,
+    dynamic mockResponse,
     bool shouldThrow = false,
     String? errorType,
   }) {
@@ -13,12 +23,12 @@ class MockApiClient implements ApiClient {
     _errorType = errorType;
   }
 
-  Map<String, dynamic>? _mockResponse;
+  dynamic _mockResponse;
   bool _shouldThrow = false;
   String? _errorType;
 
-  Map<String, dynamic>? get mockResponse => _mockResponse;
-  set mockResponse(Map<String, dynamic>? value) => _mockResponse = value;
+  dynamic get mockResponse => _mockResponse;
+  set mockResponse(dynamic value) => _mockResponse = value;
 
   bool get shouldThrow => _shouldThrow;
   set shouldThrow(bool value) => _shouldThrow = value;
@@ -70,7 +80,13 @@ class MockApiClient implements ApiClient {
     if (_mockResponse == null) {
       throw AppException(message: 'Mock response not set');
     }
-    return parser != null ? parser(_mockResponse!) : _mockResponse as T;
+
+    // If parser is provided, use it (standard behavior)
+    // If no parser, return MockResponse to mimic Dio's Response structure
+    if (parser != null) {
+      return parser(_mockResponse) as T;
+    }
+    return MockResponse(_mockResponse) as T;
   }
 
   @override
@@ -91,7 +107,11 @@ class MockApiClient implements ApiClient {
     if (_mockResponse == null) {
       throw AppException(message: 'Mock response not set');
     }
-    return parser != null ? parser(_mockResponse!) : _mockResponse as T;
+
+    if (parser != null) {
+      return parser(_mockResponse) as T;
+    }
+    return MockResponse(_mockResponse) as T;
   }
 
   @override
@@ -112,7 +132,11 @@ class MockApiClient implements ApiClient {
     if (_mockResponse == null) {
       throw AppException(message: 'Mock response not set');
     }
-    return parser != null ? parser(_mockResponse!) : _mockResponse as T;
+
+    if (parser != null) {
+      return parser(_mockResponse) as T;
+    }
+    return MockResponse(_mockResponse) as T;
   }
 
   @override
@@ -130,7 +154,11 @@ class MockApiClient implements ApiClient {
     if (_mockResponse == null) {
       throw AppException(message: 'Mock response not set');
     }
-    return parser != null ? parser(_mockResponse!) : _mockResponse as T;
+
+    if (parser != null) {
+      return parser(_mockResponse) as T;
+    }
+    return MockResponse(_mockResponse) as T;
   }
 
   @override
@@ -151,7 +179,11 @@ class MockApiClient implements ApiClient {
     if (_mockResponse == null) {
       throw AppException(message: 'Mock response not set');
     }
-    return parser != null ? parser(_mockResponse!) : _mockResponse as T;
+
+    if (parser != null) {
+      return parser(_mockResponse) as T;
+    }
+    return MockResponse(_mockResponse) as T;
   }
 
   Exception _createError() {
