@@ -129,58 +129,13 @@ class OmrEngineService {
   /// Convert OMRTemplate to AppOmrTemplate using exact coords from templateJson
   /// This replicates OMREngine._toAppTemplate logic
   AppOmrTemplate _serverTemplateToAppTemplate(OMRTemplate serverTemplate) {
-    // Extract exact coordinates from templateJson.answers if available
-    final Map<String, Map<String, Map<String, dynamic>>>? exactCoords =
-        _extractExactCoords(serverTemplate.templateJson);
+    // Parse MCQ blocks from templateJson.answers
+    final fieldBlocks = _parseMCQBlocks(serverTemplate.templateJson);
     
-    final fieldBlocks = <AppOmrFieldBlock>[];
-    
-    // Convert existing field blocks
-    for (final fb in serverTemplate.fieldBlocks) {
-      // Get exact coords for this block if available
-      List<AppBubbleCoord>? exactBubbleCoords;
-      if (exactCoords != null) {
-        exactBubbleCoords = <AppBubbleCoord>[];
-        for (final label in fb.fieldLabels) {
-          final labelCoords = exactCoords[label];
-          if (labelCoords != null) {
-            for (final entry in labelCoords.entries) {
-              final value = entry.key;
-              final coord = entry.value;
-              exactBubbleCoords.add(AppBubbleCoord(
-                label: label,
-                value: value,
-                x: (coord['x'] as num?)?.toInt() ?? 0,
-                y: (coord['y'] as num?)?.toInt() ?? 0,
-                w: (coord['w'] as num?)?.toInt() ?? fb.bubbleWidth,
-                h: (coord['h'] as num?)?.toInt() ?? fb.bubbleHeight,
-              ));
-            }
-          }
-        }
-      }
-      
-      fieldBlocks.add(AppOmrFieldBlock(
-        name: fb.name,
-        originX: fb.originX,
-        originY: fb.originY,
-        shift: 0,
-        bubbleWidth: fb.bubbleWidth,
-        bubbleHeight: fb.bubbleHeight,
-        fieldLabels: fb.fieldLabels,
-        bubbleValues: fb.bubbleValues,
-        bubblesGap: fb.bubblesGap.toDouble(),
-        labelsGap: fb.labelsGap.toDouble(),
-        direction: fb.direction.name,
-        emptyValue: fb.emptyValue,
-        exactCoords: exactBubbleCoords,
-      ));
-    }
-    
-    // Add Student ID field block
+    // Add Student ID field blocks
     fieldBlocks.addAll(_createStudentIdBlocks(serverTemplate.templateJson, serverTemplate.studentId));
     
-    // Add Version Code field block
+    // Add Version Code field blocks
     fieldBlocks.addAll(_createVersionCodeBlocks(serverTemplate.templateJson, serverTemplate.versionCodeZone));
     
     final preprocessors = serverTemplate.preProcessors.map((pp) {
@@ -205,34 +160,173 @@ class OmrEngineService {
     );
   }
   
-  /// Extract exact coordinates from templateJson.answers format
-  Map<String, Map<String, Map<String, dynamic>>>? _extractExactCoords(Map<String, dynamic>? templateJson) {
-    if (templateJson == null) return null;
+  /// Parse MCQ blocks from templateJson.answers
+  /// Each question becomes a block with exact bubble coordinates
+  List<AppOmrFieldBlock> _parseMCQBlocks(Map<String, dynamic>? templateJson) {
+    if (templateJson == null) return [];
     
     final answers = templateJson['answers'];
-    if (answers is! Map) return null;
+    if (answers is! Map) return [];
     
-    final result = <String, Map<String, Map<String, dynamic>>>{};
+    final fieldBlocks = <AppOmrFieldBlock>[];
     
-    for (final entry in answers.entries) {
-      final qId = entry.key.toString();
-      final options = entry.value;
-      if (options is Map) {
-        result[qId] = <String, Map<String, dynamic>>{};
-        for (final optEntry in options.entries) {
-          final optKey = optEntry.key.toString();
-          if (optEntry.value is Map) {
-            result[qId]![optKey] = Map<String, dynamic>.from(optEntry.value as Map);
-          } else {
-            result[qId]![optKey] = {};
+    // Group questions by their Y position (same row = same Y ± tolerance)
+    final questionsByRow = _groupQuestionsByRow(answers);
+    
+    for (final row in questionsByRow) {
+      // Sort questions in row by X position (left to right)
+      row.sort((a, b) => a['x'].compareTo(b['x']));
+      
+      // Find the question with smallest Y to use as block origin
+      final firstQ = row.first;
+      final blockOriginY = row.map((q) => q['y']).reduce((a, b) => a < b ? a : b);
+      
+      // Find the question with smallest X to use as block origin
+      final blockOriginX = firstQ['x'];
+      
+      // Create bubble coords for all questions in this row
+      final bubbleCoords = <AppBubbleCoord>[];
+      final fieldLabels = <String>[];
+      
+      for (final q in row) {
+        final qId = q['id'];
+        final qCoords = q['coords'] as Map<String, dynamic>;
+        
+        fieldLabels.add(qId);
+        
+        // Add each option (A, B, C, D) as separate coords
+        for (final entry in qCoords.entries) {
+          final opt = entry.key;
+          final coord = entry.value as Map<String, dynamic>;
+          bubbleCoords.add(AppBubbleCoord(
+            label: qId,
+            value: opt,
+            x: (coord['x'] as num?)?.toInt() ?? 0,
+            y: (coord['y'] as num?)?.toInt() ?? 0,
+            w: (coord['w'] as num?)?.toInt() ?? 46,
+            h: (coord['h'] as num?)?.toInt() ?? 46,
+          ));
+        }
+      }
+      
+      if (bubbleCoords.isNotEmpty) {
+        // Calculate spacing
+        // Sort by label then value to find gaps
+        final sortedByYThenX = List<AppBubbleCoord>.from(bubbleCoords)
+          ..sort((a, b) {
+            if (a.label != b.label) return a.label.compareTo(b.label);
+            return a.y.compareTo(b.y);
+          });
+        
+        // Find bubblesGap (spacing between options A,B,C,D - same label, different Y)
+        int bubblesGap = 46;
+        for (int i = 0; i < sortedByYThenX.length - 1; i++) {
+          if (sortedByYThenX[i].label == sortedByYThenX[i + 1].label) {
+            final gap = sortedByYThenX[i + 1].y - sortedByYThenX[i].y;
+            if (gap > 0 && gap < 200) {
+              bubblesGap = gap;
+              break;
+            }
           }
         }
+        
+        // Find labelsGap (spacing between questions - different label, similar Y)
+        int labelsGap = 607;
+        final sortedByYThenLabel = List<AppBubbleCoord>.from(bubbleCoords)
+          ..sort((a, b) {
+            if ((a.y - b.y).abs() < 20) {
+              return a.x.compareTo(b.x);
+            }
+            return a.y.compareTo(b.y);
+          });
+        
+        for (int i = 0; i < sortedByYThenLabel.length - 1; i++) {
+          final curr = sortedByYThenLabel[i];
+          final next = sortedByYThenLabel[i + 1];
+          if (curr.label != next.label) {
+            final xDiff = next.x - curr.x;
+            if (xDiff > 100) {
+              labelsGap = xDiff;
+              break;
+            }
+          }
+        }
+        
+        fieldBlocks.add(AppOmrFieldBlock(
+          name: 'MCQBlock${fieldBlocks.length + 1}',
+          originX: blockOriginX,
+          originY: blockOriginY,
+          shift: 0,
+          bubbleWidth: bubbleCoords.first.w,
+          bubbleHeight: bubbleCoords.first.h,
+          fieldLabels: fieldLabels,
+          bubbleValues: ['A', 'B', 'C', 'D'],
+          bubblesGap: bubblesGap.toDouble(),
+          labelsGap: labelsGap.toDouble(),
+          direction: 'horizontal',
+          emptyValue: '',
+          exactCoords: bubbleCoords,
+        ));
       }
     }
     
-    return result.isEmpty ? null : result;
+    return fieldBlocks;
   }
   
+  /// Group questions by their row (same Y position ± tolerance)
+  List<List<Map<String, dynamic>>> _groupQuestionsByRow(Map answers) {
+    final rows = <List<Map<String, dynamic>>>[];
+    final usedKeys = <String>{};
+    
+    // Sort questions by Y position
+    final sortedQuestions = <Map<String, dynamic>>[];
+    for (final entry in answers.entries) {
+      final qId = entry.key.toString();
+      final options = entry.value as Map;
+      if (options.isEmpty) continue;
+      
+      // Get first option's position as question position
+      final firstOpt = options.entries.first.value as Map<String, dynamic>;
+      final y = (firstOpt['y'] as num?)?.toInt() ?? 0;
+      final x = (firstOpt['x'] as num?)?.toInt() ?? 0;
+      
+      sortedQuestions.add({
+        'id': qId,
+        'y': y,
+        'x': x,
+        'coords': options,
+      });
+    }
+    
+    sortedQuestions.sort((a, b) => a['y'].compareTo(b['y']));
+    
+    // Group by Y with tolerance
+    const yTolerance = 30;
+    for (final q in sortedQuestions) {
+      if (usedKeys.contains(q['id'])) continue;
+      
+      final row = <Map<String, dynamic>>[q];
+      usedKeys.add(q['id']);
+      
+      final qY = q['y'];
+      
+      // Find other questions in same row
+      for (final other in sortedQuestions) {
+        if (usedKeys.contains(other['id'])) continue;
+        if ((other['y'] - qY).abs() <= yTolerance) {
+          row.add(other);
+          usedKeys.add(other['id']);
+        }
+      }
+      
+      if (row.isNotEmpty) {
+        rows.add(row);
+      }
+    }
+    
+    return rows;
+  }
+
   /// Create field blocks for Student ID from templateJson
   /// Each digit is a separate block with 10 values (0-9)
   List<AppOmrFieldBlock> _createStudentIdBlocks(
