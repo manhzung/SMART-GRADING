@@ -42,15 +42,6 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerTemplateSet event,
     Emitter<OMRScannerState> emit,
   ) async {
-    developer.log(
-      '[OMRScanner] _onTemplateSet called. ExamId: ${event.examId}, ExamName: ${event.examName}',
-      name: 'OMRScanner',
-    );
-    developer.log(
-      '[OMRScanner] Template JSON keys: ${event.templateJson.keys.toList()}',
-      name: 'OMRScanner',
-    );
-
     emit(OMRScannerTemplateReady(
       templateJson: event.templateJson,
       examId: event.examId,
@@ -58,11 +49,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
       classId: event.classId,
       className: event.className,
     ));
-
-    developer.log(
-      '[OMRScanner] Template set complete. State is now OMRScannerTemplateReady',
-      name: 'OMRScanner',
-    );
+  }
     
       // Pre-load students for this class
     if (event.classId != null) {
@@ -105,29 +92,16 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImageCaptured event,
     Emitter<OMRScannerState> emit,
   ) async {
-    developer.log(
-      '[OMRScanner] _onImageCaptured called. Image size: ${event.imageBytes.length} bytes',
-      name: 'OMRScanner',
-    );
     emit(OMRScannerImageReady(imageBytes: event.imageBytes));
 
     final current = state;
-    developer.log(
-      '[OMRScanner] After emit ImageReady, current state type: ${current.runtimeType}',
-      name: 'OMRScanner',
-    );
-
     if (current is OMRScannerTemplateReady) {
-      developer.log(
-        '[OMRScanner] Template ready, triggering process...',
-        name: 'OMRScanner',
-      );
       add(OMRScannerProcessStarted(imageBytes: event.imageBytes));
     } else {
       developer.log(
-        '[OMRScanner] WARNING: Template NOT ready. State type: ${current.runtimeType}',
+        '[OMRScanner] ERROR: Template not ready. State: ${current.runtimeType}',
         name: 'OMRScanner',
-        error: 'Template not ready when image captured',
+        error: 'Template not ready',
       );
     }
   }
@@ -136,29 +110,16 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImagePicked event,
     Emitter<OMRScannerState> emit,
   ) async {
-    developer.log(
-      '[OMRScanner] _onImagePicked called. Image size: ${event.imageBytes.length} bytes',
-      name: 'OMRScanner',
-    );
     emit(OMRScannerImageReady(imageBytes: event.imageBytes));
 
     final current = state;
-    developer.log(
-      '[OMRScanner] After emit ImageReady, current state type: ${current.runtimeType}',
-      name: 'OMRScanner',
-    );
-
     if (current is OMRScannerTemplateReady) {
-      developer.log(
-        '[OMRScanner] Template ready, triggering process...',
-        name: 'OMRScanner',
-      );
       add(OMRScannerProcessStarted(imageBytes: event.imageBytes));
     } else {
       developer.log(
-        '[OMRScanner] WARNING: Template NOT ready. State type: ${current.runtimeType}',
+        '[OMRScanner] ERROR: Template not ready. State: ${current.runtimeType}',
         name: 'OMRScanner',
-        error: 'Template not ready when image picked',
+        error: 'Template not ready',
       );
     }
   }
@@ -167,37 +128,17 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerProcessStarted event,
     Emitter<OMRScannerState> emit,
   ) async {
-    developer.log(
-      '[OMRScanner] _onProcessStarted called. Current state type: ${state.runtimeType}',
-      name: 'OMRScanner',
-    );
-
     final current = state;
-    developer.log(
-      '[OMRScanner] State check: current is OMRScannerTemplateReady = ${current is OMRScannerTemplateReady}',
-      name: 'OMRScanner',
-    );
-
     if (current is! OMRScannerTemplateReady) {
       developer.log(
-        '[OMRScanner] ERROR: No template loaded. State type: ${current.runtimeType}, State: $current',
+        '[OMRScanner] ERROR: No template. State: ${current.runtimeType}',
         name: 'OMRScanner',
-        error: 'Template not ready',
       );
       emit(OMRScannerError(
-        message: 'No template loaded. Please load an exam template first. Current state: ${current.runtimeType}',
+        message: 'No template loaded. Current state: ${current.runtimeType}',
       ));
       return;
     }
-
-    developer.log(
-      '[OMRScanner] Template loaded. ExamId: ${current.examId}, ExamName: ${current.examName}',
-      name: 'OMRScanner',
-    );
-    developer.log(
-      '[OMRScanner] Template JSON keys: ${current.templateJson.keys.toList()}',
-      name: 'OMRScanner',
-    );
 
     emit(OMRScannerProcessing(
       imageBytes: event.imageBytes,
