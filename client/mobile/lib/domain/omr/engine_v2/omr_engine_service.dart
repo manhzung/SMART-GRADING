@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import '../engine/app_omr_engine.dart';
 import '../engine/app_omr_models.dart';
 import 'omr_models.dart';
@@ -22,7 +23,39 @@ class OmrEngineService {
     required List<int> imageBytes,
     required Map<String, dynamic> templateJson,
   }) async {
+    // LOG: Print template info for debugging
+    debugPrint('═══ OmrEngineService Template Info ═══');
+    debugPrint('Template keys: ${templateJson.keys.toList()}');
+    final t = templateJson['template'] ?? templateJson;
+    if (t is Map<String, dynamic>) {
+      debugPrint('Template pageDimensions: ${t['pageDimensions']}');
+      debugPrint('Template bubbleDimensions: ${t['bubbleDimensions']}');
+      debugPrint('Template fieldBlocks: ${t['fieldBlocks']?.keys.toList() ?? 'none'}');
+      if (t['fieldBlocks'] != null) {
+        for (final entry in (t['fieldBlocks'] as Map<String, dynamic>).entries) {
+          final block = entry.value as Map<String, dynamic>;
+          debugPrint('  Block "${entry.key}": origin=${block['origin']}, fieldType=${block['fieldType']}, '
+              'bubbleWidth=${block['bubbleWidth']}, bubbleHeight=${block['bubbleHeight']}, '
+              'labels=${(block['fieldLabels'] as List?)?.length ?? 0}');
+        }
+      }
+      debugPrint('Template answerKey: ${t['answerKey']}');
+    }
+    debugPrint('═══════════════════════════════════════');
+
     final template = _convertToAppOmrTemplate(templateJson);
+    
+    // LOG: Print converted AppOmrTemplate
+    debugPrint('═══ Converted AppOmrTemplate ═══');
+    debugPrint('pageWidth=${template.pageWidth}, pageHeight=${template.pageHeight}');
+    debugPrint('bubbleWidth=${template.bubbleWidth}, bubbleHeight=${template.bubbleHeight}');
+    debugPrint('fieldBlocks count=${template.fieldBlocks.length}');
+    for (final fb in template.fieldBlocks) {
+      debugPrint('  Block "${fb.name}": origin=(${fb.originX},${fb.originY}), '
+          'labels=${fb.fieldLabels.length}, values=${fb.bubbleValues}');
+    }
+    debugPrint('═══════════════════════════════════');
+    
     final bytes = Uint8List.fromList(imageBytes);
 
     // Use AppOMREngine with full corner detection and warp support

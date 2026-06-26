@@ -108,7 +108,18 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
       if (t == null) {
         throw Exception('No template selected');
       }
-      debugPrint('OMRTestLab _processImage: template=$t, fieldBlocks=${t.fieldBlocks.map((b) => '${b.name}:${b.originY}').toList()}');
+      
+      // LOG: Print template info for comparison with camera scanner
+      debugPrint('═══ TestLab Template Info ═══');
+      debugPrint('pageWidth=${t.pageWidth}, pageHeight=${t.pageHeight}');
+      debugPrint('bubbleWidth=${t.bubbleWidth}, bubbleHeight=${t.bubbleHeight}');
+      debugPrint('fieldBlocks count=${t.fieldBlocks.length}');
+      for (final fb in t.fieldBlocks) {
+        debugPrint('  Block "${fb.name}": origin=(${fb.originX},${fb.originY}), '
+            'labels=${fb.fieldLabels.length}, values=${fb.bubbleValues}');
+      }
+      debugPrint('═══════════════════════════════════');
+      
       final result = await OMREngine().processImage(
         imageBytes: bytes,
         template: t,
@@ -667,12 +678,26 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
         'croppedLen=${result.croppedImageBytes?.length ?? 0}, '
         'template=${result.template.name}');
 
+    // Build scan result from processing result for overlay visualization
+    OMRTestLabScanResult? scanResult;
+    if (result.response.bubbleIntensities.isNotEmpty) {
+      scanResult = OMRTestLabScanResult(
+        responses: Map<String, String>.from(result.response.answers),
+        bubbleIntensities: Map<String, List<double>>.from(
+          result.response.bubbleIntensities.map(
+            (key, value) => MapEntry(key, List<double>.from(value.map((e) => e.meanIntensity))),
+          ),
+        ),
+      );
+      debugPrint('OMRTestLab _buildOverlayTab: created scanResult with ${scanResult.bubbleIntensities.length} fields');
+    }
+
     return OMRTestLabOverlay(
       imageBytes: displayBytes,
       imageWidth: displayWidth,
       imageHeight: displayHeight,
       template: result.template,
-      scanResult: null,
+      scanResult: scanResult,
     );
   }
 
