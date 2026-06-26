@@ -143,35 +143,17 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
       child: BlocConsumer<OMRScannerBloc, OMRScannerState>(
         listener: (context, state) {
           if (state is OMRScannerSuccess) {
-            // NEW FLOW: Auto-detected student or show picker
-            if (state.matchedStudent != null) {
-              // Student found automatically - show confirmation dialog
-              _showAutoDetectConfirmation(context, state);
-            } else if (state.studentCode != null && state.studentCode!.isNotEmpty) {
-              // Student code detected but not matched - show picker with code pre-filled
-              _showStudentPickerWithCode(context, state);
-            } else {
-              // No student code detected - show normal picker
-              StudentPickerDialog.show(
-                context: context,
-                classId: widget.classId ?? '',
-                className: widget.className ?? widget.examName ?? '',
-                examId: widget.examId ?? '',
-                examName: widget.examName ?? '',
-                imageBytes: state.imageBytes,
-              );
-            }
-          } else if (state is OMRScannerStudentConfirmed) {
-            // Student manually selected - go to result
+            // Auto-detected student or proceed without student selection
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => OMRResultPage(
                   imageBytes: state.imageBytes,
                   gradingResult: state.gradingResult,
-                  processingResult: null,
-                  examId: widget.examId,
-                  examName: widget.examName,
-                  student: state.student,
+                  processingResult: state.processingResult,
+                  examId: widget.examId ?? '',
+                  examName: widget.examName ?? '',
+                  student: state.matchedStudent,
+                  studentCode: state.studentCode,
                 ),
               ),
             );

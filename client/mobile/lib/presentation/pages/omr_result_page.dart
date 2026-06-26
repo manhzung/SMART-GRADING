@@ -15,6 +15,7 @@ class OMRResultPage extends StatelessWidget {
   final String? examName;
   final List<QuestionScoreResult>? questionScores;
   final ClassStudent? student;
+  final String? studentCode;
 
   const OMRResultPage({
     super.key,
@@ -25,6 +26,7 @@ class OMRResultPage extends StatelessWidget {
     this.examName,
     this.questionScores,
     this.student,
+    this.studentCode,
   });
 
   @override
@@ -155,6 +157,9 @@ class OMRResultPage extends StatelessWidget {
   }
 
   Widget _buildStudentInfoCard() {
+    final displayName = student?.name ?? studentCode ?? 'Unknown';
+    final displayCode = student?.studentCode ?? studentCode;
+    
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -180,16 +185,16 @@ class OMRResultPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  student!.name,
+                  displayName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-                if (student!.studentCode != null)
+                if (displayCode != null && student != null)
                   Text(
-                    'MSSV: ${student!.studentCode}',
+                    'MSSV: $displayCode',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 13,
@@ -198,7 +203,8 @@ class OMRResultPage extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.verified, color: Colors.white, size: 24),
+          if (student != null)
+            const Icon(Icons.verified, color: Colors.white, size: 24),
         ],
       ),
     );
