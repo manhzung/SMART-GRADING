@@ -52,7 +52,8 @@ class OmrEngineService {
     debugPrint('fieldBlocks count=${template.fieldBlocks.length}');
     for (final fb in template.fieldBlocks) {
       debugPrint('  Block "${fb.name}": origin=(${fb.originX},${fb.originY}), '
-          'labels=${fb.fieldLabels.length}, values=${fb.bubbleValues}');
+          'labels=${fb.fieldLabels.length}, values=${fb.bubbleValues}, '
+          'bubblesGap=${fb.bubblesGap.toInt()}, labelsGap=${fb.labelsGap.toInt()}, direction=${fb.direction}');
     }
     debugPrint('═══════════════════════════════════');
     
