@@ -8,11 +8,9 @@ import 'package:smart_grading_mobile/core/network/api_client.dart';
 import 'package:smart_grading_mobile/core/network/exam_template_service.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/domain/omr/models/evaluation_config.dart';
-import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
 import 'package:smart_grading_mobile/presentation/blocs/camera/camera_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/omr_result_page.dart';
-import 'package:smart_grading_mobile/presentation/widgets/student_picker_dialog.dart';
 import 'package:smart_grading_mobile/presentation/widgets/corner_overlay_painter.dart';
 
 class CameraScannerPage extends StatefulWidget {
@@ -47,7 +45,6 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
   late CameraBloc _cameraBloc;
   final ImagePicker _imagePicker = ImagePicker();
   late ExamTemplateService _examTemplateService;
-  Map<String, dynamic>? _cachedTemplateJson;
 
   @override
   void initState() {
@@ -71,7 +68,11 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
   }
 
   void _loadTemplate() {
-    if (widget.template != null) {
+    // First, try to fetch template from server if we have an examId
+    if (widget.examId != null) {
+      _fetchAndSetTemplate();
+    } else if (widget.template != null) {
+      // Fallback to provided template
       context.read<OMRScannerBloc>().add(OMRScannerTemplateSet(
         templateJson: widget.template!.toJson(),
         examId: widget.examId,
@@ -79,10 +80,8 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         classId: widget.classId,
         className: widget.className,
       ));
-      if (widget.useNewEngine && widget.examId != null) {
-        _fetchTemplateJson();
-      }
     } else {
+      // Use default template
       final template = OMRTemplate.simpleMcq(
         numQuestions: 20,
         numOptions: 4,
@@ -99,12 +98,44 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
     }
   }
 
-  Future<void> _fetchTemplateJson() async {
-    if (widget.examId == null) return;
+  Future<void> _fetchAndSetTemplate() async {
     try {
-      _cachedTemplateJson = await _examTemplateService.getTemplate(widget.examId!);
+      final templateJson = await _examTemplateService.getTemplate(widget.examId!);
+      if (mounted) {
+        context.read<OMRScannerBloc>().add(OMRScannerTemplateSet(
+          templateJson: templateJson,
+          examId: widget.examId,
+          examName: widget.examName,
+          classId: widget.classId,
+          className: widget.className,
+        ));
+      }
     } catch (e) {
-      debugPrint('Failed to fetch template: $e');
+      debugPrint('Failed to fetch template from server: $e');
+      // Fallback to provided template or default
+      if (widget.template != null) {
+        context.read<OMRScannerBloc>().add(OMRScannerTemplateSet(
+          templateJson: widget.template!.toJson(),
+          examId: widget.examId,
+          examName: widget.examName,
+          classId: widget.classId,
+          className: widget.className,
+        ));
+      } else {
+        final template = OMRTemplate.simpleMcq(
+          numQuestions: 20,
+          numOptions: 4,
+          bubbleWidth: 35,
+          bubbleHeight: 35,
+        );
+        context.read<OMRScannerBloc>().add(OMRScannerTemplateSet(
+          templateJson: template.toJson(),
+          examId: widget.examId ?? 'demo',
+          examName: widget.examName ?? 'Demo Exam',
+          classId: widget.classId,
+          className: widget.className,
+        ));
+      }
     }
   }
 
@@ -196,153 +227,6 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
     );
   }
 
-  void _showAutoDetectConfirmation(BuildContext context, OMRScannerSuccess state) {
-    final student = state.matchedStudent!;
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF22C55E).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.check_circle, color: Color(0xFF22C55E), size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Text('Student Detected'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStudentInfoCard(student),
-            const SizedBox(height: 16),
-            Text(
-              'MSSV: ${state.studentCode}',
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
-            ),
-            if (state.versionCode != null && state.versionCode!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Mã đề: ${state.versionCode}',
-                style: TextStyle(color: Colors.grey[600], fontSize: 13),
-              ),
-            ],
-            const SizedBox(height: 16),
-            const Text(
-              'Is this the correct student?',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              StudentPickerDialog.show(
-                context: context,
-                classId: widget.classId ?? '',
-                className: widget.className ?? widget.examName ?? '',
-                examId: widget.examId ?? '',
-                examName: widget.examName ?? '',
-                imageBytes: state.imageBytes,
-              );
-            },
-            child: const Text('Change'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.read<OMRScannerBloc>().add(OMRScannerConfirmStudent(student));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF22C55E),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Confirm & Submit'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showStudentPickerWithCode(BuildContext context, OMRScannerSuccess state) {
-    StudentPickerDialog.show(
-      context: context,
-      classId: widget.classId ?? '',
-      className: widget.className ?? widget.examName ?? '',
-      examId: widget.examId ?? '',
-      examName: widget.examName ?? '',
-      imageBytes: state.imageBytes,
-      prefillCode: state.studentCode,
-    );
-  }
-
-  Widget _buildStudentInfoCard(ClassStudent student) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                _getInitials(student.name),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF6366F1),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  student.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                if (student.studentCode != null)
-                  Text(
-                    student.studentCode!,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const Icon(Icons.verified, color: Color(0xFF22C55E), size: 24),
-        ],
-      ),
-    );
-  }
-
   void _showSubmittedSnackbar(BuildContext context, OMRScannerSubmitted state) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -417,13 +301,6 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         ),
       ),
     );
-  }
-
-  String _getInitials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.isEmpty) return '?';
-    if (parts.length == 1) return parts[0][0].toUpperCase();
-    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   Widget _buildBody(OMRScannerState omrState, CameraBlocState cameraState) {
