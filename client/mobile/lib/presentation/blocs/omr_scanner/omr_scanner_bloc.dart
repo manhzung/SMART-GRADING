@@ -140,7 +140,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
 
       final convertedGradingResult = _convertToOldGradingResult(result.gradingResult);
       final processingResult = OMRProcessingResult(
-        template: OMRTemplate.simpleMcq(numQuestions: result.gradingResult.questionScores.length, numOptions: 4),
+        template: OMRTemplate.fromJson(templateJson),
         gradingResult: convertedGradingResult,
         response: OMRResponseDebug(
           answers: Map.fromEntries(
@@ -153,7 +153,8 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
         processingTime: result.scanResult.processingTime,
         processingSteps: result.scanResult.processingSteps,
         wasWarped: result.scanResult.wasWarped,
-        annotatedImageBytes: result.annotatedBytes ?? imageBytes,
+        annotatedImageBytes: result.annotatedBytes ?? result.croppedBytes ?? imageBytes,
+        croppedImageBytes: result.croppedBytes,
       );
 
       // Try to find student by studentCode

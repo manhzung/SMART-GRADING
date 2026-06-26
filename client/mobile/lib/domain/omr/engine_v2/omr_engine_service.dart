@@ -7,11 +7,13 @@ class OmScanAndGradeResult {
   final OmrScanResult scanResult;
   final OmrGradingResult gradingResult;
   final Uint8List? annotatedBytes;
+  final Uint8List? croppedBytes;
 
   OmScanAndGradeResult({
     required this.scanResult,
     required this.gradingResult,
     this.annotatedBytes,
+    this.croppedBytes,
   });
 }
 
@@ -25,17 +27,17 @@ class OmrEngineService {
 
     // Use AppOMREngine with full corner detection and warp support
     final engine = AppOMREngine(template);
-    final (result, annotatedBytes) = engine.processImage(bytes);
+    final (appResult, annotatedBytes) = engine.processImage(bytes);
 
     // Convert AppOmrResult to OmrScanResult
-    final scanResult = _convertToOmrScanResult(result, annotatedBytes);
+    final scanResult = _convertToOmrScanResult(appResult, annotatedBytes);
 
     // Extract answer key from template
     final answerKey = _extractAnswerKey(templateJson);
 
     // Convert responses to answer format for grading
     final detectedAnswers = <String, String>{};
-    for (final entry in result.responses.entries) {
+    for (final entry in appResult.responses.entries) {
       // AppOmrEngine uses fieldLabels as keys (e.g., "q1", "q2", "roll1")
       // We need to convert to grading format
       final label = entry.key;
@@ -56,6 +58,7 @@ class OmrEngineService {
       scanResult: scanResult,
       gradingResult: gradingResult,
       annotatedBytes: annotatedBytes,
+      croppedBytes: appResult.croppedImageBytes,
     );
   }
 
