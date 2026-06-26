@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   GraduationCap,
@@ -23,7 +23,8 @@ export default function SchoolDashboard() {
 
   useEffect(() => {
     fetchStats(userSchoolId);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchStats]);
 
   const handleRefresh = () => {
     fetchStats(userSchoolId);
@@ -33,7 +34,7 @@ export default function SchoolDashboard() {
     ? `Xin chào, ${user.name.split(' ').pop()}!`
     : 'Xin chào!';
 
-  const statCards = [
+  const statCards = useMemo(() => [
     {
       label: 'Tổng Lớp',
       value: stats?.totalClasses ?? 0,
@@ -62,7 +63,7 @@ export default function SchoolDashboard() {
       color: '#8b5cf6',
       sub: 'Bài kiểm tra đã tạo',
     },
-  ];
+  ], [stats]);
 
   return (
     <div className={styles.page}>
