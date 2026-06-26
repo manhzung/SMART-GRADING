@@ -30,6 +30,12 @@ import AITutorPage from '../../features/ai-tutor/AITutorPage';
 import AdminDashboard from '../../pages/admin/AdminDashboard';
 import SchoolsPage from '../../pages/admin/SchoolsPage';
 import UsersPage from '../../pages/admin/UsersPage';
+import SchoolLayout from '../components/SchoolLayout';
+import SchoolDashboard from '../../pages/school/SchoolDashboard';
+import ClassesPage as SchoolClassesPage from '../../pages/school/ClassesPage';
+import StudentsPage from '../../pages/school/StudentsPage';
+import QuestionsPage from '../../pages/school/QuestionsPage';
+import ExamsPage as SchoolExamsPage from '../../pages/school/ExamsPage';
 import Layout from '../components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -56,7 +62,17 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   const userRole = useAuthStore((state) => state.user?.role);
   if (isLoading) return null;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (userRole !== 'admin' && userRole !== 'school-admin') return <Navigate to="/" replace />;
+  if (userRole !== 'admin') return <Navigate to="/unauthorized" replace />;
+  return <>{children}</>;
+}
+
+function SchoolRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const userRole = useAuthStore((state) => state.user?.role);
+  if (isLoading) return null;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (userRole !== 'school-admin') return <Navigate to="/unauthorized" replace />;
   return <>{children}</>;
 }
 
@@ -165,6 +181,22 @@ export default function AppRoutes() {
               </AdminRoute>
             }
           />
+        </Route>
+
+        {/* School Admin routes */}
+        <Route
+          path="/school"
+          element={
+            <SchoolRoute>
+              <SchoolLayout />
+            </SchoolRoute>
+          }
+        >
+          <Route index element={<SchoolDashboard />} />
+          <Route path="classes" element={<SchoolClassesPage />} />
+          <Route path="students" element={<StudentsPage />} />
+          <Route path="questions" element={<QuestionsPage />} />
+          <Route path="exams" element={<SchoolExamsPage />} />
         </Route>
 
         {/* Catch-all 404 route */}
