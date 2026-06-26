@@ -199,26 +199,49 @@ class OmrEngineService {
   AppOmrTemplate _createDefaultTemplate(Map<String, dynamic> t) {
     final pageWidth = (t['pageWidth'] as num?)?.toInt() ?? 2480;
     final pageHeight = (t['pageHeight'] as num?)?.toInt() ?? 3508;
+    final bubbleWidth = (t['bubbleWidth'] as num?)?.toInt() ?? 46;
+    final bubbleHeight = (t['bubbleHeight'] as num?)?.toInt() ?? 46;
+    final autoAlign = t['autoAlign'] as bool? ?? false;
 
     // Parse existing coordinates if available
     final fieldBlocks = <AppOmrFieldBlock>[];
 
-    // Student ID block
+    // Student ID block - parse coords with proper spacing
     final studentId = t['studentId'] as Map<String, dynamic>?;
     if (studentId != null) {
       final coords = studentId['coords'] as List?;
       if (coords != null && coords.isNotEmpty) {
-        final first = coords.first as Map<String, dynamic>;
+        // Calculate spacing from actual coords
+        final sortedByX = List<Map<String, dynamic>>.from(
+          coords.map((c) => Map<String, dynamic>.from(c as Map))
+        )..sort((a, b) => (a['x'] as num).compareTo(b['x'] as num));
+        
+        final sortedByY = List<Map<String, dynamic>>.from(
+          coords.map((c) => Map<String, dynamic>.from(c as Map))
+        )..sort((a, b) => (a['y'] as num).compareTo(b['y'] as num));
+        
+        int xGap = 0;
+        if (sortedByX.length >= 2) {
+          xGap = ((sortedByX[1]['x'] as num) - (sortedByX[0]['x'] as num)).toInt();
+        }
+        
+        int yGap = 0;
+        if (sortedByY.length >= 2) {
+          yGap = ((sortedByY[1]['y'] as num) - (sortedByY[0]['y'] as num)).toInt();
+        }
+
+        // Student ID is vertical (digits stacked), use yGap as bubblesGap
         fieldBlocks.add(AppOmrFieldBlock(
           name: 'student_code',
-          originX: (first['x'] as num?)?.toInt() ?? 0,
-          originY: (first['y'] as num?)?.toInt() ?? 0,
-          bubbleWidth: (first['w'] as num?)?.toInt() ?? 40,
-          bubbleHeight: (first['h'] as num?)?.toInt() ?? 40,
+          originX: (coords.first['x'] as num).toInt(),
+          originY: (coords.first['y'] as num).toInt(),
+          bubbleWidth: (coords.first['w'] as num?)?.toInt() ?? bubbleWidth,
+          bubbleHeight: (coords.first['h'] as num?)?.toInt() ?? bubbleHeight,
           fieldLabels: List.generate(coords.length, (i) => 'roll$i'),
           bubbleValues: List.generate(10, (i) => i.toString()),
-          bubblesGap: 40,
-          labelsGap: 40,
+          bubblesGap: yGap > 0 ? yGap.toDouble() : bubbleHeight + 10,
+          labelsGap: xGap > 0 ? xGap.toDouble() : bubbleWidth + 10,
+          direction: 'vertical', // digits go vertically
         ));
       }
     }
@@ -228,63 +251,115 @@ class OmrEngineService {
     if (versionCode != null) {
       final coords = versionCode['coords'] as List?;
       if (coords != null && coords.isNotEmpty) {
-        final first = coords.first as Map<String, dynamic>;
+        final sortedByX = List<Map<String, dynamic>>.from(
+          coords.map((c) => Map<String, dynamic>.from(c as Map))
+        )..sort((a, b) => (a['x'] as num).compareTo(b['x'] as num));
+        
+        final sortedByY = List<Map<String, dynamic>>.from(
+          coords.map((c) => Map<String, dynamic>.from(c as Map))
+        )..sort((a, b) => (a['y'] as num).compareTo(b['y'] as num));
+        
+        int xGap = 0;
+        if (sortedByX.length >= 2) {
+          xGap = ((sortedByX[1]['x'] as num) - (sortedByX[0]['x'] as num)).toInt();
+        }
+        
+        int yGap = 0;
+        if (sortedByY.length >= 2) {
+          yGap = ((sortedByY[1]['y'] as num) - (sortedByY[0]['y'] as num)).toInt();
+        }
+
         fieldBlocks.add(AppOmrFieldBlock(
           name: 'version_code',
-          originX: (first['x'] as num?)?.toInt() ?? 0,
-          originY: (first['y'] as num?)?.toInt() ?? 0,
-          bubbleWidth: (first['w'] as num?)?.toInt() ?? 40,
-          bubbleHeight: (first['h'] as num?)?.toInt() ?? 40,
+          originX: (coords.first['x'] as num).toInt(),
+          originY: (coords.first['y'] as num).toInt(),
+          bubbleWidth: (coords.first['w'] as num?)?.toInt() ?? bubbleWidth,
+          bubbleHeight: (coords.first['h'] as num?)?.toInt() ?? bubbleHeight,
           fieldLabels: List.generate(coords.length, (i) => 'ver$i'),
-          bubbleValues: ['1', '2', '3', '4'],
-          bubblesGap: 40,
-          labelsGap: 40,
+          bubbleValues: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+          bubblesGap: yGap > 0 ? yGap.toDouble() : bubbleHeight + 10,
+          labelsGap: xGap > 0 ? xGap.toDouble() : bubbleWidth + 10,
+          direction: 'vertical',
         ));
       }
     }
 
-    // Answer blocks
+    // Answer blocks - each question has 4 options (A, B, C, D) in horizontal row
     final answers = t['answers'] as Map<String, dynamic>?;
     if (answers != null) {
-      for (final entry in answers.entries) {
-        final qId = entry.key;
-        final options = entry.value as Map<String, dynamic>;
+      // Get option keys sorted (A, B, C, D)
+      final sortedQIds = answers.keys.toList()..sort();
+      
+      for (final qId in sortedQIds) {
+        final options = answers[qId] as Map<String, dynamic>;
         if (options.isNotEmpty) {
-          final firstOpt = options.values.first as Map<String, dynamic>;
+          // Get sorted options by x position
+          final sortedOpts = options.entries.toList()
+            ..sort((a, b) {
+              final aX = (a.value as Map)['x'] as num;
+              final bX = (b.value as Map)['x'] as num;
+              return aX.compareTo(bX);
+            });
+          
+          final firstOpt = sortedOpts.first.value as Map<String, dynamic>;
+          final optionKeys = sortedOpts.map((e) => e.key).toList();
+          
+          // Calculate horizontal spacing between options
+          int xGap = 0;
+          if (sortedOpts.length >= 2) {
+            final firstX = (sortedOpts[0].value as Map)['x'] as num;
+            final secondX = (sortedOpts[1].value as Map)['x'] as num;
+            xGap = (secondX - firstX).toInt();
+          }
+          
+          // For answers: bubblesGap = spacing between A,B,C,D (horizontal)
+          // labelsGap = spacing between questions (vertical) - use bubbleHeight + 10 as default
           fieldBlocks.add(AppOmrFieldBlock(
             name: qId,
-            originX: (firstOpt['x'] as num?)?.toInt() ?? 0,
-            originY: (firstOpt['y'] as num?)?.toInt() ?? 0,
-            bubbleWidth: (firstOpt['w'] as num?)?.toInt() ?? 40,
-            bubbleHeight: (firstOpt['h'] as num?)?.toInt() ?? 40,
+            originX: (firstOpt['x'] as num).toInt(),
+            originY: (firstOpt['y'] as num).toInt(),
+            bubbleWidth: (firstOpt['w'] as num?)?.toInt() ?? bubbleWidth,
+            bubbleHeight: (firstOpt['h'] as num?)?.toInt() ?? bubbleHeight,
             fieldLabels: [qId],
-            bubbleValues: options.keys.toList(),
-          bubblesGap: 50,
-          labelsGap: 50,
+            bubbleValues: optionKeys,
+            bubblesGap: xGap > 0 ? xGap.toDouble() : bubbleWidth + 25, // spacing between options
+            labelsGap: (bubbleHeight + 20).toDouble(), // spacing between questions (estimated)
+            direction: 'horizontal',
+          ));
+        }
+      }
+    }
+
+    // Parse preprocessors from template
+    final preprocessorList = t['preProcessors'] as List?;
+    final preprocessors = <AppOmrPreProcessor>[];
+    if (preprocessorList != null) {
+      for (final pp in preprocessorList) {
+        final ppMap = pp as Map<String, dynamic>;
+        final options = Map<String, dynamic>.from(ppMap['options'] as Map? ?? {});
+        preprocessors.add(AppOmrPreProcessor(
+          name: ppMap['name'] as String,
+          options: options,
         ));
       }
     }
+    
+    // Default preprocessors if none specified
+    if (preprocessors.isEmpty) {
+      preprocessors.addAll([
+        const AppOmrPreProcessor(name: 'GaussianBlur', options: {'kSize': [3, 3]}),
+        const AppOmrPreProcessor(name: 'CropPage', options: {}),
+      ]);
     }
-
-    final preprocessors = [
-      const AppOmrPreProcessor(
-        name: 'GaussianBlur',
-        options: {'kSize': [5, 5]},
-      ),
-      const AppOmrPreProcessor(
-        name: 'CropPage',
-        options: {},
-      ),
-    ];
 
     return AppOmrTemplate(
       pageWidth: pageWidth,
       pageHeight: pageHeight,
-      bubbleWidth: 40,
-      bubbleHeight: 40,
+      bubbleWidth: bubbleWidth,
+      bubbleHeight: bubbleHeight,
       fieldBlocks: fieldBlocks,
       preprocessors: preprocessors,
-      autoAlign: true,
+      autoAlign: autoAlign,
     );
   }
 
