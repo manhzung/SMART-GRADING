@@ -113,11 +113,17 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
       debugPrint('═══ TestLab Template Info ═══');
       debugPrint('pageWidth=${t.pageWidth}, pageHeight=${t.pageHeight}');
       debugPrint('bubbleWidth=${t.bubbleWidth}, bubbleHeight=${t.bubbleHeight}');
+      debugPrint('autoAlign=${t.autoAlign}');
       debugPrint('fieldBlocks count=${t.fieldBlocks.length}');
       for (final fb in t.fieldBlocks) {
         debugPrint('  Block "${fb.name}": origin=(${fb.originX},${fb.originY}), '
-            'labels=${fb.fieldLabels.length}, values=${fb.bubbleValues}');
+            'labels=${fb.fieldLabels.length}, values=${fb.bubbleValues}, '
+            'bubblesGap=${fb.bubblesGap.toInt()}, labelsGap=${fb.labelsGap.toInt()}, '
+            'direction=${fb.direction.name}');
       }
+      debugPrint('  studentId: ${t.studentId != null ? "present" : "null"}');
+      debugPrint('  versionCodeZone: ${t.versionCodeZone != null ? "present" : "null"}');
+      debugPrint('  answerKey: ${t.answerKey}');
       debugPrint('═══════════════════════════════════');
       
       final result = await OMREngine().processImage(
