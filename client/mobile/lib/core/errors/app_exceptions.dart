@@ -40,6 +40,14 @@ class AuthException extends AppException {
   });
 }
 
+class ForbiddenException extends AppException {
+  ForbiddenException({
+    super.message = 'Access denied',
+    super.code = 'FORBIDDEN',
+    super.originalError,
+  });
+}
+
 class ValidationException extends AppException {
   final Map<String, String>? fieldErrors;
 

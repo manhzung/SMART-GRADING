@@ -1,14 +1,16 @@
 /**
  * AMC Service Facade
- * Entry point cho toan bo AMC pipeline
+ * Entry point cho toan bo AMC pipeline — chi quan ly PDF generation
+ *
+ * Luu y: templateJson (OMR grading data) duoc luu vao OMRTemplate
+ * boi examPaper.service.generateAllPapers() (qua _compileAnswerSheetProject)
+ * Khong luu templateJson o amc.service.js.
  */
 
 const path = require('path');
 const fs = require('fs');
 const amcRunner = require('./amcRunner.service');
 const amcCompiler = require('./amcCompiler.service');
-const amcCsvParser = require('./amcCsvParser');
-const amcTemplateBridge = require('./amcTemplateBridge');
 const { Exam, ExamVersion } = require('../models');
 
 const UPLOADS_DIR = path.join(__dirname, '../../../uploads/amc');
@@ -28,7 +30,6 @@ class AmcService {
   async generateExamPapers(examId, versionCodes, options = {}) {
     const { timeoutSeconds = 120 } = options;
 
-    // Validate environment first
     const envCheck = await amcRunner.validateEnvironment();
     if (!envCheck.isValid) {
       throw new Error(
@@ -41,7 +42,6 @@ class AmcService {
       );
     }
 
-    // Fetch exam data with questions
     const exam = await Exam.findById(examId)
       .populate('primaryClassId', 'name')
       .populate('questionIds');
@@ -50,13 +50,11 @@ class AmcService {
       throw new Error(`Exam ${examId} not found`);
     }
 
-    // Build output directory
     const outputDir = path.join(this.uploadsDir, examId.toString());
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // Prepare question data
     const questions = (exam.questionIds || []).map((q) => ({
       content: q.content,
       options: q.options.map((o) => ({
@@ -68,7 +66,6 @@ class AmcService {
       score: q.score || 1,
     }));
 
-    // Run compilation
     const result = await amcCompiler.compile({
       examId: examId.toString(),
       examData: {
@@ -88,7 +85,7 @@ class AmcService {
       timeoutSeconds,
     });
 
-    // Update ExamVersion records
+    // Update ExamVersion records with PDF URLs only
     const versionResults = [];
     for (let i = 0; i < result.versionPdfs.length; i++) {
       const vp = result.versionPdfs[i];
@@ -102,44 +99,6 @@ class AmcService {
         examVersion.generatedAt = new Date();
         examVersion.generationErrors = vp.errors || [];
         await examVersion.save();
-
-        // Generate template JSON for this version
-        const CsvParser = require('./amcCsvParser');
-        const bridge = new amcTemplateBridge();
-
-        const csvPath = path.join(outputDir, 'exam-answers.csv');
-        let csvContent = '';
-        if (fs.existsSync(csvPath)) {
-          csvContent = fs.readFileSync(csvPath, 'utf8');
-        }
-
-        const parser = new CsvParser();
-        const csvData = parser.parse(csvContent);
-        const answerKey = {};
-        const questionScores = {};
-        (examVersion.questions || []).forEach((q, idx) => {
-          const qId = `q${idx + 1}`;
-          const correct = (q.shuffledOptions || []).find(o => o.isCorrect);
-          answerKey[qId] = correct ? correct.id : null;
-          questionScores[qId] = q.questionId?.score || 1;
-        });
-
-        const templateJson = bridge.generate({
-          csvData,
-          versionData: { versionCode: vCode, answerKey },
-          examData: {
-            _id: examId,
-            totalScore: exam.totalScore,
-            questionIds: examVersion.questions,
-          },
-          paperSize: exam.printConfig?.paperSize || 'A4',
-          scanDpi: exam.printConfig?.scanDpi || 300,
-        });
-
-        await ExamVersion.updateOne(
-          { _id: examVersion._id },
-          { $set: { templateJson } }
-        );
 
         versionResults.push({
           versionCode: vCode,

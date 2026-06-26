@@ -7,8 +7,8 @@ import 'package:smart_grading_mobile/core/network/omr_template_service.dart';
 import 'package:smart_grading_mobile/domain/omr/engine/omr_engine.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/presentation/widgets/omr_bubble_details_table.dart';
-import 'package:smart_grading_mobile/presentation/widgets/omr_bubble_overlay.dart';
 import 'package:smart_grading_mobile/presentation/widgets/omr_processing_log.dart';
+import 'package:smart_grading_mobile/presentation/widgets/omr_test_lab_overlay.dart';
 
 enum _CaptureState { idle, capturing, processing, done, error }
 
@@ -45,10 +45,8 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    // Start with the bundled Sample 4 — keeps the test lab working even
-    // when the backend is offline. User can switch to a server template
-    // (or the "Phiếu 15 câu" server template) once they load.
-    _template = OMRTemplate.sample4();
+    // Use AMC user template with templateJson for full bubble coordinates
+    _template = _create30QuestionDemoTemplate();
     _templateSource = _TemplateSource.offlineFallback;
     _loadServerTemplates();
   }
@@ -110,6 +108,7 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
       if (t == null) {
         throw Exception('No template selected');
       }
+      debugPrint('OMRTestLab _processImage: template=$t, fieldBlocks=${t.fieldBlocks.map((b) => '${b.name}:${b.originY}').toList()}');
       final result = await OMREngine().processImage(
         imageBytes: bytes,
         template: t,
@@ -139,6 +138,122 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
       _imageBytes = null;
       _processingResult = null;
       _errorMessage = null;
+    });
+  }
+
+  /// Build a hard-coded template matching the user's AMC template exactly
+  OMRTemplate _create30QuestionDemoTemplate() {
+    // Student ID: 7 digits × 10 values each (70 coords)
+    // From user's template: x columns at 511, 605, 700, 795, 890, 985, 1080
+    // y values: 2850, 2779, 2708, 2637, 2567, 2496, 2425, 2354, 2283, 2212
+    final studentIdCoords = <Map<String, dynamic>>[];
+    final studentIdXCols = [1080, 985, 890, 795, 700, 605, 511]; // digit 1-7 (right to left)
+    final studentIdYValues = [2850, 2779, 2708, 2637, 2567, 2496, 2425, 2354, 2283, 2212]; // value 1-10
+
+    for (int digitIdx = 0; digitIdx < 7; digitIdx++) {
+      for (int valueIdx = 0; valueIdx < 10; valueIdx++) {
+        studentIdCoords.add({
+          'x': studentIdXCols[digitIdx],
+          'y': studentIdYValues[valueIdx],
+          'w': 46,
+          'h': 46,
+          'digit': digitIdx + 1,
+          'value': valueIdx + 1,
+        });
+      }
+    }
+
+    // Version Code: 2 digits × 10 values (20 coords)
+    // From user's template: x columns at 1272, 1367
+    final versionCoords = <Map<String, dynamic>>[];
+    final versionXCols = [1367, 1272]; // digit 1-2
+    for (int digitIdx = 0; digitIdx < 2; digitIdx++) {
+      for (int valueIdx = 0; valueIdx < 10; valueIdx++) {
+        versionCoords.add({
+          'x': versionXCols[digitIdx],
+          'y': studentIdYValues[valueIdx], // same y as studentId
+          'w': 46,
+          'h': 46,
+          'digit': digitIdx + 1,
+          'value': valueIdx + 1,
+        });
+      }
+    }
+
+    // Answers: q1-q16 with A,B,C,D (exact coords from user's template)
+    final answers = <String, Map<String, Map<String, dynamic>>>{};
+
+    // Column 1: q1-q6 (x: 492, 597, 701, 805)
+    // y: 1993, 1925, 1856, 1788, 1720, 1652
+    final col1Y = [1993, 1925, 1856, 1788, 1720, 1652];
+    for (int q = 1; q <= 6; q++) {
+      final y = col1Y[q - 1];
+      answers['q$q'] = {
+        'A': {'x': 492, 'y': y, 'w': 46, 'h': 46},
+        'B': {'x': 597, 'y': y, 'w': 46, 'h': 46},
+        'C': {'x': 701, 'y': y, 'w': 46, 'h': 46},
+        'D': {'x': 805, 'y': y, 'w': 46, 'h': 46},
+      };
+    }
+
+    // Column 2: q7-q12 (x: 1099, 1204, 1308, 1412)
+    final col2Y = [1993, 1925, 1856, 1788, 1720, 1652];
+    for (int q = 7; q <= 12; q++) {
+      final y = col2Y[q - 7];
+      answers['q$q'] = {
+        'A': {'x': 1099, 'y': y, 'w': 46, 'h': 46},
+        'B': {'x': 1204, 'y': y, 'w': 46, 'h': 46},
+        'C': {'x': 1308, 'y': y, 'w': 46, 'h': 46},
+        'D': {'x': 1412, 'y': y, 'w': 46, 'h': 46},
+      };
+    }
+
+    // Column 3: q13-q16 (x: 1705, 1811, 1914, 2018)
+    final col3Y = [1993, 1925, 1856, 1788];
+    for (int q = 13; q <= 16; q++) {
+      final y = col3Y[q - 13];
+      answers['q$q'] = {
+        'A': {'x': 1705, 'y': y, 'w': 46, 'h': 46},
+        'B': {'x': 1811, 'y': y, 'w': 46, 'h': 46},
+        'C': {'x': 1914, 'y': y, 'w': 46, 'h': 46},
+        'D': {'x': 2018, 'y': y, 'w': 46, 'h': 46},
+      };
+    }
+
+    return OMRTemplate.fromServerJson({
+      '_id': {'\$oid': 'demo-amc-user-template'},
+      'name': 'AMC User Template (adawdwd2222)',
+      'templateJson': {
+        'pageWidth': 2479,
+        'pageHeight': 3508,
+        'bubbleWidth': 46,
+        'bubbleHeight': 46,
+        'autoAlign': false,
+        'studentId': {
+          'digits': 7,
+          'coords': studentIdCoords,
+        },
+        'versionCodeZone': {
+          'digits': 2,
+          'coords': versionCoords,
+        },
+        'answerKey': {
+          'q1': 'B', 'q2': 'A', 'q3': 'A', 'q4': 'A', 'q5': 'B', 'q6': 'A',
+          'q7': 'B', 'q8': 'A', 'q9': 'A', 'q10': 'A', 'q11': 'A', 'q12': 'A',
+          'q13': 'A', 'q14': 'A', 'q15': 'B', 'q16': 'A',
+        },
+        'questionScores': {
+          'q1': 0.625, 'q2': 0.625, 'q3': 0.625, 'q4': 0.625, 'q5': 0.625, 'q6': 0.625,
+          'q7': 0.625, 'q8': 0.625, 'q9': 0.625, 'q10': 0.625, 'q11': 0.625, 'q12': 0.625,
+          'q13': 0.625, 'q14': 0.625, 'q15': 0.625, 'q16': 0.625,
+        },
+        'answers': answers,
+        'preProcessors': [
+          {'name': 'Levels', 'options': {'inBlack': 15, 'inWhite': 200, 'outBlack': 0, 'outWhite': 255, 'gamma': 1}},
+          {'name': 'GaussianBlur', 'options': {'kSize': [3, 3], 'sigmaX': 0}},
+          {'name': 'CropPage', 'options': {}},
+        ],
+      },
     });
   }
 
@@ -283,6 +398,13 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
     }
 
     final entries = <_TemplateMenuEntry>[];
+
+    // Add the 30-question demo template (hardcoded for testing)
+    entries.add(_TemplateMenuEntry(
+      label: '30 Câu Demo (bundled)',
+      source: _TemplateSource.offlineFallback,
+      template: _create30QuestionDemoTemplate(),
+    ));
 
     // Always offer the bundled Sample 4 as a fallback option.
     entries.add(_TemplateMenuEntry(
@@ -504,22 +626,23 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
             ],
           ),
         ),
-        if (_template?.id == '15q') _buildSbdMdHeader(),
+        // Header bar with detected SBD and Mã đề
+        _buildInfoHeader(),
         Expanded(
           child: TabBarView(
             controller: _tabController,
             children: [
               if (showBubbleOverlay)
-                OMRBubbleOverlay(
-                  imageBytes: displayBytes,
-                  imageWidth: displayWidth,
-                  imageHeight: displayHeight,
-                  result: _processingResult!,
-                )
+                _buildOverlayTab()
               else
                 _buildNoImageOverlay(),
-              OMRBubbleDetailsTable(result: _processingResult!),
-              OMRProcessingLog(result: _processingResult!),
+              if (_processingResult != null) ...[
+                OMRBubbleDetailsTable(result: _processingResult!),
+                OMRProcessingLog(result: _processingResult!),
+              ] else ...[
+                const Center(child: Text('No processing result')),
+                const Center(child: Text('No processing log')),
+              ],
             ],
           ),
         ),
@@ -527,10 +650,67 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
     );
   }
 
-  Widget _buildSbdMdHeader() {
-    final answers = _processingResult?.response.answers ?? const <String, String>{};
-    final sbd = '${answers['sbd1'] ?? ''}${answers['sbd2'] ?? ''}';
-    final md = '${answers['md1'] ?? ''}${answers['md2'] ?? ''}';
+  /// Build the bubble overlay tab using legacy engine data
+  Widget _buildOverlayTab() {
+    final result = _processingResult!;
+
+    // Use annotated image if available (shows what engine actually processed)
+    // Fall back to cropped, then original
+    final displayBytes = result.annotatedImageBytes ?? result.croppedImageBytes ?? _displayImageBytes ?? _imageBytes!;
+    final displayWidth = result.croppedWidth ?? _displayImageWidth;
+    final displayHeight = result.croppedHeight ?? _displayImageHeight;
+
+    debugPrint('OMRTestLab _buildOverlayTab: '
+        'displayImage=${displayWidth}x$displayHeight}, '
+        'usingAnnotated=${result.annotatedImageBytes != null}, '
+        'annotatedLen=${result.annotatedImageBytes?.length ?? 0}, '
+        'croppedLen=${result.croppedImageBytes?.length ?? 0}, '
+        'template=${result.template.name}');
+
+    return OMRTestLabOverlay(
+      imageBytes: displayBytes,
+      imageWidth: displayWidth,
+      imageHeight: displayHeight,
+      template: result.template,
+      scanResult: null,
+    );
+  }
+
+  /// Extract detected student ID from processing result
+  String? _getDetectedStudentId() {
+    final answers = _processingResult?.response.answers ?? {};
+    // Try different field names
+    final sbd1 = answers['sbd1'] ?? answers['studentId1'] ?? answers['student_digit_0'] ?? '';
+    final sbd2 = answers['sbd2'] ?? answers['studentId2'] ?? answers['student_digit_1'] ?? '';
+    final sbd3 = answers['sbd3'] ?? answers['studentId3'] ?? answers['student_digit_2'] ?? '';
+    final sbd4 = answers['sbd4'] ?? answers['studentId4'] ?? answers['student_digit_3'] ?? '';
+    final sbd5 = answers['sbd5'] ?? answers['studentId5'] ?? answers['student_digit_4'] ?? '';
+    final sbd6 = answers['sbd6'] ?? answers['studentId6'] ?? answers['student_digit_5'] ?? '';
+    final sbd7 = answers['sbd7'] ?? answers['studentId7'] ?? answers['student_digit_6'] ?? '';
+    
+    final sbd = '$sbd1$sbd2$sbd3$sbd4$sbd5$sbd6$sbd7'.trim();
+    return sbd.isEmpty ? null : sbd;
+  }
+
+  /// Extract detected version code from processing result
+  String? _getDetectedVersionCode() {
+    final answers = _processingResult?.response.answers ?? {};
+    // Try different field names
+    final md1 = answers['md1'] ?? answers['version1'] ?? answers['version_digit_0'] ?? '';
+    final md2 = answers['md2'] ?? answers['version2'] ?? answers['version_digit_1'] ?? '';
+    
+    final md = '$md1$md2'.trim();
+    return md.isEmpty ? null : md;
+  }
+
+  Widget _buildInfoHeader() {
+    final sbd = _getDetectedStudentId();
+    final md = _getDetectedVersionCode();
+    
+    if (sbd == null && md == null) {
+      return const SizedBox.shrink();
+    }
+    
     return Container(
       width: double.infinity,
       color: const Color(0xFFE8F0FE),
@@ -538,8 +718,12 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _CodeLabel(label: 'SBD', value: sbd),
-          _CodeLabel(label: 'MĐ', value: md),
+          if (sbd != null)
+            _CodeLabel(label: 'SBD', value: sbd, color: const Color(0xFF3B82F6)),
+          if (sbd != null && md != null)
+            const SizedBox(width: 24),
+          if (md != null)
+            _CodeLabel(label: 'Mã đề', value: md, color: const Color(0xFF8B5CF6)),
         ],
       ),
     );
@@ -691,8 +875,13 @@ class _CaptureButton extends StatelessWidget {
 class _CodeLabel extends StatelessWidget {
   final String label;
   final String value;
+  final Color color;
 
-  const _CodeLabel({required this.label, required this.value});
+  const _CodeLabel({
+    required this.label,
+    required this.value,
+    this.color = const Color(0xFF0F172A),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -701,18 +890,18 @@ class _CodeLabel extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: Color(0xFF64748B),
+            color: color.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           value.isEmpty ? '--' : value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
-            color: Color(0xFF0F172A),
+            color: color,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
           ),

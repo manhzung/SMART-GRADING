@@ -8,6 +8,7 @@ import 'package:smart_grading_mobile/core/network/api_client.dart';
 import 'package:smart_grading_mobile/core/network/exam_template_service.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/domain/omr/models/evaluation_config.dart';
+import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
 import 'package:smart_grading_mobile/presentation/blocs/camera/camera_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/omr_result_page.dart';
@@ -72,8 +73,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
   void _loadTemplate() {
     if (widget.template != null) {
       context.read<OMRScannerBloc>().add(OMRScannerTemplateSet(
-        template: widget.template!,
-        evaluationConfig: widget.evaluationConfig,
+        templateJson: widget.template!.toJson(),
         examId: widget.examId,
         examName: widget.examName,
         classId: widget.classId,
@@ -89,17 +89,8 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         bubbleWidth: 35,
         bubbleHeight: 35,
       );
-      final evalConfig = EvaluationConfig.simple(
-        questionAnswers: Map.fromEntries(
-          List.generate(20, (i) => MapEntry('q${i + 1}', 'A')),
-        ),
-        correct: 1.0,
-        incorrect: 0.0,
-        unmarked: 0.0,
-      );
       context.read<OMRScannerBloc>().add(OMRScannerTemplateSet(
-        template: template,
-        evaluationConfig: evalConfig,
+        templateJson: template.toJson(),
         examId: widget.examId ?? 'demo',
         examName: widget.examName ?? 'Demo Exam',
         classId: widget.classId,
@@ -152,20 +143,15 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
       child: BlocConsumer<OMRScannerBloc, OMRScannerState>(
         listener: (context, state) {
           if (state is OMRScannerSuccess) {
-            if (widget.studentId != null) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => OMRResultPage(
-                    imageBytes: state.imageBytes,
-                    gradingResult: state.gradingResult,
-                    processingResult: state.processingResult,
-                    examId: widget.examId,
-                    examName: widget.examName,
-                    questionScores: state.questionScores,
-                  ),
-                ),
-              );
+            // NEW FLOW: Auto-detected student or show picker
+            if (state.matchedStudent != null) {
+              // Student found automatically - show confirmation dialog
+              _showAutoDetectConfirmation(context, state);
+            } else if (state.studentCode != null && state.studentCode!.isNotEmpty) {
+              // Student code detected but not matched - show picker with code pre-filled
+              _showStudentPickerWithCode(context, state);
             } else {
+              // No student code detected - show normal picker
               StudentPickerDialog.show(
                 context: context,
                 classId: widget.classId ?? '',
@@ -175,25 +161,25 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                 imageBytes: state.imageBytes,
               );
             }
-          } else if (state is OMRScannerError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                action: SnackBarAction(
-                  label: 'Retry',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    final s = context.read<OMRScannerBloc>().state;
-                    if (s is OMRScannerImageReady) {
-                      context.read<OMRScannerBloc>().add(
-                        OMRScannerProcessStarted(imageBytes: s.imageBytes),
-                      );
-                    }
-                  },
+          } else if (state is OMRScannerStudentConfirmed) {
+            // Student manually selected - go to result
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => OMRResultPage(
+                  imageBytes: state.imageBytes,
+                  gradingResult: state.gradingResult,
+                  processingResult: null,
+                  examId: widget.examId,
+                  examName: widget.examName,
+                  student: state.student,
                 ),
               ),
             );
+          } else if (state is OMRScannerSubmitted) {
+            // Submitted successfully - show success and return
+            _showSubmittedSnackbar(context, state);
+          } else if (state is OMRScannerError) {
+            _showErrorSnackbar(context, state);
           }
         },
         builder: (context, omrState) {
@@ -226,6 +212,236 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         },
       ),
     );
+  }
+
+  void _showAutoDetectConfirmation(BuildContext context, OMRScannerSuccess state) {
+    final student = state.matchedStudent!;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.check_circle, color: Color(0xFF22C55E), size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Text('Student Detected'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStudentInfoCard(student),
+            const SizedBox(height: 16),
+            Text(
+              'MSSV: ${state.studentCode}',
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            ),
+            if (state.versionCode != null && state.versionCode!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Mã đề: ${state.versionCode}',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ),
+            ],
+            const SizedBox(height: 16),
+            const Text(
+              'Is this the correct student?',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              StudentPickerDialog.show(
+                context: context,
+                classId: widget.classId ?? '',
+                className: widget.className ?? widget.examName ?? '',
+                examId: widget.examId ?? '',
+                examName: widget.examName ?? '',
+                imageBytes: state.imageBytes,
+              );
+            },
+            child: const Text('Change'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<OMRScannerBloc>().add(OMRScannerConfirmStudent(student));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF22C55E),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Confirm & Submit'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showStudentPickerWithCode(BuildContext context, OMRScannerSuccess state) {
+    StudentPickerDialog.show(
+      context: context,
+      classId: widget.classId ?? '',
+      className: widget.className ?? widget.examName ?? '',
+      examId: widget.examId ?? '',
+      examName: widget.examName ?? '',
+      imageBytes: state.imageBytes,
+      prefillCode: state.studentCode,
+    );
+  }
+
+  Widget _buildStudentInfoCard(ClassStudent student) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                _getInitials(student.name),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF6366F1),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  student.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                if (student.studentCode != null)
+                  Text(
+                    student.studentCode!,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const Icon(Icons.verified, color: Color(0xFF22C55E), size: 24),
+        ],
+      ),
+    );
+  }
+
+  void _showSubmittedSnackbar(BuildContext context, OMRScannerSubmitted state) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              state.submittedOnline ? Icons.cloud_done : Icons.cloud_off,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Submitted Successfully',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    state.submittedOnline
+                        ? 'Uploaded to server'
+                        : 'Saved locally, will sync later',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF22C55E),
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
+    );
+    
+    // Auto navigate back after short delay
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  void _showErrorSnackbar(BuildContext context, OMRScannerError state) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(state.message)),
+          ],
+        ),
+        backgroundColor: const Color(0xFFEF4444),
+        action: SnackBarAction(
+          label: 'Retry',
+          textColor: Colors.white,
+          onPressed: () {
+            final bloc = context.read<OMRScannerBloc>();
+            final currentState = bloc.state;
+            if (currentState is OMRScannerImageReady) {
+              bloc.add(OMRScannerProcessStarted(imageBytes: currentState.imageBytes));
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   Widget _buildBody(OMRScannerState omrState, CameraBlocState cameraState) {
@@ -595,18 +811,9 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
   }
 
   Future<void> _processImage(Uint8List imageBytes) async {
-    if (widget.useNewEngine && _cachedTemplateJson != null) {
-      context.read<OMRScannerBloc>().add(
-        OMRScannerProcessWithNewEngine(
-          imageBytes: imageBytes,
-          templateJson: _cachedTemplateJson!,
-        ),
-      );
-    } else {
-      context.read<OMRScannerBloc>().add(
-        OMRScannerProcessStarted(imageBytes: imageBytes),
-      );
-    }
+    context.read<OMRScannerBloc>().add(
+      OMRScannerProcessStarted(imageBytes: imageBytes),
+    );
   }
 
   Widget _buildProcessingState(OMRScannerProcessing state) {

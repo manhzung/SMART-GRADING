@@ -14,6 +14,10 @@ router
   .post(auth('manageExams'), validate(examValidation.createExam), examController.create)
   .get(auth(), validate(examValidation.getExams), examController.getAll);
 
+router
+  .route('/from-selection')
+  .post(auth('manageExams'), validate(examValidation.createExamFromSelection), examController.createFromSelection);
+
 router.get('/upcoming', auth(), validate(examValidation.getUpcoming), examController.getUpcoming);
 
 router
@@ -43,6 +47,10 @@ router
 router
   .route('/:id/versions/full')
   .get(auth(), examController.getVersionsWithQuestions);
+
+router
+  .route('/:id/versions/:versionCode')
+  .delete(auth('manageExams'), examController.deleteVersion);
 
 router
   .route('/:id/export')
@@ -80,6 +88,12 @@ router.get(
   auth(),
   validate(examValidation.getExamTemplate),
   examController.getExamTemplate
+);
+
+router.get(
+  '/:id/answer-sheet',
+  auth(),
+  examController.getAnswerSheet
 );
 
 module.exports = router;

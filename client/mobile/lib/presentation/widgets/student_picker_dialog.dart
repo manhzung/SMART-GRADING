@@ -1,8 +1,10 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smart_grading_mobile/core/network/user_service.dart';
 import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
+import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
 
 class StudentPickerDialog extends StatefulWidget {
   final String classId;
@@ -10,6 +12,7 @@ class StudentPickerDialog extends StatefulWidget {
   final String examId;
   final String examName;
   final Uint8List imageBytes;
+  final String? prefillCode;
 
   const StudentPickerDialog({
     super.key,
@@ -18,6 +21,7 @@ class StudentPickerDialog extends StatefulWidget {
     required this.examId,
     required this.examName,
     required this.imageBytes,
+    this.prefillCode,
   });
 
   static Future<void> show({
@@ -27,6 +31,7 @@ class StudentPickerDialog extends StatefulWidget {
     required String examId,
     required String examName,
     required Uint8List imageBytes,
+    String? prefillCode,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -38,6 +43,7 @@ class StudentPickerDialog extends StatefulWidget {
         examId: examId,
         examName: examName,
         imageBytes: imageBytes,
+        prefillCode: prefillCode,
       ),
     );
   }
@@ -51,15 +57,20 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  List<User> _students = [];
+  List<ClassStudent> _students = [];
   bool _isLoading = true;
   String? _error;
   String _searchQuery = '';
   bool _isSubmitting = false;
+  int? _highlightedIndex;
 
   @override
   void initState() {
     super.initState();
+    if (widget.prefillCode != null) {
+      _searchController.text = widget.prefillCode!;
+      _searchQuery = widget.prefillCode!;
+    }
     _loadStudents();
     _scrollController.addListener(_onScroll);
   }
@@ -82,8 +93,23 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
         search: _searchQuery.isEmpty ? null : _searchQuery,
       );
       setState(() {
-        _students = result.results;
+        _students = result.results.map((u) => ClassStudent(
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          studentCode: u.studentCode,
+          isActive: u.isActive,
+          dateOfBirth: u.dateOfBirth,
+        )).toList();
         _isLoading = false;
+        
+        // Auto-highlight if prefillCode matches
+        if (widget.prefillCode != null && _students.isNotEmpty) {
+          _highlightedIndex = _students.indexWhere(
+            (s) => s.studentCode?.toLowerCase() == widget.prefillCode!.toLowerCase(),
+          );
+          if (_highlightedIndex == -1) _highlightedIndex = null;
+        }
       });
     } catch (e) {
       setState(() {
@@ -102,12 +128,17 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
 
   void _onSearchChanged(String value) {
     _searchQuery = value;
+    _highlightedIndex = null;
     _loadStudents();
   }
 
-  Future<void> _onSubmit(User student) async {
+  Future<void> _onSubmit(ClassStudent student) async {
+    if (_isSubmitting) return;
     setState(() => _isSubmitting = true);
-    Navigator.of(context).pop(student);
+    
+    // Submit via bloc instead of just popping
+    context.read<OMRScannerBloc>().add(OMRScannerConfirmStudent(student));
+    Navigator.of(context).pop();
   }
 
   @override
@@ -277,18 +308,22 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
         if (index == _students.length) {
           return _buildQuickScanTile();
         }
-        return _buildStudentTile(_students[index]);
+        final isHighlighted = _highlightedIndex == index;
+        return _buildStudentTile(_students[index], isHighlighted: isHighlighted);
       },
     );
   }
 
-  Widget _buildStudentTile(User student) {
+  Widget _buildStudentTile(ClassStudent student, {bool isHighlighted = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isHighlighted ? const Color(0xFFEEF2FF) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isHighlighted ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0),
+          width: isHighlighted ? 2 : 1,
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -296,18 +331,22 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: isHighlighted 
+                ? const Color(0xFF6366F1).withValues(alpha: 0.1)
+                : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(
-            child: Text(
-              _getInitials(student.name),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF475569),
-              ),
-            ),
+            child: isHighlighted
+                ? const Icon(Icons.auto_awesome, color: Color(0xFF6366F1), size: 20)
+                : Text(
+                    _getInitials(student.name),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF475569),
+                    ),
+                  ),
           ),
         ),
         title: Text(
@@ -327,13 +366,35 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
                 ),
               )
             : null,
-        trailing: _isSubmitting
-            ? const SizedBox(
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isHighlighted)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'DETECTED',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            if (_isSubmitting)
+              const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
+            else
+              const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
+          ],
+        ),
         onTap: () => _onSubmit(student),
       ),
     );
@@ -346,7 +407,11 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
         color: const Color(0xFFFEF3C7),
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
-          onTap: () => Navigator.of(context).pop(),
+          onTap: () {
+            Navigator.of(context).pop();
+            // Submit without student assignment
+            context.read<OMRScannerBloc>().add(OMRScannerSubmit());
+          },
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -371,7 +436,7 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Scan without assigning',
+                        'Submit without student',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -379,7 +444,7 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
                         ),
                       ),
                       Text(
-                        'Submit without linking to a student',
+                        'Anonymous submission',
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFFB45309),

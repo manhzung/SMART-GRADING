@@ -55,6 +55,8 @@ class AppOMREngine {
   final AppOmrTemplate template;
   final Uint8List? _markerBytes;
   final List<int> _shifts = [];
+  int _actualCropHeight = 0;
+  int _actualCropWidth = 0;
 
   AppOMREngine(this.template, {Uint8List? markerBytes})
       : _markerBytes = markerBytes;
@@ -138,6 +140,7 @@ class AppOMREngine {
                 // Warp original image to template dimensions
                 final cropped = _fourPointTransform(img, scaledCorners);
                 if (cropped != null && cropped.cols > 0 && cropped.rows > 0) {
+                  debugPrint('AppOMREngine: CropPage raw crop: ${cropped.cols}x${cropped.rows}');
                   final resizedImg = _resize(cropped, pw, ph);
                   cropped.dispose();
                   img.dispose();
@@ -145,7 +148,7 @@ class AppOMREngine {
                   preprocessor = 'CropPage';
                   warpOk = true;
                   debugPrint(
-                      'AppOMREngine: CropPage succeeded, img now: ${img.cols}x${img.rows}');
+                      'AppOMREngine: CropPage succeeded, resized to: ${img.cols}x${img.rows} (template=$pw x $ph)');
                 } else {
                   if (cropped != null) cropped.dispose();
                   debugPrint('AppOMREngine: CropPage - fourPointTransform failed or returned empty');
@@ -207,6 +210,10 @@ class AppOMREngine {
           normalized = resizedImg;
         }
 
+        // Track actual cropped image dimensions for coordinate conversion
+        _actualCropHeight = normalized.rows;
+        _actualCropWidth = normalized.cols;
+
         // Compute alignment shifts even when warp fails
         if (template.autoAlign) {
           _computeShifts(normalized);
@@ -253,6 +260,10 @@ class AppOMREngine {
       } else {
         normalized = img;
       }
+
+      // Track actual cropped image dimensions for coordinate conversion
+      _actualCropHeight = normalized.rows;
+      _actualCropWidth = normalized.cols;
 
       if (template.autoAlign) {
         _computeShifts(normalized);
@@ -856,6 +867,8 @@ class AppOMREngine {
     final warped = cv.warpPerspective(image, matrix, (maxWidth, maxHeight));
     matrix.dispose();
 
+    debugPrint('AppOMREngine _fourPointTransform: input=${image.cols}x${image.rows}, output=${warped.cols}x${warped.rows}');
+
     return warped;
   }
 
@@ -995,7 +1008,9 @@ class AppOMREngine {
 
     for (int i = 0; i < template.fieldBlocks.length; i++) {
       final block = template.fieldBlocks[i];
-      final shift = _findShift(eroded, block.originX, block.originY, 200, 150);
+      // originY is TOP-LEFT of first bubble - no offset needed
+      final cvOriginY = _actualCropHeight - block.originY;
+      final shift = _findShift(eroded, block.originX, cvOriginY, 200, 150);
       _shifts.add(shift);
     }
 
@@ -1073,9 +1088,10 @@ class AppOMREngine {
   // ═══════════════════════════════════════════════════════════════════════
 
   /// Reads bubble responses from the image and returns results with annotated image.
-  /// Coordinate formulas follow OMRChecker/template.py exactly:
-  ///   - direction="vertical":   bx = originX + fi*labelsGap,   by = originY + vi*bubblesGap
-  ///   - direction="horizontal": bx = originX + vi*bubblesGap, by = originY + fi*labelsGap
+  /// 
+  /// Coordinate priority:
+  /// 1. If block.exactCoords is available, use those exact coordinates
+  /// 2. Otherwise, compute from originX/Y + gaps (direction-based formula)
   (Map<String, String>, List<AppBubbleResult>, double, Uint8List?) _readResponses(
       cv.Mat img) {
     final responses = <String, String>{};
@@ -1092,36 +1108,95 @@ class AppOMREngine {
       final block = template.fieldBlocks[b];
       final shift = _shifts.length > b ? _shifts[b] : 0;
       final isHorizontal = block.direction == 'horizontal';
+      final hasExactCoords = block.exactCoords != null && block.exactCoords!.isNotEmpty;
 
-      // Use block-level bubble sizes (Bug E fix)
+      // Get coords lookup map if exact coords are available
+      final Map<String, Map<String, AppBubbleCoord>> coordsLookup =
+          hasExactCoords ? block.coordsByLabelAndValue : {};
+
+      // Use block-level bubble sizes
       final blockBoxW = block.bubbleWidth;
       final blockBoxH = block.bubbleHeight;
 
+      // Convert template originY to OpenCV top-left corner for ROI
+      // originY from template is TOP-LEFT of first bubble (not CENTER), so:
+      // cvOriginY = cropHeight - pdfTopLeftY
+      final cvOriginY = _actualCropHeight - block.originY;
+
+      debugPrint('=== AppOMREngine _readResponses ===');
+      debugPrint('Block: ${block.name}, origin=(${block.originX},${block.originY}), isHorizontal=$isHorizontal, hasExactCoords=$hasExactCoords');
+      debugPrint('cropH=$_actualCropHeight (template.pageHeight=$template.pageHeight), box=${blockBoxW}x${blockBoxH}');
+      debugPrint('fieldLabels=${block.fieldLabels.toList()}, bubbleValues=${block.bubbleValues.toList()}');
+
       for (int fi = 0; fi < block.fieldLabels.length; fi++) {
+        final fieldLabel = block.fieldLabels[fi];
+
+        // Compute base coordinates (used if no exact coords)
         final xBase = isHorizontal
             ? block.originX + shift
             : block.originX + fi * block.labelsGap.round();
         final yBase = isHorizontal
-            ? block.originY + fi * block.labelsGap.round()
-            : block.originY;
+            ? cvOriginY + fi * block.labelsGap.round()
+            : cvOriginY;
+
+        debugPrint('FIELD[fi=$fi]: label=$fieldLabel, xBase=$xBase, yBase=$yBase');
 
         final fieldVals = <double>[];
 
+        // Process each bubble option (A, B, C, D or 0-9 for student ID)
         for (int vi = 0; vi < block.bubbleValues.length; vi++) {
-          final bx = isHorizontal
-              ? xBase + vi * block.bubblesGap.round()
-              : xBase;
-          final by = isHorizontal
-              ? yBase
-              : yBase + vi * block.bubblesGap.round();
+          final bubbleValue = block.bubbleValues[vi];
+          int bx, by, bw, bh;
+
+          if (hasExactCoords && coordsLookup.containsKey(fieldLabel) &&
+              coordsLookup[fieldLabel]!.containsKey(bubbleValue)) {
+            // Use exact coordinates from templateJson
+            // exact.y is TOP in PDF coords, OpenCV also uses TOP as y=0
+            final exact = coordsLookup[fieldLabel]![bubbleValue]!;
+            bx = exact.x;
+            by = _actualCropHeight - exact.y;
+            bw = exact.w;
+            bh = exact.h;
+            debugPrint('  EXACT: $bubbleValue at ($bx, $by) size=${bw}x${bh}');
+          } else {
+            // Compute from origin + gaps
+            if (isHorizontal) {
+              bx = xBase + vi * block.bubblesGap.round();
+              by = yBase;
+            } else {
+              bx = xBase;
+              by = yBase + vi * block.bubblesGap.round();
+            }
+            bw = blockBoxW;
+            bh = blockBoxH;
+          }
 
           final bx1 = bx.clamp(0, img.cols - 1);
-          final bx2 = (bx + blockBoxW).clamp(0, img.cols);
+          final bx2 = (bx + bw).clamp(0, img.cols);
           final by1 = by.clamp(0, img.rows - 1);
-          final by2 = (by + blockBoxH).clamp(0, img.rows);
+          final by2 = (by + bh).clamp(0, img.rows);
 
-          final roi = cv.Mat.fromRange(img, by1, by2,
-              colStart: bx1, colEnd: bx2);
+          // Read ROI from CENTER of bubble (matching overlay which draws circle at center)
+          // Overlay draws circle with radius = w/2 at center (x + w/2, y + h/2)
+          // We read the same center area for consistent detection
+          final centerX = bx + bw ~/ 2;
+          final centerY = by + bh ~/ 2;
+          final readRadius = (bw < bh ? bw : bh) ~/ 2; // Read circular area
+          final readBx1 = (centerX - readRadius).clamp(0, img.cols - 1);
+          final readBx2 = (centerX + readRadius).clamp(0, img.cols);
+          final readBy1 = (centerY - readRadius).clamp(0, img.rows - 1);
+          final readBy2 = (centerY + readRadius).clamp(0, img.rows);
+
+          // Log detailed ROI info for first field, first bubble
+          if (fi == 0 && vi == 0) {
+            final pdfY = _actualCropHeight - by1;
+            debugPrint('ROI DEBUG: block=${block.name}, field=$fieldLabel, opt=$bubbleValue');
+            debugPrint('  fullROI=[$bx1,$by1,$bx2,$by2], size=${bx2-bx1}x${by2-by1}');
+            debugPrint('  centerROI=[$readBx1,$readBy1,$readBx2,$readBy2], radius=$readRadius');
+            debugPrint('  pdfY_top=$pdfY, pdfY_center=${pdfY + bh ~/ 2}');
+          }
+
+          final roi = cv.Mat.fromRange(img, readBy1, readBy2, colStart: readBx1, colEnd: readBx2);
           final mean = cv.mean(roi).val1;
           roi.dispose();
 
@@ -1134,59 +1209,90 @@ class AppOMREngine {
         }
 
         // Detect marked bubbles for this question using per-field local threshold
-        final fieldThr = _computeThreshold(fieldVals);
-        String marked = '';
-        bool multiMarked = false;
-        double markedIntensity = 255;
+        // Use hardcoded threshold=180 for now (was detecting BLANK for dark filled bubbles)
+        final fieldThr = 180.0;
         final detectedBubbles = <int>[];
-
         for (int vi = 0; vi < fieldVals.length; vi++) {
           if (fieldVals[vi] < fieldThr) {
             detectedBubbles.add(vi);
-            if (marked.isEmpty) {
-              marked = block.bubbleValues[vi];
-              markedIntensity = fieldVals[vi];
-            } else {
-              multiMarked = true;
+          }
+        }
+        debugPrint('FIELD: $fieldLabel = ${fieldVals.map((v) => v.round()).toList()}, thr=$fieldThr, result=${detectedBubbles.isEmpty ? "BLANK" : block.bubbleValues[detectedBubbles.first]}');
+        
+        String marked = '';
+        bool multiMarked = false;
+        double markedIntensity = 255;
+
+        if (detectedBubbles.isNotEmpty) {
+          if (detectedBubbles.length == 1) {
+            marked = block.bubbleValues[detectedBubbles.first];
+            markedIntensity = fieldVals[detectedBubbles.first];
+          } else {
+            multiMarked = true;
+            // For multi-marked, keep the darkest (lowest mean) bubble
+            int darkestIdx = detectedBubbles.first;
+            double darkestVal = fieldVals[darkestIdx];
+            for (int i = 1; i < detectedBubbles.length; i++) {
+              if (fieldVals[detectedBubbles[i]] < darkestVal) {
+                darkestVal = fieldVals[detectedBubbles[i]];
+                darkestIdx = detectedBubbles[i];
+              }
             }
+            marked = block.bubbleValues[darkestIdx];
+            markedIntensity = darkestVal;
           }
         }
 
         // Draw bubble annotations on the annotated image
+        // Calculate all bubble positions first (for annotation)
+        final List<(int, int, int, int)> bubbleRects = [];
         for (int vi = 0; vi < block.bubbleValues.length; vi++) {
-          final bx = isHorizontal
-              ? xBase + vi * block.bubblesGap.round()
-              : xBase;
-          final by = isHorizontal
-              ? yBase
-              : yBase + vi * block.bubblesGap.round();
+          final bubbleValue = block.bubbleValues[vi];
+          int bx, by, bw, bh;
+
+          if (hasExactCoords && coordsLookup.containsKey(fieldLabel) &&
+              coordsLookup[fieldLabel]!.containsKey(bubbleValue)) {
+            final exact = coordsLookup[fieldLabel]![bubbleValue]!;
+            bx = exact.x;
+            by = _actualCropHeight - exact.y;
+            bw = exact.w;
+            bh = exact.h;
+          } else {
+            if (isHorizontal) {
+              bx = xBase + vi * block.bubblesGap.round();
+              by = yBase;
+            } else {
+              bx = xBase;
+              by = yBase + vi * block.bubblesGap.round();
+            }
+            bw = blockBoxW;
+            bh = blockBoxH;
+          }
+          bubbleRects.add((bx, by, bw, bh));
+        }
+
+        // Draw each bubble
+        for (int vi = 0; vi < bubbleRects.length; vi++) {
+          final (bx, by, bw, bh) = bubbleRects[vi];
 
           if (detectedBubbles.contains(vi)) {
-            final innerMargin = blockBoxW ~/ _rectInnerMarginNum;
+            final innerMargin = bw ~/ _rectInnerMarginNum;
             cv.rectangle(
               finalMarked,
-              cv.Rect(
-                  bx + innerMargin,
-                  by + innerMargin,
-                  blockBoxW - innerMargin * 2,
-                  blockBoxH - innerMargin * 2),
+              cv.Rect(bx + innerMargin, by + innerMargin, bw - innerMargin * 2, bh - innerMargin * 2),
               cv.Scalar(50, 50, 50),
               thickness: 3,
             );
             _putText(finalMarked, block.bubbleValues[vi],
-                (bx, by + blockBoxH ~/ 3),
+                (bx, by + bh ~/ 3),
                 fontScale: 0.4,
                 color: cv.Scalar(10, 10, 20),
                 thickness: 1);
           } else {
-            final outerMargin = blockBoxW ~/ _rectOuterMarginNum;
+            final outerMargin = bw ~/ _rectOuterMarginNum;
             cv.rectangle(
               finalMarked,
-              cv.Rect(
-                  bx + outerMargin,
-                  by + outerMargin,
-                  blockBoxW - outerMargin * 2,
-                  blockBoxH - outerMargin * 2),
+              cv.Rect(bx + outerMargin, by + outerMargin, bw - outerMargin * 2, bh - outerMargin * 2),
               cv.Scalar(128, 128, 128),
               thickness: -1,
             );
@@ -1198,7 +1304,7 @@ class AppOMREngine {
           markedIntensity = 255;
         }
 
-        final fieldLabel = block.fieldLabels[fi];
+        // fieldLabel already declared above
         if (multiMarked) {
           final combined = StringBuffer();
           for (final idx in detectedBubbles) {
@@ -1302,9 +1408,12 @@ class AppOMREngine {
       final block = template.fieldBlocks[b];
       final shift = _shifts.length > b ? _shifts[b] : 0;
 
+      // originY is TOP-LEFT of first bubble
+      final cvOriginY = _actualCropHeight - block.originY;
+
       for (int row = 0; row < block.fieldLabels.length; row++) {
         final label = block.fieldLabels[row];
-        final by = ((block.originY + row * block.labelsGap.round()) * scaleY).round();
+        final by = ((cvOriginY + row * block.labelsGap.round()) * scaleY).round();
 
         final labelDetail = details.firstWhere(
           (d) => d.label == label,

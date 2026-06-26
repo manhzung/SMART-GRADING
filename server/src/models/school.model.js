@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { toJSON, paginate } = require('./plugins');
 
 const gradeLevelSchema = new mongoose.Schema({
   name: {
@@ -156,6 +157,8 @@ const schoolSchema = mongoose.Schema(
   }
 );
 
+schoolSchema.plugin(toJSON);
+schoolSchema.plugin(paginate);
 schoolSchema.index({ code: 1 }, { unique: true });
 schoolSchema.index({ name: 'text' });
 

@@ -19,7 +19,8 @@ class OMRBubbleDetailsTable extends StatelessWidget {
       return _buildEmptyOrIssuesState(hasIssues);
     }
 
-    final fields = bubbleIntensities.keys.toList();
+    // Sort fields by type (roll, ver, q) then by number
+    final fields = _sortFields(bubbleIntensities.keys.toList());
 
     return Column(
       children: [
@@ -311,7 +312,50 @@ class OMRBubbleDetailsTable extends StatelessWidget {
   }
 }
 
-enum _BubbleStatus { marked, unmarked, multi }
+  enum _BubbleStatus { marked, unmarked, multi }
+
+  /// Sort fields by type first (roll, ver, q), then by number
+  List<String> _sortFields(List<String> fields) {
+    final sorted = List<String>.from(fields);
+    sorted.sort((a, b) {
+      // Extract field type and number
+      final typeA = _getFieldType(a);
+      final typeB = _getFieldType(b);
+      final numA = _getFieldNumber(a);
+      final numB = _getFieldNumber(b);
+
+      // First sort by type
+      if (typeA != typeB) {
+        // roll first, then ver, then q
+        const order = {'roll': 0, 'ver': 1, 'q': 2, 'other': 3};
+        return (order[typeA] ?? 3).compareTo(order[typeB] ?? 3);
+      }
+
+      // Then sort by number
+      return numA.compareTo(numB);
+    });
+    return sorted;
+  }
+
+  String _getFieldType(String field) {
+    final lower = field.toLowerCase();
+    if (lower.startsWith('roll') || lower.startsWith('student')) {
+      return 'roll';
+    }
+    if (lower.startsWith('ver') || lower.startsWith('version')) {
+      return 'ver';
+    }
+    if (lower.startsWith('q')) {
+      return 'q';
+    }
+    return 'other';
+  }
+
+  int _getFieldNumber(String field) {
+    // Extract number from field name (e.g., "roll1" -> 1, "q5" -> 5)
+    final match = RegExp(r'\d+').firstMatch(field);
+    return match != null ? int.tryParse(match.group(0)!) ?? 0 : 0;
+  }
 
 class _StatusBadge extends StatelessWidget {
   final String label;

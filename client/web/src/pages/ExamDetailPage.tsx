@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Fragment } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Edit,
@@ -6,7 +6,6 @@ import {
   Printer,
   Copy,
   Radio,
-  Info,
   Calendar,
   Clock,
   Timer,
@@ -14,30 +13,24 @@ import {
   Shield,
   BookOpen,
   Layers,
-  ChevronLeft,
-  ChevronRight,
   X,
-  ChevronDown,
-  ChevronUp,
   CheckCircle2,
   FileText,
-  Key,
-  MoreVertical,
-  Check,
-  Settings,
   FileDown,
   AlertTriangle,
-  Loader2,
   Cpu,
   RefreshCw,
-  CheckCircle,
+  Settings,
   Download,
+  Info,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useExamStore } from '../presentation/store/examStore';
 import { useSubmissionStore } from '../presentation/store/submissionStore';
 import { apiService } from '../core/api';
 import { mapExamDetailData } from './examPageAdapters';
-import { exportOmrTemplatePdf, exportOmrTemplateVersionSheetsPdf } from '../features/reports/examReportExport';
 import styles from './ExamDetailPage.module.css';
 
 export default function ExamDetailPage() {
@@ -59,10 +52,12 @@ export default function ExamDetailPage() {
     removeClassesFromExam,
     deleteExam,
     exportExamPdf,
-    exportVersionPdf,
     exportResults,
     generatePapers,
     isCompiling,
+    fetchExamTemplate,
+    downloadExamTemplateJson,
+    examTemplate,
   } = useExamStore();
 
   const {
@@ -73,12 +68,13 @@ export default function ExamDetailPage() {
     submissions,
   } = useSubmissionStore();
 
-  const [isSystemConfigOpen, setIsSystemConfigOpen] = useState(false);
   const [isExportingOmr, setIsExportingOmr] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [currentQuestionPage, setCurrentQuestionPage] = useState(1);
   const questionsPerPage = 3;
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [isCompileModalOpen, setIsCompileModalOpen] = useState(false);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -86,10 +82,12 @@ export default function ExamDetailPage() {
       fetchExamVersions(id);
       fetchByExam(id);
       fetchStatistics(id);
+      // Load exam template for OMR readiness check (used in mapExamDetailData)
+      fetchExamTemplate(id);
     }
-  }, [id, fetchExamById, fetchExamVersions, fetchByExam, fetchStatistics]);
+  }, [id, fetchExamById, fetchExamVersions, fetchByExam, fetchStatistics, fetchExamTemplate]);
 
-  const examData = useMemo(() => mapExamDetailData(currentExam, examVersions), [currentExam, examVersions]);
+  const examData = useMemo(() => mapExamDetailData(currentExam, examVersions, examTemplate), [currentExam, examVersions, examTemplate]);
 
   if (!examData) {
     const hasData = currentExam || isExamLoading || isSubLoading;
@@ -121,7 +119,9 @@ export default function ExamDetailPage() {
   // Paginated Questions
   const indexOfLastQuestion = currentQuestionPage * questionsPerPage;
   const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
-  const currentQuestions = examData.questions.slice(indexOfFirstQuestion, indexOfLastQuestion);
+  const displayedQuestions = showAllQuestions
+    ? examData.questions
+    : examData.questions.slice(indexOfFirstQuestion, indexOfLastQuestion);
   const totalQuestionPages = Math.ceil(examData.questions.length / questionsPerPage);
 
   // Class code extractor (e.g. Lớp 12A1 -> 12A)
@@ -152,7 +152,7 @@ export default function ExamDetailPage() {
     }
   };
 
-  const getEngineBadge = (engine: string) => {
+  const getEngineBadge = () => {
     return (
       <span className={`${styles.engineBadge} ${styles.engineBadgeAMC}`}>
         <Cpu size={9} />
@@ -223,6 +223,10 @@ export default function ExamDetailPage() {
     try {
       await generatePapers(id, { forceRegenerate });
       await fetchExamVersions(id);
+      // Re-fetch the exam so the OMRTemplate (with new templateJson) is in currentExam.
+      await fetchExamById(id);
+      // Fetch the exam-level template (now sourced from OMRTemplate.templateJson).
+      await fetchExamTemplate(id);
       setIsCompileModalOpen(false);
       alert('Compile hoàn tất! Kiểm tra trạng thái các mã đề bên dưới.');
     } catch (err: any) {
@@ -268,15 +272,6 @@ export default function ExamDetailPage() {
     }
   };
 
-  const handleVersionDownload = async (versionCode: string) => {
-    if (!id) return;
-    try {
-      await exportVersionPdf(id, versionCode);
-    } catch (err: any) {
-      alert(err.message || 'Lỗi khi tải đề thi');
-    }
-  };
-
   const handleExportResults = async (format: 'pdf' | 'excel' = 'pdf') => {
     if (!id) return;
     try {
@@ -290,7 +285,7 @@ export default function ExamDetailPage() {
     if (!id) return;
     if (!window.confirm('Tạo báo cáo phân tích cho bài thi này?')) return;
     try {
-      const response = await apiService.post(`/reports/exam/${id}/generate`);
+      await apiService.post(`/reports/exam/${id}/generate`);
       alert('Báo cáo đã được tạo thành công!');
       await fetchStatistics(id);
     } catch (err: any) {
@@ -300,23 +295,48 @@ export default function ExamDetailPage() {
 
   const handleExportOmrSheet = async () => {
     if (!id) return;
-    const templateId = currentExam?.omrTemplateId?._id;
-    if (!templateId) {
-      alert('Bài thi này chưa gắn mẫu OMR.');
-      return;
-    }
+
     setIsExportingOmr(true);
     try {
-      const versions = examVersions.map(v => v.versionCode);
-      if (versions.length > 1) {
-        await exportOmrTemplateVersionSheetsPdf(templateId, versions, examData.title);
-      } else {
-        await exportOmrTemplatePdf(templateId, examData.title);
+      // Fetch versions to get answerSheetPdfUrl from each ExamVersion
+      const versionsRes = await apiService.get<any>(`/exams/${id}/versions`);
+      const versions: any[] = Array.isArray(versionsRes) ? versionsRes : (versionsRes.results || []);
+
+      if (versions.length === 0) {
+        alert('Bài thi chưa có mã đề nào. Vui lòng sinh mã đề trước.');
+        return;
+      }
+
+      const answerSheetUrls = versions
+        .map((v) => ({ versionCode: v.versionCode, url: v.answerSheetPdfUrl }))
+        .filter((v) => !!v.url);
+
+      if (answerSheetUrls.length === 0) {
+        alert('Phiếu OMR chưa được sinh. Vui lòng compile AMC trước.');
+        return;
+      }
+
+      // Download each answer sheet PDF
+      for (const { versionCode, url } of answerSheetUrls) {
+        await handleDownloadPdf(url!, `PhieuTraLoi_${versionCode}.pdf`);
       }
     } catch (err: any) {
       alert(err.message || 'Lỗi khi tải phiếu OMR');
     } finally {
       setIsExportingOmr(false);
+    }
+  };
+
+  const handleDownloadOmrTemplateJson = async () => {
+    if (!id) return;
+    if (!examData.omrTemplateReady) {
+      alert('OMR template chưa sẵn sàng. Hãy compile AMC trước.');
+      return;
+    }
+    try {
+      await downloadExamTemplateJson(id);
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi tải OMR template');
     }
   };
 
@@ -359,10 +379,9 @@ export default function ExamDetailPage() {
   };
 
   return (
-    <Fragment>
-      <div className={styles.container}>
-        {/* Breadcrumbs */}
-        <nav className={styles.breadcrumb}>
+    <div className={styles.container}>
+      {/* Breadcrumbs */}
+      <nav className={styles.breadcrumb}>
         <Link to="/exams" className={styles.breadcrumbLink}>Quản lý bài kiểm tra</Link>
         <span className={styles.breadcrumbSeparator}>&gt;</span>
         <span className={styles.breadcrumbActive}>{examData.title}</span>
@@ -377,37 +396,50 @@ export default function ExamDetailPage() {
           </span>
         </div>
         
+        {/* Actions - Nhóm lại: Chính và Phụ */}
         <div className={styles.actions}>
-          <button className={styles.btnOutline} onClick={handleDelete} title="Xóa bài thi">
+          {/* Nhóm Phụ - Các tác vụ xem/in */}
+          <div className={styles.actionGroup}>
+            <button className={styles.btnOutline} onClick={() => navigate(`/exams/${examData._id}/edit`)} title="Sửa bài thi">
+              <Edit size={16} />
+              <span>Sửa</span>
+            </button>
+            <button className={styles.btnOutline} onClick={handleExportPdf} title="Xuất đề thi ra PDF">
+              <Printer size={16} />
+              <span>In đề</span>
+            </button>
+            <button className={styles.btnOutline} onClick={handleExportOmrSheet} disabled={isExportingOmr} title="Tải phiếu trả lời OMR">
+              <FileDown size={16} />
+              <span>{isExportingOmr ? 'Đang tải...' : 'In Phiếu OMR'}</span>
+            </button>
+          </div>
+          
+          {/* Dấu phân cách */}
+          <div className={styles.actionDivider} />
+          
+          {/* Nhóm Chính - Tạo phiên bản và xuất bản */}
+          <div className={styles.actionGroup}>
+            <button className={styles.btnOutline} onClick={handleGenerateVersions} disabled={isGeneratingVersions} title="Sinh mã đề trộn">
+              <Copy size={16} />
+              <span>Sinh phiên bản</span>
+            </button>
+            {examData.status !== 'completed' && (
+              <button className={styles.btnOutlineComplete} onClick={handleCompleteExam} disabled={isCompleting} title="Kết thúc kỳ thi">
+                <CheckCircle2 size={16} />
+                <span>{isCompleting ? 'Đang xử lý...' : 'Kết thúc'}</span>
+              </button>
+            )}
+            <button className={styles.btnSolidPublish} onClick={handlePublish} disabled={isPublishing || examData.status !== 'draft'} title="Xuất bản đề thi">
+              <Radio size={16} />
+              <span>Xuất bản</span>
+            </button>
+          </div>
+          
+          {/* Nút Xóa - ở cuối vì là tác vụ nguy hiểm */}
+          <button className={styles.btnDanger} onClick={handleDelete} title="Xóa bài thi">
             <Trash2 size={16} />
             <span>Xóa</span>
           </button>
-          <button className={styles.btnOutline} onClick={() => navigate(`/exams/${examData._id}/edit`)} title="Sửa bài thi">
-            <Edit size={16} />
-            <span>Sửa</span>
-          </button>
-          <button className={styles.btnOutline} onClick={handleExportPdf} title="Xuất đề thi ra PDF">
-            <Printer size={16} />
-            <span>In đề</span>
-          </button>
-          <button className={styles.btnOutline} onClick={handleExportOmrSheet} disabled={isExportingOmr} title="Tải phiếu trả lời OMR">
-            <FileDown size={16} />
-            <span>{isExportingOmr ? 'Đang tải...' : 'In Phiếu OMR'}</span>
-          </button>
-          <button className={styles.btnOutline} onClick={handleGenerateVersions} disabled={isGeneratingVersions} title="Sinh mã đề trộn">
-            <Copy size={16} />
-            <span>Sinh phiên bản</span>
-          </button>
-          <button className={styles.btnSolidPublish} onClick={handlePublish} disabled={isPublishing || examData.status !== 'draft'} title="Xuất bản đề thi">
-            <Radio size={16} />
-            <span>Xuất bản</span>
-          </button>
-          {examData.status !== 'completed' && (
-            <button className={styles.btnOutlineComplete} onClick={handleCompleteExam} disabled={isCompleting} title="Kết thúc kỳ thi">
-              <CheckCircle2 size={16} />
-              <span>{isCompleting ? 'Đang xử lý...' : 'Kết thúc'}</span>
-            </button>
-          )}
         </div>
       </div>
 
@@ -443,13 +475,6 @@ export default function ExamDetailPage() {
                 <div className={styles.infoField}>
                   <span className={styles.infoLabel}>NGÀY TẠO</span>
                   <span className={styles.infoValue}>{examData.createdDate}</span>
-                </div>
-                <div className={styles.infoField}>
-                  <span className={styles.infoLabel}>OMR TEMPLATE</span>
-                  <span className={styles.infoValueLink}>
-                    <FileText size={14} />
-                    <span>{examData.omrTemplateName}</span>
-                  </span>
                 </div>
               </div>
               <div className={styles.divider} />
@@ -690,7 +715,7 @@ export default function ExamDetailPage() {
                     </td>
                   </tr>
                 ) : (
-                  currentQuestions.map((q, idx) => (
+                  displayedQuestions.map((q, idx) => (
                     <tr key={idx}>
                       <td className={styles.boldText}>{q.stt}</td>
                       <td className={styles.questionContent}>{q.content}</td>
@@ -724,30 +749,53 @@ export default function ExamDetailPage() {
 
           <div className={styles.tableFooter}>
             <div className={styles.paginationInfo}>
-              Hiển thị {indexOfFirstQuestion + 1}-{Math.min(indexOfLastQuestion, examData.questions.length)} / {examData.questions.length} câu
+              {showAllQuestions ? (
+                <>Hiển thị tất cả {examData.questions.length} / {examData.questions.length} câu</>
+              ) : (
+                <>Hiển thị {indexOfFirstQuestion + 1}-{Math.min(indexOfLastQuestion, examData.questions.length)} / {examData.questions.length} câu</>
+              )}
             </div>
             <div className={styles.pageButtons}>
-              <button 
-                disabled={currentQuestionPage === 1}
-                onClick={() => setCurrentQuestionPage(p => p - 1)}
-                className={styles.pageBtn}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button 
-                disabled={currentQuestionPage === totalQuestionPages}
-                onClick={() => setCurrentQuestionPage(p => p + 1)}
-                className={styles.pageBtn}
-              >
-                <ChevronRight size={16} />
-              </button>
+              {!showAllQuestions && (
+                <>
+                  <button 
+                    disabled={currentQuestionPage === 1}
+                    onClick={() => setCurrentQuestionPage(p => p - 1)}
+                    className={styles.pageBtn}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button 
+                    disabled={currentQuestionPage === totalQuestionPages}
+                    onClick={() => setCurrentQuestionPage(p => p + 1)}
+                    className={styles.pageBtn}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
           
           <div className={styles.viewAllContainer}>
-            <Link to="/question-bank" className={styles.viewAllLink}>
-              Xem tất cả {examData.totalQuestions} câu hỏi
-            </Link>
+            {showAllQuestions ? (
+              <button
+                className={styles.viewAllLink}
+                onClick={() => {
+                  setShowAllQuestions(false);
+                  setCurrentQuestionPage(1);
+                }}
+              >
+                Thu gọn danh sách
+              </button>
+            ) : (
+              <button
+                className={styles.viewAllLink}
+                onClick={() => setShowAllQuestions(true)}
+              >
+                Xem tất cả {examData.totalQuestions} câu hỏi
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -755,149 +803,115 @@ export default function ExamDetailPage() {
       {/* Section: Phiên bản đề thi */}
       <div className={styles.sectionCard}>
         <div className={styles.card}>
-          <div className={styles.amcHeader}>
+          <div className={styles.cardHeaderFlex}>
             <div className={styles.headerTitle}>
-              <h2>Phiên bản đề thi</h2>
+              <h2>Phiên bản đề thi ({examData.versions.length})</h2>
+              {examData.omrTemplateReady ? (
+                <span className={`${styles.templateBadge} ${styles.templateReady}`}>OMR: Sẵn sàng</span>
+              ) : (
+                <span className={`${styles.templateBadge} ${styles.templatePlaceholder}`}>OMR: Chưa sẵn sàng</span>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                className={styles.btnOutlineCompact}
+                onClick={() => setIsGenerateModalOpen(true)}
+                disabled={isGeneratingVersions}
+              >
+                <Copy size={13} />
+                {isGeneratingVersions ? 'Đang sinh...' : 'Sinh mã đề'}
+              </button>
+              <button
+                className={styles.btnOutlineCompact}
+                onClick={handleExportOmrSheet}
+                disabled={isExportingOmr}
+                title="Tải phiếu trả lời OMR"
+              >
+                <FileDown size={13} />
+                {isExportingOmr ? 'Đang tải...' : 'In Phiếu OMR'}
+              </button>
               <button
                 className={styles.btnSolidCompact}
                 onClick={() => setIsCompileModalOpen(true)}
                 disabled={isCompiling || examData.versions.length === 0}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                {isCompiling ? (
-                  <>
-                    <span className={styles.compilingSpinner} />
-                    Đang compile...
-                  </>
-                ) : (
-                  <>
-                    <Cpu size={13} />
-                    Compile AMC
-                  </>
-                )}
-              </button>
-              <button className={styles.btnOutlineCompact} onClick={handleGenerateVersions} disabled={isGeneratingVersions}>
-                <Copy size={13} style={{ marginRight: '4px' }} />
-                {isGeneratingVersions ? 'Đang sinh...' : 'Sinh mã đề'}
+                {isCompiling ? 'Đang compile...' : 'Compile'}
               </button>
             </div>
           </div>
 
           {examData.versions.length === 0 ? (
-            <p style={{ color: '#999', textAlign: 'center', padding: '32px', gridColumn: '1 / -1' }}>
-              Chưa có phiên bản đề thi nào. Nhấn "Sinh mã đề" để tạo.
-            </p>
+            <div className={styles.emptyState}>
+              <FileText size={32} className={styles.emptyIcon} />
+              <p>Chưa có mã đề nào</p>
+              <button className={styles.btnSolid} onClick={handleGenerateVersions}>
+                Sinh mã đề đầu tiên
+              </button>
+            </div>
           ) : (
-            <div className={styles.versionsGrid}>
-              {examData.versions.map((ver) => {
+            <div className={styles.versionsList}>
+              {examData.versions.map((ver, idx) => {
                 const hasErrors = ver.hasErrors;
                 return (
-                  <div
-                    key={ver.code}
-                    className={`${styles.versionCard} ${hasErrors ? styles.versionCardWithError : ''}`}
-                  >
-                    <div className={styles.verCardHeader}>
-                      <span className={styles.verCardTitle}>MÃ ĐỀ: {ver.code}</span>
-                      {ver.status === 'Đã sinh PDF' && (
-                        <div className={styles.checkIconWrapper}>
-                          <Check size={12} strokeWidth={3} />
-                        </div>
-                      )}
-                      {ver.status === 'Chưa sinh' && (
-                        <div style={{ width: 18, height: 18 }} />
-                      )}
-                    </div>
-
-                    <div className={styles.verCardBody}>
-                      <div className={styles.verField}>
-                        <span className={styles.verLabel}>Trạng thái:</span>
-                        {getVersionStatusBadge(ver.status)}
-                      </div>
-                      <div className={styles.verField}>
-                        <span className={styles.verLabel}>Engine:</span>
-                        <div className={styles.versionBadges}>
-                          {getEngineBadge(ver.engine)}
-                        </div>
-                      </div>
-                      <div className={styles.verField}>
-                        <span className={styles.verLabel}>Cập nhật:</span>
-                        <span className={styles.verValue}>{ver.updatedAt}</span>
-                      </div>
-                      {ver.generatedAt && (
-                        <div className={styles.verField}>
-                          <span className={styles.verLabel}>Đã compile:</span>
-                          <span className={styles.verValue}>{ver.generatedAt}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className={styles.versionAmcRow}>
-                      <div className={styles.versionBadges}>
-                        {ver.templateReady ? (
-                          <span className={`${styles.templateBadge} ${styles.templateReady}`}>
-                            Coords: Ready
-                          </span>
-                        ) : (
-                          <span className={`${styles.templateBadge} ${styles.templatePlaceholder}`}>
-                            Coords: Placeholder
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {hasErrors && ver.errors.length > 0 && (
-                      <div className={styles.versionErrors}>
-                        <AlertTriangle size={13} />
-                        <span>{ver.errors[0]}</span>
-                      </div>
-                    )}
-
-                    <div className={styles.versionCardActions}>
-                      {ver.pdfUrl ? (
-                        <>
-                          <button
-                            className={styles.verCompileBtn}
-                            onClick={() => handleCompile(true)}
-                            disabled={isCompiling}
-                            title="Compile lại"
-                          >
-                            <RefreshCw size={11} />
-                            Compile lại
-                          </button>
-                          <button
-                            className={styles.verRecompileBtn}
-                            onClick={() => handleDownloadPdf(ver.pdfUrl, `De_${ver.code}.pdf`)}
-                            title="Tải đề thi"
-                          >
-                            <Download size={11} />
-                            Tải đề
-                          </button>
-                          {ver.answerSheetPdfUrl && (
-                            <button
-                              className={styles.verRecompileBtn}
-                              onClick={() => handleDownloadPdf(ver.answerSheetPdfUrl, `Phieu_TL_${ver.code}.pdf`)}
-                              title="Tải phiếu trả lời OMR"
-                            >
-                              <FileDown size={11} />
-                              Tải phiếu
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        <button
-                          className={styles.verCompileBtn}
-                          onClick={() => handleCompile(false)}
-                          disabled={isCompiling}
-                          title="Compile với AMC"
-                        >
-                          <Cpu size={11} />
-                          Compile AMC
-                        </button>
-                      )}
-                    </div>
+                <div key={ver.code} className={styles.versionRow}>
+                  <div className={styles.versionIndex}>{idx + 1}</div>
+                  <div className={styles.versionInfo}>
+                    <span className={styles.versionCode}>Mã đề {ver.code}</span>
+                    <span className={styles.versionMeta}>
+                      Cập nhật: {ver.updatedAt}
+                      {ver.generatedAt && ` • Đã compile: ${ver.generatedAt}`}
+                    </span>
                   </div>
+                  <div className={styles.versionStatus}>
+                    {getVersionStatusBadge(ver.status)}
+                    {hasErrors && ver.errors.length > 0 && (
+                      <span className={styles.errorBadge}>
+                        <AlertTriangle size={11} /> {ver.errors[0]}
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.versionActions}>
+                    {ver.pdfUrl ? (
+                      <>
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => handleDownloadPdf(ver.pdfUrl, `De_${ver.code}.pdf`)}
+                          title="Tải đề thi"
+                        >
+                          <Download size={14} />
+                          Đề
+                        </button>
+                        {ver.corrigePdfUrl && (
+                          <button
+                            className={styles.actionBtn}
+                            onClick={() => handleDownloadPdf(ver.corrigePdfUrl, `DapAn_${ver.code}.pdf`)}
+                            title="Tải đáp án"
+                          >
+                            <Download size={14} />
+                            Đáp án
+                          </button>
+                        )}
+                        <button
+                          className={styles.actionBtnSecondary}
+                          onClick={() => handleCompile(true)}
+                          disabled={isCompiling}
+                          title="Compile lại"
+                        >
+                          <RefreshCw size={14} />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className={styles.actionBtnPrimary}
+                        onClick={() => handleCompile(false)}
+                        disabled={isCompiling}
+                      >
+                        <Cpu size={14} />
+                        Compile
+                      </button>
+                    )}
+                  </div>
+                </div>
                 );
               })}
             </div>
@@ -1005,89 +1019,6 @@ export default function ExamDetailPage() {
         </div>
       </div>
 
-      {/* Section: Cấu hình hệ thống (Accordion) */}
-      <div className={styles.sectionCard}>
-        <div className={styles.accordionCard} onClick={() => setIsSystemConfigOpen(!isSystemConfigOpen)}>
-          <div className={styles.accordionHeader}>
-            <div className={styles.accordionTitle}>
-              <Settings size={18} />
-              <h2>Cấu hình hệ thống</h2>
-            </div>
-            {isSystemConfigOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </div>
-          
-          {isSystemConfigOpen && (
-            <div className={styles.accordionContent} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.configGrid}>
-                <div className={styles.configItem}>
-                  <span className={styles.configLabel}>Khổ giấy in đề</span>
-                  <span className={styles.configValue}>{currentExam?.printConfig?.paperSize || 'A4'}</span>
-                </div>
-                <div className={styles.configItem}>
-                  <span className={styles.configLabel}>Số câu mỗi trang</span>
-                  <span className={styles.configValue}>{currentExam?.printConfig?.questionsPerPage || '5'} câu</span>
-                </div>
-                <div className={styles.configItem}>
-                  <span className={styles.configLabel}>Bao gồm phiếu trả lời</span>
-                  <span className={styles.configValue}>{currentExam?.printConfig?.includeAnswerSheet !== false ? 'Có' : 'Không'}</span>
-                </div>
-                <div className={styles.configItem}>
-                  <span className={styles.configLabel}>Trộn câu hỏi</span>
-                  <span className={styles.configValue}>{currentExam?.shuffleConfig?.shuffleQuestions !== false ? 'Bật' : 'Tắt'}</span>
-                </div>
-                <div className={styles.configItem}>
-                  <span className={styles.configLabel}>Trộn đáp án</span>
-                  <span className={styles.configValue}>{currentExam?.shuffleConfig?.shuffleOptions !== false ? 'Bật' : 'Tắt'}</span>
-                </div>
-                <div className={styles.configItem}>
-                  <span className={styles.configLabel}>Bản quyền tiêu đề trường</span>
-                  <span className={styles.configValue}>{currentExam?.printConfig?.schoolHeader !== false ? 'Có' : 'Không'}</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Section: Lịch sử thay đổi */}
-      <div className={styles.sectionCard}>
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <div className={styles.headerTitle}>
-              <h2>Lịch sử thay đổi</h2>
-            </div>
-          </div>
-          
-          <div className={styles.timeline}>
-            {examData.history.map((hist, idx) => (
-              <div key={idx} className={styles.timelineItem}>
-                <div className={styles.timelinePoint}></div>
-                {idx < examData.history.length - 1 && <div className={styles.timelineLine}></div>}
-                
-                <div className={styles.timelineContent}>
-                  <span className={styles.timelineDate}>{hist.timestamp}</span>
-                  <h3 className={styles.timelineActionTitle}>{hist.action}</h3>
-                  {hist.action.includes('Phát hành') ? (
-                    <>
-                      <p className={styles.timelineDesc}>Bài thi đã được công bố cho các lớp 12A1, 12A2, 11B3.</p>
-                      <div className={styles.timelineUser}>
-                        <div className={styles.timelineAvatar}>NV</div>
-                        <span className={styles.timelineUserName}>Bởi {hist.user}</span>
-                      </div>
-                    </>
-                  ) : hist.action.includes('câu hỏi') ? (
-                    <p className={styles.timelineDesc}>Thay đổi 5 câu hỏi khó ở chương 2 và điều chỉnh thang điểm.</p>
-                  ) : (
-                    <p className={styles.timelineDesc}>Tạo khung bài kiểm tra giữa kỳ 1 theo chuẩn của tổ bộ môn.</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      </div>
-
       {/* ── Compile AMC Modal ── */}
       {isCompileModalOpen && (
         <CompileModal
@@ -1097,17 +1028,33 @@ export default function ExamDetailPage() {
           isCompiling={isCompiling}
         />
       )}
-    </Fragment>
+
+      {/* ── Generate Versions Modal ── */}
+      {isGenerateModalOpen && (
+        <GenerateVersionsModal
+          onClose={() => setIsGenerateModalOpen(false)}
+          onGenerate={async (count) => {
+            if (!id) return;
+            try {
+              await generateExamVersions(id, count);
+              alert(`Đã sinh ${count} mã đề thành công!`);
+              setIsGenerateModalOpen(false);
+            } catch (err: any) {
+              alert(err.message || 'Lỗi khi sinh mã đề');
+            }
+          }}
+          isGenerating={isGeneratingVersions}
+        />
+      )}
+    </div>
   );
 }
 
 function CompileModal({
-  examId,
   onClose,
   onCompile,
   isCompiling,
 }: {
-  examId: string;
   onClose: () => void;
   onCompile: (force: boolean) => void;
   isCompiling: boolean;
@@ -1170,6 +1117,81 @@ function CompileModal({
               <>
                 <Cpu size={14} />
                 Bắt đầu Compile
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GenerateVersionsModal({
+  onClose,
+  onGenerate,
+  isGenerating,
+}: {
+  onClose: () => void;
+  onGenerate: (count: number) => void;
+  isGenerating: boolean;
+}) {
+  const [count, setCount] = useState(4);
+
+  const handleSubmit = () => {
+    if (count < 1 || count > 100) {
+      alert('Số lượng mã đề phải từ 1 đến 100');
+      return;
+    }
+    onGenerate(count);
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitle}>Sinh mã đề thi</h3>
+          <button className={styles.modalClose} onClick={onClose} disabled={isGenerating}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className={styles.modalBody}>
+          <p style={{ marginBottom: '16px', color: '#64748b' }}>
+            Nhập số lượng mã đề bạn muốn sinh. Mỗi mã đề sẽ có thứ tự câu hỏi được xáo trộn khác nhau.
+          </p>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Số lượng mã đề</label>
+            <input
+              type="number"
+              className={styles.formInput}
+              value={count}
+              onChange={(e) => setCount(parseInt(e.target.value) || 0)}
+              min={1}
+              max={100}
+              disabled={isGenerating}
+            />
+          </div>
+        </div>
+
+        <div className={styles.modalFooter}>
+          <button className={styles.btnCancel} onClick={onClose} disabled={isGenerating}>
+            Hủy
+          </button>
+          <button
+            className={styles.btnCompile}
+            onClick={handleSubmit}
+            disabled={isGenerating || count < 1}
+          >
+            {isGenerating ? (
+              <>
+                <span className={styles.compilingSpinner} />
+                Đang sinh...
+              </>
+            ) : (
+              <>
+                <Copy size={14} />
+                Sinh {count} mã đề
               </>
             )}
           </button>

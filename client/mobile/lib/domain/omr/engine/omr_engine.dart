@@ -201,6 +201,10 @@ class OMREngine {
   }
 
   AppOmrTemplate _toAppTemplate(OMRTemplate template) {
+    // Extract exact coordinates from templateJson.answers if available
+    final Map<String, Map<String, Map<String, dynamic>>>? exactCoords =
+        _extractExactCoords(template.templateJson);
+
     final fieldBlocks = template.fieldBlocks.map((fb) {
       final direction = fb.direction;
       final bubbleValues = fb.bubbleValues;
@@ -208,6 +212,30 @@ class OMREngine {
       final labelsGap = fb.labelsGap;
       final bubblesGap = fb.bubblesGap;
       final emptyValue = fb.emptyValue;
+
+      // Get exact coords for this block if available
+      List<AppBubbleCoord>? exactBubbleCoords;
+      if (exactCoords != null) {
+        exactBubbleCoords = <AppBubbleCoord>[];
+        for (final label in fieldLabels) {
+          final labelCoords = exactCoords[label];
+          if (labelCoords != null) {
+            for (final entry in labelCoords.entries) {
+              final value = entry.key;
+              final coord = entry.value;
+              exactBubbleCoords.add(AppBubbleCoord(
+                label: label,
+                value: value,
+                x: (coord['x'] as num?)?.toInt() ?? 0,
+                y: (coord['y'] as num?)?.toInt() ?? 0,
+                w: (coord['w'] as num?)?.toInt() ?? fb.bubbleWidth,
+                h: (coord['h'] as num?)?.toInt() ?? fb.bubbleHeight,
+              ));
+            }
+          }
+        }
+      }
+
       return AppOmrFieldBlock(
         name: fb.name,
         originX: fb.originX,
@@ -221,6 +249,7 @@ class OMREngine {
         labelsGap: labelsGap.toDouble(),
         direction: direction.name,
         emptyValue: emptyValue,
+        exactCoords: exactBubbleCoords,
       );
     }).toList();
 
@@ -244,6 +273,34 @@ class OMREngine {
       autoAlign: template.autoAlign,
       useMarkers: false,
     );
+  }
+
+  /// Extract exact coordinates from templateJson.answers
+  /// Returns: { "q1": { "A": {x, y, w, h}, "B": {...} }, "q2": {...} }
+  Map<String, Map<String, Map<String, dynamic>>>? _extractExactCoords(
+      Map<String, dynamic>? templateJson) {
+    if (templateJson == null) return null;
+
+    final answers = templateJson['answers'];
+    if (answers is! Map) return null;
+
+    final result = <String, Map<String, Map<String, dynamic>>>{};
+    for (final entry in answers.entries) {
+      final qKey = entry.key.toString();
+      final options = entry.value;
+      if (options is Map) {
+        result[qKey] = {};
+        for (final optEntry in options.entries) {
+          final optKey = optEntry.key.toString();
+          final coord = optEntry.value;
+          if (coord is Map) {
+            result[qKey]![optKey] = Map<String, dynamic>.from(coord);
+          }
+        }
+      }
+    }
+
+    return result.isEmpty ? null : result;
   }
 
   OMRGradingResult _gradeWithConfig(

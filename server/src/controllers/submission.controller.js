@@ -3,7 +3,20 @@ const submissionService = require('../services/submission.service');
 const catchAsync = require('../utils/catchAsync');
 
 const scan = catchAsync(async (req, res) => {
-  const result = await submissionService.scan(req.body);
+  // ── Normalize payload ──────────────────────────────────────────────
+  // Mobile AMC flow sends multipart with answers as jsonEncode()'d string.
+  // Normalize it to an object before passing to service.
+  let payload = { ...req.body };
+
+  if (typeof payload.answers === 'string') {
+    try {
+      payload.answers = JSON.parse(payload.answers);
+    } catch {
+      // Not JSON — legacy format, leave as-is
+    }
+  }
+
+  const result = await submissionService.scan(payload);
   res.status(httpStatus.ACCEPTED).send({
     id: result.submissionId,
     status: result.status,

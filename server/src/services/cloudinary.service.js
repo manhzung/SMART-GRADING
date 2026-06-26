@@ -116,9 +116,16 @@ class CloudinaryService {
     this._ensureConfigured();
     let attempt = 0;
     let lastErr;
+
+    // Convert Buffer to base64 data URI if needed
+    let uploadInput = input;
+    if (Buffer.isBuffer(input)) {
+      uploadInput = `data:application/pdf;base64,${input.toString('base64')}`;
+    }
+
     while (attempt <= MAX_RETRIES) {
       try {
-        const result = await cloudinary.uploader.upload(input, {
+        const result = await cloudinary.uploader.upload(uploadInput, {
           folder: options.folder,
           public_id: options.publicId,
           overwrite: true,

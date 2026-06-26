@@ -2,40 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { 
   HelpCircle, 
-  List, 
   Shuffle, 
-  Eye, 
-  FilePlus, 
-  Info, 
   X,
   GraduationCap,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import { useClassStore } from '../presentation/store/classStore';
-import { useExamStore, type Exam } from '../presentation/store/examStore';
-import { useOMRTemplateStore } from '../presentation/store/omrTemplateStore';
-import ExamPreviewModal from '../features/exams/ExamPreviewModal';
+import { useExamStore } from '../presentation/store/examStore';
 import styles from './EditExamPage.module.css';
-
-// Vietnamese Subject List
-const SUBJECTS = [
-  'Toán học',
-  'Vật lý',
-  'Hóa học',
-  'Sinh học',
-  'Tiếng Anh',
-  'Lịch sử',
-  'Địa lý',
-  'Ngữ văn',
-  'Tin học'
-];
 
 export default function EditExamPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { classes, fetchClasses } = useClassStore();
-  const { exams, fetchExams, updateExam, fetchExamById, examVersions, fetchExamVersionsFull } = useExamStore();
-  const { templates: omrTemplatesList, fetchTemplates } = useOMRTemplateStore();
+  const { exams, fetchExams, updateExam, fetchExamById, fetchExamVersionsFull } = useExamStore();
 
   // API Lists
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
@@ -46,13 +26,14 @@ export default function EditExamPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('Toán học');
   
-  // Specs
-  const [omrTemplateId, setOmrTemplateId] = useState('');
+  // Specs - Thêm các trường còn thiếu
   const [numberOfQuestions, setNumberOfQuestions] = useState(40);
   const [numberOfVersions, setNumberOfVersions] = useState(4);
   const [examCode, setExamCode] = useState('MATH12-HK1');
+  const [duration, setDuration] = useState(45);
+  const [totalScore, setTotalScore] = useState(10);
+  const [passingScore, setPassingScore] = useState(5);
 
   // Shuffle Configuration
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
@@ -65,11 +46,8 @@ export default function EditExamPage() {
   const [_examStatus, setExamStatus] = useState<'draft' | 'published' | 'in_progress' | 'completed' | 'archived'>('draft');
   const [isLoadingExam, setIsLoadingExam] = useState(false);
 
-  // Preview modal state
-  const [showPreview, setShowPreview] = useState(false);
-
-  // Current exam for preview
-  const [currentExamData, setCurrentExamData] = useState<Exam | null>(null);
+  // Last saved timestamp
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Lock form fields for published/completed exams (computed after data loads)
   const isPublished = _examStatus === 'published' || _examStatus === 'in_progress' || _examStatus === 'completed';
@@ -81,8 +59,7 @@ export default function EditExamPage() {
     if (exams.length === 0) {
       fetchExams();
     }
-    fetchTemplates();
-  }, [fetchClasses, fetchExams, exams.length, fetchTemplates]);
+  }, [fetchClasses, fetchExams, exams.length]);
 
   // Load current exam details
   useEffect(() => {
@@ -94,13 +71,12 @@ export default function EditExamPage() {
       setTitle(exam.title);
       setDescription(exam.description || '');
       setSelectedClassId(typeof exam.primaryClassId === 'object' ? (exam.primaryClassId as any)?._id : (exam.primaryClassId as string) || '');
-      setSelectedSubject(exam.subjectName || 'Toán học');
       setNumberOfQuestions(exam.questionIds?.length || 40);
       setExamDate(exam.examDate || '');
       setExamStatus(exam.status || 'draft');
       
-      // Set current exam data for preview
-      setCurrentExamData(exam);
+      // Last saved timestamp
+      setLastSaved(new Date());
       
     // Attempt to load more detail from store
     setIsLoadingExam(true);
@@ -113,29 +89,21 @@ export default function EditExamPage() {
               const pid = typeof res.primaryClassId === 'object' ? (res.primaryClassId as any)?._id : res.primaryClassId;
               if (pid) setSelectedClassId(pid);
             }
-            if ((res as any).subjectId?.name) setSelectedSubject((res as any).subjectId.name);
-            if ((res as any).omrTemplateId) {
-              const tid = typeof (res as any).omrTemplateId === 'object' ? (res as any).omrTemplateId?._id : (res as any).omrTemplateId;
-              if (tid) setOmrTemplateId(tid);
-            }
             if (res.numberOfQuestions) setNumberOfQuestions(res.numberOfQuestions);
             if (res.numberOfVersions) setNumberOfVersions(res.numberOfVersions);
             if ((res as any).examCode || (res as any).code) setExamCode((res as any).examCode || (res as any).code || 'MATH12-HK1');
             if (res.startTime) setStartTime(res.startTime);
             if (res.examDate) setExamDate(res.examDate);
+            // Load new fields
+            if (res.duration) setDuration(res.duration);
+            if (res.totalScore) setTotalScore(res.totalScore);
+            if (res.passingScore) setPassingScore(res.passingScore);
             if ((res as any).shuffleConfig) {
               setShuffleQuestions((res as any).shuffleConfig.shuffleQuestions ?? true);
               setShuffleOptions((res as any).shuffleConfig.shuffleOptions ?? true);
               setKeepHardAtEnd((res as any).shuffleConfig.keepHardAtEnd ?? false);
             }
-            // Update currentExamData with full data from API
-            setCurrentExamData({
-              ...exam,
-              ...res,
-              duration: res.duration || exam.duration || 45,
-              totalScore: res.totalScore || exam.totalScore || 10,
-              passingScore: res.passingScore || exam.passingScore || 5,
-            });
+            setLastSaved(new Date());
             setIsLoadingExam(false);
             // Fetch exam versions full to get questions
             if ((res as any).questionIds?.length > 0) {
@@ -148,10 +116,8 @@ export default function EditExamPage() {
         });
     } else {
       // Mock / Default data fallback for the UI mockups if ID is not in store
-      // E.g. matching "Kiểm tra cuối kỳ I - Môn Toán - Khối 12"
       setTitle('Kiểm tra cuối kỳ I - Môn Toán - Khối 12');
-      setSelectedClassId(''); // Will resolve to first loaded class
-      setSelectedSubject('Toán học');
+      setSelectedClassId('');
       setDescription('Bài kiểm tra tập trung vào kiến thức Giải tích và Hình học không gian chương 1-2.');
       setNumberOfQuestions(40);
       setNumberOfVersions(4);
@@ -169,12 +135,15 @@ export default function EditExamPage() {
     }
   }, [classes, selectedClassId]);
 
-  // Sync omrTemplateId with first option if empty
-  useEffect(() => {
-    if (omrTemplatesList.length > 0 && !omrTemplateId) {
-      setOmrTemplateId(omrTemplatesList[0]._id);
-    }
-  }, [omrTemplatesList, omrTemplateId]);
+  // Format last saved time
+  const formatLastSaved = () => {
+    if (!lastSaved) return 'Chưa lưu';
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - lastSaved.getTime()) / 1000);
+    if (diff < 60) return 'Vừa xong';
+    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+    return lastSaved.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  };
 
   // Handle Save
   const handleSave = async (e: React.FormEvent) => {
@@ -200,12 +169,14 @@ export default function EditExamPage() {
           description,
           primaryClassId: selectedClassId,
           classIds: [selectedClassId],
-          omrTemplateId,
           numberOfQuestions: Number(numberOfQuestions),
           numberOfVersions: Number(numberOfVersions),
           examCode,
           examDate,
           startTime,
+          duration: Number(duration),
+          totalScore: Number(totalScore),
+          passingScore: Number(passingScore),
           shuffleConfig: {
             shuffleQuestions,
             shuffleOptions,
@@ -213,6 +184,7 @@ export default function EditExamPage() {
           }
         };
         await updateExam(deepPayload as any);
+        setLastSaved(new Date());
       }
       
       setSuccessMessage('Lưu thay đổi thành công!');
@@ -226,6 +198,10 @@ export default function EditExamPage() {
       setIsSubmitLoading(false);
     }
   };
+
+  // Handle add question - navigate to question bank
+  // (Tính năng sẽ được bổ sung sau khi Question Bank page hoàn thiện)
+  // const handleAddQuestion = () => { navigate('/question-bank'); };
 
   return (
     <div className={styles.container}>
@@ -248,7 +224,6 @@ export default function EditExamPage() {
 
       {errorMessage && (
         <div className={styles.errorBanner}>
-          <Info size={18} />
           <span>{errorMessage}</span>
           <button className={styles.errorClose} onClick={() => setErrorMessage(null)}>
             <X size={16} />
@@ -258,7 +233,6 @@ export default function EditExamPage() {
 
       {successMessage && (
         <div className={styles.successBanner}>
-          <Info size={18} />
           <span>{successMessage}</span>
         </div>
       )}
@@ -293,14 +267,14 @@ export default function EditExamPage() {
               <div className={styles.cardHeader}>
                 <div className={styles.cardHeaderTitle}>
                   <HelpCircle size={18} className={styles.iconBlue} />
-                  <h2>Thông tin chung</h2>
+                  <h2>Thông tin cơ bản</h2>
                 </div>
               </div>
               
               <div className={styles.cardContent}>
                 {/* Exam Title */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="exam-title" className={styles.fieldLabel}>Tiêu đề bài kiểm tra</label>
+                  <label htmlFor="exam-title" className={styles.fieldLabel}>Tên bài kiểm tra</label>
                   <input 
                     id="exam-title"
                     type="text" 
@@ -334,107 +308,93 @@ export default function EditExamPage() {
                       )}
                     </select>
                   </div>
-
-                  <div className={styles.formGroup}>
-                    <label htmlFor="subject-select" className={styles.fieldLabel}>Môn học</label>
-                    <select 
-                      id="subject-select"
-                      value={selectedSubject}
-                      onChange={(e) => setSelectedSubject(e.target.value)}
-                      className={styles.selectField}
-                      disabled={isLocked}
-                    >
-                      {SUBJECTS.map(sub => (
-                        <option key={sub} value={sub}>{sub}</option>
-                      ))}
-                    </select>
-                  </div>
                 </div>
 
                 {/* Description / Notes */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="exam-desc" className={styles.fieldLabel}>Ghi chú (không bắt buộc)</label>
+                  <label htmlFor="exam-desc" className={styles.fieldLabel}>Mô tả (không bắt buộc)</label>
                   <textarea 
                     id="exam-desc"
                     placeholder="VD: Bài kiểm tra tập trung vào kiến thức Giải tích và Hình học không gian chương 1-2."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className={styles.textareaField}
-                    rows={4}
+                    rows={3}
                     disabled={isLocked}
                   />
                 </div>
 
-                {/* Exam Date */}
-                <div className={styles.formGroup}>
-                  <label htmlFor="exam-date" className={styles.fieldLabel}>Ngày kiểm tra</label>
-                  <input 
-                    id="exam-date"
-                    type="date" 
-                    value={examDate}
-                    onChange={(e) => setExamDate(e.target.value)}
-                    className={styles.inputField}
-                    disabled={isLocked}
-                  />
-                </div>
+                {/* Exam Date & Time Grid */}
+                <div className={styles.grid2Col}>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="exam-date" className={styles.fieldLabel}>Ngày kiểm tra</label>
+                    <input 
+                      id="exam-date"
+                      type="date" 
+                      value={examDate}
+                      onChange={(e) => setExamDate(e.target.value)}
+                      className={styles.inputField}
+                      disabled={isLocked}
+                    />
+                  </div>
 
-                {/* Start Time */}
-                <div className={styles.formGroup}>
-                  <label htmlFor="start-time" className={styles.fieldLabel}>Giờ bắt đầu</label>
-                  <input 
-                    id="start-time"
-                    type="time" 
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className={styles.inputField}
-                    disabled={isLocked}
-                  />
+                  <div className={styles.formGroup}>
+                    <label htmlFor="start-time" className={styles.fieldLabel}>Giờ bắt đầu</label>
+                    <input 
+                      id="start-time"
+                      type="time" 
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className={styles.inputField}
+                      disabled={isLocked}
+                    />
+                  </div>
                 </div>
               </div>
             </section>
 
-            {/* Card 2: Danh sách câu hỏi */}
+            {/* Card 2: Cấu hình xáo trộn */}
             <section className={styles.card}>
-              <div className={styles.cardHeaderFlex}>
+              <div className={styles.cardHeader}>
                 <div className={styles.cardHeaderTitle}>
-                  <List size={18} className={styles.iconGray} />
-                  <h2>Danh sách câu hỏi</h2>
+                  <Shuffle size={18} className={styles.iconNavy} />
+                  <h2>Tùy chọn xáo trộn</h2>
                 </div>
-                
-                <button 
-                  type="button" 
-                  onClick={() => alert('Thêm câu hỏi thành công!')}
-                  className={styles.addQuestionBtn}
-                  disabled={isLocked}
-                  style={{ opacity: isLocked ? 0.5 : 1, cursor: isLocked ? 'not-allowed' : 'pointer' }}
-                >
-                  + Thêm câu hỏi
-                </button>
               </div>
-
+              
               <div className={styles.cardContent}>
-                {/* List of questions from exam versions */}
-                <div className={styles.questionList}>
-                  
-                  {examVersions.length > 0 ? (
-                    examVersions.flatMap(v => v.questions || []).slice(0, numberOfQuestions).map((q, idx) => (
-                      <div key={`${q.questionId}-${idx}`} className={styles.questionRow}>
-                        <div className={styles.questionHeader}>
-                          <span className={styles.questionTitle}>Câu {idx + 1}</span>
-                        </div>
-                        <p className={styles.questionText}>
-                          {q.questionId ? `Câu hỏi: ${q.questionId.substring(0, 12)}...` : 'Đang tải...'}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className={styles.dragPlaceholder} onClick={() => alert('Chọn file câu hỏi hoặc nhập từ ngân hàng.')}>
-                      <FilePlus size={32} className={styles.placeholderIcon} />
-                      <span className={styles.placeholderText}>Kéo thả câu hỏi từ thư viện hoặc tạo mới</span>
-                    </div>
-                  )}
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox"
+                    checked={shuffleQuestions}
+                    onChange={(e) => setShuffleQuestions(e.target.checked)}
+                    className={styles.checkboxInput}
+                    disabled={isLocked}
+                  />
+                  <span>Xáo trộn thứ tự câu hỏi</span>
+                </label>
 
-                </div>
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox"
+                    checked={shuffleOptions}
+                    onChange={(e) => setShuffleOptions(e.target.checked)}
+                    className={styles.checkboxInput}
+                    disabled={isLocked}
+                  />
+                  <span>Xáo trộn các phương án trả lời</span>
+                </label>
+
+                <label className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox"
+                    checked={keepHardAtEnd}
+                    onChange={(e) => setKeepHardAtEnd(e.target.checked)}
+                    className={styles.checkboxInput}
+                    disabled={isLocked}
+                  />
+                  <span>Giữ cố định các câu hỏi khó ở cuối</span>
+                </label>
               </div>
             </section>
 
@@ -453,7 +413,7 @@ export default function EditExamPage() {
               </div>
               
               <div className={styles.cardContent}>
-                {/* Number of questions with input suffix */}
+                {/* Number of questions */}
                 <div className={styles.formGroup}>
                   <label htmlFor="questions-count" className={styles.fieldLabel}>Số lượng câu hỏi</label>
                   <div className={styles.inputWithSuffixWrapper}>
@@ -471,32 +431,72 @@ export default function EditExamPage() {
                   </div>
                 </div>
 
-                {/* OMR Template */}
+                {/* Thời gian làm bài */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="omr-template" className={styles.fieldLabel}>Mẫu phiếu trả lời (OMR)</label>
+                  <label htmlFor="duration" className={styles.fieldLabel}>Thời gian làm bài</label>
+                  <div className={styles.inputWithSuffixWrapper}>
+                    <input 
+                      id="duration"
+                      type="number" 
+                      required 
+                      min={1}
+                      value={duration}
+                      onChange={(e) => setDuration(Number(e.target.value))}
+                      className={styles.inputField}
+                      disabled={isLocked}
+                    />
+                    <span className={styles.inputSuffix}>Phút</span>
+                  </div>
+                </div>
+
+                {/* Điểm tổng & Điểm đạt */}
+                <div className={styles.grid2Col}>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="total-score" className={styles.fieldLabel}>Điểm tổng</label>
+                    <input 
+                      id="total-score"
+                      type="number" 
+                      required 
+                      min={1}
+                      value={totalScore}
+                      onChange={(e) => setTotalScore(Number(e.target.value))}
+                      className={styles.inputField}
+                      disabled={isLocked}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label htmlFor="passing-score" className={styles.fieldLabel}>Điểm đạt</label>
+                    <input 
+                      id="passing-score"
+                      type="number" 
+                      required 
+                      min={0}
+                      value={passingScore}
+                      onChange={(e) => setPassingScore(Number(e.target.value))}
+                      className={styles.inputField}
+                      disabled={isLocked}
+                    />
+                  </div>
+                </div>
+
+                {/* Số lượng mã đề */}
+                <div className={styles.formGroup}>
+                  <label htmlFor="versions-count" className={styles.fieldLabel}>Số lượng mã đề cần tạo</label>
                   <select 
-                    id="omr-template"
-                    value={omrTemplateId}
-                    onChange={(e) => setOmrTemplateId(e.target.value)}
+                    id="versions-count"
+                    value={numberOfVersions}
+                    onChange={(e) => setNumberOfVersions(Number(e.target.value))}
                     className={styles.selectField}
-                    required
                     disabled={isLocked}
                   >
-                    {omrTemplatesList.length === 0 ? (
-                      <>
-                        <option value="40-cau">Mẫu 40 câu - Chuẩn Bộ GD&ĐT</option>
-                        <option value="50-cau">Mẫu 50 câu - Tiêu chuẩn</option>
-                        <option value="30-cau">Mẫu 30 câu - Giữa kỳ</option>
-                      </>
-                    ) : (
-                      omrTemplatesList.map(tpl => (
-                        <option key={tpl._id} value={tpl._id}>{tpl.name}</option>
-                      ))
-                    )}
+                    {[2, 3, 4, 5, 6, 8, 10].map(v => (
+                      <option key={v} value={v}>{v} mã đề</option>
+                    ))}
                   </select>
                 </div>
 
-                {/* Original Exam Code */}
+                {/* Mã đề gốc */}
                 <div className={styles.formGroup}>
                   <label htmlFor="exam-code" className={styles.fieldLabel}>Mã đề gốc</label>
                   <input 
@@ -513,84 +513,11 @@ export default function EditExamPage() {
               </div>
             </section>
 
-            {/* Card 4: Cấu hình xáo trộn */}
-            <section className={styles.card}>
-              <div className={styles.cardHeader}>
-                <div className={styles.cardHeaderTitle}>
-                  <Shuffle size={18} className={styles.iconNavy} />
-                  <h2>Cấu hình xáo trộn</h2>
-                </div>
-              </div>
-              
-              <div className={styles.cardContent}>
-                {/* Shuffle Question order */}
-                <label className={styles.checkboxLabel}>
-                  <input 
-                    type="checkbox"
-                    checked={shuffleQuestions}
-                    onChange={(e) => setShuffleQuestions(e.target.checked)}
-                    className={styles.checkboxInput}
-                    disabled={isLocked}
-                  />
-                  <span>Xáo trộn thứ tự câu hỏi</span>
-                </label>
-
-                {/* Shuffle Options */}
-                <label className={styles.checkboxLabel}>
-                  <input 
-                    type="checkbox"
-                    checked={shuffleOptions}
-                    onChange={(e) => setShuffleOptions(e.target.checked)}
-                    className={styles.checkboxInput}
-                    disabled={isLocked}
-                  />
-                  <span>Xáo trộn các phương án trả lời</span>
-                </label>
-
-                {/* Keep hard questions at end */}
-                <label className={styles.checkboxLabel}>
-                  <input 
-                    type="checkbox"
-                    checked={keepHardAtEnd}
-                    onChange={(e) => setKeepHardAtEnd(e.target.checked)}
-                    className={styles.checkboxInput}
-                    disabled={isLocked}
-                  />
-                  <span>Giữ cố định các câu hỏi khó ở cuối</span>
-                </label>
-
-                {/* Number of versions to create */}
-                <div className={styles.formGroup} style={{ marginTop: '8px' }}>
-                  <label htmlFor="versions-count" className={styles.fieldLabel}>Số lượng mã đề cần tạo</label>
-                  <select 
-                    id="versions-count"
-                    value={numberOfVersions}
-                    onChange={(e) => setNumberOfVersions(Number(e.target.value))}
-                    className={styles.selectField}
-                    disabled={isLocked}
-                  >
-
-            {/* Card 5: Xem trước đề thi */}
-            <section className={styles.previewCard}>
-              <div className={styles.previewHeader}>
-                <h3 className={styles.previewTitle}>Xem trước đề thi</h3>
-                <p className={styles.previewDesc}>
-                  Kiểm tra hiển thị của các câu hỏi và cấu trúc mã đề trước khi lưu.
-                </p>
-              </div>
-              <button 
-                type="button" 
-                onClick={() => setShowPreview(true)}
-                className={styles.previewBtn}
-              >
-                <Eye size={16} />
-                <span>Chế độ xem trước</span>
-              </button>
-            </section>
-
           </div>
+          {/* /LEFT COLUMN */}
 
         </div>
+        {/* /TWO COLUMN GRID */}
 
         {/* Space wrapper for sticky footer */}
         <div className={styles.footerSpacing} />
@@ -598,24 +525,24 @@ export default function EditExamPage() {
         {/* ─── STICKY FOOTER ─── */}
         <footer className={styles.stickyFooter}>
           <div className={styles.footerContent}>
-            {/* Left side: status saved indicator */}
+            {/* Left side: status saved indicator - Hiển thị thời gian lưu thực tế */}
             <div className={styles.statusLeft}>
               <span className={styles.statusDot} />
-              <span>Lần cuối lưu: 2 phút trước bởi Bạn</span>
+              <span>Lần cuối lưu: {formatLastSaved()}</span>
             </div>
 
             {/* Right side: buttons */}
             <div className={styles.actionsRight}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => navigate(id ? `/exams/${id}` : '/exams')}
                 className={styles.cancelBtn}
               >
                 Hủy bỏ
               </button>
-              
-              <button 
-                type="submit" 
+
+              <button
+                type="submit"
                 disabled={isSubmitLoading || isLocked}
                 className={styles.submitBtn}
                 style={isLocked ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
@@ -627,15 +554,6 @@ export default function EditExamPage() {
         </footer>
 
       </form>
-
-      {/* Preview Modal */}
-      {showPreview && currentExamData && (
-        <ExamPreviewModal
-          exam={currentExamData}
-          examVersions={examVersions}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
     </div>
   );
 }

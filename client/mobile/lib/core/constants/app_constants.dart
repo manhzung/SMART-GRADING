@@ -1,5 +1,7 @@
+import '../config/environment.dart';
+
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.1.248:3000/api/v1';
+  static String get baseUrl => EnvironmentConfig.apiBaseUrl;
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 

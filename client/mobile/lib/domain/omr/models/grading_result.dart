@@ -1,25 +1,11 @@
+// Re-export from engine_v2 for backward compatibility
+// These models are now the canonical source
+export '../engine_v2/omr_models.dart';
+
 import 'omr_response.dart';
 
-/// Result of grading a single question.
-class QuestionVerdict {
-  final String question;
-  final String markedAnswer;
-  final String correctAnswer;
-  final String verdict; // 'correct', 'incorrect', 'unmarked'
-  final double delta;
-  final double cumulativeScore;
-
-  const QuestionVerdict({
-    required this.question,
-    required this.markedAnswer,
-    required this.correctAnswer,
-    required this.verdict,
-    required this.delta,
-    required this.cumulativeScore,
-  });
-}
-
-/// Final grading result combining score and question breakdown.
+/// Backward compatibility alias - deprecated, use engine_v2/omr_models.dart
+@Deprecated('Use OmrGradingResult from engine_v2/omr_models.dart')
 class OMRGradingResult {
   final double score;
   final double maxScore;
@@ -61,4 +47,24 @@ class OMRGradingResult {
     maxScore: 0,
     verdicts: [],
   );
+}
+
+/// Backward compatibility - deprecated, use QuestionScoreResult from engine_v2/omr_models.dart
+@Deprecated('Use QuestionScoreResult from engine_v2/omr_models.dart')
+class QuestionVerdict {
+  final String question;
+  final String markedAnswer;
+  final String correctAnswer;
+  final String verdict;
+  final double delta;
+  final double cumulativeScore;
+
+  const QuestionVerdict({
+    required this.question,
+    required this.markedAnswer,
+    required this.correctAnswer,
+    required this.verdict,
+    required this.delta,
+    required this.cumulativeScore,
+  });
 }

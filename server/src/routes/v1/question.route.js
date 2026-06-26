@@ -20,6 +20,10 @@ router
   .post(auth('manageQuestions'), validate(questionValidation.generateQuestions), questionController.generate);
 
 router
+  .route('/by-tags')
+  .get(auth(), validate(questionValidation.getQuestionsByTags), questionController.getByTags);
+
+router
   .route('/stats')
   .get(auth(), questionController.getBankStats);
 

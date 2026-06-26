@@ -143,12 +143,39 @@ const getByExamId = catchAsync(async (req, res) => {
   res.send({ data: flutterJson });
 });
 
+/**
+ * Get AMC scan JSON for an exam.
+ * Returns templateJson from OMRTemplate (bubble coords + answer key for mobile scanning).
+ * This is the PRIMARY endpoint for mobile OMR scanning.
+ */
+const getScanJsonByExamId = catchAsync(async (req, res) => {
+  const exam = await examService.getById(req.params.examId);
+  if (!exam || !exam.omrTemplateId) {
+    return res.status(httpStatus.NOT_FOUND).send({ message: 'Exam template not found' });
+  }
+  const template = await omrTemplateService.getFullById(exam.omrTemplateId._id || exam.omrTemplateId);
+  if (!template) {
+    return res.status(httpStatus.NOT_FOUND).send({ message: 'Template not found' });
+  }
+  
+  // Return templateJson (AMC format) if available
+  // This contains bubble coordinates + answer keys for mobile scanning
+  if (template.templateJson) {
+    return res.send({ data: template.templateJson });
+  }
+  
+  // Fallback: convert from zones to FieldBlock format
+  const flutterJson = convertTemplate(template);
+  return res.send({ data: flutterJson });
+});
+
 module.exports = {
   create,
   getAll,
   getById,
   getFullById,
   getJsonById,
+  getScanJsonByExamId,
   update,
   remove,
   getDefault,

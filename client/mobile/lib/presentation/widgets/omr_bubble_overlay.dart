@@ -53,12 +53,20 @@ class OMRBubbleOverlay extends StatelessWidget {
   /// The OMR processing result containing bubble intensity data and template.
   final OMRProcessingResult result;
 
+  /// Detected student ID (for display).
+  final String? detectedStudentId;
+
+  /// Detected version code (for display).
+  final String? detectedVersionCode;
+
   const OMRBubbleOverlay({
     super.key,
     required this.imageBytes,
     required this.imageWidth,
     required this.imageHeight,
     required this.result,
+    this.detectedStudentId,
+    this.detectedVersionCode,
   });
 
   @override
@@ -87,6 +95,8 @@ class OMRBubbleOverlay extends StatelessWidget {
                       imageWidth: imageWidth,
                       imageHeight: imageHeight,
                       alignmentShifts: result.alignmentShifts,
+                      detectedStudentId: detectedStudentId,
+                      detectedVersionCode: detectedVersionCode,
                     ),
                   ),
                 ),
@@ -112,32 +122,71 @@ class OMRBubbleOverlay extends StatelessWidget {
           ),
         ],
       ),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 16,
-        runSpacing: 4,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _legendItem(const Color(0xFF22C55E), 'MARKED'),
-          if (result.response.multiMarked)
-            _legendItem(const Color(0xFFEF4444), 'MULTI'),
-          _legendItem(const Color(0xFFFEF3C7), 'LOW'),
-          _legendItem(const Color(0xFF94A3B8), 'UNMARKED'),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              'GLOBAL ${result.response.globalThreshold.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF475569),
+          if (detectedStudentId != null || detectedVersionCode != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (detectedStudentId != null)
+                    _infoChip('SBD: $detectedStudentId', const Color(0xFF3B82F6)),
+                  if (detectedStudentId != null && detectedVersionCode != null)
+                    const SizedBox(width: 12),
+                  if (detectedVersionCode != null)
+                    _infoChip('Mã đề: $detectedVersionCode', const Color(0xFF8B5CF6)),
+                ],
               ),
             ),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 16,
+            runSpacing: 4,
+            children: [
+              _legendItem(const Color(0xFF22C55E), 'MARKED'),
+              if (result.response.multiMarked)
+                _legendItem(const Color(0xFFEF4444), 'MULTI'),
+              _legendItem(const Color(0xFFFEF3C7), 'LOW'),
+              _legendItem(const Color(0xFF94A3B8), 'UNMARKED'),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'GLOBAL ${result.response.globalThreshold.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF475569),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _infoChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
@@ -183,6 +232,8 @@ class _BubbleOverlayPainter extends CustomPainter {
   final int imageWidth;
   final int imageHeight;
   final List<int> alignmentShifts;
+  final String? detectedStudentId;
+  final String? detectedVersionCode;
 
   _BubbleOverlayPainter({
     required this.template,
@@ -192,6 +243,8 @@ class _BubbleOverlayPainter extends CustomPainter {
     required this.imageWidth,
     required this.imageHeight,
     this.alignmentShifts = const [],
+    this.detectedStudentId,
+    this.detectedVersionCode,
   });
 
   @override
@@ -199,7 +252,6 @@ class _BubbleOverlayPainter extends CustomPainter {
     if (imageWidth <= 0 || imageHeight <= 0) return;
 
     // Letterbox-aware scaling: compute the visible image rectangle within the widget.
-    // Image is drawn with BoxFit.contain, so we need to find the actual displayed area.
     final imgAspect = imageWidth / imageHeight;
     final widgetAspect = size.width / size.height;
 
@@ -209,36 +261,198 @@ class _BubbleOverlayPainter extends CustomPainter {
     double offsetY;
 
     if (widgetAspect > imgAspect) {
-      // Widget is wider than image — image has horizontal letterboxing (bars left/right)
       displayImgHeight = size.height;
       displayImgWidth = size.height * imgAspect;
       offsetX = (size.width - displayImgWidth) / 2;
       offsetY = 0;
     } else {
-      // Widget is taller than image — image has vertical letterboxing (bars top/bottom)
       displayImgWidth = size.width;
       displayImgHeight = size.width / imgAspect;
       offsetX = 0;
       offsetY = (size.height - displayImgHeight) / 2;
     }
 
-    // Scale from template coords to actual displayed image pixels
     final scaleX = displayImgWidth / imageWidth;
     final scaleY = displayImgHeight / imageHeight;
 
-    // Use uniform scaling so circles stay round (template may be scaled
-    // non-uniformly by BoxFit.contain in some aspect cases).
+    // Draw fiducial markers (4 corners)
+    _drawFiducialMarkers(canvas, offsetX, offsetY, scaleX, scaleY);
+
+    // Draw Student ID bubbles
+    _drawStudentIdBubbles(canvas, offsetX, offsetY, scaleX, scaleY);
+
+    // Draw Version Code bubbles
+    _drawVersionCodeBubbles(canvas, offsetX, offsetY, scaleX, scaleY);
+
+    // Draw answer bubbles
+    _drawAnswerBubbles(canvas, offsetX, offsetY, scaleX, scaleY);
+  }
+
+  void _drawFiducialMarkers(Canvas canvas, double offsetX, double offsetY,
+      double scaleX, double scaleY) {
+    final markers = template.fiducialMarkers;
+    if (markers == null || markers.isEmpty) return;
+
+    for (final marker in markers) {
+      final centerX = marker.x * scaleX + offsetX;
+      final centerY = marker.y * scaleY + offsetY;
+      final radius = marker.radius * ((scaleX + scaleY) / 2);
+
+      // Draw crosshair pattern for fiducial marker
+      final paint = Paint()
+        ..color = const Color(0xFFFF6B00).withValues(alpha: 0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+
+      // Draw outer circle
+      canvas.drawCircle(Offset(centerX, centerY), radius, paint);
+
+      // Draw inner dot
+      final innerPaint = Paint()
+        ..color = const Color(0xFFFF6B00)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(centerX, centerY), radius * 0.3, innerPaint);
+
+      // Draw crosshair lines
+      canvas.drawLine(
+        Offset(centerX - radius, centerY),
+        Offset(centerX + radius, centerY),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(centerX, centerY - radius),
+        Offset(centerX, centerY + radius),
+        paint,
+      );
+    }
+  }
+
+  void _drawStudentIdBubbles(Canvas canvas, double offsetX, double offsetY,
+      double scaleX, double scaleY) {
+    final studentId = template.studentId;
+    if (studentId == null || studentId.coords.isEmpty) return;
+
+    // Group coords by digit position
+    final byDigit = <int, List<IdBubbleCoord>>{};
+    for (final coord in studentId.coords) {
+      byDigit.putIfAbsent(coord.digit, () => []).add(coord);
+    }
+
+    for (final entry in byDigit.entries) {
+      final digit = entry.key;
+      final coords = entry.value;
+
+      for (final coord in coords) {
+        final centerX = coord.x * scaleX + offsetX;
+        final centerY = coord.y * scaleY + offsetY;
+        final radius = (coord.w / 2) * scaleX;
+
+        // Determine color based on whether this digit was detected
+        final isMarked = detectedStudentId != null &&
+            detectedStudentId!.length > digit &&
+            detectedStudentId![digit] == coord.value.toString();
+        final color = isMarked
+            ? const Color(0xFF3B82F6)  // Blue for detected
+            : const Color(0xFF94A3B8).withValues(alpha: 0.5);  // Gray for others
+
+        final paint = Paint()
+          ..color = color
+          ..style = isMarked ? PaintingStyle.fill : PaintingStyle.stroke
+          ..strokeWidth = 1.5;
+
+        canvas.drawCircle(Offset(centerX, centerY), radius, paint);
+
+        // Label for digit position
+        if (coord.value == 0 || coord.value == 1) {
+          final textPainter = TextPainter(
+            text: TextSpan(
+              text: 'D$digit',
+              style: TextStyle(
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.6),
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            textDirection: TextDirection.ltr,
+          );
+          textPainter.layout();
+          textPainter.paint(
+            canvas,
+            Offset(centerX - textPainter.width / 2, centerY - radius - 12),
+          );
+        }
+      }
+    }
+  }
+
+  void _drawVersionCodeBubbles(Canvas canvas, double offsetX, double offsetY,
+      double scaleX, double scaleY) {
+    final versionZone = template.versionCodeZone;
+    if (versionZone == null || versionZone.coords.isEmpty) return;
+
+    // Group coords by digit position
+    final byDigit = <int, List<IdBubbleCoord>>{};
+    for (final coord in versionZone.coords) {
+      byDigit.putIfAbsent(coord.digit, () => []).add(coord);
+    }
+
+    for (final entry in byDigit.entries) {
+      final digit = entry.key;
+      final coords = entry.value;
+
+      for (final coord in coords) {
+        final centerX = coord.x * scaleX + offsetX;
+        final centerY = coord.y * scaleY + offsetY;
+        final radius = (coord.w / 2) * scaleX;
+
+        // Determine color based on detected version
+        final isMarked = detectedVersionCode != null &&
+            detectedVersionCode!.length > digit &&
+            detectedVersionCode![digit] == coord.value.toString();
+        final color = isMarked
+            ? const Color(0xFF8B5CF6)  // Purple for detected
+            : const Color(0xFF94A3B8).withValues(alpha: 0.5);
+
+        final paint = Paint()
+          ..color = color
+          ..style = isMarked ? PaintingStyle.fill : PaintingStyle.stroke
+          ..strokeWidth = 1.5;
+
+        canvas.drawCircle(Offset(centerX, centerY), radius, paint);
+
+        // Show version number
+        if (coord.value == 1) {
+          final textPainter = TextPainter(
+            text: TextSpan(
+              text: 'V$digit',
+              style: TextStyle(
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.6),
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            textDirection: TextDirection.ltr,
+          );
+          textPainter.layout();
+          textPainter.paint(
+            canvas,
+            Offset(centerX - textPainter.width / 2, centerY - radius - 12),
+          );
+        }
+      }
+    }
+  }
+
+  void _drawAnswerBubbles(Canvas canvas, double offsetX, double offsetY,
+      double scaleX, double scaleY) {
     final scale = (scaleX < scaleY) ? scaleX : scaleY;
 
-    // Iterate through all bubbles from the template
+    // Iterate through all bubbles from the template field blocks
     for (int blockIdx = 0; blockIdx < template.fieldBlocks.length; blockIdx++) {
       final block = template.fieldBlocks[blockIdx];
       final shift = alignmentShifts.isNotEmpty && blockIdx < alignmentShifts.length
           ? alignmentShifts[blockIdx]
           : 0;
-      // Bubble radius in display pixels = half the template bubble size
-      // scaled to the displayed image. This makes the overlay circle
-      // match the real bubble on the sheet across zoom levels.
       final radius = (block.bubbleWidth / 2) * scale;
 
       for (int rowIdx = 0; rowIdx < block.traverseBubbles.length; rowIdx++) {
@@ -251,9 +465,6 @@ class _BubbleOverlayPainter extends CustomPainter {
         for (int colIdx = 0; colIdx < row.length; colIdx++) {
           final bubble = row[colIdx];
 
-          // Map template coords → display coords via the shared
-          // helper. `bubble.x + shift` / `bubble.y` are the engine's
-          // actual read position (top-left in template space).
           final center = bubbleDisplayCenter(
             bubbleTemplateX: bubble.x + shift,
             bubbleTemplateY: bubble.y,
@@ -267,36 +478,31 @@ class _BubbleOverlayPainter extends CustomPainter {
           final bx = center.dx;
           final by = center.dy;
 
-          // Retrieve intensity for this specific bubble position
           final intensity = (intensities != null && colIdx < intensities.length)
               ? intensities[colIdx]
               : null;
           final isMarked = intensity?.isMarked ?? false;
           final meanIntensity = intensity?.meanIntensity ?? 255.0;
 
-          // Determine color based on bubble state
           final Color bubbleColor;
           if (isMarked) {
             bubbleColor = hasMultiMarked
-                ? const Color(0xFFEF4444) // Red for multi-marked
-                : const Color(0xFF22C55E); // Green for correctly marked
+                ? const Color(0xFFEF4444)
+                : const Color(0xFF22C55E);
           } else if (meanIntensity < globalThreshold) {
-            bubbleColor = const Color(0xFFFEF3C7); // Yellow for low intensity
+            bubbleColor = const Color(0xFFFEF3C7);
           } else {
-            bubbleColor = const Color(0xFF94A3B8); // Gray for unmarked
+            bubbleColor = const Color(0xFF94A3B8);
           }
 
-          // Stroke width also scales so it remains visible at any zoom.
           final strokeWidth = (radius * 0.12).clamp(1.0, 3.0);
 
-          // Draw outline circle scaled to match the real bubble size.
           final strokePaint = Paint()
             ..color = bubbleColor
             ..style = PaintingStyle.stroke
             ..strokeWidth = strokeWidth;
           canvas.drawCircle(Offset(bx, by), radius, strokePaint);
 
-          // Draw small filled center dot for marked bubbles only.
           final dotRadius = (radius * 0.3).clamp(1.5, 6.0);
           if (isMarked) {
             final fillPaint = Paint()
@@ -316,6 +522,8 @@ class _BubbleOverlayPainter extends CustomPainter {
         hasMultiMarked != oldDelegate.hasMultiMarked ||
         imageWidth != oldDelegate.imageWidth ||
         imageHeight != oldDelegate.imageHeight ||
+        detectedStudentId != oldDelegate.detectedStudentId ||
+        detectedVersionCode != oldDelegate.detectedVersionCode ||
         !_listEquals(alignmentShifts, oldDelegate.alignmentShifts) ||
         !_mapEquals(bubbleIntensities, oldDelegate.bubbleIntensities);
   }

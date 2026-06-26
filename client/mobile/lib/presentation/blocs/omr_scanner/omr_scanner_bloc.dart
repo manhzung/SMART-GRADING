@@ -1,17 +1,18 @@
 import 'dart:typed_data';
+import 'dart:developer' as developer;
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smart_grading_mobile/domain/omr/engine/omr_engine.dart';
+import 'package:smart_grading_mobile/domain/omr/models/models.dart';
 import 'package:smart_grading_mobile/domain/omr/engine_v2/omr_engine_service.dart';
 import 'package:smart_grading_mobile/domain/omr/engine_v2/omr_models.dart';
-import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
-import 'package:smart_grading_mobile/domain/omr/models/evaluation_config.dart';
-import 'package:smart_grading_mobile/domain/omr/models/grading_result.dart';
-import 'package:smart_grading_mobile/domain/omr/models/omr_response.dart';
+import 'package:smart_grading_mobile/domain/omr/engine_v2/omr_template.dart';
+import 'package:smart_grading_mobile/domain/omr/engine_v2/scoring_engine.dart';
+import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/core/network/omr_submission_sync_service.dart';
 import 'package:smart_grading_mobile/core/network/omr_template_service.dart';
+import 'package:smart_grading_mobile/core/network/class_service.dart';
 import 'package:smart_grading_mobile/core/storage/omr_local_storage.dart';
 import 'package:get_it/get_it.dart';
 
@@ -19,22 +20,22 @@ part 'omr_scanner_event.dart';
 part 'omr_scanner_state.dart';
 
 class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
-  final OMREngine _engine;
   final Connectivity _connectivity;
   OMRLocalStorage? _localStorage;
+  List<ClassStudent>? _cachedClassStudents;
 
-  OMRScannerBloc({OMREngine? engine, Connectivity? connectivity})
-      : _engine = engine ?? OMREngine(),
-        _connectivity = connectivity ?? Connectivity(),
+  OMRScannerBloc({Connectivity? connectivity})
+      : _connectivity = connectivity ?? Connectivity(),
         super(OMRScannerInitial()) {
     on<OMRScannerTemplateSet>(_onTemplateSet);
     on<OMRScannerLoadFromServer>(_onLoadFromServer);
+    on<OMRScannerLoadClassStudents>(_onLoadClassStudents);
     on<OMRScannerImageCaptured>(_onImageCaptured);
     on<OMRScannerProcessStarted>(_onProcessStarted);
-    on<OMRScannerProcessWithNewEngine>(_onProcessWithNewEngine);
     on<OMRScannerReset>(_onReset);
     on<OMRScannerImagePicked>(_onImagePicked);
     on<OMRScannerSubmit>(_onSubmit);
+    on<OMRScannerConfirmStudent>(_onConfirmStudent);
   }
 
   Future<void> _onTemplateSet(
@@ -42,13 +43,29 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     Emitter<OMRScannerState> emit,
   ) async {
     emit(OMRScannerTemplateReady(
-      template: event.template,
-      evaluationConfig: event.evaluationConfig,
+      templateJson: event.templateJson,
       examId: event.examId,
       examName: event.examName,
       classId: event.classId,
       className: event.className,
     ));
+    
+      // Pre-load students for this class
+    if (event.classId != null) {
+      add(OMRScannerLoadClassStudents(event.classId!));
+    }
+  }
+
+  Future<void> _onLoadClassStudents(
+    OMRScannerLoadClassStudents event,
+    Emitter<OMRScannerState> emit,
+  ) async {
+    try {
+      final classService = GetIt.instance<ClassService>();
+      _cachedClassStudents = await classService.getStudentsByClass(event.classId);
+    } catch (e) {
+      developer.log('Failed to load class students: $e', name: 'OMRScanner');
+    }
   }
 
   Future<void> _onLoadFromServer(
@@ -58,34 +75,14 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     emit(OMRScannerLoadingTemplate());
     try {
       final templateService = GetIt.instance<OMRTemplateService>();
-      final template = await templateService.getTemplateForExam(event.examId);
-      EvaluationConfig? eval_;
-      try {
-        eval_ = await templateService.getEvaluationForExam(event.examId);
-      } catch (_) {
-        // Evaluation might not exist yet
-      }
+      final templateJson = await templateService.getTemplateJsonForExam(event.examId);
+      
       emit(OMRScannerTemplateReady(
-        template: template,
-        evaluationConfig: eval_,
+        templateJson: templateJson,
         examId: event.examId,
         examName: event.examName,
       ));
     } catch (e) {
-      try {
-        final storage = await _getLocalStorage();
-        final template = await storage.getTemplateForExam(event.examId);
-        final eval_ = await storage.getEvaluation(event.examId);
-        if (template != null) {
-          emit(OMRScannerTemplateReady(
-            template: template,
-            evaluationConfig: eval_,
-            examId: event.examId,
-            examName: event.examName,
-          ));
-          return;
-        }
-      } catch (_) {}
       emit(OMRScannerError(message: 'Failed to load template: $e'));
     }
   }
@@ -119,13 +116,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     Emitter<OMRScannerState> emit,
   ) async {
     final current = state;
-    OMRTemplate template;
-    EvaluationConfig? evalConfig;
-
-    if (current is OMRScannerTemplateReady) {
-      template = current.template;
-      evalConfig = current.evaluationConfig;
-    } else {
+    if (current is! OMRScannerTemplateReady) {
       emit(const OMRScannerError(
         message: 'No template loaded. Please load an exam template first.',
       ));
@@ -134,77 +125,64 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
 
     emit(OMRScannerProcessing(
       imageBytes: event.imageBytes,
-      steps: const ['Starting OMR processing...'],
-    ));
-
-    final result = await _engine.processImage(
-      imageBytes: event.imageBytes,
-      template: template,
-      evaluationConfig: evalConfig,
-    );
-
-    if (result.isSuccess) {
-      emit(OMRScannerSuccess(
-        imageBytes: event.imageBytes,
-        processingResult: result,
-        gradingResult: result.gradingResult,
-      ));
-    } else {
-      emit(OMRScannerError(
-        message: result.errorMessage ?? 'Unknown processing error',
-        steps: result.processingSteps,
-      ));
-    }
-  }
-
-  Future<void> _onProcessWithNewEngine(
-    OMRScannerProcessWithNewEngine event,
-    Emitter<OMRScannerState> emit,
-  ) async {
-    emit(OMRScannerProcessing(
-      imageBytes: event.imageBytes,
       steps: const ['Starting OMR processing with Engine v2...'],
     ));
 
     try {
       final omrEngineService = OmrEngineService();
-      final gradingResult = await omrEngineService.scanAndGrade(
+      final result = await omrEngineService.scanAndGrade(
         imageBytes: event.imageBytes.toList(),
-        templateJson: event.templateJson,
+        templateJson: current.templateJson,
       );
 
-      final convertedGradingResult = _convertToOldGradingResult(gradingResult);
+      final convertedGradingResult = _convertToOldGradingResult(result.gradingResult);
       final processingResult = OMRProcessingResult(
-        template: OMRTemplate.simpleMcq(numQuestions: gradingResult.questionScores.length, numOptions: 4),
+        template: OMRTemplate.simpleMcq(numQuestions: result.gradingResult.questionScores.length, numOptions: 4),
         gradingResult: convertedGradingResult,
         response: OMRResponseDebug(
           answers: Map.fromEntries(
-            gradingResult.questionScores.map((q) => MapEntry('q${q.position}', q.detectedAnswer ?? '')),
+            result.gradingResult.questionScores.map((q) => MapEntry('q${q.position}', q.detectedAnswer ?? '')),
           ),
           globalThreshold: 0.5,
           bubbleIntensities: {},
           localThresholds: {},
         ),
-        processingTime: const Duration(milliseconds: 500),
-        processingSteps: [
-          'Image captured',
-          'Template loaded from server',
-          'OMR Engine v2 processed',
-          'Scored ${gradingResult.correctCount} correct, ${gradingResult.incorrectCount} incorrect, ${gradingResult.unmarkedCount} unmarked',
-        ],
-        wasWarped: false,
-        annotatedImageBytes: event.imageBytes,
+        processingTime: result.scanResult.processingTime,
+        processingSteps: result.scanResult.processingSteps,
+        wasWarped: result.scanResult.wasWarped,
+        annotatedImageBytes: result.annotatedBytes ?? event.imageBytes,
       );
+
+      // Try to find student by studentCode
+      ClassStudent? matchedStudent;
+      if (result.scanResult.studentId.isNotEmpty && _cachedClassStudents != null) {
+        matchedStudent = _findStudentByCode(result.scanResult.studentId);
+      }
 
       emit(OMRScannerSuccess(
         imageBytes: event.imageBytes,
         processingResult: processingResult,
         gradingResult: convertedGradingResult,
-        questionScores: gradingResult.questionScores,
+        questionScores: result.gradingResult.questionScores,
+        studentCode: result.scanResult.studentId,
+        versionCode: result.scanResult.versionCode,
+        matchedStudent: matchedStudent,
       ));
     } catch (e) {
       emit(OMRScannerError(message: 'Processing failed: $e'));
     }
+  }
+
+  ClassStudent? _findStudentByCode(String studentCode) {
+    if (_cachedClassStudents == null) return null;
+    
+    final normalizedCode = studentCode.trim().toLowerCase();
+    for (final student in _cachedClassStudents!) {
+      if (student.studentCode?.trim().toLowerCase() == normalizedCode) {
+        return student;
+      }
+    }
+    return null;
   }
 
   OMRGradingResult _convertToOldGradingResult(OmrGradingResult newResult) {
@@ -234,20 +212,57 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     );
   }
 
-  Future<void> _onSubmit(
-    OMRScannerSubmit event,
+  Future<void> _onConfirmStudent(
+    OMRScannerConfirmStudent event,
     Emitter<OMRScannerState> emit,
   ) async {
     final current = state;
     if (current is! OMRScannerSuccess) return;
 
-    emit(OMRScannerSubmitting(
+    emit(OMRScannerStudentConfirmed(
       imageBytes: current.imageBytes,
       gradingResult: current.gradingResult,
+      student: event.student,
+    ));
+
+    // Auto-submit after confirming student
+    add(OMRScannerSubmit());
+  }
+
+  Future<void> _onSubmit(
+    OMRScannerSubmit event,
+    Emitter<OMRScannerState> emit,
+  ) async {
+    final current = state;
+    if (current is! OMRScannerSuccess && current is! OMRScannerStudentConfirmed) return;
+
+    // Get student info from either state
+    ClassStudent? confirmedStudent;
+    Uint8List imageBytes;
+    OMRGradingResult gradingResult;
+    String? studentCode;
+    String? versionCode;
+
+    if (current is OMRScannerStudentConfirmed) {
+      confirmedStudent = current.student;
+      imageBytes = current.imageBytes;
+      gradingResult = current.gradingResult;
+    } else {
+      final successState = current as OMRScannerSuccess;
+      confirmedStudent = successState.matchedStudent;
+      imageBytes = successState.imageBytes;
+      gradingResult = successState.gradingResult;
+      studentCode = successState.studentCode;
+      versionCode = successState.versionCode;
+    }
+
+    emit(OMRScannerSubmitting(
+      imageBytes: imageBytes,
+      gradingResult: gradingResult,
     ));
 
     final answers = Map<String, String>.fromEntries(
-      current.gradingResult.verdicts
+      gradingResult.verdicts
           .map((v) => MapEntry(v.question, v.markedAnswer)),
     );
 
@@ -271,14 +286,18 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
           examId: examId ?? 'unknown',
           classId: classId,
           answers: answers,
-          score: current.gradingResult.score,
-          maxScore: current.gradingResult.maxScore,
+          score: gradingResult.score,
+          maxScore: gradingResult.maxScore,
+          studentId: confirmedStudent?.id,
+          studentCode: confirmedStudent?.studentCode ?? studentCode,
+          versionCode: versionCode,
         );
 
         if (success) {
           emit(OMRScannerSubmitted(
-            gradingResult: current.gradingResult,
+            gradingResult: gradingResult,
             submittedOnline: true,
+            student: confirmedStudent,
           ));
           return;
         }
@@ -295,16 +314,19 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           examId: examId ?? 'unknown',
           classId: classId,
-          imageBytes: current.imageBytes,
+          imageBytes: imageBytes,
           answers: answers,
-          score: current.gradingResult.score,
-          maxScore: current.gradingResult.maxScore,
+          score: gradingResult.score,
+          maxScore: gradingResult.maxScore,
           timestamp: DateTime.now(),
+          studentCode: confirmedStudent?.studentCode ?? studentCode,
+          versionCode: versionCode,
         ),
       );
       emit(OMRScannerSubmitted(
-        gradingResult: current.gradingResult,
+        gradingResult: gradingResult,
         submittedOnline: false,
+        student: confirmedStudent,
       ));
     } catch (e) {
       emit(OMRScannerError(message: 'Failed to submit: $e'));

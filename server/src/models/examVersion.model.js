@@ -62,14 +62,18 @@ const examVersionSchema = mongoose.Schema(
       type: String,
       default: null,
     },
+    corrigePdfUrl: {
+      type: String,
+      default: null,
+    },
     submissionCount: {
       type: Number,
       default: 0,
     },
     paperEngine: {
       type: String,
-      enum: ['pdfkit', 'amc'],
-      default: null,
+      enum: ['pdfkit', 'amc', 'auto'],
+      default: 'auto',
     },
     amcProjectPath: {
       type: String,
@@ -84,10 +88,6 @@ const examVersionSchema = mongoose.Schema(
         type: String,
       },
     ],
-    templateJson: {
-      type: mongoose.Schema.Types.Mixed,
-      default: null,
-    },
     isActive: {
       type: Boolean,
       default: true,

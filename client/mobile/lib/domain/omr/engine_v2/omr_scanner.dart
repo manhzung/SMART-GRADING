@@ -9,6 +9,8 @@ class OmrScanner {
   final OmrImageProcessor _processor = OmrImageProcessor();
   final OmrBubbleDetector _detector = OmrBubbleDetector();
 
+  OmrScanner();
+
   Future<OmrScanResult> scan({
     required List<int> imageBytes,
     required OmrTemplate template,

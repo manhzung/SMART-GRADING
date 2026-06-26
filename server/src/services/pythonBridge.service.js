@@ -2,22 +2,15 @@ const { spawn } = require('child_process');
 const path = require('path');
 const logger = require('../config/logger');
 
+const DEFAULT_TIMEOUT = 30000;
+const DEFAULT_SCRIPT = path.join(__dirname, '../../scripts/omr_process.py');
+
 class PythonBridgeService {
   constructor(options = {}) {
-    this.scriptPath = options.scriptPath || path.join(__dirname, '../../scripts/omr_process.py');
-    this.defaultTimeout = options.timeout || 30000;
+    this.scriptPath = options.scriptPath || DEFAULT_SCRIPT;
+    this.defaultTimeout = options.timeout || DEFAULT_TIMEOUT;
   }
 
-  /**
-   * Process an OMR image using the Python bridge script
-   * @param {Object} params - Processing parameters
-   * @param {Buffer|string} params.image - Image data (Buffer or base64 string)
-   * @param {Object} params.template - Template configuration
-   * @param {Object} [params.evaluation] - Evaluation configuration
-   * @param {Object} [params.options] - Processing options
-   * @param {number} [params.timeout] - Timeout in milliseconds
-   * @returns {Promise<Object>} Processing result
-   */
   async processImage({ image, imageUrl, template, evaluation, options, timeout }) {
     const timeoutMs = timeout || this.defaultTimeout;
 
@@ -168,4 +161,5 @@ class PythonBridgeService {
   }
 }
 
-module.exports = PythonBridgeService;
+// Export singleton instance for backward compatibility
+module.exports = new PythonBridgeService();

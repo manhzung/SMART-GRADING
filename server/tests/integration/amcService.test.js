@@ -77,7 +77,7 @@ describe('AMC Integration', () => {
 
       const result = generateAmcSource(input);
       expect(result).toContain('\\documentclass');
-      expect(result).toContain('auto-multiple-choice');
+      expect(result).toContain('automultiplechoice');
       expect(result).toContain('Test Exam');
       expect(result).toContain('What is 2 + 2?');
       expect(result).toContain('\\correctchoice{4}');
@@ -104,7 +104,7 @@ describe('AMC Integration', () => {
 
       expect(result).toBeTruthy();
       expect(result.length).toBeGreaterThan(5000);
-      expect((result.match(/\\question/g) || []).length).toBe(50);
+      expect((result.match(/\\begin\{question\}/g) || []).length).toBe(50);
     });
   });
 

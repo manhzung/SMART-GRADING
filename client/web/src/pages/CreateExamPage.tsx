@@ -9,30 +9,26 @@ import {
   Rocket, 
   ChevronLeft, 
   ChevronRight, 
-  HelpCircle, 
-  Info,
-  CheckCircle2
+  FileText
 } from 'lucide-react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { useClassStore } from '../presentation/store/classStore';
 import { useQuestionStore } from '../presentation/store/questionStore';
 import { useExamStore } from '../presentation/store/examStore';
-import { useOMRTemplateStore } from '../presentation/store/omrTemplateStore';
-import { useSubjectStore } from '../presentation/store/subjectStore';
 import { resolveAssignedQuestions } from './examPageAdapters';
 import styles from './CreateExamPage.module.css';
 
 // ─── LaTeX Renderer Helper ──────────────────────────────────────────────────
-function Latex({ math, block = false }: { math: string; block?: boolean }) {
+function renderMath(math: string, block: boolean): string {
   try {
     const html = katex.renderToString(math, {
       displayMode: block,
       throwOnError: false,
     });
-    return <span dangerouslySetInnerHTML={{ __html: html }} />;
+    return html;
   } catch {
-    return <span>{math}</span>;
+    return math;
   }
 }
 
@@ -52,9 +48,10 @@ function parseMathText(text: string) {
       {blockParts.map((blockPart, blockIndex) => {
         // Odd indexes are block math
         if (blockIndex % 2 === 1) {
+          const html = renderMath(blockPart, true);
           return (
             <div key={`block-${blockIndex}`} className={styles.formulaBox}>
-              <Latex math={blockPart} block />
+              <span dangerouslySetInnerHTML={{ __html: html }} />
             </div>
           );
         }
@@ -65,7 +62,8 @@ function parseMathText(text: string) {
           <span key={`text-${blockIndex}`}>
             {inlineParts.map((part, inlineIndex) => {
               if (inlineIndex % 2 === 1) {
-                return <Latex key={`inline-${inlineIndex}`} math={part} />;
+                const html = renderMath(part, false);
+                return <span key={`inline-${inlineIndex}`} dangerouslySetInnerHTML={{ __html: html }} />;
               }
               return part;
             })}
@@ -79,13 +77,10 @@ function parseMathText(text: string) {
 export default function CreateExamPage() {
   const navigate = useNavigate();
   const { classes, fetchClasses } = useClassStore();
-  const { questions: storeQuestions, pagination: questionPagination, fetchQuestions } = useQuestionStore();
+  const { questions: storeQuestions, pagination: questionPagination, fetchQuestions, fetchTags, availableTags, fetchQuestionsByTags, tagQuestions, isLoadingTagQuestions } = useQuestionStore();
   const { fetchExams, createExam, generateExamVersions } = useExamStore();
-  const { templates: omrTemplates, isLoading: isOmrLoading, fetchTemplates: fetchOmrTemplates } = useOMRTemplateStore();
-  const { subjects, fetchSubjects } = useSubjectStore();
 
   // ─── API Lists ─────────────────────────────────────────────────────────────
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -93,10 +88,8 @@ export default function CreateExamPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
-  const [primaryClassId, setPrimaryClassId] = useState('');
   
   // Specs
-  const [omrTemplateId, setOmrTemplateId] = useState('');
   const [examDate, setExamDate] = useState('');
   const [startTime, setStartTime] = useState('08:00');
   const [duration, setDuration] = useState(45);
@@ -109,22 +102,22 @@ export default function CreateExamPage() {
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleOptions, setShuffleOptions] = useState(true);
 
-  // Print Layout Formatting
-  const [paperSize, setPaperSize] = useState<'A4' | 'A5'>('A4');
-  const [paperEngine, setPaperEngine] = useState<'auto' | 'amc' | 'pdfkit'>('auto');
-  const [questionsPerPage, setQuestionsPerPage] = useState(20);
-  const [schoolHeader, setSchoolHeader] = useState(true);
-  const [includeInstructions, setIncludeInstructions] = useState(true);
-
   // Questions assignment
   const [assignedQuestionIds, setAssignedQuestionIds] = useState<string[]>([]);
   const [assignedQuestionsLocalSearch, setAssignedQuestionsLocalSearch] = useState('');
+
+  // Derived count for UI display
+  const selectedQuestionsCount = assignedQuestionIds.length;
 
   // ─── Question Bank Modal Selector ──────────────────────────────────────────
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [bankSearchText, setBankSearchText] = useState('');
   const [bankDifficultyFilter, setBankDifficultyFilter] = useState('');
   const [bankPage, setBankPage] = useState(1);
+
+  // ─── Tag-based Selection ────────────────────────────────────────────────────
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagDifficultyFilter, setTagDifficultyFilter] = useState('');
 
   const allAvailableQuestions = storeQuestions;
 
@@ -143,43 +136,12 @@ export default function CreateExamPage() {
   useEffect(() => {
     fetchClasses({ limit: 100 });
     fetchQuestions({ limit: 100, page: 1 });
-    fetchOmrTemplates();
+    fetchTags(); // Load available tags for filtering
 
     // Preset today's date formatted for html input (yyyy-mm-dd)
     const today = new Date().toISOString().split('T')[0];
     setExamDate(today);
-  }, [fetchClasses, fetchQuestions, fetchOmrTemplates]);
-
-  // Fetch subjects list
-  useEffect(() => {
-    fetchSubjects();
-  }, [fetchSubjects]);
-
-  // Auto-select first subject when subjects load
-  useEffect(() => {
-    if (subjects.length > 0 && !selectedSubjectId) {
-      setSelectedSubjectId(subjects[0]._id);
-    }
-  }, [subjects, selectedSubjectId]);
-
-  // Sync primaryClassId when selectedClassIds change
-  useEffect(() => {
-    if (selectedClassIds.length > 0) {
-      // If primaryClassId is not in selected list, default it to the first selected class
-      if (!selectedClassIds.includes(primaryClassId)) {
-        setPrimaryClassId(selectedClassIds[0]);
-      }
-    } else {
-      setPrimaryClassId('');
-    }
-  }, [selectedClassIds, primaryClassId]);
-
-  // Auto-select first OMR template when loaded
-  useEffect(() => {
-    if (!isOmrLoading && omrTemplates.length > 0 && !omrTemplateId) {
-      setOmrTemplateId(omrTemplates[0]._id);
-    }
-  }, [omrTemplates, isOmrLoading, omrTemplateId]);
+  }, [fetchClasses, fetchQuestions, fetchTags]);
 
   // Toggle class selection checkbox
   const handleToggleClass = (classId: string) => {
@@ -189,9 +151,6 @@ export default function CreateExamPage() {
         : [...prev, classId]
     );
   };
-
-  // Questions count selected
-  const selectedQuestionsCount = assignedQuestionIds.length;
 
   // Toggle question selection
   const handleToggleQuestionAssignment = (qId: string) => {
@@ -237,13 +196,6 @@ export default function CreateExamPage() {
       setErrorMessage('Vui lòng chọn ít nhất một lớp thi.');
       return;
     }
-    if (!omrTemplateId) {
-      // If OMR templates list is loading or failed, find fallback seed id
-      if (omrTemplates.length > 0) {
-        setErrorMessage('Vui lòng chọn mẫu OMR.');
-        return;
-      }
-    }
 
     if (assignedQuestionIds.length === 0) {
       setErrorMessage('Vui lòng chọn ít nhất một câu hỏi từ ngân hàng câu hỏi.');
@@ -253,22 +205,11 @@ export default function CreateExamPage() {
     setIsSubmitLoading(true);
     setErrorMessage(null);
 
-    const finalQuestionIds = assignedQuestionIds;
-
-    // Resolve subjectName from selected subjectId
-    const subjectName = selectedSubjectId
-      ? (subjects.find(s => s._id === selectedSubjectId)?.name || '')
-      : '';
-
     // Build the payload
     const payload = {
       title,
       description,
       classIds: selectedClassIds,
-      primaryClassId: primaryClassId || selectedClassIds[0],
-      subjectId: selectedSubjectId,
-      subjectName,
-      omrTemplateId,
       examDate: new Date(`${examDate}T${startTime}:00`).toISOString(),
       startTime,
       duration: Number(duration),
@@ -280,14 +221,7 @@ export default function CreateExamPage() {
         shuffleQuestions,
         shuffleOptions
       },
-      printConfig: {
-        paperSize,
-        questionsPerPage: Math.min(Number(questionsPerPage), 10),
-        includeAnswerSheet: true,
-        schoolHeader,
-        paperEngine,
-      },
-      questionIds: finalQuestionIds,
+      questionIds: assignedQuestionIds,
     };
 
     try {
@@ -336,7 +270,6 @@ export default function CreateExamPage() {
 
       {errorMessage && (
         <div className={styles.errorBanner}>
-          <Info size={18} />
           <span>{errorMessage}</span>
           <button className={styles.errorClose} onClick={() => setErrorMessage(null)}>
             <X size={16} />
@@ -344,10 +277,10 @@ export default function CreateExamPage() {
         </div>
       )}
 
-      {/* ─── Main Grid Layout ─── */}
+      {/* ─── Main Form Layout ─── */}
       <form onSubmit={handleSubmit} className={styles.formGrid}>
         
-        {/* Card 1: Thông tin cơ bản & Đối tượng kiểm tra */}
+        {/* Card 1: Thông tin cơ bản */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardHeaderTitle}>
@@ -371,27 +304,6 @@ export default function CreateExamPage() {
               />
             </div>
 
-            {/* Subject Selector */}
-            <div className={styles.formGroup}>
-              <label htmlFor="subject-select" className={styles.fieldLabel}>Môn học <span className={styles.required}>*</span></label>
-              <select
-                id="subject-select"
-                required
-                value={selectedSubjectId}
-                onChange={(e) => setSelectedSubjectId(e.target.value)}
-                className={styles.selectField}
-              >
-                <option value="">-- Chọn môn học --</option>
-                {subjects.length === 0 ? (
-                  <option value="subj001">Toán học</option>
-                ) : (
-                  subjects.map(s => (
-                    <option key={s._id} value={s._id}>{s.name}</option>
-                  ))
-                )}
-              </select>
-            </div>
-
             {/* Description */}
             <div className={styles.formGroup}>
               <label htmlFor="exam-desc" className={styles.fieldLabel}>Mô tả</label>
@@ -405,102 +317,49 @@ export default function CreateExamPage() {
               />
             </div>
 
-            {/* Target Settings */}
-            <div className={styles.targetSection}>
-              <div className={styles.targetIconHeader}>
-                <HelpCircle size={15} />
-                <span>Đối tượng kiểm tra</span>
+            {/* Class Selection */}
+            <div className={styles.formGroup}>
+              <label className={styles.fieldLabel}>Lớp tham gia thi <span className={styles.required}>*</span></label>
+              <div className={styles.classListContainer}>
+                {classes.length === 0 ? (
+                  <div className={styles.noClassesMsg}>Đang tải danh sách lớp...</div>
+                ) : (
+                  classes.map((cls) => {
+                    const isChecked = selectedClassIds.includes(cls._id);
+                    return (
+                      <label key={cls._id} className={styles.classCheckItem}>
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onChange={() => handleToggleClass(cls._id)}
+                          className={styles.checkboxInput}
+                        />
+                        <span className={styles.checkboxLabelText}>{cls.name}</span>
+                      </label>
+                    );
+                  })
+                )}
               </div>
-
-              <div className={styles.targetGrid}>
-                {/* Class selector list */}
-                <div className={styles.classListWrapper}>
-                  <label className={styles.subLabel}>Danh sách lớp</label>
-                  <div className={styles.classListContainer}>
-                    {classes.length === 0 ? (
-                      <div className={styles.noClassesMsg}>Đang tải danh sách lớp...</div>
-                    ) : (
-                      classes.map((cls) => {
-                        const isChecked = selectedClassIds.includes(cls._id);
-                        return (
-                          <label key={cls._id} className={styles.classCheckItem}>
-                            <input 
-                              type="checkbox" 
-                              checked={isChecked}
-                              onChange={() => handleToggleClass(cls._id)}
-                              className={styles.checkboxInput}
-                            />
-                            <span className={styles.checkboxLabelText}>{cls.name}</span>
-                          </label>
-                        );
-                      })
-                    )}
-                  </div>
-                  <div className={styles.selectedCountBadge}>
-                    Đã chọn: {selectedClassIds.length} lớp
-                  </div>
-                </div>
-
-                {/* Primary Class dropdown picker */}
-                <div className={styles.primaryClassWrapper}>
-                  <label htmlFor="primary-class-select" className={styles.subLabel}>Lớp chính</label>
-                  <select 
-                    id="primary-class-select"
-                    value={primaryClassId}
-                    onChange={(e) => setPrimaryClassId(e.target.value)}
-                    disabled={selectedClassIds.length === 0}
-                    className={styles.selectField}
-                  >
-                    <option value="">-- Chọn lớp chính --</option>
-                    {classes
-                      .filter(cls => selectedClassIds.includes(cls._id))
-                      .map(cls => (
-                        <option key={cls._id} value={cls._id}>{cls.name}</option>
-                      ))}
-                  </select>
-                  <p className={styles.fieldHelper}>Dùng để áp dụng cấu trúc mặc định của lớp này.</p>
-                </div>
+              <div className={styles.selectedCountBadge}>
+                Đã chọn: {selectedClassIds.length} lớp
               </div>
             </div>
           </div>
         </section>
 
-        {/* Card 2: Thông số bài thi */}
+        {/* Card 2: Cấu hình bài thi */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardHeaderTitle}>
               <span className={styles.stepNumber}>02</span>
-              <h2>Thông số bài thi</h2>
+              <h2>Cấu hình bài thi</h2>
             </div>
           </div>
           
           <div className={styles.cardContent}>
-            <div className={styles.grid4Col}>
-              {/* OMR Template */}
-              <div className={styles.formGroup}>
-                <label htmlFor="omr-template-select" className={styles.fieldLabel}>Mẫu OMR <span className={styles.required}>*</span></label>
-                <select 
-                  id="omr-template-select"
-                  value={omrTemplateId}
-                  onChange={(e) => setOmrTemplateId(e.target.value)}
-                  className={styles.selectField}
-                  required
-                >
-                  <option value="">-- Chọn mẫu phiếu --</option>
-                  {omrTemplates.length === 0 ? (
-                    <>
-                      <option value="6a17f0091743766eb47a09ce">Mẫu 50 câu (Tiêu chuẩn)</option>
-                      <option value="6a17f0091743766eb47a09cf">Mẫu 30 câu (Giữa kỳ)</option>
-                      <option value="6a17f0091743766eb47a09d0">Mẫu 15 câu (15 phút)</option>
-                    </>
-                  ) : (
-                    omrTemplates.map(tpl => (
-                      <option key={tpl._id} value={tpl._id}>{tpl.name}</option>
-                    ))
-                  )}
-                </select>
-              </div>
-
+            {/* Time & Date Grid */}
+            <div className={styles.sectionSubtitle}>Thời gian & Địa điểm</div>
+            <div className={styles.grid3Col}>
               {/* Exam Date */}
               <div className={styles.formGroup}>
                 <label htmlFor="exam-date-picker" className={styles.fieldLabel}>Ngày thi <span className={styles.required}>*</span></label>
@@ -549,6 +408,38 @@ export default function CreateExamPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Score & Questions Grid */}
+            <div className={styles.sectionSubtitle}>Điểm số</div>
+            <div className={styles.grid4Col}>
+              {/* Total Score */}
+              <div className={styles.formGroup}>
+                <label htmlFor="total-score-input" className={styles.fieldLabel}>Điểm tổng <span className={styles.required}>*</span></label>
+                <input 
+                  id="total-score-input"
+                  type="number" 
+                  required 
+                  min={1}
+                  value={totalScore}
+                  onChange={(e) => setTotalScore(Number(e.target.value))}
+                  className={styles.inputField}
+                />
+              </div>
+
+              {/* Passing Score */}
+              <div className={styles.formGroup}>
+                <label htmlFor="passing-score-input" className={styles.fieldLabel}>Điểm đạt <span className={styles.required}>*</span></label>
+                <input 
+                  id="passing-score-input"
+                  type="number" 
+                  required 
+                  min={0}
+                  value={passingScore}
+                  onChange={(e) => setPassingScore(Number(e.target.value))}
+                  className={styles.inputField}
+                />
+              </div>
 
               {/* Number of Questions */}
               <div className={styles.formGroup}>
@@ -578,148 +469,42 @@ export default function CreateExamPage() {
                   className={styles.inputField}
                 />
               </div>
-
-              {/* Total Score */}
-              <div className={styles.formGroup}>
-                <label htmlFor="total-score-input" className={styles.fieldLabel}>Điểm tổng <span className={styles.required}>*</span></label>
-                <input 
-                  id="total-score-input"
-                  type="number" 
-                  required 
-                  min={1}
-                  value={totalScore}
-                  onChange={(e) => setTotalScore(Number(e.target.value))}
-                  className={styles.inputField}
-                />
-              </div>
-
-              {/* Passing Score */}
-              <div className={styles.formGroup}>
-                <label htmlFor="passing-score-input" className={styles.fieldLabel}>Điểm đạt <span className={styles.required}>*</span></label>
-                <input 
-                  id="passing-score-input"
-                  type="number" 
-                  required 
-                  min={0}
-                  value={passingScore}
-                  onChange={(e) => setPassingScore(Number(e.target.value))}
-                  className={styles.inputField}
-                />
-              </div>
             </div>
 
-            {/* Card 3: Tùy chọn xáo trộn */}
-            <div className={styles.shuffleSection}>
-              <div className={styles.sectionDivider} />
-              <h3 className={styles.sectionSubtitle}>Tùy chọn xáo trộn</h3>
-              
-              <div className={styles.grid2Col}>
-                {/* Shuffle Questions */}
-                <label className={styles.shuffleOptionCard}>
-                  <input 
-                    type="checkbox"
-                    checked={shuffleQuestions}
-                    onChange={(e) => setShuffleQuestions(e.target.checked)}
-                    className={styles.checkboxSquare}
-                  />
-                  <div className={styles.optionDetails}>
-                    <span className={styles.optionTitle}>Đảo câu hỏi</span>
-                    <span className={styles.optionDesc}>Xáo trộn thứ tự các câu hỏi trong mỗi mã đề khác nhau.</span>
-                  </div>
-                </label>
-
-                {/* Shuffle Answers */}
-                <label className={styles.shuffleOptionCard}>
-                  <input 
-                    type="checkbox"
-                    checked={shuffleOptions}
-                    onChange={(e) => setShuffleOptions(e.target.checked)}
-                    className={styles.checkboxSquare}
-                  />
-                  <div className={styles.optionDetails}>
-                    <span className={styles.optionTitle}>Đảo đáp án</span>
-                    <span className={styles.optionDesc}>Xáo trộn thứ tự A, B, C, D cho từng câu hỏi.</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            {/* Card 4: Định dạng in ấn */}
-            <div className={styles.printSection}>
-              <div className={styles.sectionDivider} />
-              <h3 className={styles.sectionSubtitle}>Định dạng in ấn</h3>
-
-              <div className={styles.grid4ColAlign}>
-                {/* Paper Size */}
-                <div className={styles.formGroup}>
-                  <label htmlFor="paper-size-select" className={styles.fieldLabel}>Khổ giấy</label>
-                  <select
-                    id="paper-size-select"
-                    value={paperSize}
-                    onChange={(e) => setPaperSize(e.target.value as 'A4' | 'A5')}
-                    className={styles.selectField}
-                  >
-                    <option value="A4">A4</option>
-                    <option value="A5">A5</option>
-                  </select>
+            {/* Shuffle Options - gộp vào cùng card */}
+            <div className={styles.sectionDivider} />
+            <div className={styles.sectionSubtitle}>Tùy chọn xáo trộn</div>
+            <div className={styles.grid2Col}>
+              <label className={styles.shuffleOptionCard}>
+                <input 
+                  type="checkbox"
+                  checked={shuffleQuestions}
+                  onChange={(e) => setShuffleQuestions(e.target.checked)}
+                  className={styles.checkboxSquare}
+                />
+                <div className={styles.optionDetails}>
+                  <span className={styles.optionTitle}>Đảo câu hỏi</span>
+                  <span className={styles.optionDesc}>Xáo trộn thứ tự các câu hỏi trong mỗi mã đề.</span>
                 </div>
+              </label>
 
-                {/* Paper Engine */}
-                <div className={styles.formGroup}>
-                  <label htmlFor="paper-engine-select" className={styles.fieldLabel}>Engine tạo đề thi</label>
-                  <select
-                    id="paper-engine-select"
-                    value={paperEngine}
-                    onChange={(e) => setPaperEngine(e.target.value as 'auto' | 'amc' | 'pdfkit')}
-                    className={styles.selectField}
-                  >
-                    <option value="auto">Tự động (AMC nếu có sẵn)</option>
-                    <option value="amc">AMC (LaTeX, chuẩn quốc tế)</option>
-                    <option value="pdfkit">PDFKit (legacy)</option>
-                  </select>
-                  <p className={styles.fieldHelper}>AMC sinh đề chuẩn với OMR sheet chính xác hơn.</p>
+              <label className={styles.shuffleOptionCard}>
+                <input 
+                  type="checkbox"
+                  checked={shuffleOptions}
+                  onChange={(e) => setShuffleOptions(e.target.checked)}
+                  className={styles.checkboxSquare}
+                />
+                <div className={styles.optionDetails}>
+                  <span className={styles.optionTitle}>Đảo đáp án</span>
+                  <span className={styles.optionDesc}>Xáo trộn thứ tự A, B, C, D cho từng câu hỏi.</span>
                 </div>
-
-                {/* Questions Per Page */}
-                <div className={styles.formGroup}>
-                  <label htmlFor="questions-per-page-input" className={styles.fieldLabel}>Số câu/trang</label>
-                  <input 
-                    id="questions-per-page-input"
-                    type="number"
-                    min={1}
-                    value={questionsPerPage}
-                    onChange={(e) => setQuestionsPerPage(Number(e.target.value))}
-                    className={styles.inputField}
-                  />
-                </div>
-
-                {/* Show Header */}
-                <label className={styles.alignCheckbox}>
-                  <input 
-                    type="checkbox"
-                    checked={schoolHeader}
-                    onChange={(e) => setSchoolHeader(e.target.checked)}
-                    className={styles.checkboxSquare}
-                  />
-                  <span className={styles.checkboxTextLabel}>Hiển thị header</span>
-                </label>
-
-                {/* Show Instructions */}
-                <label className={styles.alignCheckbox}>
-                  <input 
-                    type="checkbox"
-                    checked={includeInstructions}
-                    onChange={(e) => setIncludeInstructions(e.target.checked)}
-                    className={styles.checkboxSquare}
-                  />
-                  <span className={styles.checkboxTextLabel}>Hiển thị hướng dẫn</span>
-                </label>
-              </div>
+              </label>
             </div>
           </div>
         </section>
 
-        {/* Card 5: Gán câu hỏi */}
+        {/* Card 3: Gán câu hỏi */}
         <section className={styles.card}>
           <div className={styles.cardHeaderFlex}>
             <div className={styles.cardHeaderTitle}>
@@ -728,7 +513,7 @@ export default function CreateExamPage() {
             </div>
             
             <span className={styles.questionSelectedBadge}>
-              Đã chọn: {selectedQuestionsCount}/{numberOfQuestions} câu
+              Đã chọn: {assignedQuestionIds.length}/{numberOfQuestions} câu
             </span>
           </div>
 
@@ -755,7 +540,6 @@ export default function CreateExamPage() {
                 mainCardQuestions.map((q) => {
                   const isChecked = assignedQuestionIds.includes(q._id);
                   
-                  // Difficulty color tag
                   let diffColor = styles.diffMedium;
                   let diffText = 'Trung bình';
                   if (q.difficulty === 'Easy') {
@@ -801,7 +585,8 @@ export default function CreateExamPage() {
               onClick={openQuestionBankModal}
               className={styles.exploreBankBtn}
             >
-              <span>Xem thêm câu hỏi từ Ngân hàng</span>
+              <FileText size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+              <span>Chọn câu hỏi từ Ngân hàng câu hỏi</span>
             </button>
           </div>
         </section>
@@ -812,11 +597,8 @@ export default function CreateExamPage() {
         {/* ─── STICKY FOOTER BAR ─── */}
         <footer className={styles.stickyFooter}>
           <div className={styles.footerContent}>
-            {/* Left status indicator */}
-            <div className={styles.statusLeft}>
-              <CheckCircle2 size={16} className={styles.checkIcon} />
-              <span>Tất cả thay đổi đã được lưu tự động.</span>
-            </div>
+            {/* Left side - empty for cleaner look */}
+            <div />
 
             {/* Right actions buttons */}
             <div className={styles.actionsRight}>
@@ -861,21 +643,55 @@ export default function CreateExamPage() {
             </div>
 
             <div className={styles.modalFilterBar}>
-              <div className={styles.modalSearchBox}>
-                <Search size={16} className={styles.searchIcon} />
-                <input 
-                  type="text" 
-                  placeholder="Tìm câu hỏi..." 
-                  value={bankSearchText}
-                  onChange={(e) => setBankSearchText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleBankSearch()}
-                  className={styles.modalSearchField}
-                />
+              {/* Tag selection chips */}
+              <div className={styles.tagFilterSection}>
+                <label className={styles.tagFilterLabel}>Lọc theo Tags:</label>
+                <div className={styles.tagChipsContainer}>
+                  {availableTags.slice(0, 15).map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTags((prev) =>
+                          prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                        );
+                      }}
+                      className={`${styles.tagChip} ${selectedTags.includes(tag) ? styles.tagChipActive : ''}`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+                {selectedTags.length > 0 && (
+                  <div className={styles.selectedTagsInfo}>
+                    <span>Đã chọn: {selectedTags.length} tags</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTags([]);
+                        fetchQuestionsByTags([], { difficulty: tagDifficultyFilter, limit: 20 });
+                      }}
+                      className={styles.clearTagsBtn}
+                    >
+                      Xóa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        fetchQuestionsByTags(selectedTags, { difficulty: tagDifficultyFilter, limit: 50 });
+                      }}
+                      className={styles.applyTagsBtn}
+                    >
+                      Áp dụng
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <select 
-                value={bankDifficultyFilter}
-                onChange={(e) => setBankDifficultyFilter(e.target.value)}
+              {/* Difficulty filter */}
+              <select
+                value={tagDifficultyFilter}
+                onChange={(e) => setTagDifficultyFilter(e.target.value)}
                 className={styles.modalSelectField}
               >
                 <option value="">-- Mọi độ khó --</option>
@@ -884,6 +700,18 @@ export default function CreateExamPage() {
                 <option value="hard">Khó</option>
               </select>
 
+              <div className={styles.modalSearchBox}>
+                <Search size={16} className={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Tìm câu hỏi..."
+                  value={bankSearchText}
+                  onChange={(e) => setBankSearchText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleBankSearch()}
+                  className={styles.modalSearchField}
+                />
+              </div>
+
               <button type="button" onClick={handleBankSearch} className={styles.modalSearchBtn}>
                 Tìm kiếm
               </button>
@@ -891,9 +719,74 @@ export default function CreateExamPage() {
 
             {/* List in modal */}
             <div className={styles.modalQuestionsList}>
-              {allAvailableQuestions.length === 0 ? (
+              {isLoadingTagQuestions ? (
+                <div className={styles.modalLoading}>Đang tải câu hỏi...</div>
+              ) : selectedTags.length > 0 && tagQuestions.length > 0 ? (
+                // Show questions fetched by tags
+                tagQuestions
+                  .filter(q => {
+                    if (bankSearchText.trim()) {
+                      const searchLower = bankSearchText.toLowerCase();
+                      if (!q.text.toLowerCase().includes(searchLower)) return false;
+                    }
+                    if (tagDifficultyFilter) {
+                      if (q.difficulty.toLowerCase() !== tagDifficultyFilter.toLowerCase()) return false;
+                    }
+                    return true;
+                  })
+                  .map((q) => {
+                    const isChecked = assignedQuestionIds.includes(q._id);
+
+                    let diffColor = styles.diffMedium;
+                    let diffText = 'Trung bình';
+                    if (q.difficulty === 'Easy') {
+                      diffColor = styles.diffEasy;
+                      diffText = 'Dễ';
+                    } else if (q.difficulty === 'Hard') {
+                      diffColor = styles.diffHard;
+                      diffText = 'Khó';
+                    }
+
+                    return (
+                      <div key={q._id} className={`${styles.modalQuestionRow} ${isChecked ? styles.modalQuestionChecked : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleQuestionAssignment(q._id)}
+                          className={styles.questionCheckbox}
+                        />
+                        <div className={styles.modalQuestionContent}>
+                          <div className={styles.questionTagsRow}>
+                            <span className={styles.typeBadge}>
+                              {q.options.length === 2 ? 'ĐÚNG/SAI' : 'TRẮC NGHIỆM ĐƠN'}
+                            </span>
+                            <span className={`${styles.diffBadge} ${diffColor}`}>
+                              {diffText}
+                            </span>
+                            {q.tags && q.tags.length > 0 && (
+                              <span className={styles.tagPill}>{q.tags[0]}</span>
+                            )}
+                          </div>
+                          <div className={styles.modalQuestionText}>
+                            {parseMathText(q.text)}
+                          </div>
+
+                          <div className={styles.modalOptionsGrid}>
+                            {q.options.map(opt => (
+                              <div key={opt.letter} className={styles.modalOption}>
+                                <strong style={{ marginRight: '6px' }}>{opt.letter}.</strong>
+                                <span>{parseMathText(opt.text)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+              ) : allAvailableQuestions.length === 0 ? (
                 <div className={styles.modalLoading}>Không tìm thấy câu hỏi nào.</div>
               ) : (
+                // Show default questions from store
                 allAvailableQuestions
                   .filter(q => {
                     // client filtering combined with server parameters for maximum reliability
@@ -959,7 +852,7 @@ export default function CreateExamPage() {
             {/* Footer with pagination */}
             <div className={styles.modalFooter}>
               <span className={styles.modalSelectionCount}>
-                Đã chọn {selectedQuestionsCount} câu hỏi
+                Đã chọn {assignedQuestionIds.length} câu hỏi
               </span>
 
               <div className={styles.modalPagination}>

@@ -204,4 +204,18 @@ class FieldBlock {
       traverseBubbles: newTraverseBubbles,
     );
   }
+
+  /// Serializes this FieldBlock to a config map (inverse of fromConfig).
+  Map<String, dynamic> toConfig() {
+    return {
+      'fieldType': fieldType.key,
+      'fieldLabels': fieldLabels,
+      'origin': [originX, originY],
+      'bubblesGap': bubblesGap,
+      'labelsGap': labelsGap,
+      'bubbleValues': bubbleValues,
+      'direction': direction.name,
+      'emptyValue': emptyValue,
+    };
+  }
 }

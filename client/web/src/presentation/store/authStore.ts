@@ -268,6 +268,17 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Sync tokens to apiService after rehydration
+        if (state) {
+          if (state.token) {
+            apiService.setToken(state.token);
+          }
+          if (state.refreshToken) {
+            apiService.setRefreshToken(state.refreshToken);
+          }
+        }
+      },
     }
   )
 );

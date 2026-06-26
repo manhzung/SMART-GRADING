@@ -79,7 +79,7 @@ const generatePdf = {
   params: id,
   query: Joi.object().keys({
     examTitle: Joi.string().max(200),
-    schoolName: Joi.string().max(200),
+    schoolName: Joi.string().allow('').max(200),
   }),
 };
 
@@ -88,7 +88,7 @@ const generateVersionSheetsPdf = {
   body: Joi.object().keys({
     versions: Joi.array().items(Joi.string().max(20)).min(1).max(50).required(),
     examTitle: Joi.string().max(200),
-    schoolName: Joi.string().max(200),
+    schoolName: Joi.string().allow('').max(200),
   }),
 };
 

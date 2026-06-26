@@ -846,7 +846,7 @@ export default function SubmissionsPage() {
       )}
 
       {/* Override Score Modal */}
-      {showOverrideModal && selectedSubmission && (
+      {showOverrideModal && selectedSubmission ? (
         <div className={styles.modalOverlay} onClick={() => setShowOverrideModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
             <div className={styles.modalHeader}>
@@ -961,4 +961,7 @@ export default function SubmissionsPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
+    </div>
+  );
+};

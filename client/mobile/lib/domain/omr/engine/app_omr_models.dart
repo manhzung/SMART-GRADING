@@ -20,6 +20,45 @@ class AppOmrPreProcessor {
   }
 }
 
+/// Represents a single bubble at an exact position
+class AppBubbleCoord {
+  final String label;     // e.g. "q1", "sbd1"
+  final String value;     // e.g. "A", "B", "1", "2"
+  final int x;
+  final int y;
+  final int w;
+  final int h;
+
+  const AppBubbleCoord({
+    required this.label,
+    required this.value,
+    required this.x,
+    required this.y,
+    required this.w,
+    required this.h,
+  });
+
+  factory AppBubbleCoord.fromJson(Map<String, dynamic> json) {
+    return AppBubbleCoord(
+      label: json['label'] as String? ?? '',
+      value: json['value'] as String? ?? '',
+      x: (json['x'] as num?)?.toInt() ?? 0,
+      y: (json['y'] as num?)?.toInt() ?? 0,
+      w: (json['w'] as num?)?.toInt() ?? 46,
+      h: (json['h'] as num?)?.toInt() ?? 46,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'label': label,
+    'value': value,
+    'x': x,
+    'y': y,
+    'w': w,
+    'h': h,
+  };
+}
+
 /// Field block definition - mirrors OmrFieldBlock in omr_engine_v2.dart
 class AppOmrFieldBlock {
   final String name;
@@ -34,6 +73,9 @@ class AppOmrFieldBlock {
   final double labelsGap;
   final String direction;
   final String emptyValue;
+  /// Exact bubble coordinates for each (label, value) pair.
+  /// When provided, engine uses these instead of computed coords.
+  final List<AppBubbleCoord>? exactCoords;
 
   const AppOmrFieldBlock({
     required this.name,
@@ -48,9 +90,17 @@ class AppOmrFieldBlock {
     required this.labelsGap,
     this.direction = 'vertical',
     this.emptyValue = '',
+    this.exactCoords,
   });
 
   factory AppOmrFieldBlock.fromMap(Map<String, dynamic> map) {
+    final coordsRaw = map['exactCoords'] as List<dynamic>?;
+    final exactCoords = coordsRaw != null
+        ? coordsRaw
+            .map((e) => AppBubbleCoord.fromJson(e as Map<String, dynamic>))
+            .toList()
+        : null;
+
     return AppOmrFieldBlock(
       name: map['name'] as String? ?? '',
       originX: (map['originX'] as num?)?.toInt() ?? 0,
@@ -70,6 +120,7 @@ class AppOmrFieldBlock {
       labelsGap: (map['labelsGap'] as num?)?.toDouble() ?? 50.0,
       direction: map['direction'] as String? ?? 'vertical',
       emptyValue: map['emptyValue'] as String? ?? '',
+      exactCoords: exactCoords,
     );
   }
 
@@ -86,6 +137,7 @@ class AppOmrFieldBlock {
         'labelsGap': labelsGap,
         'direction': direction,
         'emptyValue': emptyValue,
+        if (exactCoords != null) 'exactCoords': exactCoords!.map((c) => c.toJson()).toList(),
       };
 
   AppOmrFieldBlock withShift(int newShift) {
@@ -102,7 +154,20 @@ class AppOmrFieldBlock {
       labelsGap: labelsGap,
       direction: direction,
       emptyValue: emptyValue,
+      exactCoords: exactCoords,
     );
+  }
+
+  /// Returns all exact coordinates grouped by field label.
+  /// Returns empty map if exactCoords is not available.
+  Map<String, Map<String, AppBubbleCoord>> get coordsByLabelAndValue {
+    if (exactCoords == null) return {};
+    final result = <String, Map<String, AppBubbleCoord>>{};
+    for (final coord in exactCoords!) {
+      result.putIfAbsent(coord.label, () => {});
+      result[coord.label]![coord.value] = coord;
+    }
+    return result;
   }
 }
 

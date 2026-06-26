@@ -1,5 +1,110 @@
+import 'bubble.dart';
 import 'field_block.dart';
 import 'template_layout.dart';
+
+/// Represents the student ID field (Số báo danh) in AMC templates.
+/// Contains coordinates for each digit position and possible values.
+class StudentIdField {
+  final int digits;
+  final List<IdBubbleCoord> coords;
+
+  const StudentIdField({
+    required this.digits,
+    required this.coords,
+  });
+
+  factory StudentIdField.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return const StudentIdField(digits: 0, coords: []);
+    }
+    final coordsRaw = json['coords'] as List<dynamic>? ?? [];
+    final coords = coordsRaw
+        .map((c) => IdBubbleCoord.fromJson(c as Map<String, dynamic>))
+        .toList();
+    return StudentIdField(
+      digits: (json['digits'] as num?)?.toInt() ?? 7,
+      coords: coords,
+    );
+  }
+}
+
+/// Represents a single bubble coordinate with digit/position info.
+class IdBubbleCoord {
+  final int x;
+  final int y;
+  final int w;
+  final int h;
+  final int digit;  // Position index (0, 1, 2...)
+  final int value;  // Value at this position (0-9 for student ID)
+
+  const IdBubbleCoord({
+    required this.x,
+    required this.y,
+    required this.w,
+    required this.h,
+    required this.digit,
+    required this.value,
+  });
+
+  factory IdBubbleCoord.fromJson(Map<String, dynamic> json) {
+    return IdBubbleCoord(
+      x: (json['x'] as num?)?.toInt() ?? 0,
+      y: (json['y'] as num?)?.toInt() ?? 0,
+      w: (json['w'] as num?)?.toInt() ?? 20,
+      h: (json['h'] as num?)?.toInt() ?? 20,
+      digit: (json['digit'] as num?)?.toInt() ?? 0,
+      value: (json['value'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+/// Represents the version code field (Mã đề) in AMC templates.
+class VersionCodeField {
+  final int digits;
+  final List<IdBubbleCoord> coords;
+
+  const VersionCodeField({
+    required this.digits,
+    required this.coords,
+  });
+
+  factory VersionCodeField.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return const VersionCodeField(digits: 0, coords: []);
+    }
+    final coordsRaw = json['coords'] as List<dynamic>? ?? [];
+    final coords = coordsRaw
+        .map((c) => IdBubbleCoord.fromJson(c as Map<String, dynamic>))
+        .toList();
+    return VersionCodeField(
+      digits: (json['digits'] as num?)?.toInt() ?? 2,
+      coords: coords,
+    );
+  }
+}
+
+/// Represents a fiducial marker (4 góc tròn) for document alignment/cropping.
+class FiducialMarker {
+  final int x;
+  final int y;
+  final int radius;
+
+  const FiducialMarker({
+    required this.x,
+    required this.y,
+    required this.radius,
+  });
+
+  factory FiducialMarker.fromJson(Map<String, dynamic> json) {
+    return FiducialMarker(
+      x: (json['x'] as num?)?.toInt() ?? 0,
+      y: (json['y'] as num?)?.toInt() ?? 0,
+      radius: (json['radius'] as num?)?.toInt() ?? 15,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {'x': x, 'y': y, 'radius': radius};
+}
 
 /// Represents an OMR template configuration parsed from template.json.
 class OMRTemplate {
@@ -21,6 +126,24 @@ class OMRTemplate {
   /// calibrated against a real scanned sheet.
   final bool autoAlign;
 
+  /// Student ID field (Số báo danh) - extracted from AMC calage data.
+  final StudentIdField? studentId;
+
+  /// Version code field (Mã đề) - extracted from AMC calage data.
+  final VersionCodeField? versionCodeZone;
+
+  /// Answer key extracted from CSV (format: {'q1': 'A', 'q2': 'B', ...}).
+  final Map<String, String>? answerKey;
+
+  /// Question scores (format: {'q1': 0.5, 'q2': 0.5, ...}).
+  final Map<String, double>? questionScores;
+
+  /// 4 fiducial markers for document alignment (top-left, top-right, bottom-right, bottom-left).
+  final List<FiducialMarker>? fiducialMarkers;
+
+  /// Raw templateJson from server - used by overlay for accurate bubble positions.
+  final Map<String, dynamic>? templateJson;
+
   const OMRTemplate({
     this.id,
     required this.name,
@@ -34,7 +157,36 @@ class OMRTemplate {
     required this.customLabels,
     required this.preProcessors,
     this.autoAlign = true,
+    this.studentId,
+    this.versionCodeZone,
+    this.answerKey,
+    this.questionScores,
+    this.fiducialMarkers,
+    this.templateJson,
   });
+
+  Map<String, dynamic> toJson() {
+    final fieldBlocksMap = <String, dynamic>{};
+    for (final block in fieldBlocks) {
+      fieldBlocksMap[block.name] = block.toConfig();
+    }
+
+    return {
+      '_id': id,
+      'name': name,
+      'pageDimensions': [pageWidth, pageHeight],
+      'bubbleDimensions': [bubbleWidth, bubbleHeight],
+      'emptyValue': emptyValue,
+      'outputColumns': outputColumns,
+      'fieldBlocks': fieldBlocksMap,
+      'customLabels': customLabels,
+      'preProcessors': preProcessors.map((p) => {
+        'name': p.name,
+        'options': p.options,
+      }).toList(),
+      'autoAlign': autoAlign,
+    };
+  }
 
   /// Debug-only: validate this template against the layout calculator
   /// (no-overlap rules, page bounds). Stripped out in release builds
@@ -356,6 +508,359 @@ class OMRTemplate {
       ],
     ).._debugValidate();
   }
+
+  /// Creates an OMRTemplate from the server's API response format.
+  ///
+  /// The server returns a document with this structure:
+  /// ```json
+  /// {
+  ///   "_id": { "$oid": "..." },
+  ///   "name": "Template Name",
+  ///   "templateJson": {
+  ///     "pageWidth": 2479,
+  ///     "pageHeight": 3508,
+  ///     "bubbleWidth": 63,
+  ///     "bubbleHeight": 63,
+  ///     "answers": {
+  ///       "q1": { "A": {"x":333,"y":562}, "B": {...}, ... },
+  ///       ...
+  ///     },
+  ///     "preProcessors": [...],
+  ///     "autoAlign": false,
+  ///     ...
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// This factory converts it to the internal OMRTemplate format:
+  /// - `answers` coords are grouped into FieldBlocks by row (same Y)
+  /// - Each FieldBlock uses `QTYPE_MCQ4` with `direction=vertical`
+  /// - Bubbles are extracted with correct x/y coordinates
+  factory OMRTemplate.fromServerJson(Map<String, dynamic> json) {
+    final templateJson = json['templateJson'] as Map<String, dynamic>? ?? {};
+
+    // Extract id from _id.$oid or id field
+    final idValue = json['_id'];
+    final id = idValue is Map ? idValue['\$oid']?.toString() : json['id']?.toString();
+
+    final name = json['name']?.toString() ?? 'Server Template';
+
+    final pageWidth = (templateJson['pageWidth'] as num?)?.toInt() ?? 2480;
+    final pageHeight = (templateJson['pageHeight'] as num?)?.toInt() ?? 3508;
+    final bubbleWidth = (templateJson['bubbleWidth'] as num?)?.toInt() ?? 35;
+    final bubbleHeight = (templateJson['bubbleHeight'] as num?)?.toInt() ?? 35;
+    final autoAlign = templateJson['autoAlign'] as bool? ?? true;
+
+    // Parse answers into field blocks (handle dynamic Map from JSON)
+    final answersRaw = templateJson['answers'];
+    final Map<String, dynamic> answersJson = answersRaw is Map
+        ? Map<String, dynamic>.from(answersRaw)
+        : {};
+    final (fieldBlocks, outputColumns) = _parseAnswersToFieldBlocks(
+      answersJson,
+      bubbleWidth,
+      bubbleHeight,
+    );
+
+    // Parse pre-processors (handle dynamic Map from JSON)
+    final preProcsRaw = templateJson['preProcessors'] as List<dynamic>? ?? [];
+    final preProcessors = preProcsRaw.map((p) {
+      final optsRaw = p['options'];
+      final Map<String, dynamic> opts = optsRaw is Map
+          ? Map<String, dynamic>.from(optsRaw)
+          : <String, dynamic>{};
+      return OMRPreProcessor(
+        name: p['name']?.toString() ?? '',
+        options: opts,
+      );
+    }).toList();
+
+    // Parse student ID field
+    final StudentIdField? studentId = _parseStudentId(templateJson['studentId']);
+
+    // Parse version code field
+    final VersionCodeField? versionCodeZone = _parseVersionCode(templateJson['versionCodeZone']);
+
+    // Parse answer key
+    final answerKey = _parseAnswerKey(templateJson['answerKey']);
+
+    // Parse question scores
+    final questionScores = _parseQuestionScores(templateJson['questionScores']);
+
+    // Parse fiducial markers
+    final fiducialMarkers = _parseFiducialMarkers(templateJson['fiducialMarkers']);
+
+    return OMRTemplate(
+      id: id,
+      name: name,
+      pageWidth: pageWidth,
+      pageHeight: pageHeight,
+      bubbleWidth: bubbleWidth,
+      bubbleHeight: bubbleHeight,
+      emptyValue: '',
+      outputColumns: outputColumns,
+      fieldBlocks: fieldBlocks,
+      customLabels: {},
+      preProcessors: preProcessors,
+      autoAlign: autoAlign,
+      studentId: studentId,
+      versionCodeZone: versionCodeZone,
+      answerKey: answerKey,
+      questionScores: questionScores,
+      fiducialMarkers: fiducialMarkers,
+      templateJson: templateJson, // Store raw template for overlay
+    );
+  }
+
+  static StudentIdField? _parseStudentId(dynamic json) {
+    if (json == null) return null;
+    try {
+      final Map<String, dynamic> data = json is Map
+          ? Map<String, dynamic>.from(json)
+          : <String, dynamic>{};
+      return StudentIdField.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static VersionCodeField? _parseVersionCode(dynamic json) {
+    if (json == null) return null;
+    try {
+      final Map<String, dynamic> data = json is Map
+          ? Map<String, dynamic>.from(json)
+          : <String, dynamic>{};
+      return VersionCodeField.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Map<String, String>? _parseAnswerKey(dynamic json) {
+    if (json == null) return null;
+    if (json is! Map) return null;
+    final Map<String, dynamic> data = Map<String, dynamic>.from(json);
+    return data.map((k, v) => MapEntry(k, v?.toString() ?? ''));
+  }
+
+  static Map<String, double>? _parseQuestionScores(dynamic json) {
+    if (json == null) return null;
+    if (json is! Map) return null;
+    final Map<String, dynamic> data = Map<String, dynamic>.from(json);
+    return data.map((k, v) => MapEntry(k, (v as num?)?.toDouble() ?? 0.0));
+  }
+
+  static List<FiducialMarker>? _parseFiducialMarkers(dynamic json) {
+    if (json == null) return null;
+    if (json is! List) return null;
+    try {
+      return json
+          .whereType<Map>()
+          .map((m) => FiducialMarker.fromJson(Map<String, dynamic>.from(m)))
+          .toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Parses the server's `answers` map into FieldBlocks.
+  ///
+  /// Server format: { "q1": { "A": {x,y,w,h}, "B": {...}, ... }, "q2": {...} }
+  /// Internal format: FieldBlocks grouped by row (same Y coordinate).
+  ///
+  /// Returns (fieldBlocks, outputColumns) tuple.
+  static (List<FieldBlock>, List<String>) _parseAnswersToFieldBlocks(
+    Map<String, dynamic> answersJson,
+    int globalBubbleWidth,
+    int globalBubbleHeight,
+  ) {
+    if (answersJson.isEmpty) {
+      return ([], []);
+    }
+
+    // Collect all question keys and their first bubble position for grouping
+    final questionInfo = <_QuestionLayoutInfo>[];
+    final optionKeys = ['A', 'B', 'C', 'D', 'E'];
+
+    for (final entry in answersJson.entries) {
+      final qKey = entry.key;
+      final optionsRaw = entry.value;
+      final Map<String, dynamic> options = optionsRaw is Map
+          ? Map<String, dynamic>.from(optionsRaw)
+          : <String, dynamic>{};
+
+      if (options.isEmpty) continue;
+
+      // Find first option to get position info
+      String? firstOption;
+      int? firstX;
+      int? firstY;
+
+      for (final optKey in optionKeys) {
+        if (options.containsKey(optKey)) {
+          final optRaw = options[optKey];
+          final Map<String, dynamic> opt = optRaw is Map
+              ? Map<String, dynamic>.from(optRaw)
+              : <String, dynamic>{};
+          firstOption = optKey;
+          firstX = (opt['x'] as num?)?.toInt();
+          firstY = (opt['y'] as num?)?.toInt();
+          break;
+        }
+      }
+
+      if (firstX != null && firstY != null) {
+        questionInfo.add(_QuestionLayoutInfo(
+          key: qKey,
+          firstOption: firstOption ?? 'A',
+          firstX: firstX,
+          firstY: firstY,
+          options: options,
+        ));
+      }
+    }
+
+    if (questionInfo.isEmpty) {
+      return ([], []);
+    }
+
+    // Sort by Y then X to process in layout order
+    questionInfo.sort((a, b) {
+      final yCompare = a.firstY.compareTo(b.firstY);
+      if (yCompare != 0) return yCompare;
+      return a.firstX.compareTo(b.firstX);
+    });
+
+    // Group questions into rows by Y coordinate (with tolerance)
+    final rows = <_QuestionRow>[];
+    const yTolerance = 20; // px tolerance for same row
+
+    for (final qInfo in questionInfo) {
+      // Find existing row or create new one
+      _QuestionRow? targetRow;
+      for (final row in rows) {
+        if ((qInfo.firstY - row.baseY).abs() <= yTolerance) {
+          targetRow = row;
+          break;
+        }
+      }
+
+      if (targetRow == null) {
+        targetRow = _QuestionRow(baseY: qInfo.firstY);
+        rows.add(targetRow);
+      }
+      targetRow.questions.add(qInfo);
+    }
+
+    // Build field blocks from rows
+    final fieldBlocks = <FieldBlock>[];
+    final outputColumns = <String>[];
+
+    for (int rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+      final row = rows[rowIdx];
+      // Sort questions in row by X
+      row.questions.sort((a, b) => a.firstX.compareTo(b.firstX));
+
+      final fieldLabels = row.questions.map((q) => q.key).toList();
+      outputColumns.addAll(fieldLabels);
+
+      // Build traverseBubbles for this block
+      // direction=vertical: options stacked vertically, questions spread horizontally
+      final traverseBubbles = <List<Bubble>>[];
+
+      for (final qInfo in row.questions) {
+        final bubbles = <Bubble>[];
+        for (final optKey in optionKeys) {
+          if (qInfo.options.containsKey(optKey)) {
+            final optRaw = qInfo.options[optKey];
+            final Map<String, dynamic> opt = optRaw is Map
+                ? Map<String, dynamic>.from(optRaw)
+                : <String, dynamic>{};
+            final bx = (opt['x'] as num?)?.toInt() ?? 0;
+            final by = (opt['y'] as num?)?.toInt() ?? 0;
+            bubbles.add(Bubble(
+              x: bx,
+              y: by,
+              fieldLabel: qInfo.key,
+              fieldValue: optKey,
+            ));
+          }
+        }
+        if (bubbles.isNotEmpty) {
+          traverseBubbles.add(bubbles);
+        }
+      }
+
+      // Calculate origin as the top-left bubble position
+      int originX = row.questions.first.firstX;
+      int originY = row.questions.first.firstY;
+
+      // Calculate gaps from first question's bubbles
+      int bubblesGap = 0;
+      if (traverseBubbles.isNotEmpty && traverseBubbles[0].length >= 2) {
+        bubblesGap = traverseBubbles[0][1].y - traverseBubbles[0][0].y;
+        if (bubblesGap == 0) bubblesGap = globalBubbleHeight + 5;
+      }
+
+      int labelsGap = 0;
+      if (row.questions.length >= 2) {
+        labelsGap = row.questions[1].firstX - row.questions[0].firstX;
+        if (labelsGap == 0) labelsGap = globalBubbleWidth + 5;
+      }
+
+      // Determine field type from number of options
+      final numOptions = traverseBubbles.isNotEmpty ? traverseBubbles[0].length : 4;
+      final fieldType = switch (numOptions) {
+        5 => FieldType.qtypeMcq5,
+        _ => FieldType.qtypeMcq4,
+      };
+
+      fieldBlocks.add(FieldBlock(
+        name: 'MCQBlock${rowIdx + 1}',
+        originX: originX,
+        originY: originY,
+        blockWidth: 0, // Will be computed
+        blockHeight: 0,
+        bubbleWidth: globalBubbleWidth,
+        bubbleHeight: globalBubbleHeight,
+        bubblesGap: bubblesGap,
+        labelsGap: labelsGap,
+        direction: FieldDirection.vertical,
+        fieldType: fieldType,
+        fieldLabels: fieldLabels,
+        bubbleValues: fieldType.defaultBubbleValues.sublist(0, numOptions),
+        emptyValue: '',
+        traverseBubbles: traverseBubbles,
+      ));
+    }
+
+    return (fieldBlocks, outputColumns);
+  }
+}
+
+/// Helper class for parsing question layout
+class _QuestionLayoutInfo {
+  final String key;
+  final String firstOption;
+  final int firstX;
+  final int firstY;
+  final Map<String, dynamic> options;
+
+  _QuestionLayoutInfo({
+    required this.key,
+    required this.firstOption,
+    required this.firstX,
+    required this.firstY,
+    required this.options,
+  });
+}
+
+/// Helper class for grouping questions by row
+class _QuestionRow {
+  final int baseY;
+  final List<_QuestionLayoutInfo> questions;
+
+  _QuestionRow({required this.baseY}) : questions = [];
 }
 
 /// Represents a pre-processor step in the pipeline.

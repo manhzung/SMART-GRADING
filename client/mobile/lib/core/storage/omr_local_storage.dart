@@ -18,6 +18,10 @@ class PendingSubmission {
   final DateTime timestamp;
   final SyncStatus status;
   final int retryCount;
+  /// Detected student code (SBD) — from engine_v2 scan
+  final String? studentCode;
+  /// Detected version code (mã đề) — from engine_v2 scan
+  final String? versionCode;
 
   const PendingSubmission({
     required this.id,
@@ -31,6 +35,8 @@ class PendingSubmission {
     required this.timestamp,
     this.status = SyncStatus.pending,
     this.retryCount = 0,
+    this.studentCode,
+    this.versionCode,
   });
 
   Map<String, dynamic> toJson() => {
@@ -45,6 +51,8 @@ class PendingSubmission {
         'timestamp': timestamp.toIso8601String(),
         'status': status.name,
         'retryCount': retryCount,
+        'studentCode': studentCode,
+        'versionCode': versionCode,
       };
 
   factory PendingSubmission.fromJson(Map<String, dynamic> json) {
@@ -63,6 +71,8 @@ class PendingSubmission {
         orElse: () => SyncStatus.pending,
       ),
       retryCount: json['retryCount'] as int? ?? 0,
+      studentCode: json['studentCode'] as String?,
+      versionCode: json['versionCode'] as String?,
     );
   }
 }

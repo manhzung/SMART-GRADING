@@ -344,6 +344,12 @@
 }
 
 /* Grid Layout definitions */
+.grid3Col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
 .grid4Col {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -997,4 +1003,111 @@
 
 .modalDoneBtn:hover {
   background-color: #153259;
+}
+
+/* Tag Filter Styles */
+.tagFilterSection {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.tagFilterLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tagChipsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.tagChip {
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tagChip:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.tagChipActive {
+  background-color: #0b2240;
+  color: #ffffff;
+  border-color: #0b2240;
+}
+
+.tagChipActive:hover {
+  background-color: #153259;
+  border-color: #153259;
+}
+
+.selectedTagsInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background-color: #eff6ff;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #1e40af;
+}
+
+.selectedTagsInfo span {
+  font-weight: 600;
+}
+
+.clearTagsBtn {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  border: 1px solid #94a3b8;
+  background-color: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.clearTagsBtn:hover {
+  background-color: #f1f5f9;
+}
+
+.applyTagsBtn {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  border: none;
+  background-color: #0b2240;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.applyTagsBtn:hover {
+  background-color: #153259;
+}
+
+.tagPill {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  background-color: #e0e7ff;
+  color: #3730a3;
+  font-weight: 500;
 }

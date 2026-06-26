@@ -2,8 +2,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
 import '../../core/constants/app_constants.dart';
-import '../../domain/omr/models/omr_template.dart';
 import '../../domain/omr/models/evaluation_config.dart';
+import '../../domain/omr/models/omr_template.dart';
 
 /// Service for fetching OMR templates and evaluation configs from the backend.
 class OMRTemplateService {
@@ -11,31 +11,18 @@ class OMRTemplateService {
 
   OMRTemplateService({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  /// Fetch OMR template for an exam.
-  Future<OMRTemplate> getTemplateForExam(String examId) async {
+  /// Fetch OMR scan JSON for an exam.
+  /// Returns templateJson (AMC format with bubble coords + answer key).
+  /// Used by mobile engine_v2 for OMR scanning.
+  Future<Map<String, dynamic>> getTemplateJsonForExam(String examId) async {
     try {
       final response = await _apiClient.get(
-        '${ApiConstants.omrTemplates}/exam/$examId',
+        '${ApiConstants.omrTemplates}/exam/$examId/json',
       );
-
       final data = response.data['data'] as Map<String, dynamic>;
-      return OMRTemplate.fromJson(data);
+      return data;
     } on DioException catch (e) {
       throw Exception('Failed to fetch template: ${e.message}');
-    }
-  }
-
-  /// Fetch the full Flutter-ready JSON layout (px @ 300 DPI) for a template.
-  /// This is the single source of truth used by both PDF and OMR engine.
-  Future<OMRTemplate> getJsonById(String templateId) async {
-    try {
-      final response = await _apiClient.get(
-        '${ApiConstants.omrTemplates}/$templateId/json',
-      );
-      final data = response.data as Map<String, dynamic>;
-      return OMRTemplate.fromJson(data);
-    } on DioException catch (e) {
-      throw Exception('Failed to fetch template JSON: ${e.message}');
     }
   }
 
@@ -84,21 +71,6 @@ class OMRTemplateService {
     }
   }
 
-  Future<List<OMRTemplate>> getAll() async {
-    final response = await _apiClient.get<Map<String, dynamic>>(
-      ApiConstants.omrTemplates,
-      parser: (data) => data as Map<String, dynamic>,
-    );
-    final results = response['results'] as List<dynamic>? ?? [];
-    final templates = <OMRTemplate>[];
-    for (final item in results) {
-      if (item is Map<String, dynamic>) {
-        templates.add(OMRTemplate.fromJson(item));
-      }
-    }
-    return templates;
-  }
-
   /// Download a template as JSON bytes (for offline use).
   Future<Uint8List> downloadTemplateBytes(String templateId) async {
     try {
@@ -110,6 +82,34 @@ class OMRTemplateService {
       return Uint8List.fromList(response.data);
     } on DioException catch (e) {
       throw Exception('Failed to download template: ${e.message}');
+    }
+  }
+
+  /// Fetch all OMR template metadata (for listing/selection).
+  /// Returns templates with fieldBlocks populated from server's templateJson.
+  Future<List<OMRTemplate>> getAll() async {
+    try {
+      final response = await _apiClient.get(
+        ApiConstants.omrTemplates,
+      );
+      final data = response.data['data'] as List<dynamic>;
+      return data.map((json) => OMRTemplate.fromServerJson(json as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw Exception('Failed to fetch templates: ${e.message}');
+    }
+  }
+
+  /// Fetch full template JSON by template ID.
+  /// Parses the server's templateJson format into OMRTemplate fieldBlocks.
+  Future<OMRTemplate> getJsonById(String id) async {
+    try {
+      final response = await _apiClient.get(
+        '${ApiConstants.omrTemplates}/$id',
+      );
+      final data = response.data['data'] as Map<String, dynamic>;
+      return OMRTemplate.fromServerJson(data);
+    } on DioException catch (e) {
+      throw Exception('Failed to fetch template: ${e.message}');
     }
   }
 }

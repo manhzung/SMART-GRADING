@@ -118,6 +118,68 @@ const getBankStats = catchAsync(async (req, res) => {
   res.send(stats);
 });
 
+/**
+ * Get questions filtered by tags
+ * User can select questions to create exam
+ */
+const getByTags = catchAsync(async (req, res) => {
+  const { tags, difficulty, limit, excludeIds } = req.query;
+
+  const filter = questionService.buildRoleFilter(req.user);
+
+  // Parse tags (comma-separated)
+  if (tags) {
+    const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+    filter.tags = { $in: tagList };
+  }
+
+  // Filter by difficulty
+  if (difficulty) {
+    filter.difficulty = difficulty.toLowerCase();
+  }
+
+  // Exclude specific IDs (questions already selected)
+  if (excludeIds) {
+    const excludeList = excludeIds.split(',').map(id => id.trim()).filter(Boolean);
+    filter._id = { $nin: excludeList };
+  }
+
+  const questions = await Question.find(filter)
+    .select('content options difficulty tags topicName usageCount correctRate source createdAt')
+    .limit(parseInt(limit, 10) || 20)
+    .sort({ usageCount: -1, createdAt: -1 }) // Prioritize popular questions
+    .lean();
+
+  // Hide correct answers for non-admin/teacher
+  const isPrivileged = req.user?.role === 'admin' || req.user?.role === 'teacher';
+  const sanitizedQuestions = questions.map(q => {
+    if (!isPrivileged) {
+      return {
+        ...q,
+        options: q.options.map(({ isCorrect, ...rest }) => rest),
+        correctAnswer: undefined,
+      };
+    }
+    return q;
+  });
+
+  // Group by difficulty for UI display
+  const byDifficulty = {
+    easy: sanitizedQuestions.filter(q => q.difficulty === 'easy'),
+    medium: sanitizedQuestions.filter(q => q.difficulty === 'medium'),
+    hard: sanitizedQuestions.filter(q => q.difficulty === 'hard'),
+  };
+
+  res.send({
+    success: true,
+    data: {
+      total: sanitizedQuestions.length,
+      byDifficulty,
+      questions: sanitizedQuestions,
+    },
+  });
+});
+
 module.exports = {
   create,
   getAll,
@@ -128,4 +190,5 @@ module.exports = {
   generate,
   getTags,
   getBankStats,
+  getByTags,
 };

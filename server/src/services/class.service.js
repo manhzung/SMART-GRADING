@@ -302,6 +302,26 @@ class ClassService {
     return classData?.studentIds?.length || 0;
   }
 
+  async getStudentsByClass(classId, requestingUser = null) {
+    const classData = await Class.findById(classId)
+      .select('studentIds schoolId')
+      .populate('studentIds', 'name email studentCode avatarUrl isActive dateOfBirth phone gender');
+
+    if (!classData) {
+      throw new ApiError(404, 'Class not found');
+    }
+
+    // Authorization: enforce school boundary
+    if (requestingUser?.schoolId && classData.schoolId.toString() !== requestingUser.schoolId.toString()) {
+      throw new ApiError(403, 'You can only access students in your own school');
+    }
+
+    return {
+      results: classData.studentIds,
+      total: classData.studentIds.length,
+    };
+  }
+
   async manageSubjectTeachers(classId, action, payload, requestingUser = null) {
     const classData = await this._authorizeClassAccess(classId, requestingUser, 'modify');
 

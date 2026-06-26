@@ -23,6 +23,7 @@ router
 
 router
   .route('/:id/students')
+  .get(auth(), classController.getStudentsByClass)
   .post(auth('manageClasses'), validate(classValidation.addStudents), classController.addStudents)
   .delete(auth('manageClasses'), validate(classValidation.removeStudents), classController.removeStudents);
 
@@ -54,6 +55,6 @@ router
 
 router
   .route('/:id/available-students')
-  .get(auth('manageClasses'), validate(classValidation.getAvailableStudents), classController.getAvailableStudents);
+  .get(auth(), validate(classValidation.getAvailableStudents), classController.getAvailableStudents);
 
 module.exports = router;

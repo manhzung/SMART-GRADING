@@ -159,6 +159,22 @@ export const questionService = {
     return apiService.get<BackendQuestion>(`/questions/${id}`);
   },
 
+  async getByTags(params: {
+    tags: string;
+    difficulty?: string;
+    limit?: number;
+    excludeIds?: string;
+  }) {
+    return apiService.get<{
+      success: boolean;
+      data: {
+        total: number;
+        byDifficulty: { easy: BackendQuestion[]; medium: BackendQuestion[]; hard: BackendQuestion[] };
+        questions: BackendQuestion[];
+      };
+    }>('/questions/by-tags', { params });
+  },
+
   async create(data: CreateQuestionPayload) {
     return apiService.post<BackendQuestion>('/questions', data);
   },
@@ -208,6 +224,10 @@ interface QuestionState {
     isApproved: boolean | null;
   };
   availableTags: string[];
+  // Questions fetched by tags (for exam creation)
+  tagQuestions: Question[];
+  isLoadingTagQuestions: boolean;
+  fetchQuestionsByTags: (tags: string[], options?: { difficulty?: string; limit?: number; excludeIds?: string[] }) => Promise<void>;
   fetchQuestions: (params?: {
     page?: number;
     limit?: number;
@@ -248,6 +268,29 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
     isApproved: null,
   },
   availableTags: [],
+  tagQuestions: [],
+  isLoadingTagQuestions: false,
+
+  fetchQuestionsByTags: async (tags, options = {}) => {
+    set({ isLoadingTagQuestions: true });
+    try {
+      const response = await questionService.getByTags({
+        tags: tags.join(','),
+        difficulty: options.difficulty,
+        limit: options.limit,
+        excludeIds: options.excludeIds?.join(','),
+      });
+
+      const questions = response.data?.questions || [];
+      set({
+        tagQuestions: questions.map(toFrontendQuestion),
+        isLoadingTagQuestions: false,
+      });
+    } catch (error) {
+      console.error('Failed to fetch questions by tags:', error);
+      set({ isLoadingTagQuestions: false });
+    }
+  },
 
   fetchQuestions: async (params) => {
     set({ isLoading: true, error: null });

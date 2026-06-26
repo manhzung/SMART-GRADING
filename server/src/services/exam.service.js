@@ -7,16 +7,28 @@ const { parsePagination } = require('../utils/parsePagination');
 
 class ExamService {
   async create(data) {
-    // Validate OMR template exists
-    const template = await OMRTemplate.findById(data.omrTemplateId);
-    if (!template) {
-      throw new ApiError(400, 'OMR Template not found');
+    // Auto-assign default OMR template if not provided
+    if (!data.omrTemplateId) {
+      const defaultTemplate = await OMRTemplate.findOne({ isDefault: true, isActive: true });
+      if (!defaultTemplate) {
+        throw new ApiError(400, 'No OMR Template specified and no default template found. Please create or set a default OMR Template.');
+      }
+      data.omrTemplateId = defaultTemplate._id;
+    } else {
+      // Validate OMR template exists
+      const template = await OMRTemplate.findById(data.omrTemplateId);
+      if (!template) {
+        throw new ApiError(400, 'OMR Template not found');
+      }
     }
 
     // Set primaryClassId if not provided
     if (!data.primaryClassId && data.classIds?.length > 0) {
       data.primaryClassId = data.classIds[0];
     }
+
+    // Ensure paperEngine is 'amc' for AMC-based grading
+    data.paperEngine = 'amc';
 
     const exam = new Exam(data);
     await exam.save();
@@ -250,6 +262,12 @@ class ExamService {
     for (let i = 0; i < count; i++) {
       const versionCode = (101 + i).toString();
       
+      // Check if version already exists
+      let examVersion = await ExamVersion.findOne({
+        examId: exam._id,
+        versionCode,
+      });
+      
       // Shuffle questions
       const shuffledQuestions = this.shuffleArray([...questions]);
       
@@ -270,16 +288,24 @@ class ExamService {
         answerKey.set((idx + 1).toString(), correctOption?.id || null);
       });
 
-      const examVersion = new ExamVersion({
-        examId: exam._id,
-        versionCode,
-        numberOfQuestions: questions.length,
-        questions: questionsWithShuffledOptions,
-        answerKey,
-      });
-
-      await examVersion.save();
-      exam.versions.push(examVersion._id);
+      if (examVersion) {
+        // Update existing
+        examVersion.questions = questionsWithShuffledOptions;
+        examVersion.answerKey = answerKey;
+        examVersion.numberOfQuestions = questions.length;
+        await examVersion.save();
+      } else {
+        // Create new
+        examVersion = new ExamVersion({
+          examId: exam._id,
+          versionCode,
+          numberOfQuestions: questions.length,
+          questions: questionsWithShuffledOptions,
+          answerKey,
+        });
+        await examVersion.save();
+        exam.versions.push(examVersion._id);
+      }
       versionCodes.push(versionCode);
     }
 
@@ -295,7 +321,7 @@ class ExamService {
 
   async getVersions(examId) {
     return ExamVersion.find({ examId })
-      .select('versionCode numberOfQuestions submissionCount createdAt');
+      .select('versionCode numberOfQuestions submissionCount createdAt paperEngine pdfUrl answerSheetPdfUrl corrigePdfUrl generatedAt generationErrors');
   }
 
   async getVersionByCode(examId, versionCode) {

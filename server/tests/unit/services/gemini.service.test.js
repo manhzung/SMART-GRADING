@@ -88,12 +88,40 @@ describe('GeminiService', () => {
     });
 
     it('should have geminiApiKey property', () => {
-      // Property exists but may be undefined if env var not set
       expect('geminiApiKey' in geminiService).toBe(true);
     });
 
     it('should have geminiModel property', () => {
       expect(geminiService.geminiModel).toBeDefined();
+    });
+  });
+
+  describe('retry logic', () => {
+    it('should have maxRetries configuration', () => {
+      expect(geminiService.maxRetries).toBeDefined();
+      expect(geminiService.maxRetries).toBe(3);
+    });
+
+    it('should have retryDelayMs configuration', () => {
+      expect(geminiService.retryDelayMs).toBeDefined();
+      expect(geminiService.retryDelayMs).toBe(1000);
+    });
+
+    it('should identify non-retryable errors', () => {
+      const error1 = new Error('Invalid API key');
+      expect(geminiService._isNonRetryableError(error1)).toBe(true);
+
+      const error2 = new Error('API rate limit exceeded');
+      expect(geminiService._isNonRetryableError(error2)).toBe(true);
+
+      const error3 = new Error('Network timeout');
+      expect(geminiService._isNonRetryableError(error3)).toBe(false);
+    });
+  });
+
+  describe('generateContent options', () => {
+    it('should accept custom retry options', () => {
+      expect(typeof geminiService.generateContent).toBe('function');
     });
   });
 });

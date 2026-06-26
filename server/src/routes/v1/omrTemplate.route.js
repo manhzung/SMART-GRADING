@@ -53,4 +53,8 @@ router
   .route('/exam/:examId')
   .get(auth(), omrTemplateController.getByExamId);
 
+router
+  .route('/exam/:examId/json')
+  .get(auth(), omrTemplateController.getScanJsonByExamId);
+
 module.exports = router;

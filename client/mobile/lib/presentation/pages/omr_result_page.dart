@@ -4,24 +4,27 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_grading_mobile/domain/omr/engine/omr_engine.dart';
 import 'package:smart_grading_mobile/domain/omr/engine_v2/omr_models.dart';
 import 'package:smart_grading_mobile/domain/omr/models/grading_result.dart';
+import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
 
 class OMRResultPage extends StatelessWidget {
   final Uint8List imageBytes;
   final OMRGradingResult gradingResult;
-  final OMRProcessingResult processingResult;
+  final OMRProcessingResult? processingResult;
   final String? examId;
   final String? examName;
   final List<QuestionScoreResult>? questionScores;
+  final ClassStudent? student;
 
   const OMRResultPage({
     super.key,
     required this.imageBytes,
     required this.gradingResult,
-    required this.processingResult,
+    this.processingResult,
     this.examId,
     this.examName,
     this.questionScores,
+    this.student,
   });
 
   @override
@@ -72,14 +75,15 @@ class OMRResultPage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              if (processingResult.annotatedImageBytes != null)
+              if (processingResult?.annotatedImageBytes != null)
                 _buildAnnotatedImage(),
               _buildScoreCard(),
               if (questionScores != null && questionScores!.isNotEmpty)
                 _buildPerQuestionScores()
               else
                 _buildAnswerBreakdown(),
-              _buildProcessingInfo(),
+              if (processingResult != null)
+                _buildProcessingInfo(),
               const SizedBox(height: 24),
             ],
           ),
@@ -114,7 +118,7 @@ class OMRResultPage extends StatelessWidget {
                     color: Color(0xFF0F172A),
                   ),
                 ),
-                if (processingResult.wasWarped) ...[
+                if (processingResult?.wasWarped ?? false) ...[
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -140,11 +144,61 @@ class OMRResultPage extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.memory(
-                processingResult.annotatedImageBytes!,
+                processingResult!.annotatedImageBytes!,
                 fit: BoxFit.contain,
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudentInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Center(
+              child: Icon(Icons.person, color: Colors.white, size: 20),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  student!.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                if (student!.studentCode != null)
+                  Text(
+                    'MSSV: ${student!.studentCode}',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 13,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const Icon(Icons.verified, color: Colors.white, size: 24),
         ],
       ),
     );
@@ -177,6 +231,10 @@ class OMRResultPage extends StatelessWidget {
       ),
       child: Column(
         children: [
+          if (student != null) ...[
+            _buildStudentInfoCard(),
+            const SizedBox(height: 16),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -524,16 +582,16 @@ class OMRResultPage extends StatelessWidget {
           const SizedBox(height: 16),
           _buildInfoRow(
             'Processing time',
-            '${processingResult.processingTime.inMilliseconds}ms',
+            '${processingResult!.processingTime.inMilliseconds}ms',
           ),
           _buildInfoRow(
             'Questions processed',
             '${gradingResult.verdicts.length}',
           ),
-          if (processingResult.response.globalThreshold > 0)
+          if (processingResult!.response.globalThreshold > 0)
             _buildInfoRow(
               'Global threshold',
-              processingResult.response.globalThreshold.toStringAsFixed(1),
+              processingResult!.response.globalThreshold.toStringAsFixed(1),
             ),
           if (gradingResult.hasMultiMarked)
             Container(
@@ -566,7 +624,7 @@ class OMRResultPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          ...processingResult.processingSteps.map((step) => Padding(
+          ...processingResult!.processingSteps.map((step) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: Row(
               children: [

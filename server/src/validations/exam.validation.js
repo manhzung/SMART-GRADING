@@ -8,11 +8,11 @@ const createExam = {
   body: Joi.object().keys({
     title: Joi.string().min(3).max(200).trim().required(),
     description: Joi.string().allow(''),
-    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
     subjectName: Joi.string().allow(''),
     classIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
     primaryClassId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
-    omrTemplateId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    omrTemplateId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
     examDate: Joi.date().iso().required(),
     startTime: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/).default('07:00'),
     duration: Joi.number().min(5).max(300).required(),
@@ -39,7 +39,7 @@ const updateExam = {
   body: Joi.object().keys({
     title: Joi.string().min(3).max(200).trim(),
     description: Joi.string().allow(''),
-    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
     subjectName: Joi.string().allow(''),
     examDate: Joi.date().iso(),
     startTime: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/),
@@ -127,10 +127,9 @@ const getUpcoming = {
 
 const validateGeneratePapers = {
   params: Joi.object({
-    id: Joi.object().keys({ id: Joi.string().regex(/^[0-9a-fA-F]{24}$/) }),
+    id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
   }),
   body: Joi.object({
-    paperEngine: Joi.string().valid('pdfkit', 'amc', 'auto').default('auto'),
     forceRegenerate: Joi.boolean().default(false),
   }),
 };
@@ -141,6 +140,44 @@ const getExamTemplate = {
   }),
   query: Joi.object({
     versionCode: Joi.string().optional(),
+  }),
+};
+
+const createExamFromSelection = {
+  body: Joi.object().keys({
+    questionIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required()
+      .description('Array of selected question IDs from question bank'),
+    title: Joi.string().min(3).max(200).trim().required(),
+    description: Joi.string().allow('', null),
+    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    subjectName: Joi.string().allow('', null),
+    classIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
+    primaryClassId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    omrTemplateId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    examDate: Joi.date().iso().required(),
+    startTime: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .default('07:00'),
+    duration: Joi.number().min(5).max(300).default(45),
+    totalScore: Joi.number().min(1).default(10),
+    passingScore: Joi.number().min(0).default(5),
+    numberOfVersions: Joi.number().min(1).max(50).default(4),
+    printConfig: Joi.object().keys({
+      paperSize: Joi.string().valid('A4', 'A5'),
+      questionsPerPage: Joi.number().min(1).max(10),
+      includeAnswerSheet: Joi.boolean(),
+      schoolHeader: Joi.boolean(),
+    }),
+    shuffleConfig: Joi.object().keys({
+      shuffleQuestions: Joi.boolean().default(true),
+      shuffleOptions: Joi.boolean().default(true),
+    }),
   }),
 };
 
@@ -158,4 +195,5 @@ module.exports = {
   exportExam,
   validateGeneratePapers,
   getExamTemplate,
+  createExamFromSelection,
 };

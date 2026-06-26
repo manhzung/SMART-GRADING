@@ -141,8 +141,8 @@ const examSchema = mongoose.Schema(
     },
     paperEngine: {
       type: String,
-      enum: ['pdfkit', 'amc', 'auto'],
-      default: 'auto',
+      enum: ['pdfkit', 'amc'],
+      default: 'amc', // AMC is the primary paper engine for OMR-based grading
     },
     notifiedUsers: [
       {

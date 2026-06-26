@@ -29,6 +29,7 @@ const allRoles = {
     'scanSubmissions',
     'reviewAppeals',
     'viewReports',
+    'getUsers',
   ],
   student: [
     'viewExams',

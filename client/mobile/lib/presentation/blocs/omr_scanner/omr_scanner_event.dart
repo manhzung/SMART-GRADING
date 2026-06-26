@@ -8,16 +8,14 @@ abstract class OMRScannerEvent extends Equatable {
 }
 
 class OMRScannerTemplateSet extends OMRScannerEvent {
-  final OMRTemplate template;
-  final EvaluationConfig? evaluationConfig;
+  final Map<String, dynamic> templateJson;
   final String? examId;
   final String? examName;
   final String? classId;
   final String? className;
 
   const OMRScannerTemplateSet({
-    required this.template,
-    this.evaluationConfig,
+    required this.templateJson,
     this.examId,
     this.examName,
     this.classId,
@@ -25,7 +23,7 @@ class OMRScannerTemplateSet extends OMRScannerEvent {
   });
 
   @override
-  List<Object?> get props => [template, evaluationConfig, examId, examName, classId, className];
+  List<Object?> get props => [templateJson, examId, examName, classId, className];
 }
 
 class OMRScannerLoadFromServer extends OMRScannerEvent {
@@ -65,19 +63,24 @@ class OMRScannerProcessStarted extends OMRScannerEvent {
   List<Object?> get props => [imageBytes];
 }
 
-class OMRScannerProcessWithNewEngine extends OMRScannerEvent {
-  final Uint8List imageBytes;
-  final Map<String, dynamic> templateJson;
-
-  const OMRScannerProcessWithNewEngine({
-    required this.imageBytes,
-    required this.templateJson,
-  });
-
-  @override
-  List<Object?> get props => [imageBytes, templateJson];
-}
-
 class OMRScannerSubmit extends OMRScannerEvent {}
 
 class OMRScannerReset extends OMRScannerEvent {}
+
+class OMRScannerLoadClassStudents extends OMRScannerEvent {
+  final String classId;
+
+  const OMRScannerLoadClassStudents(this.classId);
+
+  @override
+  List<Object?> get props => [classId];
+}
+
+class OMRScannerConfirmStudent extends OMRScannerEvent {
+  final ClassStudent student;
+
+  const OMRScannerConfirmStudent(this.student);
+
+  @override
+  List<Object?> get props => [student];
+}

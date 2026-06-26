@@ -4,6 +4,7 @@ class OmrScanResult {
   final Map<String, String> answers;
   final Duration processingTime;
   final List<String> processingSteps;
+  final bool wasWarped;  // true if proper perspective warp, false if simple resize fallback
 
   OmrScanResult({
     required this.studentId,
@@ -11,6 +12,7 @@ class OmrScanResult {
     required this.answers,
     required this.processingTime,
     required this.processingSteps,
+    this.wasWarped = true,
   });
 }
 

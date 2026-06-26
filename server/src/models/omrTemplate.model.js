@@ -261,6 +261,10 @@ const omrTemplateSchema = mongoose.Schema(
     },
     tags: [String],
     previewImageUrl: String,
+    templateJson: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
   {
     timestamps: true,

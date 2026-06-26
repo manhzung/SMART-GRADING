@@ -3,6 +3,7 @@ const seedSchoolsData = require('./school.seeds');
 const seedAdminUser = require('./admin.seed');
 const seedAcademicData = require('./academic.seed');
 const seedExamsAndSubmissions = require('./exam.seed');
+const seedHustQuestions = require('./question.hust.seeds');
 
 async function runAllSeeds() {
   console.log('='.repeat(50));
@@ -15,6 +16,7 @@ async function runAllSeeds() {
     await seedAdminUser();
     await seedAcademicData();
     await seedExamsAndSubmissions();
+    await seedHustQuestions();
 
     console.log('\n' + '='.repeat(50));
     console.log('All seeds completed successfully!');

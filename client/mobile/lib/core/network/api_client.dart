@@ -95,6 +95,9 @@ class ApiClient {
   }) async {
     try {
       final response = await dio.post(path, data: data);
+      if (response.statusCode == 204 || response.statusCode == 205) {
+        return parser != null ? parser(null) : ({} as T);
+      }
       return parser != null ? parser(response.data) : response.data as T;
     } on DioException catch (e) {
       throw _handleError(e);
@@ -158,6 +161,9 @@ class ApiClient {
         final message = error.response?.data?['message'] ?? 'Server error';
         if (statusCode == 401) {
           return AuthException(message: message, originalError: error);
+        }
+        if (statusCode == 403) {
+          return ForbiddenException(message: message, originalError: error);
         }
         return ApiException(
           message: message,

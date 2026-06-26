@@ -1,4 +1,4 @@
-import type { Exam, ExamVersion } from '../presentation/store/examStore';
+import type { Exam, ExamVersion, ExamTemplateData } from '../presentation/store/examStore';
 import type { Question } from '../presentation/store/questionStore';
 
 export interface ExamListItem {
@@ -52,11 +52,14 @@ export interface ExamDetailData {
     engine: 'amc';
     pdfUrl: string | null;
     answerSheetPdfUrl: string | null;
+    corrigePdfUrl: string | null;
     generatedAt: string | null;
     hasErrors: boolean;
     errors: string[];
-    templateReady: boolean;
   }>;
+  // OMR template is now a single source of truth per exam (not per version).
+  // Reflects readiness of the OMRTemplate.templateJson produced by AMC.
+  omrTemplateReady: boolean;
   history: Array<{ action: string; timestamp: string; user: string; type: 'edit' | 'class' | 'create' }>;
 }
 
@@ -113,7 +116,11 @@ export function resolveAssignedQuestions(storeQuestions: Question[], assignedIds
   return storeQuestions.filter((question) => assignedIds.includes(question._id));
 }
 
-export function mapExamDetailData(exam: Exam | null, versions: ExamVersion[]): ExamDetailData | null {
+export function mapExamDetailData(
+  exam: Exam | null,
+  versions: ExamVersion[],
+  examTemplate: ExamTemplateData | null = null,
+): ExamDetailData | null {
   if (!exam) return null;
 
   const mappedQuestions = (exam.questionIds || [])
@@ -166,11 +173,6 @@ export function mapExamDetailData(exam: Exam | null, versions: ExamVersion[]): E
       else if (pdfReady) status = 'Đã sinh PDF';
       else status = 'Chưa sinh';
 
-      const templateReady = !!(
-        version.templateJson &&
-        (version.templateJson as any)?.studentId?.coords?.length > 0
-      );
-
       return {
         code: version.versionCode,
         status,
@@ -178,12 +180,50 @@ export function mapExamDetailData(exam: Exam | null, versions: ExamVersion[]): E
         engine: 'amc',
         pdfUrl: version.pdfUrl || null,
         answerSheetPdfUrl: version.answerSheetPdfUrl || null,
+        corrigePdfUrl: (version as any).corrigePdfUrl || null,
         generatedAt: version.generatedAt ? formatDate(version.generatedAt) : null,
         hasErrors,
         errors: version.generationErrors || [],
-        templateReady,
       };
     }),
+    omrTemplateReady: isOmrTemplateReady(examTemplate, exam.omrTemplateId),
     history: [],
   };
+}
+
+/**
+ * OMR template readiness check.
+ *
+ * After AMC compile, OMRTemplate.templateJson contains:
+ *   - studentId.coords[] (bubble positions for student ID)
+ *   - answers{} (per-question bubble coords, e.g. {"q1": {"A":{x,y,w,h}, ...}})
+ *
+ * Template is "ready" when both studentId and answers are populated.
+ * Legacy exams without AMC (no templateJson) return false.
+ *
+ * @param template - optional ExamTemplateData from fetchExamTemplate() store action
+ * @param omrTemplateId - optional populated omrTemplate from exam detail endpoint
+ */
+function isOmrTemplateReady(
+  template: ExamTemplateData | null | undefined,
+  omrTemplateId: Exam['omrTemplateId'],
+): boolean {
+  // Priority 1: ExamTemplateData from fetchExamTemplate (most reliable — direct from OMRTemplate.templateJson)
+  if (template?.template) {
+    const t = template.template;
+    const hasStudentId = (t.studentId?.coords?.length ?? 0) > 0;
+    const hasAnswers = Object.keys(t.answers ?? {}).length > 0;
+    return hasStudentId && hasAnswers;
+  }
+  // Priority 2: Check omrTemplateId.templateJson directly (from exam detail populate)
+  const templateJson = (omrTemplateId as any)?.templateJson as
+    | { studentId?: { coords?: unknown[] }; answers?: Record<string, unknown> }
+    | null
+    | undefined;
+  if (templateJson) {
+    const hasStudentId = (templateJson.studentId?.coords?.length ?? 0) > 0;
+    const hasAnswers = Object.keys(templateJson.answers ?? {}).length > 0;
+    return hasStudentId && hasAnswers;
+  }
+  return false;
 }

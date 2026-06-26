@@ -126,7 +126,8 @@ function buildHeaderLines(exam, config) {
   const lines = [];
   lines.push('\\documentclass[11pt,a4paper]{article}');
   lines.push('');
-  lines.push('\\usepackage[utf8]{inputenc}');
+  lines.push('\\usepackage{fontspec}');
+  lines.push('\\setmainfont{Latin Modern Roman}');
   lines.push('\\usepackage{amsmath,amssymb}');
   lines.push('\\usepackage{geometry}');
   lines.push('\\geometry{top=1.5cm,bottom=1.5cm,left=1.5cm,right=1.5cm}');
@@ -237,6 +238,71 @@ function generateAmcSourceForVersion(input) {
 }
 
 /**
+ * Generate Corrige (Answer Key) LaTeX source
+ * Shows questions with correct answers highlighted
+ *
+ * @param {Object} input - same as generateAmcSourceForVersion
+ * @returns {string} - LaTeX source
+ */
+function generateCorrigeSourceForVersion(input) {
+  const { exam, questions, config } = input;
+  const lines = [];
+
+  // Header
+  lines.push('\\documentclass[11pt,a4paper]{article}');
+  lines.push('');
+  lines.push('\\usepackage{fontspec}');
+  lines.push('\\setmainfont{Latin Modern Roman}');
+  lines.push('\\usepackage{amsmath,amssymb}');
+  lines.push('\\usepackage{geometry}');
+  lines.push('\\usepackage{xcolor}');
+  lines.push('\\geometry{top=1.5cm,bottom=1.5cm,left=1.5cm,right=1.5cm}');
+  lines.push('\\usepackage{automultiplechoice}');
+  lines.push('');
+
+  lines.push('\\begin{document}');
+  lines.push('');
+
+  // Title for answer key
+  lines.push('{\\centering');
+  lines.push('\\textbf{\\LARGE DAP AN}\\par');
+  lines.push('\\vspace{0.2cm}');
+  if (config.schoolHeader) {
+    lines.push(`{\\centering\\textbf{${escapeLatex(config.schoolHeader)}}\\par}`);
+  }
+  lines.push(`{\\centering\\textbf{${escapeLatex(exam.title || 'Kiem tra trac nghiem')}}\\par}`);
+  lines.push(`Ma de: ${escapeLatex(exam.versionCode || '')}\\par`);
+  lines.push('\\vspace{0.2cm}');
+  lines.push('\\hrule');
+  lines.push('\\vspace{0.3cm}');
+  lines.push('}');
+  lines.push('');
+
+  // Questions with answers
+  questions.forEach((q, i) => {
+    lines.push(`\\begin{question}{q${i + 1}}`);
+    lines.push(escapeLatex(q.content));
+    lines.push('\\begin{choices}');
+    q.options.forEach((opt) => {
+      if (opt.isCorrect) {
+        // Highlight correct answer with color
+        lines.push(`  \\correctchoice{\\textcolor{blue}{\\textbf{${escapeLatex(opt.content)}}}}`);
+      } else {
+        lines.push(`  \\wrongchoice{${escapeLatex(opt.content)}}`);
+      }
+    });
+    lines.push('\\end{choices}');
+    lines.push('\\end{question}');
+    lines.push('');
+  });
+
+  // Footer
+  lines.push('\\end{document}');
+
+  return lines.join('\n');
+}
+
+/**
  * LEGACY: Generate AMC LaTeX source from exam data (backward compat)
  * Use generateAmcSourceForVersion for new code.
  * @param {Object} input - {exam, questions, config}
@@ -294,6 +360,7 @@ function shuffleQuestionsForVersion(questions, versionCode, options = {}) {
 module.exports = {
   generateAmcSource,
   generateAmcSourceForVersion,
+  generateCorrigeSourceForVersion,
   shuffleQuestionsForVersion,
   escapeLatex,
   seededShuffle,

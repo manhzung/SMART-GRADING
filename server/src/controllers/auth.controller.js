@@ -9,13 +9,24 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id) && String(ne
 const register = catchAsync(async (req, res) => {
   const { name, email, password, schoolId } = req.body;
 
+  if (!schoolId || String(schoolId).trim() === '') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'School is required');
+  }
+
   let resolvedSchoolId = schoolId;
-  if (schoolId && !isValidObjectId(schoolId)) {
+  if (!isValidObjectId(schoolId)) {
+    // schoolId is a name → resolve to _id
     const school = await schoolService.getByName(schoolId);
     if (!school) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'School not found');
     }
     resolvedSchoolId = school._id.toString();
+  } else {
+    // schoolId is a valid ObjectId → verify school exists
+    const school = await schoolService.getById(schoolId);
+    if (!school) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'School not found');
+    }
   }
 
   const user = await userService.createUser({ name, email, password, schoolId: resolvedSchoolId });
