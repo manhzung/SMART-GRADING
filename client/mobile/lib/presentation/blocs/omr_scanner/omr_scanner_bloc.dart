@@ -49,9 +49,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
       classId: event.classId,
       className: event.className,
     ));
-  }
     
-      // Pre-load students for this class
     if (event.classId != null) {
       add(OMRScannerLoadClassStudents(event.classId!));
     }
@@ -92,10 +90,13 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImageCaptured event,
     Emitter<OMRScannerState> emit,
   ) async {
+    // Check template BEFORE emitting new state
+    final current = state;
+    final hasTemplate = current is OMRScannerTemplateReady;
+    
     emit(OMRScannerImageReady(imageBytes: event.imageBytes));
 
-    final current = state;
-    if (current is OMRScannerTemplateReady) {
+    if (hasTemplate) {
       add(OMRScannerProcessStarted(imageBytes: event.imageBytes));
     } else {
       developer.log(
@@ -110,10 +111,13 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImagePicked event,
     Emitter<OMRScannerState> emit,
   ) async {
+    // Check template BEFORE emitting new state
+    final current = state;
+    final hasTemplate = current is OMRScannerTemplateReady;
+    
     emit(OMRScannerImageReady(imageBytes: event.imageBytes));
 
-    final current = state;
-    if (current is OMRScannerTemplateReady) {
+    if (hasTemplate) {
       add(OMRScannerProcessStarted(imageBytes: event.imageBytes));
     } else {
       developer.log(
