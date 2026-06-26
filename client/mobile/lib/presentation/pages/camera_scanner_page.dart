@@ -71,7 +71,10 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
   }
 
   void _loadTemplate() {
+    debugPrint('[CameraScanner] _loadTemplate called. template=${widget.template}');
+
     if (widget.template != null) {
+      debugPrint('[CameraScanner] Using widget.template');
       context.read<OMRScannerBloc>().add(OMRScannerTemplateSet(
         templateJson: widget.template!.toJson(),
         examId: widget.examId,
@@ -83,12 +86,14 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         _fetchTemplateJson();
       }
     } else {
+      debugPrint('[CameraScanner] widget.template is null, creating default template');
       final template = OMRTemplate.simpleMcq(
         numQuestions: 20,
         numOptions: 4,
         bubbleWidth: 35,
         bubbleHeight: 35,
       );
+      debugPrint('[CameraScanner] Default template created: ${template.toJson().keys}');
       context.read<OMRScannerBloc>().add(OMRScannerTemplateSet(
         templateJson: template.toJson(),
         examId: widget.examId ?? 'demo',
@@ -179,6 +184,9 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
             // Submitted successfully - show success and return
             _showSubmittedSnackbar(context, state);
           } else if (state is OMRScannerError) {
+            debugPrint('[CameraScanner] OMRScannerError: ${state.message}');
+            debugPrint('[CameraScanner] Current widget.template: ${widget.template}');
+            debugPrint('[CameraScanner] widget.examId: ${widget.examId}');
             _showErrorSnackbar(context, state);
           }
         },
@@ -811,6 +819,8 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
   }
 
   Future<void> _processImage(Uint8List imageBytes) async {
+    debugPrint('[CameraScanner] _processImage called. Image size: ${imageBytes.length} bytes');
+    debugPrint('[CameraScanner] Current OMRScannerBloc state: ${context.read<OMRScannerBloc>().state.runtimeType}');
     context.read<OMRScannerBloc>().add(
       OMRScannerProcessStarted(imageBytes: imageBytes),
     );
