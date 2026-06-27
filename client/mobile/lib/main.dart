@@ -17,6 +17,7 @@ import 'core/network/analytics_service.dart';
 import 'core/network/question_service.dart';
 import 'core/network/school_service.dart';
 import 'core/network/exam_service.dart';
+import 'core/network/exam_submissions_service.dart';
 import 'core/network/activity_service.dart';
 import 'core/constants/app_constants.dart';
 import 'presentation/pages/splash_page.dart';
@@ -108,6 +109,9 @@ void setupDependencies() {
   );
   getIt.registerLazySingleton<ExamService>(
     () => ExamService(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ExamSubmissionsService>(
+    () => ExamSubmissionsService(apiClient: getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<ActivityService>(
     () => ActivityService(apiClient: getIt<ApiClient>()),

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/network/exam_submissions_service.dart';
 import '../../domain/entities/class_submission_summary.entity.dart';
 import '../../domain/entities/exam.entity.dart';
+import '../../main.dart' show getIt;
 import '../blocs/exam_submissions/exam_submissions_bloc.dart';
 import '../blocs/exam_submissions/exam_submissions_event.dart';
 import '../blocs/exam_submissions/exam_submissions_state.dart';
@@ -35,7 +36,8 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
   void initState() {
     super.initState();
     _effectiveExamId = widget.examId ?? widget.exam?.id ?? '';
-    _bloc = ExamSubmissionsBloc(service: widget.service!)
+    final service = widget.service ?? getIt<ExamSubmissionsService>();
+    _bloc = ExamSubmissionsBloc(service: service)
       ..add(ExamSubmissionsLoadRequested(examId: _effectiveExamId));
   }
 
