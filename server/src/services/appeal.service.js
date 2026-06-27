@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const { Appeal, Submission, Exam, User } = require('../models');
 const ApiError = require('../utils/ApiError');
-const submissionService = require('./submission.service');
 const notificationService = require('./notification.service');
 const { parsePagination } = require('../utils/parsePagination');
 
@@ -174,7 +173,7 @@ class AppealService {
   }
 
   async review(id, data, reviewerId) {
-    const { decision, note, newScore, oldScore, scoreAdjustment } = data;
+    const { decision, note } = data;
 
     const appeal = await Appeal.findById(id);
     if (!appeal) {
@@ -185,55 +184,13 @@ class AppealService {
       throw new ApiError(400, 'Appeal already reviewed');
     }
 
-    if (decision === 'approved') {
-      const submission = await Submission.findById(appeal.submissionId);
-      if (!submission) {
-        throw new ApiError(404, 'Submission not found');
-      }
-
-      // Find answer by questionId
-      const answer = submission.answers.find(
-        a => a.questionId?.toString() === appeal.questionId.toString()
-      );
-      if (answer) {
-        // Score adjustment: the DIFFERENCE in score (newScore - oldScore)
-        const adjustment = scoreAdjustment !== undefined
-          ? scoreAdjustment
-          : (newScore !== undefined && oldScore !== undefined)
-            ? (newScore - oldScore)
-            : 0;
-
-        // The answer's score should be the NEW score (not the adjustment amount)
-        answer.score = newScore !== undefined ? newScore : answer.score;
-        answer.isCorrect = true; // teacher confirmed correct via approval
-
-        // Recalculate total score with the new answer score
-        submission.totalScore = submission.answers.reduce((sum, a) => sum + a.score, 0);
-        submission.finalScore = submission.totalScore;
-        submission.status = 'appealed';
-        await submission.save();
-      }
-
-      appeal.teacherResponse = {
-        reviewedBy: reviewerId,
-        reviewedAt: new Date(),
-        decision: 'approved',
-        note,
-        scoreAdjustment: (oldScore !== undefined && newScore !== undefined)
-          ? { oldScore, newScore }
-          : undefined,
-      };
-    } else {
-      // rejected
-      appeal.teacherResponse = {
-        reviewedBy: reviewerId,
-        reviewedAt: new Date(),
-        decision: 'rejected',
-        note,
-      };
-    }
-
     appeal.status = decision;
+    appeal.teacherResponse = {
+      reviewedBy: reviewerId,
+      reviewedAt: new Date(),
+      decision,
+      note,
+    };
 
     await appeal.save();
 

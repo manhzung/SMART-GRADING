@@ -150,3 +150,136 @@ describe('AppealService - create()', () => {
     });
   });
 });
+
+describe('AppealService - review()', () => {
+  let examWithTeacher;
+  let submissionWithStudent;
+  let appealSubmissionId;
+  let createdAppeal;
+
+  beforeEach(async () => {
+    // Build exam with createdBy = teacherOne._id (for notification lookup)
+    examWithTeacher = {
+      ...examPast,
+      _id: new mongoose.Types.ObjectId(),
+      createdBy: studentOne._id,
+      title: 'Math Test',
+    };
+
+    submissionWithStudent = {
+      _id: new mongoose.Types.ObjectId(),
+      examId: examWithTeacher._id,
+      versionId: new mongoose.Types.ObjectId(),
+      omrTemplateId: new mongoose.Types.ObjectId(),
+      studentId: studentOne._id,
+      studentCode: 'HS001',
+      totalScore: 8,
+      maxScore: 10,
+      finalScore: 8,
+      status: 'pending',
+      answers: [
+        {
+          position: 1,
+          questionId: questionOne._id,
+          selectedAnswer: 'A',
+          correctAnswer: 'B',
+          isCorrect: false,
+          score: 0,
+          maxScore: 1,
+        },
+      ],
+    };
+
+    await insertSchools([schoolA]);
+    await insertUsers([studentOne]);
+    await insertExams([examWithTeacher]);
+    await insertQuestions([questionOne]);
+
+    // submissionWithStudent.totalScore = 8
+    await Submission.create(submissionWithStudent);
+    appealSubmissionId = submissionWithStudent._id;
+
+    const appealData = {
+      submissionId: submissionWithStudent._id,
+      examId: examWithTeacher._id,
+      studentId: studentOne._id,
+      questionId: questionOne._id,
+      questionPosition: 1,
+      reason: 'My answer should be correct.',
+    };
+
+    createdAppeal = await appealService.create(appealData);
+  });
+
+  describe('review() approved — no score mutation', () => {
+    it('should approve appeal without modifying submission score', async () => {
+      const teacherId = new mongoose.Types.ObjectId();
+
+      // Snapshot totalScore before review
+      const beforeSubmission = await Submission.findById(appealSubmissionId);
+      const totalScoreBefore = beforeSubmission.totalScore;
+
+      const result = await appealService.review(
+        createdAppeal._id.toString(),
+        { decision: 'approved', note: 'Chấp nhận' },
+        teacherId.toString()
+      );
+
+      expect(result.status).toBe('approved');
+      expect(result.teacherResponse.decision).toBe('approved');
+      expect(result.teacherResponse.note).toBe('Chấp nhận');
+      expect(result.teacherResponse).not.toHaveProperty('scoreAdjustment');
+
+      // Submission totalScore must be unchanged
+      const afterSubmission = await Submission.findById(appealSubmissionId);
+      expect(afterSubmission.totalScore).toBe(totalScoreBefore);
+    });
+  });
+
+  describe('review() rejected — no score mutation', () => {
+    it('should reject appeal without modifying submission score', async () => {
+      const teacherId = new mongoose.Types.ObjectId();
+
+      const beforeSubmission = await Submission.findById(appealSubmissionId);
+      const totalScoreBefore = beforeSubmission.totalScore;
+
+      const result = await appealService.review(
+        createdAppeal._id.toString(),
+        { decision: 'rejected', note: 'Không đủ cơ sở' },
+        teacherId.toString()
+      );
+
+      expect(result.status).toBe('rejected');
+      expect(result.teacherResponse.decision).toBe('rejected');
+      expect(result.teacherResponse).not.toHaveProperty('scoreAdjustment');
+
+      const afterSubmission = await Submission.findById(appealSubmissionId);
+      expect(afterSubmission.totalScore).toBe(totalScoreBefore);
+    });
+  });
+
+  describe('review() on already-reviewed appeal', () => {
+    it('should throw 400 when appeal has already been reviewed', async () => {
+      const teacherId = new mongoose.Types.ObjectId();
+
+      // First review
+      await appealService.review(
+        createdAppeal._id.toString(),
+        { decision: 'approved', note: 'First review' },
+        teacherId.toString()
+      );
+
+      // Second review — must throw
+      await expect(
+        appealService.review(
+          createdAppeal._id.toString(),
+          { decision: 'rejected', note: 'Second review' },
+          teacherId.toString()
+        )
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        message: 'Appeal already reviewed',
+      });
+    });
+  });
+});

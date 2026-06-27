@@ -51,10 +51,6 @@ const appealSchema = mongoose.Schema(
         enum: ['approved', 'rejected'],
       },
       note: String,
-      scoreAdjustment: {
-        oldScore: Number,
-        newScore: Number,
-      },
     },
     studentNotified: {
       type: Boolean,
