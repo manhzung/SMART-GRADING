@@ -587,11 +587,15 @@ class SubmissionService {
       status,
       fromDate,
       toDate,
+      page: _page,
+      limit: _limit,
+      sortBy,
+      populate,
       ...rest
     } = query;
     const { page, limit, skip } = parsePagination(query);
 
-    const filter = { ...rest };
+    const filter = {};
     if (examId) filter.examId = new mongoose.Types.ObjectId(examId);
     if (studentId) filter.studentId = new mongoose.Types.ObjectId(studentId);
     if (versionId) filter.versionId = new mongoose.Types.ObjectId(versionId);
@@ -719,7 +723,7 @@ class SubmissionService {
       if (startDate) filter.createdAt.$gte = new Date(startDate);
       if (endDate) filter.createdAt.$lte = new Date(endDate + 'T23:59:59.999Z');
     }
-    const [results, total] = await Promise.all([
+    let [results, total] = await Promise.all([
       Submission.find(filter)
         .populate('examId', 'title examDate duration subjectName subjectColor')
         .sort({ createdAt: -1 })
@@ -727,6 +731,34 @@ class SubmissionService {
         .limit(limit),
       Submission.countDocuments(filter),
     ]);
+
+    // Fallback: if studentId query returns nothing, try matching by studentCode
+    // (handles submissions created via scan where studentId resolved to null)
+    if (total === 0) {
+      const user = await User.findById(studentId).select('studentCode').lean();
+      if (user?.studentCode) {
+        const fallbackFilter = {
+          studentId: null,
+          studentCode: user.studentCode,
+          ...rest,
+        };
+        if (status) fallbackFilter.status = status;
+        if (startDate || endDate) {
+          fallbackFilter.createdAt = {};
+          if (startDate) fallbackFilter.createdAt.$gte = new Date(startDate);
+          if (endDate) fallbackFilter.createdAt.$lte = new Date(endDate + 'T23:59:59.999Z');
+        }
+        [results, total] = await Promise.all([
+          Submission.find(fallbackFilter)
+            .populate('examId', 'title examDate duration subjectName subjectColor')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit),
+          Submission.countDocuments(fallbackFilter),
+        ]);
+      }
+    }
+
     return { results, page, limit, total, pages: Math.ceil(total / limit) };
   }
 
