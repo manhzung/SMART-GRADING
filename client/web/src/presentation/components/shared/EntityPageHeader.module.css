@@ -1,0 +1,16 @@
+.header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 24px 32px 16px; border-bottom: 3px solid transparent; }
+.header.admin { border-bottom-color: #7c3aed; background: linear-gradient(180deg, #f5f3ff 0%, transparent 100%); }
+.header.schoolAdmin { border-bottom-color: #0ea5e9; background: linear-gradient(180deg, #f0f9ff 0%, transparent 100%); }
+.header.teacher { border-bottom-color: #10b981; background: linear-gradient(180deg, #f0fdf4 0%, transparent 100%); }
+.titleBlock { display: flex; flex-direction: column; gap: 4px; }
+.badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 999px; width: fit-content; }
+.badge.admin { background: #ede9fe; color: #6d28d9; }
+.badge.schoolAdmin { background: #e0f2fe; color: #0369a1; }
+.badge.teacher { background: #d1fae5; color: #047857; }
+.title { font-size: 24px; font-weight: 700; margin: 4px 0 0; color: #111827; }
+.subtitle { font-size: 14px; color: #6b7280; margin: 0; }
+.actions { display: flex; gap: 8px; align-items: center; }
+.createBtn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; color: #fff; }
+.createBtn.admin { background: #7c3aed; }
+.createBtn.schoolAdmin { background: #0ea5e9; }
+.createBtn.teacher { background: #10b981; }
