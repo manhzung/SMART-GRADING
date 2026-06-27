@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_grading_mobile/domain/entities/exam.entity.dart';
 import 'package:smart_grading_mobile/presentation/pages/scan_view.dart';
 
 // Helper: tạo Submission giả
@@ -42,7 +41,7 @@ void main() {
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: _SubmissionRow(
+          body: SubmissionRow(
             submission: sub,
             statusBgColor: const Color(0xFFE6F4EA),
             statusTextColor: const Color(0xFF137333),
@@ -69,7 +68,7 @@ void main() {
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: _SubmissionRow(
+          body: SubmissionRow(
             submission: sub,
             statusBgColor: const Color(0xFFE8F0FE),
             statusTextColor: const Color(0xFF1A73E8),
@@ -96,7 +95,7 @@ void main() {
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: _SubmissionRow(
+          body: SubmissionRow(
             submission: sub,
             statusBgColor: const Color(0xFFE6F4EA),
             statusTextColor: const Color(0xFF137333),
@@ -124,7 +123,7 @@ void main() {
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: _SubmissionRow(
+          body: SubmissionRow(
             submission: sub,
             statusBgColor: const Color(0xFFE6F4EA),
             statusTextColor: const Color(0xFF137333),
@@ -149,7 +148,7 @@ void main() {
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: _SubmissionRow(
+          body: SubmissionRow(
             submission: sub,
             statusBgColor: const Color(0xFFE6F4EA),
             statusTextColor: const Color(0xFF137333),

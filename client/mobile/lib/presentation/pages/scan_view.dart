@@ -1,9 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smart_grading_mobile/domain/entities/exam.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/submission/submission_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/exam_selection_page.dart';
 import 'package:smart_grading_mobile/presentation/pages/omr_test_lab_page.dart';
+
+export 'package:smart_grading_mobile/domain/entities/exam.entity.dart' show Submission;
 
 class ScanView extends StatefulWidget {
   const ScanView({super.key});
@@ -124,64 +127,20 @@ class _ScanViewState extends State<ScanView> {
         if (state is SubmissionError) {
           debugPrint('[ScanView] SubmissionError: ${state.message}');
         }
-        List<Map<String, dynamic>> submissionsToDisplay = [];
+
+        List<Submission> submissionsToDisplay = [];
 
         if (state is SubmissionLoaded && state.submissions.isNotEmpty) {
-          submissionsToDisplay = state.submissions.map((sub) {
-            Color bg;
-            Color text;
-            IconData icon;
-            Color iconBg;
-
-            switch (sub.statusUppercase) {
-              case 'COMPLETED':
-                bg = const Color(0xFFE6F4EA);
-                text = const Color(0xFF137333);
-                icon = Icons.check_circle_outline;
-                iconBg = const Color(0xFFE6F4EA);
-                break;
-              case 'PROCESSING':
-                bg = const Color(0xFFE8F0FE);
-                text = const Color(0xFF1A73E8);
-                icon = Icons.sync;
-                iconBg = const Color(0xFFEFF6FF);
-                break;
-              case 'REVIEW':
-                bg = const Color(0xFFFEF3C7);
-                text = const Color(0xFFD97706);
-                icon = Icons.assignment_late_outlined;
-                iconBg = const Color(0xFFFEF3C7);
-                break;
-              default:
-                bg = const Color(0xFFFCE8E6);
-                text = const Color(0xFFC5221F);
-                icon = Icons.error_outline;
-                iconBg = const Color(0xFFFFF2EC);
-            }
-
-            return {
-              'name': sub.displayName,
-              'exam': sub.displayExam,
-              'time': sub.displayTime,
-              'status': sub.statusUppercase,
-              'statusBgColor': bg,
-              'statusTextColor': text,
-              'icon': icon,
-              'iconColor': text,
-              'iconBgColor': iconBg,
-            };
-          }).toList();
-        } else if (state is SubmissionLoading) {
-          submissionsToDisplay = [];
+          submissionsToDisplay = state.submissions;
         } else if (state is SubmissionError) {
           submissionsToDisplay = _mockSubmissions;
         } else {
           submissionsToDisplay = _mockSubmissions;
         }
 
-        final List<Map<String, dynamic>> filteredList = submissionsToDisplay.where((item) {
-          final String name = item['name'].toString().toLowerCase();
-          final String exam = item['exam'].toString().toLowerCase();
+        final List<Submission> filteredList = submissionsToDisplay.where((item) {
+          final String name = item.displayName.toLowerCase();
+          final String exam = (item.examTitle ?? item.examId).toLowerCase();
           final String search = _searchQuery.toLowerCase();
           return name.contains(search) || exam.contains(search);
         }).toList();
@@ -510,18 +469,52 @@ class _ScanViewState extends State<ScanView> {
                                   ),
                                 ),
                               ...filteredList.map((item) {
+                                final status = item.statusUppercase;
+                                Color statusBgColor;
+                                Color statusTextColor;
+                                IconData icon;
+                                Color iconColor;
+                                Color iconBgColor;
+
+                                switch (status) {
+                                  case 'COMPLETED':
+                                    statusBgColor = const Color(0xFFE6F4EA);
+                                    statusTextColor = const Color(0xFF137333);
+                                    icon = Icons.check_circle_outline;
+                                    iconColor = const Color(0xFF137333);
+                                    iconBgColor = const Color(0xFFE6F4EA);
+                                    break;
+                                  case 'PROCESSING':
+                                    statusBgColor = const Color(0xFFE8F0FE);
+                                    statusTextColor = const Color(0xFF1A73E8);
+                                    icon = Icons.sync;
+                                    iconColor = const Color(0xFF1A73E8);
+                                    iconBgColor = const Color(0xFFE8F0FE);
+                                    break;
+                                  case 'REVIEW':
+                                    statusBgColor = const Color(0xFFFEF3C7);
+                                    statusTextColor = const Color(0xFFD97706);
+                                    icon = Icons.assignment_late_outlined;
+                                    iconColor = const Color(0xFFD97706);
+                                    iconBgColor = const Color(0xFFFEF3C7);
+                                    break;
+                                  default:
+                                    statusBgColor = const Color(0xFFFCE8E6);
+                                    statusTextColor = const Color(0xFFC5221F);
+                                    icon = Icons.error_outline;
+                                    iconColor = const Color(0xFFC5221F);
+                                    iconBgColor = const Color(0xFFFFF2EC);
+                                }
+
                                 return Column(
                                   children: [
-                                    _SubmissionRow(
-                                      name: item['name'],
-                                      exam: item['exam'],
-                                      time: item['time'],
-                                      status: item['status'],
-                                      statusBgColor: item['statusBgColor'],
-                                      statusTextColor: item['statusTextColor'],
-                                      icon: item['icon'],
-                                      iconColor: item['iconColor'],
-                                      iconBgColor: item['iconBgColor'],
+                                    SubmissionRow(
+                                      submission: item,
+                                      statusBgColor: statusBgColor,
+                                      statusTextColor: statusTextColor,
+                                      icon: icon,
+                                      iconColor: iconColor,
+                                      iconBgColor: iconBgColor,
                                     ),
                                     const Divider(color: Color(0xFFE2E8F0), height: 1),
                                   ],
@@ -620,70 +613,72 @@ class _ScanViewState extends State<ScanView> {
     );
   }
 
-  static final List<Map<String, dynamic>> _mockSubmissions = [
-    {
-      'name': 'Elena Rodriguez',
-      'exam': 'Midterm Calculus II',
-      'time': '10:24 AM',
-      'status': 'GRADED',
-      'statusBgColor': const Color(0xFFE6F4EA),
-      'statusTextColor': const Color(0xFF137333),
-      'icon': Icons.check_circle_outline,
-      'iconColor': Color(0xFF137333),
-      'iconBgColor': const Color(0xFFE6F4EA),
-    },
-    {
-      'name': 'Marcus Chen',
-      'exam': 'Midterm Calculus II',
-      'time': '11:02 AM',
-      'status': 'PROCESSING',
-      'statusBgColor': const Color(0xFFE8F0FE),
-      'statusTextColor': const Color(0xFF1A73E8),
-      'icon': Icons.sync,
-      'iconColor': const Color(0xFF1A73E8),
-      'iconBgColor': const Color(0xFFEFF6FF),
-    },
-    {
-      'name': 'Sarah Jenkins',
-      'exam': 'Midterm Calculus II',
-      'time': '11:15 AM',
-      'status': 'ERROR',
-      'statusBgColor': const Color(0xFFFCE8E6),
-      'statusTextColor': const Color(0xFFC5221F),
-      'icon': Icons.error_outline,
-      'iconColor': const Color(0xFFC5221F),
-      'iconBgColor': const Color(0xFFFFF2EC),
-    },
-    {
-      'name': 'David Omari',
-      'exam': 'Midterm Calculus II',
-      'time': '11:30 AM',
-      'status': 'REVIEW',
-      'statusBgColor': const Color(0xFFFEF3C7),
-      'statusTextColor': const Color(0xFFD97706),
-      'icon': Icons.assignment_late_outlined,
-      'iconColor': const Color(0xFFD97706),
-      'iconBgColor': const Color(0xFFFEF3C7),
-    },
+  static final List<Submission> _mockSubmissions = [
+    Submission(
+      id: 'mock1',
+      examId: 'e1',
+      studentId: 'st1',
+      studentName: 'Elena Rodriguez',
+      studentCode: 'SV001',
+      className: 'Lop 10A',
+      examTitle: 'Midterm Calculus II',
+      status: 'graded',
+      score: 8.5,
+      maxScore: 10,
+      createdAt: DateTime(2026, 6, 28, 10, 24),
+    ),
+    Submission(
+      id: 'mock2',
+      examId: 'e1',
+      studentId: 'st2',
+      studentName: 'Marcus Chen',
+      studentCode: 'SV002',
+      className: 'Lop 10A',
+      examTitle: 'Midterm Calculus II',
+      status: 'pending',
+      score: null,
+      maxScore: 10,
+      createdAt: DateTime(2026, 6, 28, 11, 2),
+    ),
+    Submission(
+      id: 'mock3',
+      examId: 'e1',
+      studentId: 'st3',
+      studentName: 'Sarah Jenkins',
+      studentCode: 'SV003',
+      className: 'Lop 10B',
+      examTitle: 'Midterm Calculus II',
+      status: 'scanned',
+      score: 4.2,
+      maxScore: 10,
+      createdAt: DateTime(2026, 6, 28, 11, 15),
+    ),
+    Submission(
+      id: 'mock4',
+      examId: 'e1',
+      studentId: 'st4',
+      studentName: 'David Omari',
+      studentCode: 'SV004',
+      className: 'Lop 10B',
+      examTitle: 'Midterm Calculus II',
+      status: 'review',
+      score: 5.5,
+      maxScore: 10,
+      createdAt: DateTime(2026, 6, 28, 11, 30),
+    ),
   ];
 }
 
-class _SubmissionRow extends StatelessWidget {
-  final String name;
-  final String exam;
-  final String time;
-  final String status;
+class SubmissionRow extends StatelessWidget {
+  final Submission submission;
   final Color statusBgColor;
   final Color statusTextColor;
   final IconData icon;
   final Color iconColor;
   final Color iconBgColor;
 
-  const _SubmissionRow({
-    required this.name,
-    required this.exam,
-    required this.time,
-    required this.status,
+  const SubmissionRow({
+    required this.submission,
     required this.statusBgColor,
     required this.statusTextColor,
     required this.icon,
@@ -691,62 +686,99 @@ class _SubmissionRow extends StatelessWidget {
     required this.iconBgColor,
   });
 
+  String _formatScore(Submission s) {
+    if (s.score == null) return '--/--';
+    final score = s.score!.toStringAsFixed(1);
+    final max = (s.maxScore ?? 10).toStringAsFixed(0);
+    return '$score/$max';
+  }
+
+  String? _buildSubtitle() {
+    final code = submission.studentCode;
+    final cls = submission.className;
+    if (code != null && cls != null) return '$code \u2022 $cls';
+    if (code != null) return code;
+    if (cls != null) return cls;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: iconBgColor,
-              shape: BoxShape.circle,
+    final subtitle = _buildSubtitle();
+
+    return InkWell(
+      onTap: null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    submission.displayName,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  name,
+                  _formatScore(submission),
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF0F172A),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '$exam \u2022 $time',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
+                const SizedBox(height: 4),
+                Container(
+                  decoration: BoxDecoration(
+                    color: statusBgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  child: Text(
+                    submission.statusUppercase,
+                    style: TextStyle(
+                      color: statusTextColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: statusBgColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            child: Text(
-              status,
-              style: TextStyle(
-                color: statusTextColor,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
