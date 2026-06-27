@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:smart_grading_mobile/presentation/blocs/submission/submission_bloc.dart';
-import 'package:smart_grading_mobile/domain/entities/exam.entity.dart' show Submission;
 import 'package:smart_grading_mobile/presentation/pages/scan_view.dart';
 
 class MockSubmissionBloc extends Mock implements SubmissionBloc {}

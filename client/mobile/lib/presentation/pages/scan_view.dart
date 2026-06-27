@@ -638,6 +638,7 @@ class SubmissionRow extends StatelessWidget {
   final Color iconBgColor;
 
   const SubmissionRow({
+    super.key,
     required this.submission,
     required this.statusBgColor,
     required this.statusTextColor,
