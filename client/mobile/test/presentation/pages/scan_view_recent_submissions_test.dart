@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:smart_grading_mobile/presentation/blocs/submission/submission_bloc.dart';
+import 'package:smart_grading_mobile/domain/entities/exam.entity.dart' show Submission;
+import 'package:smart_grading_mobile/presentation/blocs/submission/submission_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/scan_view.dart';
+
+class MockSubmissionBloc extends Mock implements SubmissionBloc {}
 
 // Helper: tạo Submission giả
 Submission makeSubmission({
@@ -160,6 +167,74 @@ void main() {
       ));
 
       expect(find.text('Lop 11B'), findsOneWidget);
+    });
+  });
+
+  group('ScanView Recent Submissions', () {
+    testWidgets('hien thi recent submissions khi SubmissionLoaded', (tester) async {
+      final bloc = MockSubmissionBloc();
+
+      final subs = [
+        Submission(
+          id: 's1', examId: 'e1', studentId: 'st1',
+          studentName: 'Nguyen Van A', studentCode: 'SV001', className: 'Lop 10A',
+          status: 'graded', score: 8.5, maxScore: 10,
+        ),
+        Submission(
+          id: 's2', examId: 'e1', studentId: 'st2',
+          studentName: 'Tran Thi B', studentCode: 'SV002', className: 'Lop 10B',
+          status: 'pending',
+        ),
+      ];
+
+      when(() => bloc.state).thenReturn(SubmissionLoaded(submissions: subs));
+      when(() => bloc.stream).thenAnswer((_) => Stream<SubmissionState>.fromIterable([
+        SubmissionLoaded(submissions: subs),
+      ]));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<SubmissionBloc>.value(
+              value: bloc,
+              child: const ScanView(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nguyen Van A'), findsOneWidget);
+      expect(find.text('SV001 \u2022 Lop 10A'), findsOneWidget);
+      expect(find.text('8.5/10'), findsOneWidget);
+      expect(find.text('Tran Thi B'), findsOneWidget);
+      expect(find.text('--/--'), findsOneWidget);
+    });
+
+    testWidgets('hien thi error UI + nut Thu lai khi SubmissionError', (tester) async {
+      final bloc = MockSubmissionBloc();
+
+      when(() => bloc.state).thenReturn(const SubmissionError(message: 'Connection timeout'));
+      when(() => bloc.stream).thenAnswer((_) => Stream<SubmissionState>.fromIterable([
+        const SubmissionError(message: 'Connection timeout'),
+      ]));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<SubmissionBloc>.value(
+              value: bloc,
+              child: const ScanView(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Co noi dung loi
+      expect(find.textContaining('Connection timeout'), findsOneWidget);
+      // Nut "Thu lai" co trong error UI
+      expect(find.widgetWithText(TextButton, 'Thu lai'), findsOneWidget);
     });
   });
 }
