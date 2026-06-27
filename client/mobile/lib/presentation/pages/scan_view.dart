@@ -28,7 +28,8 @@ class _ScanViewState extends State<ScanView> {
 
   int _getSubmissionCount(SubmissionState state) {
     if (state is SubmissionLoaded) return state.submissions.length;
-    if (state is SubmissionError) return _mockSubmissions.length;
+    // Khi error: không đếm mock data
+    if (state is SubmissionError) return 0;
     return 0;
   }
 
@@ -132,15 +133,16 @@ class _ScanViewState extends State<ScanView> {
 
         if (state is SubmissionLoaded && state.submissions.isNotEmpty) {
           submissionsToDisplay = state.submissions;
-        } else if (state is SubmissionError) {
-          submissionsToDisplay = _mockSubmissions;
+        } else if (state is SubmissionLoading) {
+          submissionsToDisplay = [];
         } else {
-          submissionsToDisplay = _mockSubmissions;
+          // SubmissionInitial or SubmissionError: không hiển thị mock
+          submissionsToDisplay = [];
         }
 
-        final List<Submission> filteredList = submissionsToDisplay.where((item) {
-          final String name = item.displayName.toLowerCase();
-          final String exam = (item.examTitle ?? item.examId).toLowerCase();
+        final List<Submission> filteredList = submissionsToDisplay.where((sub) {
+          final String name = sub.displayName.toLowerCase();
+          final String exam = (sub.examTitle ?? sub.examId).toLowerCase();
           final String search = _searchQuery.toLowerCase();
           return name.contains(search) || exam.contains(search);
         }).toList();
@@ -434,17 +436,8 @@ class _ScanViewState extends State<ScanView> {
                                 padding: EdgeInsets.symmetric(vertical: 30),
                                 child: Center(child: CircularProgressIndicator()),
                               )
-                            else if (filteredList.isEmpty)
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 30),
-                                child: Center(
-                                  child: Text(
-                                    'No recent submissions found.',
-                                    style: TextStyle(color: Color(0xFF64748B)),
-                                  ),
-                                ),
-                              )
                             else ...[
+                              // Error UI: hien thi khi SubmissionError
                               if (state is SubmissionError)
                                 Container(
                                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -465,10 +458,31 @@ class _ScanViewState extends State<ScanView> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
+                                      const SizedBox(width: 8),
+                                      TextButton(
+                                        onPressed: () {
+                                          context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+                                        },
+                                        child: const Text(
+                                          'Thu lai',
+                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC5221F)),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ...filteredList.map((item) {
+                              // List or empty state
+                              if (filteredList.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 30),
+                                  child: Center(
+                                    child: Text(
+                                      'No recent submissions found.',
+                                      style: TextStyle(color: Color(0xFF64748B)),
+                                    ),
+                                  ),
+                                )
+                              else ...filteredList.map((item) {
                                 final status = item.statusUppercase;
                                 Color statusBgColor;
                                 Color statusTextColor;
