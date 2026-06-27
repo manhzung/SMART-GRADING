@@ -377,7 +377,17 @@ class ExamService {
   }
 
   async delete(id) {
-    const exam = await Exam.findByIdAndUpdate(id, { status: 'archived' }, { new: true });
+    // Hard delete: remove the exam and all associated child records.
+    // Returns null if the exam does not exist; otherwise returns the deleted document.
+    const exam = await Exam.findByIdAndDelete(id);
+    if (!exam) return null;
+
+    // Cascade-delete dependent records so they don't reference a non-existent exam.
+    await Promise.all([
+      ExamVersion.deleteMany({ examId: id }),
+      Submission.deleteMany({ examId: id }),
+    ]);
+
     return exam;
   }
 
