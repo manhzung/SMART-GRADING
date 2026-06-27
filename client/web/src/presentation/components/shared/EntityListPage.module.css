@@ -1,0 +1,17 @@
+.page { padding: 0 0 32px; }
+.filters { display: flex; gap: 12px; padding: 16px 32px; align-items: center; }
+.select { padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; font-size: 14px; }
+.searchWrap { position: relative; flex: 1; max-width: 400px; }
+.searchIcon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+.searchInput { width: 100%; padding: 8px 32px 8px 36px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; }
+.clearBtn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; }
+.errorBanner { margin: 0 32px 16px; padding: 12px 16px; background: #fef2f2; color: #b91c1c; border-radius: 8px; border: 1px solid #fecaca; }
+.bulkBar { display: flex; justify-content: space-between; align-items: center; margin: 0 32px 12px; padding: 10px 16px; background: #ede9fe; color: #6d28d9; border-radius: 8px; font-weight: 500; }
+.bulkDeleteBtn { padding: 6px 12px; border-radius: 6px; border: none; background: #ef4444; color: #fff; cursor: pointer; font-size: 13px; }
+.rowActions { display: flex; gap: 6px; justify-content: flex-end; }
+.iconBtn { padding: 4px 10px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; font-size: 12px; }
+.iconBtn.danger { color: #b91c1c; border-color: #fecaca; }
+.pagination { display: flex; justify-content: center; gap: 4px; padding: 20px 32px 0; }
+.pageBtn { padding: 6px 12px; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; font-size: 13px; }
+.pageBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pageBtnActive { background: #7c3aed; color: #fff; border-color: #7c3aed; }
