@@ -739,3 +739,116 @@
 }
 
 .closeModalBtn:hover { background-color: #e2e8f0; }
+
+/* Create Appeal Form */
+.createAppealBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: all 0.15s;
+}
+.createAppealBtn:hover { background-color: #dbeafe; }
+
+.createAppealForm {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.formTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b2240;
+  margin: 0 0 12px;
+}
+
+.formField {
+  margin-bottom: 12px;
+}
+
+.formLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.charCount {
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.formSelect,
+.formTextarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #334155;
+  background-color: #fff;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.formSelect:focus,
+.formTextarea:focus { border-color: #2563eb; }
+.formTextarea { resize: vertical; min-height: 80px; }
+
+.formError {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cancelBtn {
+  padding: 7px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cancelBtn:hover:not(:disabled) { background-color: #f1f5f9; }
+.cancelBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.submitBtn {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.submitBtn:hover:not(:disabled) { background-color: #1d4ed8; }
+.submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }

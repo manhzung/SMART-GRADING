@@ -32,6 +32,7 @@ export default function MyScoresPage() {
     fetchSubmissions,
     fetchSubmissionAppeals,
     clearSubmissionAppeals,
+    createAppeal,
   } = useStudentStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,6 +47,12 @@ export default function MyScoresPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [formReason, setFormReason] = useState('');
+  const [formQuestionPosition, setFormQuestionPosition] = useState<number | ''>('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedSubmission = useMemo(
     () => submissions.find((s) => s._id === selectedId) || null,
@@ -187,6 +194,47 @@ export default function MyScoresPage() {
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
+  const canCreateAppeal = selectedSubmission &&
+    selectedSubmission.answers &&
+    selectedSubmission.answers.length > 0 &&
+    ['scanned', 'manual_review', 'completed', 'appealed'].includes(selectedSubmission.status);
+
+  const handleCreateAppeal = async () => {
+    if (!formReason.trim() || formReason.length < 10) {
+      setFormError('Lý do phúc khảo phải có ít nhất 10 ký tự.');
+      return;
+    }
+    if (formQuestionPosition === '' || !selectedSubmission) {
+      setFormError('Vui lòng chọn câu cần phúc khảo.');
+      return;
+    }
+    const answer = selectedSubmission.answers?.find(a => a.position === formQuestionPosition);
+    if (!answer) {
+      setFormError('Câu hỏi không hợp lệ.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormError(null);
+    try {
+      await createAppeal({
+        submissionId: selectedSubmission._id,
+        examId: selectedSubmission.examId?._id || '',
+        questionId: answer.questionId,
+        questionPosition: formQuestionPosition as number,
+        reason: formReason.trim(),
+      });
+      await fetchSubmissionAppeals(selectedSubmission._id);
+      setShowCreateForm(false);
+      setFormReason('');
+      setFormQuestionPosition('');
+    } catch (err) {
+      setFormError((err as Error).message || 'Có lỗi xảy ra khi gửi đơn.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -563,40 +611,117 @@ export default function MyScoresPage() {
 
               {activeTab === 'appeals' && (
                 <div>
+                  {/* Create form toggle button */}
+                  {canCreateAppeal && !showCreateForm && (
+                    <button
+                      className={styles.createAppealBtn}
+                      onClick={() => setShowCreateForm(true)}
+                    >
+                      <Scale size={14} />
+                      Tạo đơn phúc khảo
+                    </button>
+                  )}
+
+                  {/* Create form */}
+                  {showCreateForm && (
+                    <div className={styles.createAppealForm}>
+                      <h4 className={styles.formTitle}>Tạo đơn phúc khảo</h4>
+
+                      <div className={styles.formField}>
+                        <label className={styles.formLabel}>
+                          Câu cần phúc khảo *
+                        </label>
+                        <select
+                          className={styles.formSelect}
+                          value={formQuestionPosition}
+                          onChange={(e) => setFormQuestionPosition(e.target.value ? Number(e.target.value) : '')}
+                        >
+                          <option value="">-- Chọn câu --</option>
+                          {selectedSubmission.answers?.map((a) => (
+                            <option key={a.questionId} value={a.position}>
+                              Câu {a.position} — {a.isCorrect ? 'Đúng ✓' : a.selectedAnswer ? 'Sai ✗' : 'Bỏ trống'}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className={styles.formField}>
+                        <label className={styles.formLabel}>
+                          Lý do phúc khảo *
+                          <span className={styles.charCount}>{formReason.length}/1000</span>
+                        </label>
+                        <textarea
+                          className={styles.formTextarea}
+                          placeholder="Mô tả lý do bạn cho rằng đáp án bị chấm sai (ít nhất 10 ký tự)..."
+                          value={formReason}
+                          onChange={(e) => {
+                            if (e.target.value.length <= 1000) setFormReason(e.target.value);
+                          }}
+                          rows={4}
+                        />
+                      </div>
+
+                      {formError && (
+                        <div className={styles.formError}>{formError}</div>
+                      )}
+
+                      <div className={styles.formActions}>
+                        <button
+                          className={styles.cancelBtn}
+                          onClick={() => {
+                            setShowCreateForm(false);
+                            setFormReason('');
+                            setFormQuestionPosition('');
+                            setFormError(null);
+                          }}
+                          disabled={isSubmitting}
+                        >
+                          Hủy
+                        </button>
+                        <button
+                          className={styles.submitBtn}
+                          onClick={handleCreateAppeal}
+                          disabled={isSubmitting || formReason.length < 10 || formQuestionPosition === ''}
+                        >
+                          {isSubmitting ? 'Đang gửi...' : 'Gửi đơn'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Appeals list */}
                   {isLoadingSubmissionAppeals ? (
                     <div className={styles.noAppeals}>Đang tải...</div>
-                  ) : submissionAppeals.length === 0 ? (
+                  ) : submissionAppeals.length === 0 && !showCreateForm ? (
                     <div className={styles.noAppeals}>Bạn chưa gửi đơn phúc khảo nào cho bài thi này.</div>
                   ) : (
-                    <div className={styles.appealsList}>
-                      {submissionAppeals.map((appeal) => {
-                        const statusDetails = getAppealStatus(appeal.status);
-                        const StatusIcon = statusDetails.icon;
-                        return (
-                          <div key={appeal._id} className={styles.appealItem}>
-                            <div className={styles.appealInfo}>
-                              <div className={styles.appealHeader}>
-                                <FileQuestion size={12} />
-                                <span className={styles.appealQuestion}>Câu {appeal.questionPosition}</span>
-                                <span className={`${styles.statusBadge} ${statusDetails.class}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
-                                  <StatusIcon size={10} />
-                                  {statusDetails.text}
-                                </span>
+                    submissionAppeals.map((appeal) => {
+                      const statusDetails = getAppealStatus(appeal.status);
+                      const StatusIcon = statusDetails.icon;
+                      return (
+                        <div key={appeal._id} className={styles.appealItem}>
+                          <div className={styles.appealInfo}>
+                            <div className={styles.appealHeader}>
+                              <FileQuestion size={12} />
+                              <span className={styles.appealQuestion}>Câu {appeal.questionPosition}</span>
+                              <span className={`${styles.statusBadge} ${statusDetails.class}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
+                                <StatusIcon size={10} />
+                                {statusDetails.text}
+                              </span>
+                            </div>
+                            <div className={styles.appealReason}>{appeal.reason}</div>
+                            {appeal.teacherResponse?.note && (
+                              <div className={styles.appealResponse}>
+                                <strong>Phản hồi:</strong> {appeal.teacherResponse.note}
                               </div>
-                              <div className={styles.appealReason}>{appeal.reason}</div>
-                              {appeal.teacherResponse?.note && (
-                                <div className={styles.appealResponse}>
-                                  <strong>Phản hồi:</strong> {appeal.teacherResponse.note}
-                                </div>
-                              )}
-                              <div className={styles.appealDate}>
-                                Gửi: {formatDate(appeal.createdAt)}
-                              </div>
+                            )}
+                            <div className={styles.appealDate}>
+                              Gửi: {formatDate(appeal.createdAt)}
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               )}
