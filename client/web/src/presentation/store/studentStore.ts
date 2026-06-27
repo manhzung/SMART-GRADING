@@ -221,12 +221,13 @@ export const useStudentStore = create<StudentState>((set) => ({
     set({ isCreatingAppeal: true });
     try {
       const response = await apiService.post<StudentExamAppeal>('/appeals', payload);
+      const newAppeal = mapAppeal(response);
       set((state) => ({
-        submissionAppeals: [response, ...state.submissionAppeals],
-        appeals: [response, ...state.appeals],
+        submissionAppeals: [newAppeal, ...state.submissionAppeals],
+        appeals: [newAppeal, ...state.appeals],
         isCreatingAppeal: false,
       }));
-      return response;
+      return newAppeal;
     } catch (error) {
       set({ isCreatingAppeal: false });
       throw error;
