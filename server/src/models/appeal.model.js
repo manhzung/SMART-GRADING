@@ -34,7 +34,6 @@ const appealSchema = mongoose.Schema(
     evidenceImageUrl: String,
     currentAnswer: String,
     expectedAnswer: String,
-    scoreAdjustment: Number,
     status: {
       type: String,
       enum: ['pending', 'under_review', 'approved', 'rejected'],
@@ -67,32 +66,6 @@ appealSchema.index({ submissionId: 1, questionId: 1 }, { unique: true });
 appealSchema.index({ status: 1 });
 appealSchema.index({ studentId: 1, status: 1 });
 appealSchema.index({ createdAt: -1 });
-
-appealSchema.methods.approve = async function (reviewerId, note, newScore, oldScore) {
-  this.status = 'approved';
-  this.teacherResponse = {
-    reviewedBy: reviewerId,
-    reviewedAt: new Date(),
-    decision: 'approved',
-    note,
-    scoreAdjustment: {
-      oldScore,
-      newScore,
-    },
-  };
-  await this.save();
-};
-
-appealSchema.methods.reject = async function (reviewerId, note) {
-  this.status = 'rejected';
-  this.teacherResponse = {
-    reviewedBy: reviewerId,
-    reviewedAt: new Date(),
-    decision: 'rejected',
-    note,
-  };
-  await this.save();
-};
 
 appealSchema.statics.findPendingAppeals = async function (examId) {
   return this.find({ examId, status: 'pending' })

@@ -20,8 +20,6 @@ const reviewAppeal = {
   body: Joi.object().keys({
     decision: Joi.string().valid('approved', 'rejected').required(),
     note: Joi.string().max(1000),
-    newScore: Joi.number().min(0),
-    oldScore: Joi.number().min(0),
   }),
 };
 
