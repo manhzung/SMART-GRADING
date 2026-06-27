@@ -20,7 +20,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
   bool _isLoading = true;
   bool _isSubmittingAppeal = false;
   Submission? _fullSubmission;
-  Map<String, dynamic>? _answerDetails;
+  List<Map<String, dynamic>>? _answerDetails;
 
   @override
   void initState() {
@@ -686,15 +686,13 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
     );
   }
 
-  Widget _buildAnswerList(Map<String, dynamic> answers) {
-    final entries = answers.entries.toList();
+  Widget _buildAnswerList(List<Map<String, dynamic>> answers) {
     return Column(
-      children: List.generate(entries.length, (index) {
-        final entry = entries[index];
-        final questionNum = entry.key;
-        final answer = entry.value;
+      children: List.generate(answers.length, (index) {
+        final answer = answers[index];
+        final questionNum = (answer['position'] ?? index + 1).toString();
         final isCorrect = answer['isCorrect'] == true;
-        final studentAnswer = answer['studentAnswer'] ?? '';
+        final studentAnswer = answer['selectedAnswer'] ?? answer['studentAnswer'] ?? '';
         final correctAnswer = answer['correctAnswer'] ?? '';
 
         return Container(
@@ -766,22 +764,24 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
     );
   }
 
-  int _getCorrectCount(Map<String, dynamic>? answers) {
+  int _getCorrectCount(List<Map<String, dynamic>>? answers) {
     if (answers == null || answers.isEmpty) return 0;
-    return answers.values.where((a) => a['isCorrect'] == true).length;
+    return answers.where((a) => a['isCorrect'] == true).length;
   }
 
-  int _getWrongCount(Map<String, dynamic>? answers) {
+  int _getWrongCount(List<Map<String, dynamic>>? answers) {
     if (answers == null || answers.isEmpty) return 0;
-    return answers.values.where((a) => a['isCorrect'] == false).length;
+    return answers.where((a) => a['isCorrect'] == false).length;
   }
 
-  int _getSkippedCount(Map<String, dynamic>? answers) {
+  int _getSkippedCount(List<Map<String, dynamic>>? answers) {
     if (answers == null || answers.isEmpty) return 0;
-    return answers.values.where((a) => a['studentAnswer'] == null || a['studentAnswer'] == '').length;
+    return answers
+        .where((a) => a['selectedAnswer'] == null || a['selectedAnswer'] == '' || a['studentAnswer'] == null || a['studentAnswer'] == '')
+        .length;
   }
 
-  int _getTotalQuestions(Map<String, dynamic>? answers) {
+  int _getTotalQuestions(List<Map<String, dynamic>>? answers) {
     if (answers == null || answers.isEmpty) return 0;
     return answers.length;
   }
