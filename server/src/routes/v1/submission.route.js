@@ -7,10 +7,6 @@ const auth = require('../../middlewares/auth');
 const router = express.Router();
 
 router
-  .route('/debug-all')
-  .get(submissionController.debugAll);
-
-router
   .route('/scan')
   .post(auth('scanSubmissions'), validate(submissionValidation.scanSubmission), submissionController.scan);
 
