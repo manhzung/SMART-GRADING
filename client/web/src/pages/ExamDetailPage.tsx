@@ -31,6 +31,7 @@ import { useExamStore } from '../presentation/store/examStore';
 import { useSubmissionStore, type BackendStudent, type BackendClass, type BackendVersion } from '../presentation/store/submissionStore';
 import { apiService } from '../core/api';
 import { mapExamDetailData } from './examPageAdapters';
+import { SubmissionDetailModal } from '../components/submission/SubmissionDetailModal';
 import styles from './ExamDetailPage.module.css';
 
 export default function ExamDetailPage() {
@@ -75,6 +76,7 @@ export default function ExamDetailPage() {
   const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [isCompileModalOpen, setIsCompileModalOpen] = useState(false);
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+  const [submissionModalId, setSubmissionModalId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -1013,7 +1015,11 @@ export default function ExamDetailPage() {
                           </span>
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <button className={styles.actionIconButton} title="Xem chi tiết">
+                          <button
+                            className={styles.actionIconButton}
+                            title="Xem chi tiết"
+                            onClick={() => sub._id && setSubmissionModalId(sub._id)}
+                          >
                             <FileText size={14} />
                           </button>
                         </td>
@@ -1054,6 +1060,16 @@ export default function ExamDetailPage() {
           isGenerating={isGeneratingVersions}
         />
       )}
+
+      {/* ── Submission Detail Modal ── */}
+      <SubmissionDetailModal
+        open={!!submissionModalId}
+        submissionId={submissionModalId ?? undefined}
+        onClose={() => setSubmissionModalId(null)}
+        onSaved={() => {
+          if (id) fetchByExam(id);
+        }}
+      />
     </div>
   );
 }
