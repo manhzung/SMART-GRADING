@@ -34,7 +34,9 @@ class SubmissionService {
       ApiConstants.submissions,
       queryParameters: queryParams,
       parser: (data) {
-        debugPrint('[SubmissionService] RAW RESPONSE KEYS: ${data is Map ? (data as Map).keys.toList() : data.runtimeType}');
+        debugPrint('[SubmissionService] RAW RESPONSE TYPE: ${data.runtimeType}');
+        debugPrint('[SubmissionService] RAW RESPONSE KEYS: ${data is Map ? data.keys.toList() : 'N/A'}');
+        debugPrint('[SubmissionService] FULL RAW: $data');
         if (data is Map<String, dynamic>) {
           final results = data['results'] as List<dynamic>?;
           debugPrint('[SubmissionService] results count: ${results?.length ?? 0}, total: ${data['total']}, page: ${data['page']}, pages: ${data['pages']}');
