@@ -6,8 +6,10 @@ import 'submission_detail_page.dart';
 
 class SubmissionsPage extends StatefulWidget {
   final Exam? exam;
+  final String? examId;
+  final String? initialClassId;
 
-  const SubmissionsPage({super.key, this.exam});
+  const SubmissionsPage({super.key, this.exam, this.examId, this.initialClassId});
 
   @override
   State<SubmissionsPage> createState() => _SubmissionsPageState();
