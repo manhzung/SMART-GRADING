@@ -43,6 +43,43 @@ class SubmissionService {
   }
 
   /**
+   * Create submission from mobile scanner result.
+   * This is a simplified wrapper for AMC exams where mobile has already graded.
+   */
+  async create(data, userId, auditContext = {}) {
+    let { examId, classId, versionCode, studentCode, answers,
+      totalScore, maxScore, originalUrl, originalPublicId,
+      annotatedUrl, annotatedPublicId, deviceInfo } = data;
+
+    // Normalize: answers might be a JSON-encoded string
+    if (typeof answers === 'string') {
+      try {
+        answers = JSON.parse(answers);
+      } catch {
+        // Not JSON — leave as-is
+      }
+    }
+
+    // Validate required fields
+    if (!examId) {
+      throw new ApiError(400, 'examId is required');
+    }
+    if (!answers || typeof answers !== 'object') {
+      throw new ApiError(400, 'answers is required');
+    }
+
+    // Use scanOmrSheet which handles AMC path internally
+    return this.scanOmrSheet({
+      examId, classId,
+      originalUrl, originalPublicId,
+      annotatedUrl, annotatedPublicId,
+      versionCode, studentCode,
+      answers, totalScore, maxScore,
+      deviceInfo
+    });
+  }
+
+  /**
    * Scan an OMR sheet.
    *
    * AMC exam (paperEngine === 'amc'):
@@ -55,7 +92,8 @@ class SubmissionService {
    *   Backend uses pythonBridge to scan + grade server-side.
    */
   async scanOmrSheet(data) {
-    const { examId, classId, originalUrl, originalPublicId, imageMeta, image, deviceInfo,
+    const { examId, classId, originalUrl, originalPublicId,
+      annotatedUrl, annotatedPublicId, imageMeta, image, deviceInfo,
       versionCode: clientVersionCode, studentCode: clientStudentCode,
       answers: clientAnswers, totalScore: clientTotalScore,
       maxScore: clientMaxScore
@@ -185,7 +223,8 @@ class SubmissionService {
     const { examId, classId, versionCode: clientVersionCode,
       studentCode: clientStudentCode, answers: clientAnswers,
       totalScore: clientTotalScore, maxScore: clientMaxScore,
-      originalUrl, originalPublicId, deviceInfo } = data;
+      originalUrl, originalPublicId, annotatedUrl, annotatedPublicId,
+      deviceInfo } = data;
 
     if (!clientAnswers || typeof clientAnswers !== 'object') {
       throw new ApiError(400, 'AMC exam requires pre-graded answers from mobile scanner');
@@ -208,11 +247,16 @@ class SubmissionService {
     const answerKey = versionId ? await this._getAnswerKey(versionId) : {};
 
     // ── Build graded answers from mobile payload ───────────────────────
-    const gradedAnswers = Object.entries(clientAnswers).map(([posStr, selected]) => {
+    const gradedAnswers = Object.entries(clientAnswers).map(([key, selected]) => {
+      // Key format: "q1", "q2", etc. Extract position number
+      const posStr = key.replace(/^q/i, '');
       const pos = parseInt(posStr, 10);
+      if (isNaN(pos)) return null;
+      
       const selectedAnswer = selected || null;
       const correct = answerKey[pos] || null;
-      const isCorrect = selectedAnswer !== null && selectedAnswer === correct;
+      // isCorrect can only be true if we have both selected and correct answer
+      const isCorrect = selectedAnswer !== null && correct !== null && selectedAnswer === correct;
       const scorePerQuestion = exam.totalScore / exam.numberOfQuestions;
       return {
         position: pos,
@@ -221,9 +265,10 @@ class SubmissionService {
         correctAnswer: correct,
         isCorrect,
         score: isCorrect ? scorePerQuestion : 0,
+        maxScore: scorePerQuestion,
         omrData: null,
       };
-    });
+    }).filter(Boolean);
 
     // Sort by position
     gradedAnswers.sort((a, b) => a.position - b.position);
@@ -235,6 +280,7 @@ class SubmissionService {
     const submission = await this._upsertSubmission({
       exam, examId, versionId, studentId, studentCode: clientStudentCode,
       classId, gradedAnswers, originalUrl, originalPublicId,
+      annotatedUrl, annotatedPublicId,
       deviceInfo, scanMeta: {},
     });
 
@@ -321,6 +367,7 @@ class SubmissionService {
    */
   async _upsertSubmission({ exam, examId, versionId, studentId, studentCode,
     classId, gradedAnswers, originalUrl, originalPublicId,
+    annotatedUrl, annotatedPublicId,
     deviceInfo, scanMeta }) {
     const existingFilter = studentId
       ? { examId: new mongoose.Types.ObjectId(examId), studentId }
@@ -336,10 +383,11 @@ class SubmissionService {
       existing.finalScore = totalScore;
       existing.status = 'scanned';
       existing.versionId = versionId || existing.versionId;
-      if (originalUrl) {
+      if (originalUrl || annotatedUrl) {
         existing.images = {
           ...existing.images,
-          original: { publicId: originalPublicId, url: originalUrl },
+          ...(originalUrl ? { original: { publicId: originalPublicId, url: originalUrl } } : {}),
+          ...(annotatedUrl ? { annotated: { publicId: annotatedPublicId, url: annotatedUrl } } : {}),
         };
       }
       existing.scanMetadata = {
@@ -353,6 +401,10 @@ class SubmissionService {
       return existing;
     }
 
+    const imagesObj = {};
+    if (originalUrl) imagesObj.original = { publicId: originalPublicId, url: originalUrl };
+    if (annotatedUrl) imagesObj.annotated = { publicId: annotatedPublicId, url: annotatedUrl };
+
     const submission = new Submission({
       examId,
       versionId: versionId || undefined,
@@ -365,9 +417,7 @@ class SubmissionService {
       maxScore: exam.totalScore,
       finalScore: totalScore,
       status: 'scanned',
-      images: originalUrl ? {
-        original: { publicId: originalPublicId, url: originalUrl },
-      } : undefined,
+      images: Object.keys(imagesObj).length > 0 ? imagesObj : undefined,
       scanMetadata: {
         deviceInfo: deviceInfo || null,
         scannedAt: new Date(),
@@ -482,6 +532,7 @@ class SubmissionService {
         .populate('examId', 'title examDate duration')
         .populate('versionId', 'versionCode')
         .populate('studentId', 'name email studentCode')
+        .populate('classId', 'name')
         .sort({ createdAt: -1 }),
       Submission.countDocuments({ examId: new mongoose.Types.ObjectId(examId) }),
     ]);
@@ -502,9 +553,9 @@ class SubmissionService {
     const { page, limit, skip } = parsePagination(query);
 
     const filter = { ...rest };
-    if (examId) filter.examId = examId;
-    if (studentId) filter.studentId = studentId;
-    if (versionId) filter.versionId = versionId;
+    if (examId) filter.examId = new mongoose.Types.ObjectId(examId);
+    if (studentId) filter.studentId = new mongoose.Types.ObjectId(studentId);
+    if (versionId) filter.versionId = new mongoose.Types.ObjectId(versionId);
     if (status) filter.status = status;
     if (fromDate || toDate) {
       filter.createdAt = {};
@@ -515,6 +566,9 @@ class SubmissionService {
     const [results, total] = await Promise.all([
       Submission.find(filter)
         .populate('examId', 'title examDate')
+        .populate('versionId', 'versionCode')
+        .populate('studentId', 'name email studentCode')
+        .populate('classId', 'name')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
