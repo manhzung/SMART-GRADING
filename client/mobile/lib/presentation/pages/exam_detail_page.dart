@@ -516,7 +516,11 @@ Diem: ${exam.totalScore}
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => SubmissionsPage(exam: displayExam, examId: displayExam.id),
+                          builder: (context) => SubmissionsPage(
+                            exam: displayExam,
+                            examId: displayExam.id,
+                            service: _examSubmissionsService,
+                          ),
                         ),
                       );
                     },
