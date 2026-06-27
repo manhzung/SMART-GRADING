@@ -39,13 +39,37 @@ const getById = catchAsync(async (req, res) => {
 });
 
 const getAll = catchAsync(async (req, res) => {
+  console.log('[SubmissionController] getAll called with query:', JSON.stringify(req.query));
+  console.log('[SubmissionController] user:', req.user?.id, req.user?.role);
   const result = await submissionService.getAll(req.query);
+  console.log('[SubmissionController] getAll result:', {
+    total: result.total,
+    resultsCount: result.results?.length,
+    page: result.page,
+    pages: result.pages,
+  });
   res.send(result);
+});
+
+const debugAll = catchAsync(async (req, res) => {
+  // Debug endpoint - get all submissions regardless of filter
+  console.log('[SubmissionController] debugAll called');
+  const Submission = require('../models/submission.model');
+  const total = await Submission.countDocuments({});
+  const results = await Submission.find({}).limit(10).lean();
+  console.log('[SubmissionController] debugAll total in DB:', total);
+  res.send({ total, results, message: 'Debug endpoint - no auth filter' });
 });
 
 const getByExam = catchAsync(async (req, res) => {
   const { examId, id } = req.params;
   const result = await submissionService.getByExam(examId || id, req.query);
+  res.send(result);
+});
+
+const getByExamGroupedByClass = catchAsync(async (req, res) => {
+  const { examId } = req.params;
+  const result = await submissionService.getExamSubmissionsByClass(examId, req.query);
   res.send(result);
 });
 
@@ -97,11 +121,18 @@ const deleteImage = catchAsync(async (req, res) => {
   res.send(submission);
 });
 
+const create = catchAsync(async (req, res) => {
+  const auditContext = { ip: req.ip, userAgent: req.headers['user-agent'] };
+  const submission = await submissionService.create(req.body, req.user?.id, auditContext);
+  res.status(httpStatus.CREATED).send(submission);
+});
+
 module.exports = {
   scan,
   getById,
   getAll,
   getByExam,
+  getByExamGroupedByClass,
   getByStudent,
   getMy,
   manualOverride,
@@ -110,4 +141,6 @@ module.exports = {
   remove,
   attachImage,
   deleteImage,
+  create,
+  debugAll,
 };

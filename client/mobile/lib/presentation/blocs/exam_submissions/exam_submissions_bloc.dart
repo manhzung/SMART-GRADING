@@ -1,0 +1,98 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/network/exam_submissions_service.dart';
+import 'exam_submissions_event.dart';
+import 'exam_submissions_state.dart';
+
+class ExamSubmissionsBloc extends Bloc<ExamSubmissionsEvent, ExamSubmissionsState> {
+  final ExamSubmissionsService service;
+
+  ExamSubmissionsBloc({required this.service}) : super(const ExamSubmissionsInitial()) {
+    on<ExamSubmissionsLoadRequested>(_onLoad);
+    on<ExamSubmissionsRefreshRequested>(_onRefresh);
+    on<ExamSubmissionsFilterChanged>(_onFilterChanged);
+    on<ExamSubmissionsSearchChanged>(_onSearchChanged);
+    on<ExamSubmissionClassToggled>(_onClassToggled);
+  }
+
+  Future<void> _onLoad(
+    ExamSubmissionsLoadRequested event,
+    Emitter<ExamSubmissionsState> emit,
+  ) async {
+    // ignore: avoid_print
+    print('[ExamSubmissionsBloc] Loading submissions for examId=${event.examId}');
+    emit(const ExamSubmissionsLoading());
+    try {
+      final byClass = await service.getExamSubmissionsByClass(event.examId);
+      // ignore: avoid_print
+      print('[ExamSubmissionsBloc] Loaded ${byClass.length} classes');
+      final expandedIds = <String>{
+        for (final entry in byClass.entries)
+          if (entry.value.submissions.isNotEmpty) entry.key,
+      };
+      emit(ExamSubmissionsLoaded(
+        byClass: byClass,
+        expandedClassIds: expandedIds,
+      ));
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('[ExamSubmissionsBloc] ERROR: $e\n$st');
+      emit(ExamSubmissionsError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onRefresh(
+    ExamSubmissionsRefreshRequested event,
+    Emitter<ExamSubmissionsState> emit,
+  ) async {
+    emit(const ExamSubmissionsLoading());
+    try {
+      final byClass = await service.getExamSubmissionsByClass(event.examId);
+      final expandedIds = <String>{
+        for (final entry in byClass.entries)
+          if (entry.value.submissions.isNotEmpty) entry.key,
+      };
+      emit(ExamSubmissionsLoaded(
+        byClass: byClass,
+        expandedClassIds: expandedIds,
+      ));
+    } catch (e) {
+      emit(ExamSubmissionsError(message: e.toString()));
+    }
+  }
+
+  void _onFilterChanged(
+    ExamSubmissionsFilterChanged event,
+    Emitter<ExamSubmissionsState> emit,
+  ) {
+    final s = state;
+    if (s is ExamSubmissionsLoaded) {
+      emit(s.copyWith(filter: event.filter));
+    }
+  }
+
+  void _onSearchChanged(
+    ExamSubmissionsSearchChanged event,
+    Emitter<ExamSubmissionsState> emit,
+  ) {
+    final s = state;
+    if (s is ExamSubmissionsLoaded) {
+      emit(s.copyWith(searchQuery: event.query));
+    }
+  }
+
+  void _onClassToggled(
+    ExamSubmissionClassToggled event,
+    Emitter<ExamSubmissionsState> emit,
+  ) {
+    final s = state;
+    if (s is ExamSubmissionsLoaded) {
+      final newSet = Set<String>.from(s.expandedClassIds);
+      if (newSet.contains(event.classId)) {
+        newSet.remove(event.classId);
+      } else {
+        newSet.add(event.classId);
+      }
+      emit(s.copyWith(expandedClassIds: newSet));
+    }
+  }
+}

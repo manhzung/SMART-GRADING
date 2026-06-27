@@ -1,6 +1,7 @@
 import '../../domain/entities/exam.entity.dart';
 import '../constants/app_constants.dart';
 import 'api_client.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 class ExamService {
   ExamService({required ApiClient apiClient}) : _apiClient = apiClient;
@@ -160,6 +161,14 @@ class ExamService {
       data: {'count': count},
     );
   }
+
+  Future<ExamVersionAnswerKey> getVersionAnswerKey(String examId, String versionCode) {
+    debugPrint('[ExamService] getVersionAnswerKey: examId=$examId, versionCode=$versionCode');
+    return _apiClient.get<ExamVersionAnswerKey>(
+      '${ApiConstants.exams}/$examId/versions/$versionCode/answer-key',
+      parser: (data) => ExamVersionAnswerKey.fromJson(data as Map<String, dynamic>),
+    );
+  }
 }
 
 class PaginatedExams {
@@ -281,6 +290,30 @@ class Question {
       imageUrl: json['imageUrl']?.toString(),
       score: (json['score'] as num?)?.toInt() ??
           (json['points'] as num?)?.toInt() ?? 5,
+    );
+  }
+}
+
+class ExamVersionAnswerKey {
+  final String versionCode;
+  final Map<String, String> answerKey;
+  final int numberOfQuestions;
+
+  ExamVersionAnswerKey({
+    required this.versionCode,
+    required this.answerKey,
+    required this.numberOfQuestions,
+  });
+
+  factory ExamVersionAnswerKey.fromJson(Map<String, dynamic> json) {
+    debugPrint('[ExamVersionAnswerKey] fromJson: $json');
+    final keyRaw = json['answerKey'] as Map<String, dynamic>? ?? {};
+    final key = keyRaw.map((k, v) => MapEntry(k, v.toString()));
+    debugPrint('[ExamVersionAnswerKey] Parsed answerKey: $key');
+    return ExamVersionAnswerKey(
+      versionCode: (json['versionCode'] ?? '').toString(),
+      answerKey: key,
+      numberOfQuestions: (json['numberOfQuestions'] as num?)?.toInt() ?? 0,
     );
   }
 }

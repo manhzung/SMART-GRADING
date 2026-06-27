@@ -18,6 +18,10 @@ class ExamTemplateService {
       '/exams/$examId/template',
       queryParameters: queryParams,
     );
-    return response as Map<String, dynamic>;
+    // Response is the full data already from _apiClient.get
+    if (response is Map<String, dynamic>) {
+      return response;
+    }
+    throw Exception('Invalid template response format');
   }
 }

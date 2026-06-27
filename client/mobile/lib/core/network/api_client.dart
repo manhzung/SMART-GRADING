@@ -59,6 +59,8 @@ class ApiClient {
     _token = token;
   }
 
+  String? getToken() => _token;
+
   Future<String?> _getRefreshToken() async {
     const storage = FlutterSecureStorage();
     try {

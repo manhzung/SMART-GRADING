@@ -666,7 +666,11 @@ class OMRTemplate {
   /// Parses the server's `answers` map into FieldBlocks.
   ///
   /// Server format: { "q1": { "A": {x,y,w,h}, "B": {...}, ... }, "q2": {...} }
-  /// Internal format: FieldBlocks grouped by row (same Y coordinate).
+  /// Internal format: FieldBlocks grouped by column (same X for AMC) or row (same Y for hardcoded).
+  ///
+  /// Auto-detects layout type:
+  /// - AMC: options spread horizontally (A→B→C→D along X), questions stack vertically (along Y in same column)
+  /// - Hardcoded: options spread vertically (A→B→C→D along Y), questions spread horizontally (along X in same row)
   ///
   /// Returns (fieldBlocks, outputColumns) tuple.
   static (List<FieldBlock>, List<String>) _parseAnswersToFieldBlocks(
@@ -678,7 +682,7 @@ class OMRTemplate {
       return ([], []);
     }
 
-    // Collect all question keys and their first bubble position for grouping
+    // Collect all question keys and their bubble positions
     final questionInfo = <_QuestionLayoutInfo>[];
     final optionKeys = ['A', 'B', 'C', 'D', 'E'];
 
@@ -691,31 +695,40 @@ class OMRTemplate {
 
       if (options.isEmpty) continue;
 
-      // Find first option to get position info
-      String? firstOption;
-      int? firstX;
-      int? firstY;
-
+      // Collect all option positions
+      final optionPositions = <String, _Point>{};
       for (final optKey in optionKeys) {
         if (options.containsKey(optKey)) {
           final optRaw = options[optKey];
           final Map<String, dynamic> opt = optRaw is Map
               ? Map<String, dynamic>.from(optRaw)
               : <String, dynamic>{};
-          firstOption = optKey;
-          firstX = (opt['x'] as num?)?.toInt();
-          firstY = (opt['y'] as num?)?.toInt();
-          break;
+          final x = (opt['x'] as num?)?.toInt() ?? 0;
+          final y = (opt['y'] as num?)?.toInt() ?? 0;
+          optionPositions[optKey] = _Point(x, y);
         }
       }
 
-      if (firstX != null && firstY != null) {
+      if (optionPositions.isNotEmpty) {
+        // Find first option for basic info
+        String? firstOption;
+        int? firstX;
+        int? firstY;
+        for (final optKey in optionKeys) {
+          if (optionPositions.containsKey(optKey)) {
+            firstOption = optKey;
+            firstX = optionPositions[optKey]!.x;
+            firstY = optionPositions[optKey]!.y;
+            break;
+          }
+        }
+
         questionInfo.add(_QuestionLayoutInfo(
           key: qKey,
           firstOption: firstOption ?? 'A',
-          firstX: firstX,
-          firstY: firstY,
-          options: options,
+          firstX: firstX ?? 0,
+          firstY: firstY ?? 0,
+          options: optionPositions,
         ));
       }
     }
@@ -724,63 +737,50 @@ class OMRTemplate {
       return ([], []);
     }
 
-    // Sort by Y then X to process in layout order
-    questionInfo.sort((a, b) {
-      final yCompare = a.firstY.compareTo(b.firstY);
-      if (yCompare != 0) return yCompare;
-      return a.firstX.compareTo(b.firstX);
-    });
-
-    // Group questions into rows by Y coordinate (with tolerance)
-    final rows = <_QuestionRow>[];
-    const yTolerance = 20; // px tolerance for same row
-
-    for (final qInfo in questionInfo) {
-      // Find existing row or create new one
-      _QuestionRow? targetRow;
-      for (final row in rows) {
-        if ((qInfo.firstY - row.baseY).abs() <= yTolerance) {
-          targetRow = row;
-          break;
-        }
-      }
-
-      if (targetRow == null) {
-        targetRow = _QuestionRow(baseY: qInfo.firstY);
-        rows.add(targetRow);
-      }
-      targetRow.questions.add(qInfo);
+    // Auto-detect layout type by analyzing first few questions
+    final layoutType = _detectLayoutType(questionInfo);
+    
+    List<_QuestionColumn> groups;
+    if (layoutType == _LayoutType.amc) {
+      // AMC: Group by X (columns), sort by Y within each column
+      groups = _groupByColumn(questionInfo);
+    } else {
+      // Hardcoded: Group by Y (rows), sort by X within each row
+      groups = _groupByRow(questionInfo);
     }
 
-    // Build field blocks from rows
+    // Build field blocks from groups
     final fieldBlocks = <FieldBlock>[];
     final outputColumns = <String>[];
 
-    for (int rowIdx = 0; rowIdx < rows.length; rowIdx++) {
-      final row = rows[rowIdx];
-      // Sort questions in row by X
-      row.questions.sort((a, b) => a.firstX.compareTo(b.firstX));
+    for (int groupIdx = 0; groupIdx < groups.length; groupIdx++) {
+      final group = groups[groupIdx];
+      
+      // Sort questions in group
+      group.questions.sort((a, b) {
+        if (layoutType == _LayoutType.amc) {
+          // AMC: sort by Y (top to bottom)
+          return a.firstY.compareTo(b.firstY);
+        } else {
+          // Hardcoded: sort by X (left to right)
+          return a.firstX.compareTo(b.firstX);
+        }
+      });
 
-      final fieldLabels = row.questions.map((q) => q.key).toList();
+      final fieldLabels = group.questions.map((q) => q.key).toList();
       outputColumns.addAll(fieldLabels);
 
-      // Build traverseBubbles for this block
-      // direction=vertical: options stacked vertically, questions spread horizontally
+      // Build traverseBubbles
       final traverseBubbles = <List<Bubble>>[];
 
-      for (final qInfo in row.questions) {
+      for (final qInfo in group.questions) {
         final bubbles = <Bubble>[];
         for (final optKey in optionKeys) {
           if (qInfo.options.containsKey(optKey)) {
-            final optRaw = qInfo.options[optKey];
-            final Map<String, dynamic> opt = optRaw is Map
-                ? Map<String, dynamic>.from(optRaw)
-                : <String, dynamic>{};
-            final bx = (opt['x'] as num?)?.toInt() ?? 0;
-            final by = (opt['y'] as num?)?.toInt() ?? 0;
+            final pt = qInfo.options[optKey]!;
             bubbles.add(Bubble(
-              x: bx,
-              y: by,
+              x: pt.x,
+              y: pt.y,
               fieldLabel: qInfo.key,
               fieldValue: optKey,
             ));
@@ -791,21 +791,57 @@ class OMRTemplate {
         }
       }
 
-      // Calculate origin as the top-left bubble position
-      int originX = row.questions.first.firstX;
-      int originY = row.questions.first.firstY;
+      // Calculate origin and gaps based on layout type
+      int originX;
+      int originY;
+      int bubblesGap;
+      int labelsGap;
+      FieldDirection direction;
 
-      // Calculate gaps from first question's bubbles
-      int bubblesGap = 0;
-      if (traverseBubbles.isNotEmpty && traverseBubbles[0].length >= 2) {
-        bubblesGap = traverseBubbles[0][1].y - traverseBubbles[0][0].y;
-        if (bubblesGap == 0) bubblesGap = globalBubbleHeight + 5;
-      }
+      if (layoutType == _LayoutType.amc) {
+        // AMC: options spread horizontally, questions stack vertically
+        originX = group.questions.first.firstX;
+        originY = group.questions.first.firstY;
 
-      int labelsGap = 0;
-      if (row.questions.length >= 2) {
-        labelsGap = row.questions[1].firstX - row.questions[0].firstX;
-        if (labelsGap == 0) labelsGap = globalBubbleWidth + 5;
+        // bubblesGap = horizontal spacing between A,B,C,D
+        if (traverseBubbles.isNotEmpty && traverseBubbles[0].length >= 2) {
+          bubblesGap = traverseBubbles[0][1].x - traverseBubbles[0][0].x;
+          if (bubblesGap <= 0) bubblesGap = globalBubbleWidth + 5;
+        } else {
+          bubblesGap = globalBubbleWidth + 5;
+        }
+
+        // labelsGap = vertical spacing between questions in same column
+        if (group.questions.length >= 2) {
+          labelsGap = group.questions[1].firstY - group.questions[0].firstY;
+          if (labelsGap <= 0) labelsGap = globalBubbleHeight + 5;
+        } else {
+          labelsGap = globalBubbleHeight + 5;
+        }
+
+        direction = FieldDirection.horizontal;
+      } else {
+        // Hardcoded: options spread vertically, questions spread horizontally
+        originX = group.questions.first.firstX;
+        originY = group.questions.first.firstY;
+
+        // bubblesGap = vertical spacing between A,B,C,D
+        if (traverseBubbles.isNotEmpty && traverseBubbles[0].length >= 2) {
+          bubblesGap = traverseBubbles[0][1].y - traverseBubbles[0][0].y;
+          if (bubblesGap <= 0) bubblesGap = globalBubbleHeight + 5;
+        } else {
+          bubblesGap = globalBubbleHeight + 5;
+        }
+
+        // labelsGap = horizontal spacing between questions in same row
+        if (group.questions.length >= 2) {
+          labelsGap = group.questions[1].firstX - group.questions[0].firstX;
+          if (labelsGap <= 0) labelsGap = globalBubbleWidth + 5;
+        } else {
+          labelsGap = globalBubbleWidth + 5;
+        }
+
+        direction = FieldDirection.vertical;
       }
 
       // Determine field type from number of options
@@ -816,7 +852,7 @@ class OMRTemplate {
       };
 
       fieldBlocks.add(FieldBlock(
-        name: 'MCQBlock${rowIdx + 1}',
+        name: 'MCQBlock${groupIdx + 1}',
         originX: originX,
         originY: originY,
         blockWidth: 0, // Will be computed
@@ -825,7 +861,7 @@ class OMRTemplate {
         bubbleHeight: globalBubbleHeight,
         bubblesGap: bubblesGap,
         labelsGap: labelsGap,
-        direction: FieldDirection.vertical,
+        direction: direction,
         fieldType: fieldType,
         fieldLabels: fieldLabels,
         bubbleValues: fieldType.defaultBubbleValues.sublist(0, numOptions),
@@ -836,6 +872,117 @@ class OMRTemplate {
 
     return (fieldBlocks, outputColumns);
   }
+
+  /// Auto-detect if this is AMC layout or hardcoded layout
+  static _LayoutType _detectLayoutType(List<_QuestionLayoutInfo> questions) {
+    if (questions.length < 2) return _LayoutType.hardcoded;
+
+    // Get first 2 questions
+    final q1 = questions[0];
+    final q2 = questions.length > 1 ? questions[1] : null;
+
+    if (q2 == null) {
+      // Only 1 question, check if options spread horizontally or vertically
+      if (q1.options.length >= 2) {
+        final opts = q1.options.entries.toList();
+        final dx = (opts[1].value.x - opts[0].value.x).abs();
+        final dy = (opts[1].value.y - opts[0].value.y).abs();
+        return dx > dy ? _LayoutType.amc : _LayoutType.hardcoded;
+      }
+      return _LayoutType.hardcoded;
+    }
+
+    // Compare positioning of q1 vs q2
+    // If q1 and q2 have same X but different Y → AMC (vertical stack in column)
+    // If q1 and q2 have same Y but different X → Hardcoded (horizontal row)
+    final dX = (q2.firstX - q1.firstX).abs();
+    final dY = (q2.firstY - q1.firstY).abs();
+
+    // If X difference is much larger than Y difference → Hardcoded (spread horizontally)
+    // If Y difference is much larger than X difference → AMC (spread vertically)
+    if (dX > dY * 2) {
+      return _LayoutType.hardcoded;
+    } else if (dY > dX * 2) {
+      return _LayoutType.amc;
+    }
+
+    // Ambiguous, check options spread
+    if (q1.options.length >= 2) {
+      final opts = q1.options.entries.toList();
+      final dx = (opts[1].value.x - opts[0].value.x).abs();
+      final dy = (opts[1].value.y - opts[0].value.y).abs();
+      return dx > dy ? _LayoutType.amc : _LayoutType.hardcoded;
+    }
+
+    return _LayoutType.hardcoded;
+  }
+
+  /// Group questions by column (for AMC layout: same X ± tolerance)
+  static List<_QuestionColumn> _groupByColumn(List<_QuestionLayoutInfo> questions) {
+    final columns = <_QuestionColumn>[];
+    const xTolerance = 50; // px tolerance for same column
+
+    for (final qInfo in questions) {
+      // Find existing column or create new one
+      _QuestionColumn? targetCol;
+      for (final col in columns) {
+        if ((qInfo.firstX - col.baseX).abs() <= xTolerance) {
+          targetCol = col;
+          break;
+        }
+      }
+
+      if (targetCol == null) {
+        targetCol = _QuestionColumn(baseX: qInfo.firstX);
+        columns.add(targetCol);
+      }
+      targetCol.questions.add(qInfo);
+    }
+
+    // Sort columns by X (left to right)
+    columns.sort((a, b) => a.baseX.compareTo(b.baseX));
+    return columns;
+  }
+
+  /// Group questions by row (for hardcoded layout: same Y ± tolerance)
+  static List<_QuestionColumn> _groupByRow(List<_QuestionLayoutInfo> questions) {
+    final rows = <_QuestionColumn>[];
+    const yTolerance = 70; // px tolerance for same row (AMC spacing ~68px)
+
+    for (final qInfo in questions) {
+      // Find existing row or create new one
+      _QuestionColumn? targetRow;
+      for (final row in rows) {
+        if ((qInfo.firstY - row.baseY).abs() <= yTolerance) {
+          targetRow = row;
+          break;
+        }
+      }
+
+      if (targetRow == null) {
+        targetRow = _QuestionColumn(baseY: qInfo.firstY);
+        rows.add(targetRow);
+      }
+      targetRow.questions.add(qInfo);
+    }
+
+    // Sort rows by Y (top to bottom)
+    rows.sort((a, b) => a.baseY.compareTo(b.baseY));
+    return rows;
+  }
+}
+
+/// Layout type enumeration
+enum _LayoutType {
+  amc,      // Options spread horizontally, questions stack vertically
+  hardcoded // Options spread vertically, questions spread horizontally
+}
+
+/// Simple 2D point
+class _Point {
+  final int x;
+  final int y;
+  const _Point(this.x, this.y);
 }
 
 /// Helper class for parsing question layout
@@ -844,7 +991,7 @@ class _QuestionLayoutInfo {
   final String firstOption;
   final int firstX;
   final int firstY;
-  final Map<String, dynamic> options;
+  final Map<String, _Point> options; // Changed from Map<String, dynamic>
 
   _QuestionLayoutInfo({
     required this.key,
@@ -855,12 +1002,16 @@ class _QuestionLayoutInfo {
   });
 }
 
-/// Helper class for grouping questions by row
-class _QuestionRow {
-  final int baseY;
+/// Helper class for grouping questions by column or row
+class _QuestionColumn {
+  final int baseX; // For column grouping (AMC)
+  final int baseY; // For row grouping (hardcoded)
   final List<_QuestionLayoutInfo> questions;
 
-  _QuestionRow({required this.baseY}) : questions = [];
+  _QuestionColumn({int? baseX, int? baseY})
+      : baseX = baseX ?? 0,
+        baseY = baseY ?? 0,
+        questions = [];
 }
 
 /// Represents a pre-processor step in the pipeline.

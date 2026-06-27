@@ -1,3 +1,6 @@
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
+
 class Question {
   final String id;
   final String content;
@@ -187,7 +190,7 @@ class Submission {
   final String studentId;
   final String? studentName;
   final String? studentCode;
-  final Map<String, dynamic>? answers;
+  final List<Map<String, dynamic>>? answers;
   final double? score;
   final double? maxScore;
   final String? imageUrl;
@@ -196,6 +199,8 @@ class Submission {
   final String? examTitle;
   final DateTime? examDate;
   final String? versionCode;
+  final String? className;
+  final String? classId;
 
   Submission({
     required this.id,
@@ -213,19 +218,34 @@ class Submission {
     this.examTitle,
     this.examDate,
     this.versionCode,
+    this.className,
+    this.classId,
   });
 
   factory Submission.fromJson(Map<String, dynamic> json) {
+    if (kDebugMode) {
+      developer.log(
+        'Submission.fromJson parsing id=${(json['_id'] ?? json['id'] ?? '').toString()}',
+        name: 'Submission',
+      );
+    }
+
     String examId = '';
     String? examTitle;
     DateTime? examDate;
     if (json['examId'] != null) {
-      final exam = json['examId'] as Map<String, dynamic>;
-      examId = (exam['_id'] ?? exam['id'] ?? '').toString();
-      examTitle = exam['title']?.toString();
-      examDate = exam['examDate'] != null
-          ? DateTime.tryParse(exam['examDate'].toString())
+      final exam = json['examId'] is Map<String, dynamic>
+          ? json['examId'] as Map<String, dynamic>
           : null;
+      if (exam != null) {
+        examId = (exam['_id'] ?? exam['id'] ?? '').toString();
+        examTitle = exam['title']?.toString();
+        examDate = exam['examDate'] != null
+            ? DateTime.tryParse(exam['examDate'].toString())
+            : null;
+      } else {
+        examId = json['examId'].toString();
+      }
     }
 
     String studentId = '';
@@ -253,37 +273,77 @@ class Submission {
       }
     }
 
-    return Submission(
+    DateTime? scannedAt;
+    if (json['scannedAt'] != null) {
+      scannedAt = DateTime.tryParse(json['scannedAt'].toString());
+    } else if (json['scanMetadata'] != null && json['scanMetadata']['scannedAt'] != null) {
+      scannedAt = DateTime.tryParse(json['scanMetadata']['scannedAt'].toString());
+    } else if (json['createdAt'] != null) {
+      scannedAt = DateTime.tryParse(json['createdAt'].toString());
+    }
+
+    String? className;
+    String? classId;
+    if (json['classId'] != null) {
+      final classData = json['classId'];
+      if (classData is Map<String, dynamic>) {
+        className = classData['name']?.toString();
+        classId = (classData['_id'] ?? classData['id'])?.toString();
+      } else {
+        classId = classData.toString();
+      }
+    }
+    // ignore: avoid_print
+    // print('[Submission.fromJson] classId=$classId, className=$className, student=${studentName ?? "unknown"}');
+
+    final submission = Submission(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       examId: examId,
       versionId: versionId,
       studentId: studentId,
       studentName: studentName,
       studentCode: studentCode,
-      answers: json['answers'] as Map<String, dynamic>?,
+      answers: (json['answers'] as List<dynamic>?)
+          ?.whereType<Map<String, dynamic>>()
+          .toList(),
       score: (json['totalScore'] as num?)?.toDouble(),
       maxScore: (json['maxScore'] as num?)?.toDouble(),
-      imageUrl: json['images']?['original']?['url']?.toString(),
-      status: (json['status'] ?? 'pending').toString(),
-      scannedAt: json['scannedAt'] != null
-          ? DateTime.tryParse(json['scannedAt'].toString())
+      imageUrl: json['images'] != null && json['images']['original'] != null
+          ? json['images']['original']['url']?.toString()
           : null,
+      status: (json['status'] ?? 'pending').toString(),
+      scannedAt: scannedAt,
       examTitle: examTitle,
       examDate: examDate,
       versionCode: versionCode,
+      className: className,
+      classId: classId,
     );
+
+    if (kDebugMode) {
+      developer.log(
+        'Submission.fromJson id=${submission.id} name=${submission.displayName} status=${submission.status} answers=${submission.answers?.length ?? 0}',
+        name: 'Submission',
+      );
+    }
+
+    return submission;
   }
 
   String get displayName => studentName ?? studentCode ?? 'Unknown Student';
 
   String get displayExam {
-    if (examTitle != null) {
-      if (examDate != null) {
-        return '$examTitle \u2022 ${_formatTime(examDate!)}';
-      }
-      return examTitle!;
+    final parts = <String>[];
+    if (examTitle != null) parts.add(examTitle!);
+    if (className != null) parts.add(className!);
+    if (parts.isEmpty) return examId;
+    
+    if (examDate != null) {
+      final dateStr = '${examDate!.day}/${examDate!.month}/${examDate!.year}';
+      parts.add(dateStr);
     }
-    return examId;
+    
+    return parts.join(' • ');
   }
 
   String _formatTime(DateTime dt) {
