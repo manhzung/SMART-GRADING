@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_grading_mobile/presentation/blocs/submission/submission_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/exam_selection_page.dart';
 import 'package:smart_grading_mobile/presentation/pages/omr_test_lab_page.dart';
+import 'package:smart_grading_mobile/presentation/pages/submissions_page.dart';
 
 class ScanView extends StatefulWidget {
   const ScanView({super.key});
@@ -14,6 +15,12 @@ class ScanView extends StatefulWidget {
 
 class _ScanViewState extends State<ScanView> {
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+  }
 
   void _openCameraScanner(BuildContext context) {
     Navigator.of(context).push(
@@ -26,7 +33,7 @@ class _ScanViewState extends State<ScanView> {
   void _openReview(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const _ReviewSubmissionsPage(),
+        builder: (_) => const SubmissionsPage(),
       ),
     );
   }
@@ -108,6 +115,8 @@ class _ScanViewState extends State<ScanView> {
     return BlocBuilder<SubmissionBloc, SubmissionState>(
       builder: (context, state) {
         List<Map<String, dynamic>> submissionsToDisplay = [];
+        bool hasError = false;
+        String errorMessage = '';
 
         if (state is SubmissionLoaded && state.submissions.isNotEmpty) {
           submissionsToDisplay = state.submissions.map((sub) {
@@ -116,18 +125,18 @@ class _ScanViewState extends State<ScanView> {
             IconData icon;
             Color iconBg;
 
-            switch (sub.status) {
-              case 'completed':
+            final status = sub.status.toLowerCase();
+            switch (status) {
               case 'scanned':
+              case 'completed':
+              case 'graded':
                 bg = const Color(0xFFE6F4EA);
                 text = const Color(0xFF137333);
-                icon = Icons.person_outline;
-                iconBg = const Color(0xFFF1F5F9);
                 icon = Icons.check_circle_outline;
                 iconBg = const Color(0xFFE6F4EA);
                 break;
-              case 'scanning':
               case 'pending':
+              case 'submitted':
                 bg = const Color(0xFFE8F0FE);
                 text = const Color(0xFF1A73E8);
                 icon = Icons.sync;
@@ -141,32 +150,67 @@ class _ScanViewState extends State<ScanView> {
                 iconBg = const Color(0xFFFEF3C7);
                 break;
               default:
-                bg = const Color(0xFFFCE8E6);
-                text = const Color(0xFFC5221F);
-                icon = Icons.error_outline;
-                iconBg = const Color(0xFFFFF2EC);
+                bg = const Color(0xFFF1F5F9);
+                text = const Color(0xFF64748B);
+                icon = Icons.assignment_outlined;
+                iconBg = const Color(0xFFF1F5F9);
             }
 
-            String timeStr = 'Unknown';
+            String timeStr = 'N/A';
             if (sub.scannedAt != null) {
-              final h = sub.scannedAt!.hour.toString().padLeft(2, '0');
-              final m = sub.scannedAt!.minute.toString().padLeft(2, '0');
-              timeStr = '$h:$m';
+              final now = DateTime.now();
+              final diff = now.difference(sub.scannedAt!);
+              
+              if (diff.inMinutes < 1) {
+                timeStr = 'Vua xong';
+              } else if (diff.inMinutes < 60) {
+                timeStr = '${diff.inMinutes} phut truoc';
+              } else if (diff.inHours < 24) {
+                timeStr = '${diff.inHours} gio truoc';
+              } else if (diff.inDays < 7) {
+                timeStr = '${diff.inDays} ngay truoc';
+              } else {
+                timeStr = '${sub.scannedAt!.day}/${sub.scannedAt!.month}';
+              }
+            }
+
+            String statusLabel;
+            switch (status) {
+              case 'scanned':
+              case 'completed':
+              case 'graded':
+                statusLabel = 'DA CHAM';
+                break;
+              case 'pending':
+              case 'submitted':
+                statusLabel = 'DANG CHO';
+                break;
+              case 'manual_review':
+              case 'review':
+                statusLabel = 'CAN XEM LAI';
+                break;
+              default:
+                statusLabel = status.toUpperCase();
             }
 
             return {
               'name': sub.displayName,
               'exam': sub.displayExam,
               'time': timeStr,
-              'status': sub.status.toUpperCase(),
+              'status': statusLabel,
               'statusBgColor': bg,
               'statusTextColor': text,
               'icon': icon,
               'iconColor': text,
               'iconBgColor': iconBg,
+              'submission': sub,
             };
           }).toList();
         } else if (state is SubmissionLoading) {
+          submissionsToDisplay = [];
+        } else if (state is SubmissionError) {
+          hasError = true;
+          errorMessage = state.message;
           submissionsToDisplay = [];
         } else {
           submissionsToDisplay = _mockSubmissions;
@@ -468,12 +512,51 @@ class _ScanViewState extends State<ScanView> {
                                 padding: EdgeInsets.symmetric(vertical: 30),
                                 child: Center(child: CircularProgressIndicator()),
                               )
+                            else if (hasError)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 20),
+                                child: Column(
+                                  children: [
+                                    const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Khong the tai du lieu',
+                                      style: const TextStyle(
+                                        color: Color(0xFFEF4444),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                                      child: Text(
+                                        errorMessage,
+                                        style: const TextStyle(
+                                          color: Color(0xFF64748B),
+                                          fontSize: 12,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+                                      },
+                                      icon: const Icon(Icons.refresh, size: 18),
+                                      label: const Text('Thu lai'),
+                                    ),
+                                  ],
+                                ),
+                              )
                             else if (filteredList.isEmpty)
                               const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 30),
                                 child: Center(
                                   child: Text(
-                                    'No recent submissions found.',
+                                    'Chua co bai cham nao.',
                                     style: TextStyle(color: Color(0xFF64748B)),
                                   ),
                                 ),
@@ -505,7 +588,7 @@ class _ScanViewState extends State<ScanView> {
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'View All Submissions (${state is SubmissionLoaded ? state.submissions.length : 0})',
+                                  'Xem tat ca (${state is SubmissionLoaded ? state.submissions.length : filteredList.length})',
                                   style: const TextStyle(
                                     color: Color(0xFF0C2B64),
                                     fontWeight: FontWeight.bold,
@@ -801,44 +884,7 @@ class _ReviewSubmissionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
-        title: const Text(
-          'Review Submissions',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.fact_check_outlined, size: 64, color: Color(0xFFCBD5E1)),
-            SizedBox(height: 16),
-            Text(
-              'Manual Review',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            SizedBox(height: 8),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 48),
-              child: Text(
-                'Review submissions flagged for manual review due to multiple marks or low confidence.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF64748B)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const SubmissionsPage();
   }
 }
 

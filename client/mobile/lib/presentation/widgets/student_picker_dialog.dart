@@ -303,11 +303,8 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: _students.length + 1,
+      itemCount: _students.length,
       itemBuilder: (context, index) {
-        if (index == _students.length) {
-          return _buildQuickScanTile();
-        }
         final isHighlighted = _highlightedIndex == index;
         return _buildStudentTile(_students[index], isHighlighted: isHighlighted);
       },
@@ -396,68 +393,6 @@ class _StudentPickerDialogState extends State<StudentPickerDialog> {
           ],
         ),
         onTap: () => _onSubmit(student),
-      ),
-    );
-  }
-
-  Widget _buildQuickScanTile() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 8),
-      child: Material(
-        color: const Color(0xFFFEF3C7),
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).pop();
-            // Submit without student assignment
-            context.read<OMRScannerBloc>().add(OMRScannerSubmit());
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFDE68A),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_outlined,
-                    color: Color(0xFFD97706),
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Submit without student',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Color(0xFF92400E),
-                        ),
-                      ),
-                      Text(
-                        'Anonymous submission',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFB45309),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.arrow_forward, color: Color(0xFFD97706)),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -13,6 +13,7 @@ import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/core/network/omr_submission_sync_service.dart';
 import 'package:smart_grading_mobile/core/network/omr_template_service.dart';
 import 'package:smart_grading_mobile/core/network/class_service.dart';
+import 'package:smart_grading_mobile/core/network/exam_service.dart';
 import 'package:smart_grading_mobile/core/storage/omr_local_storage.dart';
 import 'package:get_it/get_it.dart';
 
@@ -62,6 +63,12 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     try {
       final classService = GetIt.instance<ClassService>();
       _cachedClassStudents = await classService.getStudentsByClass(event.classId);
+      developer.log('═══ CLASS STUDENTS LOADED ═══', name: 'OMRScanner');
+      developer.log('[ClassStudents] Total students: ${_cachedClassStudents?.length ?? 0}', name: 'OMRScanner');
+      for (final student in _cachedClassStudents ?? []) {
+        developer.log('[ClassStudents] name="${student.name}", studentCode="${student.studentCode}"', name: 'OMRScanner');
+      }
+      developer.log('═══════════════════════════════════', name: 'OMRScanner');
     } catch (e) {
       developer.log('Failed to load class students: $e', name: 'OMRScanner');
     }
@@ -80,6 +87,7 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
         templateJson: templateJson,
         examId: event.examId,
         examName: event.examName,
+        classId: event.classId,
       ));
     } catch (e) {
       emit(OMRScannerError(message: 'Failed to load template: $e'));
@@ -132,47 +140,121 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     required Emitter<OMRScannerState> emit,
   }) async {
     try {
+      // ═══ STEP 1: Initial scan (no answerKey) to detect versionCode ═══
+      developer.log('╔═══ STEP 1: Initial scan to detect versionCode ═══', name: 'OMRScanner');
+      emit(OMRScannerProcessing(
+        imageBytes: imageBytes,
+        steps: const ['[1/3] Scanning to detect version code...'],
+      ));
+
       final omrEngineService = OmrEngineService();
-      final result = await omrEngineService.scanAndGrade(
+
+      // First scan WITHOUT answerKey (to get versionCode)
+      developer.log('[STEP1] Scanning image without answerKey...', name: 'OMRScanner');
+      final initialResult = await omrEngineService.scanAndGrade(
         imageBytes: imageBytes.toList(),
         templateJson: templateJson,
       );
 
-      final convertedGradingResult = _convertToOldGradingResult(result.gradingResult);
+      final versionCode = initialResult.scanResult.versionCode;
+      developer.log('[STEP1] Initial scan complete. Detected:', name: 'OMRScanner');
+      developer.log('  - studentCode (SBD): ${initialResult.scanResult.studentId}', name: 'OMRScanner');
+      developer.log('  - versionCode (MADE): $versionCode', name: 'OMRScanner');
+      developer.log('  - answers: ${initialResult.scanResult.answers}', name: 'OMRScanner');
+
+      // ═══ STEP 2: Get answerKey from server ═══
+      Map<String, String>? serverAnswerKey;
+      if (examId != null && versionCode != null && versionCode.isNotEmpty) {
+        developer.log('╔═══ STEP 2: Fetching answerKey from server ═══', name: 'OMRScanner');
+        emit(OMRScannerProcessing(
+          imageBytes: imageBytes,
+          steps: const ['[2/3] Fetching answer key from server...'],
+        ));
+
+        try {
+          final examService = GetIt.instance<ExamService>();
+          developer.log('[STEP2] Calling API: examId=$examId, versionCode=$versionCode', name: 'OMRScanner');
+
+          final answerKeyResponse = await examService.getVersionAnswerKey(examId, versionCode);
+          serverAnswerKey = answerKeyResponse.answerKey;
+
+          developer.log('[STEP2] Received answerKeyResponse:', name: 'OMRScanner');
+          developer.log('  - versionCode: ${answerKeyResponse.versionCode}', name: 'OMRScanner');
+          developer.log('  - numberOfQuestions: ${answerKeyResponse.numberOfQuestions}', name: 'OMRScanner');
+          developer.log('  - answerKey entries: ${answerKeyResponse.answerKey.length}', name: 'OMRScanner');
+          developer.log('  - answerKey full: ${answerKeyResponse.answerKey}', name: 'OMRScanner');
+
+          if (serverAnswerKey.isEmpty) {
+            developer.log('[STEP2] WARNING: answerKey is empty!', name: 'OMRScanner');
+          }
+        } catch (e) {
+          developer.log('[STEP2] ERROR: Failed to fetch answerKey: $e', name: 'OMRScanner', error: e);
+          // Continue without server answerKey
+        }
+      } else {
+        developer.log('[STEP2] SKIP: examId=$examId, versionCode=$versionCode', name: 'OMRScanner');
+      }
+
+      // ═══ STEP 3: Final scan with answerKey (or retry with server answerKey) ═══
+      developer.log('╔═══ STEP 3: Final scan with answerKey ═══', name: 'OMRScanner');
+      emit(OMRScannerProcessing(
+        imageBytes: imageBytes,
+        steps: const ['[3/3] Grading with answer key...'],
+      ));
+
+      final finalResult = await omrEngineService.scanAndGrade(
+        imageBytes: imageBytes.toList(),
+        templateJson: templateJson,
+        serverAnswerKey: serverAnswerKey,
+      );
+
+      developer.log('[STEP3] Final scan complete. Score: ${finalResult.gradingResult.totalScore}', name: 'OMRScanner');
+      developer.log('╚═══ All steps complete ═══', name: 'OMRScanner');
+
+      // Convert to old format
+      final convertedGradingResult = _convertToOldGradingResult(finalResult.gradingResult);
       final processingResult = OMRProcessingResult(
         template: OMRTemplate.fromJson(templateJson),
         gradingResult: convertedGradingResult,
         response: OMRResponseDebug(
           answers: Map.fromEntries(
-            result.gradingResult.questionScores.map((q) => MapEntry('q${q.position}', q.detectedAnswer ?? '')),
+            finalResult.gradingResult.questionScores.map((q) => MapEntry('q${q.position}', q.detectedAnswer ?? '')),
           ),
           globalThreshold: 0.5,
           bubbleIntensities: {},
           localThresholds: {},
         ),
-        processingTime: result.scanResult.processingTime,
-        processingSteps: result.scanResult.processingSteps,
-        wasWarped: result.scanResult.wasWarped,
-        annotatedImageBytes: result.annotatedBytes ?? result.croppedBytes ?? imageBytes,
-        croppedImageBytes: result.croppedBytes,
+        processingTime: finalResult.scanResult.processingTime,
+        processingSteps: finalResult.scanResult.processingSteps,
+        wasWarped: finalResult.scanResult.wasWarped,
+        annotatedImageBytes: finalResult.annotatedBytes ?? finalResult.croppedBytes ?? imageBytes,
+        croppedImageBytes: finalResult.croppedBytes,
       );
 
       // Try to find student by studentCode
       ClassStudent? matchedStudent;
-      if (result.scanResult.studentId.isNotEmpty && _cachedClassStudents != null) {
-        matchedStudent = _findStudentByCode(result.scanResult.studentId);
+      if (finalResult.scanResult.studentId.isNotEmpty && _cachedClassStudents != null) {
+        matchedStudent = _findStudentByCode(finalResult.scanResult.studentId);
       }
+
+      // Get examId/classId from template state (may override parameter)
+      String finalExamId = examId ?? '';
+      String finalClassId = classId ?? '';
+      developer.log('[DEBUG] _processWithTemplate params - examId: $examId, classId: $classId', name: 'OMRScanner');
 
       emit(OMRScannerSuccess(
         imageBytes: imageBytes,
         processingResult: processingResult,
         gradingResult: convertedGradingResult,
-        questionScores: result.gradingResult.questionScores,
-        studentCode: result.scanResult.studentId,
-        versionCode: result.scanResult.versionCode,
+        questionScores: finalResult.gradingResult.questionScores,
+        studentCode: finalResult.scanResult.studentId,
+        versionCode: finalResult.scanResult.versionCode,
         matchedStudent: matchedStudent,
+        examId: finalExamId.isEmpty ? null : finalExamId,
+        classId: finalClassId.isEmpty ? null : finalClassId,
       ));
     } catch (e) {
+      developer.log('[ERROR] Processing failed: $e', name: 'OMRScanner', error: e);
       emit(OMRScannerError(message: 'Processing failed: $e'));
     }
   }
@@ -248,11 +330,23 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     if (_cachedClassStudents == null) return null;
     
     final normalizedCode = studentCode.trim().toLowerCase();
+    developer.log('═══ FINDING STUDENT ═══', name: 'OMRScanner');
+    developer.log('[FindStudent] Looking for studentCode="$normalizedCode"', name: 'OMRScanner');
+    developer.log('[FindStudent] Total students to check: ${_cachedClassStudents!.length}', name: 'OMRScanner');
+    
     for (final student in _cachedClassStudents!) {
-      if (student.studentCode?.trim().toLowerCase() == normalizedCode) {
+      final dbCode = student.studentCode?.trim().toLowerCase() ?? '';
+      final isMatch = dbCode == normalizedCode;
+      developer.log('[FindStudent] Checking: name="${student.name}", studentCode="$dbCode", isMatch=$isMatch', name: 'OMRScanner');
+      if (isMatch) {
+        developer.log('[FindStudent] ✓ FOUND: name="${student.name}", studentCode="${student.studentCode}"', name: 'OMRScanner');
+        developer.log('═══════════════════════════════════', name: 'OMRScanner');
         return student;
       }
     }
+    
+    developer.log('[FindStudent] ✗ NOT FOUND for code="$normalizedCode"', name: 'OMRScanner');
+    developer.log('═══════════════════════════════════', name: 'OMRScanner');
     return null;
   }
 
@@ -294,10 +388,9 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
       imageBytes: current.imageBytes,
       gradingResult: current.gradingResult,
       student: event.student,
+      examId: current.examId,
+      classId: current.classId,
     ));
-
-    // Auto-submit after confirming student
-    add(OMRScannerSubmit());
   }
 
   Future<void> _onSubmit(
@@ -337,34 +430,54 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
           .map((v) => MapEntry(v.question, v.markedAnswer)),
     );
 
+    // Get examId/classId from the pre-submitting state (OMRScannerSuccess or OMRScannerStudentConfirmed)
     String? examId;
     String? classId;
-    final templateState = state;
-    if (templateState is OMRScannerTemplateReady) {
-      examId = templateState.examId;
-      classId = templateState.classId;
+    if (current is OMRScannerSuccess) {
+      examId = current.examId;
+      classId = current.classId;
+    } else if (current is OMRScannerStudentConfirmed) {
+      examId = current.examId;
+      classId = current.classId;
     }
+
+    developer.log('[OMRScanner] Submit: examId=$examId, classId=$classId', name: 'OMRScanner');
+
+    // Check if examId is valid (24 hex chars for MongoDB ObjectId)
+    final bool hasValidExamId = examId != null && 
+        RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(examId!);
 
     // Check connectivity
     final connectivityResult = await _connectivity.checkConnectivity();
     final isOnline = connectivityResult.isNotEmpty &&
         !connectivityResult.contains(ConnectivityResult.none);
 
-    if (isOnline) {
+    if (isOnline && hasValidExamId) {
       try {
         final syncService = GetIt.instance<OMRSubmissionSyncService>();
-        final success = await syncService.submitResultOnly(
-          examId: examId ?? 'unknown',
+        
+        // Get annotated image bytes from processing result
+        Uint8List? annotatedBytes;
+        if (current is OMRScannerSuccess) {
+          annotatedBytes = current.processingResult?.annotatedImageBytes;
+          developer.log('[OMRScanner] Annotated bytes: ${annotatedBytes?.length ?? 0} bytes', name: 'OMRScanner');
+        }
+        
+        final success = await syncService.submitWithImage(
+          examId: examId!,
           classId: classId,
+          imageBytes: imageBytes,
           answers: answers,
           score: gradingResult.score,
           maxScore: gradingResult.maxScore,
           studentId: confirmedStudent?.id,
           studentCode: confirmedStudent?.studentCode ?? studentCode,
           versionCode: versionCode,
+          annotatedImageBytes: annotatedBytes,
         );
 
         if (success) {
+          developer.log('[OMRScanner] ✓ Submitted with image for student: ${confirmedStudent?.name ?? studentCode}', name: 'OMRScanner');
           emit(OMRScannerSubmitted(
             gradingResult: gradingResult,
             submittedOnline: true,
@@ -372,7 +485,45 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
           ));
           return;
         }
-      } catch (_) {
+      } catch (e) {
+        developer.log('[OMRScanner] Submit with image failed, trying offline: $e', name: 'OMRScanner');
+        // Fall through to offline
+      }
+    } else if (isOnline) {
+      // No valid examId - submit results only without image
+      developer.log('[OMRScanner] No valid examId, submitting results only', name: 'OMRScanner');
+      try {
+        final syncService = GetIt.instance<OMRSubmissionSyncService>();
+        
+        // Get annotated image bytes from processing result
+        Uint8List? annotatedBytes;
+        if (current is OMRScannerSuccess) {
+          annotatedBytes = current.processingResult?.annotatedImageBytes;
+        }
+        
+        final success = await syncService.submitResultOnly(
+          examId: examId ?? 'unknown',
+          answers: answers,
+          score: gradingResult.score,
+          maxScore: gradingResult.maxScore,
+          studentId: confirmedStudent?.id,
+          classId: classId,
+          studentCode: confirmedStudent?.studentCode ?? studentCode,
+          versionCode: versionCode,
+          annotatedImageBytes: annotatedBytes,
+        );
+
+        if (success) {
+          developer.log('[OMRScanner] ✓ Submitted results only for student: ${confirmedStudent?.name ?? studentCode}', name: 'OMRScanner');
+          emit(OMRScannerSubmitted(
+            gradingResult: gradingResult,
+            submittedOnline: true,
+            student: confirmedStudent,
+          ));
+          return;
+        }
+      } catch (e) {
+        developer.log('[OMRScanner] Submit results only failed: $e', name: 'OMRScanner');
         // Fall through to offline
       }
     }

@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import '../../domain/entities/class_submission_summary.entity.dart';
 import '../../domain/entities/exam.entity.dart';
 import '../constants/app_constants.dart';
@@ -10,12 +11,9 @@ class ExamSubmissionsService {
   final ApiClient _apiClient;
 
   /// Fetch all submissions for an exam, grouped by classId.
-  ///
-  /// Paginates through the API until all submissions are loaded,
-  /// then groups them by [Submission.classId]. Falls back to a
-  /// synthetic classId derived from [Submission.className] when
-  /// classId is missing.
   Future<Map<String, ClassSubmissionSummary>> getExamSubmissionsByClass(String examId) async {
+    developer.log('[ExamSubmissionsService] START getExamSubmissionsByClass examId=$examId', name: 'ExamSubmissionsService');
+
     const int limit = 50;
     final Map<String, List<Submission>> grouped = {};
     final Map<String, _ClassMetadata> metadata = {};
@@ -24,6 +22,8 @@ class ExamSubmissionsService {
     int totalPages = 1;
 
     while (currentPage <= totalPages) {
+      developer.log('[ExamSubmissionsService] Fetching page $currentPage, examId=$examId', name: 'ExamSubmissionsService');
+
       final result = await _apiClient.get<PaginatedSubmissions>(
         ApiConstants.submissions,
         queryParameters: {
@@ -34,8 +34,17 @@ class ExamSubmissionsService {
         parser: (data) => PaginatedSubmissions.fromJson(data as Map<String, dynamic>),
       );
 
+      developer.log(
+        '[ExamSubmissionsService] Page $currentPage: total=${result.total}, pages=${result.pages}, resultsCount=${result.results.length}',
+        name: 'ExamSubmissionsService',
+      );
+
       for (final submission in result.results) {
         final classInfo = _extractClassInfo(submission);
+        developer.log(
+          '[ExamSubmissionsService] Submission id=${submission.id}, classId=${submission.classId}, className=${submission.className}, status=${submission.status}',
+          name: 'ExamSubmissionsService',
+        );
         grouped.putIfAbsent(classInfo.id, () => []).add(submission);
         metadata[classInfo.id] = classInfo;
       }
@@ -43,10 +52,15 @@ class ExamSubmissionsService {
       totalPages = result.pages > 0 ? result.pages : 1;
       currentPage++;
 
-      if (result.results.isEmpty) break;
+      if (result.results.isEmpty) {
+        developer.log('[ExamSubmissionsService] Empty results, breaking pagination', name: 'ExamSubmissionsService');
+        break;
+      }
     }
 
-    return grouped.map((classId, submissions) {
+    developer.log('[ExamSubmissionsService] Grouped classes: ${grouped.keys.toList()}', name: 'ExamSubmissionsService');
+
+    final mapped = grouped.map((classId, submissions) {
       final meta = metadata[classId]!;
       final gradedCount = submissions.where((s) => s.status.toUpperCase() == 'GRADED').length;
       return MapEntry(
@@ -62,10 +76,17 @@ class ExamSubmissionsService {
         ),
       );
     });
+
+    developer.log('[ExamSubmissionsService] END: ${mapped.length} classes found', name: 'ExamSubmissionsService');
+    return mapped;
   }
 
   _ClassMetadata _extractClassInfo(Submission submission) {
     if (submission.classId != null && submission.classId!.isNotEmpty) {
+      developer.log(
+        '[ExamSubmissionsService] Using classId=${submission.classId}, className=${submission.className}',
+        name: 'ExamSubmissionsService',
+      );
       return _ClassMetadata(
         id: submission.classId!,
         name: submission.className ?? 'Chưa xác định',
@@ -73,6 +94,10 @@ class ExamSubmissionsService {
       );
     }
     final fallbackId = submission.className ?? 'unknown-class';
+    developer.log(
+      '[ExamSubmissionsService] NO classId! Using fallback className=$fallbackId',
+      name: 'ExamSubmissionsService',
+    );
     return _ClassMetadata(
       id: 'class-$fallbackId',
       name: submission.className ?? 'Chưa xác định',

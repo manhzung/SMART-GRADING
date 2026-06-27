@@ -1,8 +1,18 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/domain/omr/models/field_block.dart';
+
+/// Scan result data for displaying marked bubbles
+class OMRTestLabScanResult {
+  final Map<String, String> responses;
+  final Map<String, List<double>> bubbleIntensities;
+
+  const OMRTestLabScanResult({
+    required this.responses,
+    required this.bubbleIntensities,
+  });
+}
 
 /// Overlay widget for OMR Test Lab that reads directly from templateJson.
 /// 
@@ -15,7 +25,7 @@ class OMRTestLabOverlay extends StatelessWidget {
   final int imageWidth;
   final int imageHeight;
   final OMRTemplate template;
-  final Object? scanResult;
+  final OMRTestLabScanResult? scanResult;
 
   const OMRTestLabOverlay({
     super.key,
@@ -149,11 +159,13 @@ class _OMRTemplateJsonPainter extends CustomPainter {
   final OMRTemplate template;
   final int imageWidth;
   final int imageHeight;
+  final OMRTestLabScanResult? scanResult;
 
   _OMRTemplateJsonPainter({
     required this.template,
     required this.imageWidth,
     required this.imageHeight,
+    this.scanResult,
   });
 
   @override
@@ -167,30 +179,52 @@ class _OMRTemplateJsonPainter extends CustomPainter {
 
     final tj = template.templateJson;
 
-    // 3. Draw Answer bubbles (from templateJson.answers OR from fieldBlocks)
-    if (tj != null && tj['answers'] != null) {
-      _drawAnswers(canvas, tj, scale);
-    } else if (template.fieldBlocks.isNotEmpty) {
-      _drawFieldBlocksAnswers(canvas, scale);
-    }
+    // Build intensity lookup for coloring bubbles
+    final Map<String, List<double>>? intensityMap = scanResult?.bubbleIntensities;
+    final Map<String, String> responses = scanResult?.responses ?? {};
 
     // 1. Draw Student ID bubbles from templateJson.studentId.coords
     if (tj != null) {
-      _drawStudentId(canvas, tj, scale);
+      _drawStudentId(canvas, tj, scale, intensityMap, responses);
     } else if (template.studentId != null) {
       _drawFieldBlocksStudentId(canvas, scale);
     }
 
     // 2. Draw Version Code bubbles from templateJson.versionCodeZone.coords
     if (tj != null) {
-      _drawVersionCode(canvas, tj, scale);
+      _drawVersionCode(canvas, tj, scale, intensityMap, responses);
     } else if (template.versionCodeZone != null) {
       _drawFieldBlocksVersionCode(canvas, scale);
     }
+
+    // 3. Draw Answer bubbles - ALWAYS use fieldBlocks for consistent coordinates
+    // This ensures Test Lab shows the SAME bubbles as the Engine scans
+    if (template.fieldBlocks.isNotEmpty) {
+      _drawFieldBlocksAnswers(canvas, scale);
+    } else if (tj != null && tj['answers'] != null) {
+      _drawAnswers(canvas, tj, scale, intensityMap, responses);
+    }
+  }
+
+  /// Get bubble status color based on intensity
+  Color _getBubbleColor(String label, int bubbleIdx, List<double>? intensities) {
+    if (intensities == null || bubbleIdx >= intensities.length) {
+      return const Color(0xFF94A3B8); // UNMARKED (gray)
+    }
+    final intensity = intensities[bubbleIdx];
+    if (intensity < 100) {
+      return const Color(0xFF22C55E); // MARKED (green)
+    } else if (intensity < 180) {
+      return const Color(0xFFF59E0B); // PARTIAL (amber)
+    }
+    return const Color(0xFF94A3B8); // UNMARKED (gray)
   }
 
   /// Draw Answer bubbles from fieldBlocks (when templateJson.answers is not available)
   void _drawFieldBlocksAnswers(Canvas canvas, double scale) {
+    debugPrint('═══════════════════════════════════════════════════');
+    debugPrint('TESTLAB FieldBlocks: ${template.fieldBlocks.length} blocks');
+
     for (final block in template.fieldBlocks) {
       // Only draw MCQ blocks (qtypeMcq4, qtypeMcq5)
       final isMcq = block.fieldType == FieldType.qtypeMcq4 ||
@@ -199,6 +233,10 @@ class _OMRTemplateJsonPainter extends CustomPainter {
                     block.fieldType == FieldType.qtypeMcq5Rtl;
 
       if (!isMcq) continue;
+
+      debugPrint('  Block "${block.name}": origin=(${block.originX},${block.originY}), direction=${block.direction}');
+      debugPrint('    labels=${block.fieldLabels.length}, bubbleValues=${block.bubbleValues}');
+      debugPrint('    bubbleSize=${block.bubbleWidth}x${block.bubbleHeight}');
 
       final bubbleW = block.bubbleWidth;
       final bubbleH = block.bubbleHeight;
@@ -210,7 +248,10 @@ class _OMRTemplateJsonPainter extends CustomPainter {
           final cy = _toFlutterCenterY(bubble.y.toDouble(), bubbleH.toDouble(), scale);
           final radius = (bubbleW / 2) * scale;
 
-          debugPrint('OVERLAY FieldBlock Answer: ${bubble.fieldLabel} ${bubble.fieldValue}, x=${bubble.x}, y=${bubble.y}');
+          // Log first bubble of first question for comparison
+          if (block.traverseBubbles.indexOf(fieldBubbles) == 0 && fieldBubbles.indexOf(bubble) == 0) {
+            debugPrint('    FIRST BUBBLE: ${bubble.fieldLabel} ${bubble.fieldValue}, x=${bubble.x}, y=${bubble.y}');
+          }
 
           final paint = Paint()
             ..color = const Color(0xFF10B981).withValues(alpha: 0.6)
@@ -221,6 +262,7 @@ class _OMRTemplateJsonPainter extends CustomPainter {
         }
       }
     }
+    debugPrint('═══════════════════════════════════════════════════');
   }
 
   /// Draw Student ID bubbles from fieldBlocks (when templateJson.studentId is not available)
@@ -296,12 +338,26 @@ class _OMRTemplateJsonPainter extends CustomPainter {
   }
 
   /// Draw Student ID bubbles from templateJson.studentId.coords
-  void _drawStudentId(Canvas canvas, Map<String, dynamic> tj, double scale) {
+  void _drawStudentId(
+    Canvas canvas,
+    Map<String, dynamic> tj,
+    double scale,
+    Map<String, List<double>>? intensityMap,
+    Map<String, String> responses,
+  ) {
     final studentId = tj['studentId'] as Map<String, dynamic>?;
     if (studentId == null) return;
 
     final coords = studentId['coords'] as List<dynamic>?;
     if (coords == null || coords.isEmpty) return;
+
+    debugPrint('═══════════════════════════════════════════════════');
+    debugPrint('TESTLAB StudentId: ${coords.length} bubbles, sample:');
+    if (coords.isNotEmpty) {
+      final sample = coords.first as Map<String, dynamic>;
+      debugPrint('  First bubble: x=${sample['x']}, y=${sample['y']}, w=${sample['w']}, h=${sample['h']}');
+    }
+    debugPrint('═══════════════════════════════════════════════════');
 
     // Group coords by digit position
     final byDigit = <int, List<Map<String, dynamic>>>{};
@@ -320,7 +376,8 @@ class _OMRTemplateJsonPainter extends CustomPainter {
       digitCoords.sort((a, b) => ((a['value'] as num?)?.toInt() ?? 0)
           .compareTo((b['value'] as num?)?.toInt() ?? 0));
 
-      for (final c in digitCoords) {
+      for (int i = 0; i < digitCoords.length; i++) {
+        final c = digitCoords[i];
         final x = (c['x'] as num?)?.toDouble() ?? 0;
         final y = (c['y'] as num?)?.toDouble() ?? 0;
         final w = (c['w'] as num?)?.toDouble() ?? 46;
@@ -332,10 +389,13 @@ class _OMRTemplateJsonPainter extends CustomPainter {
         final cy = _toFlutterCenterY(y, h, scale);
         final radius = (w / 2) * scale;
 
-        debugPrint('OVERLAY StudentId bubble: x=$x, y=$y, w=$w, h=$h, flutterCenter=($cx, $cy)');
+        // Get intensity for this bubble
+        final label = 'sbd${entry.key + 1}';
+        final intensities = intensityMap?[label];
+        final bubbleColor = _getBubbleColor(label, i, intensities);
 
         final paint = Paint()
-          ..color = const Color(0xFF3B82F6).withValues(alpha: 0.6)
+          ..color = bubbleColor.withValues(alpha: 0.8)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.0;
 
@@ -345,7 +405,13 @@ class _OMRTemplateJsonPainter extends CustomPainter {
   }
 
   /// Draw Version Code bubbles from templateJson.versionCodeZone.coords
-  void _drawVersionCode(Canvas canvas, Map<String, dynamic> tj, double scale) {
+  void _drawVersionCode(
+    Canvas canvas,
+    Map<String, dynamic> tj,
+    double scale,
+    Map<String, List<double>>? intensityMap,
+    Map<String, String> responses,
+  ) {
     final versionZone = tj['versionCodeZone'] as Map<String, dynamic>?;
     if (versionZone == null) return;
 
@@ -369,7 +435,8 @@ class _OMRTemplateJsonPainter extends CustomPainter {
       digitCoords.sort((a, b) => ((a['value'] as num?)?.toInt() ?? 0)
           .compareTo((b['value'] as num?)?.toInt() ?? 0));
 
-      for (final c in digitCoords) {
+      for (int i = 0; i < digitCoords.length; i++) {
+        final c = digitCoords[i];
         final x = (c['x'] as num?)?.toDouble() ?? 0;
         final y = (c['y'] as num?)?.toDouble() ?? 0;
         final w = (c['w'] as num?)?.toDouble() ?? 46;
@@ -381,8 +448,13 @@ class _OMRTemplateJsonPainter extends CustomPainter {
         final cy = _toFlutterCenterY(y, h, scale);
         final radius = (w / 2) * scale;
 
+        // Get intensity for this bubble
+        final label = 'md${entry.key + 1}';
+        final intensities = intensityMap?[label];
+        final bubbleColor = _getBubbleColor(label, i, intensities);
+
         final paint = Paint()
-          ..color = const Color(0xFF8B5CF6).withValues(alpha: 0.6)
+          ..color = bubbleColor.withValues(alpha: 0.8)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.0;
 
@@ -392,9 +464,18 @@ class _OMRTemplateJsonPainter extends CustomPainter {
   }
 
   /// Draw Answer bubbles from templateJson.answers
-  void _drawAnswers(Canvas canvas, Map<String, dynamic> tj, double scale) {
+  void _drawAnswers(
+    Canvas canvas,
+    Map<String, dynamic> tj,
+    double scale,
+    Map<String, List<double>>? intensityMap,
+    Map<String, String> responses,
+  ) {
     final answers = tj['answers'] as Map<String, dynamic>?;
     if (answers == null || answers.isEmpty) return;
+
+    debugPrint('═══════════════════════════════════════════════════');
+    debugPrint('TESTLAB Answers: ${answers.length} questions');
 
     // Sort questions by key (q1, q2, ...)
     final qKeys = answers.keys.toList()
@@ -406,12 +487,28 @@ class _OMRTemplateJsonPainter extends CustomPainter {
 
     final optionKeys = ['A', 'B', 'C', 'D'];
 
+    // Log first question's coordinates for comparison
+    if (qKeys.isNotEmpty) {
+      final firstQ = qKeys.first;
+      final firstOpts = answers[firstQ] as Map<String, dynamic>?;
+      if (firstOpts != null) {
+        for (final optKey in optionKeys) {
+          final opt = firstOpts[optKey] as Map<String, dynamic>?;
+          if (opt != null) {
+            debugPrint('  First Q ($firstQ) $optKey: x=${opt['x']}, y=${opt['y']}, w=${opt['w']}, h=${opt['h']}');
+          }
+        }
+      }
+    }
+    debugPrint('═══════════════════════════════════════════════════');
+
     for (final qKey in qKeys) {
       final opts = answers[qKey] as Map<String, dynamic>?;
       if (opts == null) continue;
 
       // Draw each option bubble
-      for (final optKey in optionKeys) {
+      for (int optIdx = 0; optIdx < optionKeys.length; optIdx++) {
+        final optKey = optionKeys[optIdx];
         final opt = opts[optKey] as Map<String, dynamic>?;
         if (opt == null) continue;
 
@@ -426,10 +523,12 @@ class _OMRTemplateJsonPainter extends CustomPainter {
         final cy = _toFlutterCenterY(y, h, scale);
         final radius = (w / 2) * scale;
 
-        debugPrint('OVERLAY Answer bubble: q=$qKey, opt=$optKey, x=$x, y=$y, w=$w, h=$h, flutterCenter=($cx, $cy)');
+        // Get intensity for this bubble
+        final intensities = intensityMap?[qKey];
+        final bubbleColor = _getBubbleColor(qKey, optIdx, intensities);
 
         final paint = Paint()
-          ..color = const Color(0xFF10B981).withValues(alpha: 0.6)
+          ..color = bubbleColor.withValues(alpha: 0.8)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.0;
 
@@ -442,6 +541,7 @@ class _OMRTemplateJsonPainter extends CustomPainter {
   bool shouldRepaint(_OMRTemplateJsonPainter oldDelegate) {
     return template != oldDelegate.template ||
         imageWidth != oldDelegate.imageWidth ||
-        imageHeight != oldDelegate.imageHeight;
+        imageHeight != oldDelegate.imageHeight ||
+        scanResult != oldDelegate.scanResult;
   }
 }

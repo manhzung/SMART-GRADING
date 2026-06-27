@@ -18,9 +18,13 @@ class ExamSubmissionsBloc extends Bloc<ExamSubmissionsEvent, ExamSubmissionsStat
     ExamSubmissionsLoadRequested event,
     Emitter<ExamSubmissionsState> emit,
   ) async {
+    // ignore: avoid_print
+    print('[ExamSubmissionsBloc] Loading submissions for examId=${event.examId}');
     emit(const ExamSubmissionsLoading());
     try {
       final byClass = await service.getExamSubmissionsByClass(event.examId);
+      // ignore: avoid_print
+      print('[ExamSubmissionsBloc] Loaded ${byClass.length} classes');
       final expandedIds = <String>{
         for (final entry in byClass.entries)
           if (entry.value.submissions.isNotEmpty) entry.key,
@@ -29,7 +33,9 @@ class ExamSubmissionsBloc extends Bloc<ExamSubmissionsEvent, ExamSubmissionsStat
         byClass: byClass,
         expandedClassIds: expandedIds,
       ));
-    } catch (e) {
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('[ExamSubmissionsBloc] ERROR: $e\n$st');
       emit(ExamSubmissionsError(message: e.toString()));
     }
   }

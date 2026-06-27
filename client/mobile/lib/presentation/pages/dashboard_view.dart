@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/exam/exam_bloc.dart';
 import '../blocs/class/class_bloc.dart';
+import '../blocs/activity/activity_bloc.dart';
+import '../../domain/entities/activity.entity.dart';
 import 'exam_detail_page.dart';
 
 class DashboardView extends StatefulWidget {
@@ -16,6 +18,12 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   @override
+  void initState() {
+    super.initState();
+    context.read<ActivityBloc>().add(const ActivityLoadRequested(limit: 5));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
     String teacherName = 'Teacher';
@@ -26,6 +34,13 @@ class _DashboardViewState extends State<DashboardView> {
 
     final classState = context.watch<ClassBloc>().state;
     final examState = context.watch<ExamBloc>().state;
+
+    // ignore: avoid_print
+    print('[DashboardView] examState type: ${examState.runtimeType}, is ExamUpcomingLoaded: ${examState is ExamUpcomingLoaded}');
+    if (examState is ExamUpcomingLoaded) {
+      // ignore: avoid_print
+      print('[DashboardView] Upcoming exams count: ${examState.exams.length}');
+    }
 
     int classCount = 0;
     int examCount = 0;
@@ -51,6 +66,7 @@ class _DashboardViewState extends State<DashboardView> {
         context.read<ExamBloc>().add(const ExamLoadRequested());
         context.read<ExamBloc>().add(const UpcomingExamsLoadRequested(limit: 5));
         context.read<ClassBloc>().add(const ClassFetchRequested());
+        context.read<ActivityBloc>().add(const ActivityLoadRequested());
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -221,66 +237,143 @@ class _DashboardViewState extends State<DashboardView> {
             ),
             const SizedBox(height: 12),
 
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const ActivityItem(
-                    icon: Icons.check_circle_outline_rounded,
-                    iconColor: Color(0xFF10B981),
-                    iconBgColor: Color(0xFFE6F4EA),
-                    richTextSpan: TextSpan(
-                      text: 'Dashboard loaded with real data',
-                      style: TextStyle(color: Color(0xFF0F172A), fontSize: 14),
+            BlocBuilder<ActivityBloc, ActivityState>(
+              builder: (context, activityState) {
+                if (activityState is ActivityLoading) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
-                    time: 'Now',
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Divider(color: Color(0xFFE2E8F0), height: 1),
-                  ),
-                  const ActivityItem(
-                    icon: Icons.people_outline_rounded,
-                    iconColor: Color(0xFF3B82F6),
-                    iconBgColor: Color(0xFFEFF6FF),
-                    richTextSpan: TextSpan(
-                      text: 'Synced classes and exams from server',
-                      style: TextStyle(color: Color(0xFF0F172A), fontSize: 14),
-                    ),
-                    time: 'Just now',
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/notifications');
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        backgroundColor: const Color(0xFFF8FAFC),
-                      ),
-                      child: const Text(
-                        'View History',
-                        style: TextStyle(
-                          color: Color(0xFF0C2B64),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                    padding: const EdgeInsets.all(16),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  );
+                }
+
+                if (activityState is ActivityError) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 40),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Không thể tải hoạt động',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () {
+                            context.read<ActivityBloc>().add(const ActivityLoadRequested());
+                          },
+                          child: const Text('Thử lại'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                if (activityState is ActivityLoaded) {
+                  final activities = activityState.activities;
+
+                  if (activities.isEmpty) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.history, size: 40, color: Color(0xFFCBD5E1)),
+                          SizedBox(height: 12),
+                          Text(
+                            'Chưa có hoạt động nào',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        ...activities.take(5).map((activity) {
+                          return Column(
+                            children: [
+                              ActivityItem(
+                                icon: _getActivityIcon(activity.icon),
+                                iconColor: _parseColor(activity.iconColor),
+                                iconBgColor: _parseColor(activity.iconBgColor),
+                                richTextSpan: TextSpan(
+                                  text: activity.description,
+                                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14),
+                                ),
+                                time: activity.timeAgo,
+                              ),
+                              if (activities.indexOf(activity) < activities.take(5).length - 1)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: Divider(color: Color(0xFFE2E8F0), height: 1),
+                                ),
+                            ],
+                          );
+                        }),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/notifications');
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFE2E8F0)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              backgroundColor: const Color(0xFFF8FAFC),
+                            ),
+                            child: const Text(
+                              'View History',
+                              style: TextStyle(
+                                color: Color(0xFF0C2B64),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return const SizedBox.shrink();
+              },
             ),
             const SizedBox(height: 60),
           ],
@@ -291,10 +384,18 @@ class _DashboardViewState extends State<DashboardView> {
 
   List<Widget> _buildUpcomingExams(ExamState state) {
     // Prefer the dedicated ExamUpcomingLoaded state; fall back to nothing.
+    // ignore: avoid_print
+    print('[DashboardView] _buildUpcomingExams called with state type: ${state.runtimeType}');
     if (state is! ExamUpcomingLoaded) {
+      // ignore: avoid_print
+      print('[DashboardView] State is NOT ExamUpcomingLoaded, returning empty list');
       return [];
     }
+    // ignore: avoid_print
+    print('[DashboardView] State IS ExamUpcomingLoaded, exams count: ${state.exams.length}');
     final upcoming = state.exams.take(3).toList();
+    // ignore: avoid_print
+    print('[DashboardView] Taking ${upcoming.length} exams for display');
     if (upcoming.isEmpty) return [];
 
     return upcoming.map((exam) {
@@ -337,6 +438,35 @@ class _DashboardViewState extends State<DashboardView> {
         ),
       );
     }).toList();
+  }
+
+  IconData _getActivityIcon(String iconName) {
+    switch (iconName) {
+      case 'assignment':
+        return Icons.assignment_outlined;
+      case 'publish':
+        return Icons.publish_outlined;
+      case 'check_circle':
+        return Icons.check_circle_outline_rounded;
+      case 'score':
+        return Icons.score_outlined;
+      case 'school':
+        return Icons.school_outlined;
+      case 'feedback':
+        return Icons.feedback_outlined;
+      case 'verified':
+        return Icons.verified_outlined;
+      default:
+        return Icons.history;
+    }
+  }
+
+  Color _parseColor(String hexColor) {
+    try {
+      return Color(int.parse(hexColor.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      return const Color(0xFF6366F1);
+    }
   }
 }
 

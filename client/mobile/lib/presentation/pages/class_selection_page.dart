@@ -1,21 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:smart_grading_mobile/core/network/class_service.dart';
 import 'package:smart_grading_mobile/domain/entities/exam.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/camera_scanner_page.dart';
 
-class ClassSelectionPage extends StatelessWidget {
+class ClassSelectionPage extends StatefulWidget {
   final Exam exam;
 
   const ClassSelectionPage({super.key, required this.exam});
 
+  @override
+  State<ClassSelectionPage> createState() => _ClassSelectionPageState();
+}
+
+class _ClassSelectionPageState extends State<ClassSelectionPage> {
+  List<ExamClass> _allClasses = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClasses();
+  }
+
+  Future<void> _loadClasses() async {
+    try {
+      final classService = GetIt.instance<ClassService>();
+      final paginatedClasses = await classService.getClasses(limit: 100);
+      setState(() {
+        _allClasses = paginatedClasses.results.map((c) => ExamClass(
+          id: c.id,
+          name: c.name,
+          code: c.code,
+          studentCount: c.studentCount,
+        )).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   List<ExamClass> _getUniqueClasses() {
     final byId = <String, ExamClass>{};
-    for (final c in exam.classIds) {
+    for (final c in widget.exam.classIds) {
       byId[c.id] = c;
     }
-    if (exam.primaryClassId != null) {
-      byId[exam.primaryClassId!.id] = exam.primaryClassId!;
+    if (widget.exam.primaryClassId != null) {
+      byId[widget.exam.primaryClassId!.id] = widget.exam.primaryClassId!;
     }
     return byId.values.toList();
   }
@@ -23,6 +59,7 @@ class ClassSelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final classes = _getUniqueClasses();
+    final showAllClasses = classes.isEmpty && !_isLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -31,41 +68,95 @@ class ClassSelectionPage extends StatelessWidget {
         foregroundColor: const Color(0xFF0F172A),
         elevation: 0,
         title: Text(
-          'Choose class for ${exam.title}',
+          'Choose class for ${widget.exam.title}',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
       ),
-      body: classes.isEmpty
-          ? const _EmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: classes.length,
-              itemBuilder: (context, index) {
-                final cls = classes[index];
-                final isPrimary = exam.primaryClassId?.id == cls.id;
-                return _ClassCard(
-                  cls: cls,
-                  isPrimary: isPrimary,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => BlocProvider(
-                          create: (_) => OMRScannerBloc(),
-                          child: CameraScannerPage(
-                            examId: exam.id,
-                            examName: exam.title,
-                            classId: cls.id,
-                            className: cls.name,
-                          ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : (showAllClasses ? _buildAllClassesList() : _buildClassesList(classes)),
+    );
+  }
+
+  Widget _buildClassesList(List<ExamClass> classes) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: classes.length,
+      itemBuilder: (context, index) {
+        final cls = classes[index];
+        final isPrimary = widget.exam.primaryClassId?.id == cls.id;
+        return _ClassCard(
+          cls: cls,
+          isPrimary: isPrimary,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) => OMRScannerBloc(),
+                  child: CameraScannerPage(
+                    examId: widget.exam.id,
+                    examName: widget.exam.title,
+                    classId: cls.id,
+                    className: cls.name,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildAllClassesList() {
+    if (_allClasses.isEmpty) {
+      return const _EmptyState();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Select a class to scan (${_allClasses.length} classes available)',
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 14,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _allClasses.length,
+            itemBuilder: (context, index) {
+              final cls = _allClasses[index];
+              return _ClassCard(
+                cls: cls,
+                isPrimary: false,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider(
+                        create: (_) => OMRScannerBloc(),
+                        child: CameraScannerPage(
+                          examId: widget.exam.id,
+                          examName: widget.exam.title,
+                          classId: cls.id,
+                          className: cls.name,
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

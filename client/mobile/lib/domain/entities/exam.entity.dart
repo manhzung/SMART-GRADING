@@ -293,6 +293,8 @@ class Submission {
         classId = classData.toString();
       }
     }
+    // ignore: avoid_print
+    print('[Submission.fromJson] classId=$classId, className=$className, student=${studentName ?? "unknown"}');
 
     final submission = Submission(
       id: (json['_id'] ?? json['id'] ?? '').toString(),

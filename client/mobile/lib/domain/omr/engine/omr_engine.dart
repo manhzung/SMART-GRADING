@@ -54,6 +54,12 @@ class OMREngine {
   OMREngine();
 
   /// Process a single image and return grading result.
+  ///
+  /// [evaluationConfig] - If provided with answerKey, annotated image will color bubbles:
+  /// - Green: correct answer
+  /// - Red: incorrect answer
+  /// - Purple: multi-marked
+  /// - Blue: student ID / version code
   Future<OMRProcessingResult> processImage({
     required Uint8List imageBytes,
     required OMRTemplate template,
@@ -68,9 +74,25 @@ class OMREngine {
       steps.add('AppOmrTemplate: ${appTemplate.fieldBlocks.length} blocks, '
           '${appTemplate.preprocessors.length} preprocessors');
 
+      // Extract answerKey from evaluationConfig for coloring annotations
+      Map<String, String>? answerKey;
+      if (evaluationConfig != null) {
+        answerKey = {};
+        for (int i = 0; i < evaluationConfig.questionsInOrder.length; i++) {
+          final q = evaluationConfig.questionsInOrder[i];
+          final a = i < evaluationConfig.answersInOrder.length
+              ? evaluationConfig.answersInOrder[i]?.toString() ?? ''
+              : '';
+          if (q.isNotEmpty) {
+            answerKey[q] = a;
+          }
+        }
+        steps.add('Answer key: ${answerKey.length} questions for annotation coloring');
+      }
+
       steps.add('Processing image with AppOMREngine (OpenCV)...');
       final appEngine = AppOMREngine(appTemplate);
-      final (appResult, annotatedBytes) = appEngine.processImage(imageBytes);
+      final (appResult, annotatedBytes) = appEngine.processImage(imageBytes, answerKey: answerKey);
 
       debugPrint(
           'AppOMREngine result: warpSucceeded=${appResult.warpSucceeded}, '
@@ -253,6 +275,14 @@ class OMREngine {
       );
     }).toList();
 
+    // Add Student ID field block from templateJson
+    final studentIdBlocks = _createStudentIdBlocks(template.templateJson, template.studentId);
+    fieldBlocks.addAll(studentIdBlocks);
+
+    // Add Version Code field block from templateJson
+    final versionCodeBlocks = _createVersionCodeBlocks(template.templateJson, template.versionCodeZone);
+    fieldBlocks.addAll(versionCodeBlocks);
+
     final preprocessors = template.preProcessors.map((pp) {
       return AppOmrPreProcessor(
         name: pp.name,
@@ -273,6 +303,154 @@ class OMREngine {
       autoAlign: template.autoAlign,
       useMarkers: false,
     );
+  }
+
+  /// Create field blocks for Student ID from templateJson
+  List<AppOmrFieldBlock> _createStudentIdBlocks(
+    Map<String, dynamic>? templateJson,
+    StudentIdField? studentIdField,
+  ) {
+    if (templateJson == null) return [];
+
+    final studentId = templateJson['studentId'] as Map<String, dynamic>?;
+    if (studentId == null) return [];
+
+    final coords = studentId['coords'] as List<dynamic>?;
+    if (coords == null || coords.isEmpty) return [];
+
+    // Group coords by digit position
+    final byDigit = <int, List<Map<String, dynamic>>>{};
+    for (final c in coords) {
+      if (c is! Map) continue;
+      final coord = Map<String, dynamic>.from(c);
+      final digit = (coord['digit'] as num?)?.toInt() ?? 0;
+      byDigit.putIfAbsent(digit, () => []).add(coord);
+    }
+
+    if (byDigit.isEmpty) return [];
+
+    final blocks = <AppOmrFieldBlock>[];
+
+    // Create one field block per digit
+    for (final entry in byDigit.entries.toList()..sort((a, b) => a.key.compareTo(b.key))) {
+      final digit = entry.key;
+      final digitCoords = entry.value;
+
+      // Sort by value (1-10)
+      digitCoords.sort((a, b) => ((a['value'] as num?)?.toInt() ?? 0)
+          .compareTo((b['value'] as num?)?.toInt() ?? 0));
+
+      // Convert to AppBubbleCoord with bubbleValues as ['1', '2', ..., '10']
+      final exactCoords = <AppBubbleCoord>[];
+      for (final c in digitCoords) {
+        final value = (c['value'] as num?)?.toInt() ?? 0;
+        exactCoords.add(AppBubbleCoord(
+          label: 'sbd${digit + 1}',
+          value: '$value',
+          x: (c['x'] as num?)?.toInt() ?? 0,
+          y: (c['y'] as num?)?.toInt() ?? 0,
+          w: (c['w'] as num?)?.toInt() ?? 46,
+          h: (c['h'] as num?)?.toInt() ?? 46,
+        ));
+      }
+
+      // Get origin from first coord
+      final firstCoord = digitCoords.first;
+      final originX = (firstCoord['x'] as num?)?.toInt() ?? 0;
+      final originY = (firstCoord['y'] as num?)?.toInt() ?? 0;
+
+      blocks.add(AppOmrFieldBlock(
+        name: 'StudentId_digit_$digit',
+        originX: originX,
+        originY: originY,
+        shift: 0,
+        bubbleWidth: (firstCoord['w'] as num?)?.toInt() ?? 46,
+        bubbleHeight: (firstCoord['h'] as num?)?.toInt() ?? 46,
+        fieldLabels: ['sbd${digit + 1}'],
+        bubbleValues: List.generate(10, (i) => '${i + 1}'),
+        bubblesGap: 0, // Not used with exact coords
+        labelsGap: 0,   // Not used with exact coords
+        direction: 'vertical',
+        emptyValue: '',
+        exactCoords: exactCoords,
+      ));
+    }
+
+    return blocks;
+  }
+
+  /// Create field blocks for Version Code from templateJson
+  List<AppOmrFieldBlock> _createVersionCodeBlocks(
+    Map<String, dynamic>? templateJson,
+    VersionCodeField? versionCodeField,
+  ) {
+    if (templateJson == null) return [];
+
+    final versionZone = templateJson['versionCodeZone'] as Map<String, dynamic>?;
+    if (versionZone == null) return [];
+
+    final coords = versionZone['coords'] as List<dynamic>?;
+    if (coords == null || coords.isEmpty) return [];
+
+    // Group coords by digit position
+    final byDigit = <int, List<Map<String, dynamic>>>{};
+    for (final c in coords) {
+      if (c is! Map) continue;
+      final coord = Map<String, dynamic>.from(c);
+      final digit = (coord['digit'] as num?)?.toInt() ?? 0;
+      byDigit.putIfAbsent(digit, () => []).add(coord);
+    }
+
+    if (byDigit.isEmpty) return [];
+
+    final blocks = <AppOmrFieldBlock>[];
+
+    // Create one field block per digit
+    for (final entry in byDigit.entries.toList()..sort((a, b) => a.key.compareTo(b.key))) {
+      final digit = entry.key;
+      final digitCoords = entry.value;
+
+      // Sort by value (1-10)
+      digitCoords.sort((a, b) => ((a['value'] as num?)?.toInt() ?? 0)
+          .compareTo((b['value'] as num?)?.toInt() ?? 0));
+
+      // Convert to AppBubbleCoord with bubbleValues as ['1', '2', ..., '10']
+      final exactCoords = <AppBubbleCoord>[];
+      for (final c in digitCoords) {
+        final value = (c['value'] as num?)?.toInt() ?? 0;
+        exactCoords.add(AppBubbleCoord(
+          label: 'md${digit + 1}',
+          value: '$value',
+          x: (c['x'] as num?)?.toInt() ?? 0,
+          y: (c['y'] as num?)?.toInt() ?? 0,
+          w: (c['w'] as num?)?.toInt() ?? 46,
+          h: (c['h'] as num?)?.toInt() ?? 46,
+        ));
+      }
+
+      // Get origin from first coord
+      final firstCoord = digitCoords.first;
+      final originX = (firstCoord['x'] as num?)?.toInt() ?? 0;
+      final originY = (firstCoord['y'] as num?)?.toInt() ?? 0;
+
+      blocks.add(AppOmrFieldBlock(
+        name: 'VersionCode_digit_$digit',
+        originX: originX,
+        originY: originY,
+        shift: 0,
+        bubbleWidth: (firstCoord['w'] as num?)?.toInt() ?? 46,
+        bubbleHeight: (firstCoord['h'] as num?)?.toInt() ?? 46,
+        fieldLabels: ['md${digit + 1}'],
+        bubbleValues: List.generate(10, (i) => '${i + 1}'),
+        bubblesGap: 0,
+        labelsGap: 0,
+        direction: 'vertical',
+        emptyValue: '',
+        exactCoords: exactCoords,
+      ));
+    }
+
+    return blocks;
   }
 
   /// Extract exact coordinates from templateJson.answers

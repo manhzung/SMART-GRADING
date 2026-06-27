@@ -29,11 +29,12 @@ class OMRScannerTemplateSet extends OMRScannerEvent {
 class OMRScannerLoadFromServer extends OMRScannerEvent {
   final String examId;
   final String? examName;
+  final String? classId;
 
-  const OMRScannerLoadFromServer({required this.examId, this.examName});
+  const OMRScannerLoadFromServer({required this.examId, this.examName, this.classId});
 
   @override
-  List<Object?> get props => [examId, examName];
+  List<Object?> get props => [examId, examName, classId];
 }
 
 class OMRScannerImageCaptured extends OMRScannerEvent {

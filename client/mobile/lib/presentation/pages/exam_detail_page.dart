@@ -58,6 +58,8 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
         _statistics = futures[1] as ExamStatistics;
         _classSummaries = futures[2] as Map<String, ClassSubmissionSummary>;
         _isLoading = false;
+        // ignore: avoid_print
+        print('[ExamDetailPage] Loaded ${_classSummaries.length} class summaries: ${_classSummaries.keys.toList()}');
       });
     } catch (e) {
       // Graceful fallback to mocked statistics/questions if server fails or is empty
