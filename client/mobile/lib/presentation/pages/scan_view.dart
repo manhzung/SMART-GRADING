@@ -16,8 +16,6 @@ class ScanView extends StatefulWidget {
 }
 
 class _ScanViewState extends State<ScanView> {
-  String _searchQuery = '';
-
   @override
   void initState() {
     super.initState();
@@ -37,60 +35,6 @@ class _ScanViewState extends State<ScanView> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => const _ReviewSubmissionsPage(),
-      ),
-    );
-  }
-
-  void _showFilterSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Filter Submissions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.check_circle, color: Color(0xFF10B981)),
-              title: const Text('All'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.sync, color: Color(0xFF1A73E8)),
-              title: const Text('Pending'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.check_circle_outline, color: Color(0xFF137333)),
-              title: const Text('Completed'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.assignment_late_outlined, color: Color(0xFFD97706)),
-              title: const Text('Needs Review'),
-              onTap: () => Navigator.pop(context),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
       ),
     );
   }
@@ -145,12 +89,7 @@ class _ScanViewState extends State<ScanView> {
           submissionsToDisplay = [];
         }
 
-        final List<Submission> filteredList = submissionsToDisplay.where((sub) {
-          final String name = sub.displayName.toLowerCase();
-          final String exam = (sub.examTitle ?? sub.examId).toLowerCase();
-          final String search = _searchQuery.toLowerCase();
-          return name.contains(search) || exam.contains(search);
-        }).take(5).toList();
+        final List<Submission> filteredList = submissionsToDisplay.take(5).toList();
 
         final bool isLoading = state is SubmissionLoading;
 
@@ -330,58 +269,6 @@ class _ScanViewState extends State<ScanView> {
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.search, color: Color(0xFF64748B), size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: TextField(
-                                      onChanged: (val) {
-                                        setState(() {
-                                          _searchQuery = val;
-                                        });
-                                      },
-                                      decoration: const InputDecoration(
-                                        hintText: 'Search students...',
-                                        hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: () => _showFilterSheet(context),
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.tune_outlined, color: Color(0xFF0F172A), size: 20),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                       const SizedBox(height: 20),
 
