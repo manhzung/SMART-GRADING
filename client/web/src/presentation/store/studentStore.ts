@@ -73,6 +73,7 @@ interface StudentState {
   // Submission-specific appeals (modal in MyScores)
   submissionAppeals: StudentExamAppeal[];
   isLoadingSubmissionAppeals: boolean;
+  isCreatingAppeal: boolean;
 
   // Actions
   fetchSubmissions: (filters?: { status?: string; page?: number; limit?: number; startDate?: string; endDate?: string }) => Promise<void>;
@@ -86,6 +87,13 @@ interface StudentState {
     endDate?: string;
   }) => Promise<void>;
   fetchSubmissionAppeals: (submissionId: string) => Promise<void>;
+  createAppeal: (payload: {
+    submissionId: string;
+    examId: string;
+    questionId: string;
+    questionPosition: number;
+    reason: string;
+  }) => Promise<StudentExamAppeal>;
   clearError: () => void;
   clearSubmissionAppeals: () => void;
 }
@@ -116,6 +124,7 @@ export const useStudentStore = create<StudentState>((set) => ({
 
   submissionAppeals: [],
   isLoadingSubmissionAppeals: false,
+  isCreatingAppeal: false,
 
   fetchSubmissions: async (filters) => {
     set({ isLoadingSubmissions: true, submissionsError: null });
@@ -205,6 +214,22 @@ export const useStudentStore = create<StudentState>((set) => ({
       });
     } catch {
       set({ submissionAppeals: [], isLoadingSubmissionAppeals: false });
+    }
+  },
+
+  createAppeal: async (payload) => {
+    set({ isCreatingAppeal: true });
+    try {
+      const response = await apiService.post<StudentExamAppeal>('/appeals', payload);
+      set((state) => ({
+        submissionAppeals: [response, ...state.submissionAppeals],
+        appeals: [response, ...state.appeals],
+        isCreatingAppeal: false,
+      }));
+      return response;
+    } catch (error) {
+      set({ isCreatingAppeal: false });
+      throw error;
     }
   },
 
