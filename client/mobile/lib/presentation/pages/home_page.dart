@@ -67,7 +67,6 @@ class _HomePageState extends State<HomePage> {
           DashboardView(onViewAllExams: () => _setTab(0)),
           const AdminNavView(),
           const SchoolsNavView(),
-          const AnalyticsNavView(),
           const ProfileView(),
         ];
       case 'student':
@@ -106,11 +105,6 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.school_outlined),
             activeIcon: Icon(Icons.school),
             label: 'Schools',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            activeIcon: Icon(Icons.bar_chart),
-            label: 'Analytics',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
@@ -179,8 +173,7 @@ class _HomePageState extends State<HomePage> {
           case 0: return 'Dashboard';
           case 1: return 'Users';
           case 2: return 'Schools';
-          case 3: return 'Analytics';
-          case 4: return 'Profile';
+          case 3: return 'Profile';
           default: return 'Smart Grading';
         }
       case 'student':
