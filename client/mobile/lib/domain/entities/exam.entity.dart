@@ -226,12 +226,16 @@ class Submission {
     String? examTitle;
     DateTime? examDate;
     if (json['examId'] != null) {
-      final exam = json['examId'] as Map<String, dynamic>;
-      examId = (exam['_id'] ?? exam['id'] ?? '').toString();
-      examTitle = exam['title']?.toString();
-      examDate = exam['examDate'] != null
-          ? DateTime.tryParse(exam['examDate'].toString())
-          : null;
+      if (json['examId'] is Map<String, dynamic>) {
+        final exam = json['examId'] as Map<String, dynamic>;
+        examId = (exam['_id'] ?? exam['id'] ?? '').toString();
+        examTitle = exam['title']?.toString();
+        examDate = exam['examDate'] != null
+            ? DateTime.tryParse(exam['examDate'].toString())
+            : null;
+      } else {
+        examId = json['examId'].toString();
+      }
     }
 
     String studentId = '';

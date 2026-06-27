@@ -531,7 +531,7 @@ class SubmissionService {
       Submission.find({ examId: new mongoose.Types.ObjectId(examId), ...query })
         .populate('examId', 'title examDate duration')
         .populate('versionId', 'versionCode')
-        .populate('studentId', 'name email studentCode')
+        .populate('studentId', 'name email studentCode classIds')
         .populate('classId', 'name')
         .sort({ createdAt: -1 }),
       Submission.countDocuments({ examId: new mongoose.Types.ObjectId(examId) }),
@@ -540,50 +540,43 @@ class SubmissionService {
     return { results, total };
   }
 
+  /**
+   * Return submissions for an exam grouped by class. Recovering missing
+   * classId from the related student's classIds[0] when the stored value is
+   * null (legacy scans from before the classId field was populated).
+   */
   async getExamSubmissionsByClass(examId) {
     const submissions = await Submission.find({ examId: new mongoose.Types.ObjectId(examId) })
       .populate('examId', 'title examDate duration')
-      .populate('versionId', 'versionCode')
-      .populate({
-        path: 'studentId',
-        select: 'name email studentCode classIds',
-        populate: { path: 'classIds', select: 'name code' },
-      })
+      .populate('studentId', 'name email studentCode classIds')
       .populate('classId', 'name')
       .sort({ createdAt: -1 });
 
-    const grouped = new Map();
-    for (const submission of submissions) {
-      let classId = submission.classId ? submission.classId._id.toString() : null;
-      let className = submission.classId ? submission.classId.name : null;
+    const groups = new Map();
+    for (const sub of submissions) {
+      let classId = sub.classId?._id?.toString() || sub.classId?.toString() || null;
+      let className = sub.classId?.name || null;
 
-      // Fallback to student's first class when classId is missing.
-      if (!classId && submission.studentId && Array.isArray(submission.studentId.classIds) && submission.studentId.classIds.length > 0) {
-        const firstClass = submission.studentId.classIds[0];
-        classId = firstClass._id ? firstClass._id.toString() : firstClass.toString();
-        className = firstClass.name || className || 'Chưa xác định';
+      if (!classId && sub.studentId && Array.isArray(sub.studentId.classIds) && sub.studentId.classIds.length > 0) {
+        classId = sub.studentId.classIds[0].toString();
+        className = className || 'Chưa xác định';
       }
 
-      if (!classId) classId = 'unknown';
-      if (!className) className = 'Chưa xác định';
-
-      if (!grouped.has(classId)) {
-        grouped.set(classId, {
+      const key = classId || 'unknown';
+      if (!groups.has(key)) {
+        groups.set(key, {
           classId,
-          className,
+          className: className || 'Chưa xác định',
           submissions: [],
         });
       }
-      grouped.get(classId).submissions.push(submission);
+      groups.get(key).submissions.push(sub);
     }
 
-    const classes = Array.from(grouped.values()).map((g) => ({
-      classId: g.classId,
-      className: g.className,
-      submissions: g.submissions,
-    }));
-
-    return { classes, total: submissions.length };
+    return {
+      total: submissions.length,
+      classes: Array.from(groups.values()),
+    };
   }
 
   async getAll(query = {}) {
@@ -609,8 +602,6 @@ class SubmissionService {
       if (toDate) filter.createdAt.$lte = new Date(toDate);
     }
 
-    console.log('[SubmissionService] getAll called with filter:', JSON.stringify(filter));
-
     const [results, total] = await Promise.all([
       Submission.find(filter)
         .populate('examId', 'title examDate')
@@ -622,8 +613,6 @@ class SubmissionService {
         .limit(limit),
       Submission.countDocuments(filter),
     ]);
-
-    console.log('[SubmissionService] getAll returning results:', results.length, 'total:', total);
 
     return {
       results,

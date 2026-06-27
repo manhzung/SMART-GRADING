@@ -53,12 +53,14 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
         _examSubmissionsService.getExamSubmissionsByClass(widget.exam.id),
       ]);
 
-      setState(() {
-        _fullExam = futures[0] as Exam;
-        _statistics = futures[1] as ExamStatistics;
-        _classSummaries = futures[2] as Map<String, ClassSubmissionSummary>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _fullExam = futures[0] as Exam;
+          _statistics = futures[1] as ExamStatistics;
+          _classSummaries = futures[2] as Map<String, ClassSubmissionSummary>;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       // Graceful fallback to mocked statistics/questions if server fails or is empty
       // ignore: avoid_print
@@ -72,9 +74,11 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
           ),
         );
       }
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
