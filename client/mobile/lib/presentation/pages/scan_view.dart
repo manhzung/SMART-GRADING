@@ -627,60 +627,6 @@ class _ScanViewState extends State<ScanView> {
     );
   }
 
-  static final List<Submission> _mockSubmissions = [
-    Submission(
-      id: 'mock1',
-      examId: 'e1',
-      studentId: 'st1',
-      studentName: 'Elena Rodriguez',
-      studentCode: 'SV001',
-      className: 'Lop 10A',
-      examTitle: 'Midterm Calculus II',
-      status: 'graded',
-      score: 8.5,
-      maxScore: 10,
-      createdAt: DateTime(2026, 6, 28, 10, 24),
-    ),
-    Submission(
-      id: 'mock2',
-      examId: 'e1',
-      studentId: 'st2',
-      studentName: 'Marcus Chen',
-      studentCode: 'SV002',
-      className: 'Lop 10A',
-      examTitle: 'Midterm Calculus II',
-      status: 'pending',
-      score: null,
-      maxScore: 10,
-      createdAt: DateTime(2026, 6, 28, 11, 2),
-    ),
-    Submission(
-      id: 'mock3',
-      examId: 'e1',
-      studentId: 'st3',
-      studentName: 'Sarah Jenkins',
-      studentCode: 'SV003',
-      className: 'Lop 10B',
-      examTitle: 'Midterm Calculus II',
-      status: 'scanned',
-      score: 4.2,
-      maxScore: 10,
-      createdAt: DateTime(2026, 6, 28, 11, 15),
-    ),
-    Submission(
-      id: 'mock4',
-      examId: 'e1',
-      studentId: 'st4',
-      studentName: 'David Omari',
-      studentCode: 'SV004',
-      className: 'Lop 10B',
-      examTitle: 'Midterm Calculus II',
-      status: 'review',
-      score: 5.5,
-      maxScore: 10,
-      createdAt: DateTime(2026, 6, 28, 11, 30),
-    ),
-  ];
 }
 
 class SubmissionRow extends StatelessWidget {
