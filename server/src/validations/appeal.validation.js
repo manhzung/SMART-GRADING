@@ -6,9 +6,15 @@ const id = Joi.object().keys({
 
 const createAppeal = {
   body: Joi.object().keys({
-    submissionId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    examId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    questionId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    submissionId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
+    examId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
+    questionId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
     questionPosition: Joi.number().min(1).required(),
     reason: Joi.string().min(10).max(1000).required(),
     evidenceImageUrl: Joi.string().uri().allow(null, ''),

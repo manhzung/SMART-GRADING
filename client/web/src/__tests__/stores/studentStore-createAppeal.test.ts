@@ -17,18 +17,6 @@ const mockApiResponse = {
 };
 
 // Transformed appeal shape (what mapAppeal produces)
-const mockAppeal = {
-  _id: 'appeal123',
-  submissionId: 'sub1',
-  examId: { _id: 'exam1', title: 'Math Exam' },
-  examTitle: 'Math Exam',
-  questionPosition: 1,
-  questionContent: 'What is 2+2?',
-  reason: 'My answer is correct',
-  status: 'pending',
-  teacherResponse: undefined,
-  createdAt: '2026-06-28T00:00:00Z',
-};
 
 describe('studentStore.createAppeal', () => {
   beforeEach(() => {
