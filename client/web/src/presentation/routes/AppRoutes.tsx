@@ -26,16 +26,17 @@ import AppealsPage from '../../pages/AppealsPage';
 import SettingsPage from '../../pages/SettingsPage';
 import HelpPage from '../../pages/HelpPage';
 import NotFoundPage from '../../pages/NotFoundPage';
+import NotificationsPage from '../pages/NotificationsPage';
 import AITutorPage from '../../features/ai-tutor/AITutorPage';
 import AdminDashboard from '../../pages/admin/AdminDashboard';
 import SchoolsPage from '../../pages/admin/SchoolsPage';
 import UsersPage from '../../pages/admin/UsersPage';
 import SchoolLayout from '../components/SchoolLayout';
 import SchoolDashboard from '../../pages/school/SchoolDashboard';
-import ClassesPage as SchoolClassesPage from '../../pages/school/ClassesPage';
+import SchoolClassesPage from '../../pages/school/ClassesPage';
 import StudentsPage from '../../pages/school/StudentsPage';
 import QuestionsPage from '../../pages/school/QuestionsPage';
-import ExamsPage as SchoolExamsPage from '../../pages/school/ExamsPage';
+import SchoolExamsPage from '../../pages/school/ExamsPage';
 import Layout from '../components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -154,6 +155,7 @@ export default function AppRoutes() {
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="help" element={<HelpPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
           <Route path="ai-tutor" element={<AITutorPage />} />
 
           {/* Admin routes */}

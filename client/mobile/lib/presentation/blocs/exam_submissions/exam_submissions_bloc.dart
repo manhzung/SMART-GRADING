@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/network/exam_submissions_service.dart';
 import 'exam_submissions_event.dart';
@@ -18,24 +20,32 @@ class ExamSubmissionsBloc extends Bloc<ExamSubmissionsEvent, ExamSubmissionsStat
     ExamSubmissionsLoadRequested event,
     Emitter<ExamSubmissionsState> emit,
   ) async {
-    // ignore: avoid_print
-    print('[ExamSubmissionsBloc] Loading submissions for examId=${event.examId}');
+    developer.log(
+      '[ExamSubmissionsBloc] _onLoad examId=${event.examId}',
+      name: 'ExamSubmissionsBloc',
+    );
     emit(const ExamSubmissionsLoading());
     try {
       final byClass = await service.getExamSubmissionsByClass(event.examId);
-      // ignore: avoid_print
-      print('[ExamSubmissionsBloc] Loaded ${byClass.length} classes');
       final expandedIds = <String>{
         for (final entry in byClass.entries)
           if (entry.value.submissions.isNotEmpty) entry.key,
       };
+      developer.log(
+        '[ExamSubmissionsBloc] _onLoad success classes=${byClass.length} ids=${byClass.keys.toList()}',
+        name: 'ExamSubmissionsBloc',
+      );
       emit(ExamSubmissionsLoaded(
         byClass: byClass,
         expandedClassIds: expandedIds,
       ));
     } catch (e, st) {
-      // ignore: avoid_print
-      print('[ExamSubmissionsBloc] ERROR: $e\n$st');
+      developer.log(
+        '[ExamSubmissionsBloc] _onLoad ERROR $e',
+        name: 'ExamSubmissionsBloc',
+        error: e,
+        stackTrace: st,
+      );
       emit(ExamSubmissionsError(message: e.toString()));
     }
   }

@@ -17,6 +17,13 @@ const notificationColors = {
   error: styles.colorError,
 };
 
+function mapBackendTypeToFrontend(type: string): 'info' | 'warning' | 'success' | 'error' {
+  if (type.includes('error') || type.includes('rejected') || type.includes('failed')) return 'error';
+  if (type.includes('success') || type.includes('approved') || type.includes('resolved')) return 'success';
+  if (type.includes('warning') || type.includes('reminder') || type.includes('urgent')) return 'warning';
+  return 'info';
+}
+
 function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
@@ -119,14 +126,15 @@ export default function NotificationPanel() {
               </div>
             ) : (
               notifications.map(notification => {
-                const IconComponent = notificationIcons[notification.type];
+                const mappedType = mapBackendTypeToFrontend(notification.type);
+                const IconComponent = notificationIcons[mappedType];
                 return (
                   <div
                     key={notification._id}
                     className={`${styles.notificationItem} ${!notification.isRead ? styles.unread : ''}`}
                     onClick={() => handleNotificationClick(notification._id)}
                   >
-                    <div className={`${styles.iconWrapper} ${notificationColors[notification.type]}`}>
+                    <div className={`${styles.iconWrapper} ${notificationColors[mappedType]}`}>
                       <IconComponent size={16} />
                     </div>
                     <div className={styles.content}>

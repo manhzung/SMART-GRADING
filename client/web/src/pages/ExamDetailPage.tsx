@@ -28,7 +28,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useExamStore } from '../presentation/store/examStore';
-import { useSubmissionStore } from '../presentation/store/submissionStore';
+import { useSubmissionStore, type BackendStudent, type BackendClass, type BackendVersion } from '../presentation/store/submissionStore';
 import { apiService } from '../core/api';
 import { mapExamDetailData } from './examPageAdapters';
 import styles from './ExamDetailPage.module.css';
@@ -949,7 +949,8 @@ export default function ExamDetailPage() {
                   <th style={{ width: '50px' }}>STT</th>
                   <th style={{ width: '180px' }}>HỌC SINH</th>
                   <th style={{ width: '100px' }}>MÃ HS</th>
-                  <th style={{ width: '100px' }}>MÃ ĐỀ</th>
+                  <th style={{ width: '100px' }}>LỚP</th>
+                  <th style={{ width: '80px' }}>MÃ ĐỀ</th>
                   <th style={{ width: '80px' }}>ĐIỂM</th>
                   <th style={{ width: '80px' }}>TỶ LỆ</th>
                   <th style={{ width: '100px' }}>TRẠNG THÁI</th>
@@ -959,34 +960,41 @@ export default function ExamDetailPage() {
               <tbody>
                 {submissions.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#999' }}>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: '32px', color: '#999' }}>
                       Chưa có bài nộp nào.
                     </td>
                   </tr>
                 ) : (
                   submissions.map((sub, idx) => {
-                    // Handle both BE format (with nested objects) and local format
-                    const studentId = (sub as any).studentId;
-                    const studentName = typeof studentId === 'object' && studentId !== null
-                      ? (studentId as any).name
-                      : (sub as any).studentName || '';
-                    const studentCode = typeof studentId === 'object' && studentId !== null
-                      ? (studentId as any).studentCode
-                      : (sub as any).studentCode || '';
-                    const versionCode = (sub as any).versionId
-                      ? (typeof (sub as any).versionId === 'object'
-                        ? (sub as any).versionId?.versionCode
-                        : (sub as any).versionId)
-                      : (sub as any).versionCode || '';
-                    const pct = sub.maxScore ? ((sub.score || sub.totalScore || 0) / sub.maxScore * 100) : 0;
+                    // Extract populated data from backend response
+                    const studentObj = typeof sub.studentId === 'object' && sub.studentId !== null
+                      ? sub.studentId as BackendStudent
+                      : null;
+                    const studentName = studentObj?.name || '—';
+                    const studentCode = studentObj?.studentCode || '—';
+                    
+                    const classObj = typeof sub.classId === 'object' && sub.classId !== null
+                      ? sub.classId as BackendClass
+                      : null;
+                    const className = classObj?.name || '—';
+                    
+                    const versionObj = typeof sub.versionId === 'object' && sub.versionId !== null
+                      ? sub.versionId as BackendVersion
+                      : null;
+                    const versionCode = versionObj?.versionCode || '—';
+                    
+                    const score = sub.score ?? sub.totalScore ?? 0;
+                    const pct = sub.maxScore ? (score / sub.maxScore * 100) : 0;
+                    
                     return (
                       <tr key={sub._id || idx}>
                         <td style={{ textAlign: 'center' }}>{idx + 1}</td>
-                        <td>{studentName || '—'}</td>
-                        <td>{studentCode || '—'}</td>
-                        <td>{versionCode || '—'}</td>
+                        <td>{studentName}</td>
+                        <td>{studentCode}</td>
+                        <td>{className}</td>
+                        <td>{versionCode}</td>
                         <td style={{ textAlign: 'center', fontWeight: 600 }}>
-                          {sub.totalScore != null ? sub.totalScore.toFixed(1) : '—'}
+                          {score > 0 ? score.toFixed(1) : '—'}
                         </td>
                         <td style={{ textAlign: 'center' }}>{pct > 0 ? `${pct.toFixed(0)}%` : '—'}</td>
                         <td>

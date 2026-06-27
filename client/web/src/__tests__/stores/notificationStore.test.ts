@@ -18,8 +18,8 @@ describe('notificationStore', () => {
     const { apiService: mockApi } = await import('../../core/api');
     (mockApi.get as ReturnType<typeof vi.fn>).mockResolvedValue({
       results: [
-        { _id: '1', title: 'Test', message: 'Hello', type: 'info', isRead: false, createdAt: '2025-01-01' },
-        { _id: '2', title: 'Test2', message: 'World', type: 'success', isRead: true, createdAt: '2025-01-02' },
+        { _id: '1', title: 'Test', body: 'Hello', type: 'info', isRead: false, createdAt: '2025-01-01' },
+        { _id: '2', title: 'Test2', body: 'World', type: 'success', isRead: true, createdAt: '2025-01-02' },
       ],
       page: 1, limit: 20, total: 2, pages: 1,
     });
@@ -29,6 +29,7 @@ describe('notificationStore', () => {
 
     const state = useNotificationStore.getState();
     expect(state.notifications).toHaveLength(2);
+    expect(state.notifications[0].message).toBe('Hello');
     expect(state.unreadCount).toBe(1);
   });
 
@@ -36,7 +37,7 @@ describe('notificationStore', () => {
     const { apiService: mockApi } = await import('../../core/api');
     (mockApi.get as ReturnType<typeof vi.fn>).mockResolvedValue({
       results: [
-        { _id: '1', title: 'Test', message: 'Hello', type: 'info', isRead: false, createdAt: '2025-01-01' },
+        { _id: '1', title: 'Test', body: 'Hello', type: 'info', isRead: false, createdAt: '2025-01-01' },
       ],
       page: 1, limit: 20, total: 1, pages: 1,
     });
@@ -55,8 +56,8 @@ describe('notificationStore', () => {
     const { apiService: mockApi } = await import('../../core/api');
     (mockApi.get as ReturnType<typeof vi.fn>).mockResolvedValue({
       results: [
-        { _id: '1', title: 'Test', message: 'Hello', type: 'info', isRead: false, createdAt: '2025-01-01' },
-        { _id: '2', title: 'Test2', message: 'World', type: 'info', isRead: false, createdAt: '2025-01-02' },
+        { _id: '1', title: 'Test', body: 'Hello', type: 'info', isRead: false, createdAt: '2025-01-01' },
+        { _id: '2', title: 'Test2', body: 'World', type: 'info', isRead: false, createdAt: '2025-01-02' },
       ],
       page: 1, limit: 20, total: 2, pages: 1,
     });
@@ -74,8 +75,8 @@ describe('notificationStore', () => {
     const { apiService: mockApi } = await import('../../core/api');
     (mockApi.get as ReturnType<typeof vi.fn>).mockResolvedValue({
       results: [
-        { _id: '1', title: 'Test', message: 'Hello', type: 'info', isRead: false, createdAt: '2025-01-01' },
-        { _id: '2', title: 'Test2', message: 'World', type: 'info', isRead: true, createdAt: '2025-01-02' },
+        { _id: '1', title: 'Test', body: 'Hello', type: 'info', isRead: false, createdAt: '2025-01-01' },
+        { _id: '2', title: 'Test2', body: 'World', type: 'info', isRead: true, createdAt: '2025-01-02' },
       ],
       page: 1, limit: 20, total: 2, pages: 1,
     });

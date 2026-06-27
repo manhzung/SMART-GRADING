@@ -19,6 +19,7 @@ class _ScanViewState extends State<ScanView> {
   @override
   void initState() {
     super.initState();
+    // Load submissions when entering the grading tab
     context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
   }
 
@@ -562,7 +563,7 @@ class _ScanViewState extends State<ScanView> {
                                 ),
                               )
                             else
-                              ...filteredList.map((item) {
+                              ...filteredList.take(5).map((item) {
                                 return Column(
                                   children: [
                                     _SubmissionRow(
@@ -580,23 +581,6 @@ class _ScanViewState extends State<ScanView> {
                                   ],
                                 );
                               }),
-
-                            InkWell(
-                              onTap: () => _openReview(context),
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'Xem tat ca (${state is SubmissionLoaded ? state.submissions.length : filteredList.length})',
-                                  style: const TextStyle(
-                                    color: Color(0xFF0C2B64),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -884,7 +868,106 @@ class _ReviewSubmissionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SubmissionsPage();
+    return BlocProvider.value(
+      value: context.read<SubmissionBloc>(),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF0F172A),
+          elevation: 0,
+          title: const Text(
+            'Danh sach bai nop',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        body: const _ReviewSubmissionsList(),
+      ),
+    );
+  }
+}
+
+class _ReviewSubmissionsList extends StatelessWidget {
+  const _ReviewSubmissionsList();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SubmissionBloc, SubmissionState>(
+      builder: (context, state) {
+        if (state is SubmissionLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        if (state is SubmissionError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Color(0xFFEF4444)),
+                const SizedBox(height: 16),
+                Text(state.message),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+                  },
+                  child: const Text('Thu lai'),
+                ),
+              ],
+            ),
+          );
+        }
+        
+        if (state is SubmissionLoaded) {
+          if (state.submissions.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inbox_outlined, size: 64, color: Color(0xFFCBD5E1)),
+                  SizedBox(height: 16),
+                  Text(
+                    'Chua co bai nop nao',
+                    style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
+                  ),
+                ],
+              ),
+            );
+          }
+          
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: state.submissions.length,
+            itemBuilder: (context, index) {
+              final sub = state.submissions[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: const Color(0xFFDBEAFE),
+                    child: Text(
+                      (sub.displayName.isNotEmpty ? sub.displayName[0] : '?').toUpperCase(),
+                      style: const TextStyle(color: Color(0xFF1D4ED8)),
+                    ),
+                  ),
+                  title: Text(sub.displayName),
+                  subtitle: Text(sub.displayExam),
+                  trailing: Text(
+                    sub.score != null ? '${sub.score!.toStringAsFixed(1)}/10' : '--/10',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: sub.score != null ? const Color(0xFF22C55E) : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        }
+        
+        return const SizedBox.shrink();
+      },
+    );
   }
 }
 

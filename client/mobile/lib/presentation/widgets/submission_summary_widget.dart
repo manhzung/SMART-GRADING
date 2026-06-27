@@ -14,8 +14,6 @@ class SubmissionSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ignore: avoid_print
-    print('[SubmissionSummaryWidget] Building with ${summaries.length} classes: ${summaries.keys.toList()}');
     if (summaries.isEmpty) {
       return Container(
         width: double.infinity,

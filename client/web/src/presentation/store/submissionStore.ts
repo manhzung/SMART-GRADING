@@ -3,16 +3,36 @@ import { apiService } from '../../core/api';
 
 // ─── Backend Types ────────────────────────────────────────────────────────────
 
+export interface BackendStudent {
+  _id: string;
+  name: string;
+  email: string;
+  studentCode?: string;
+}
+
+export interface BackendExam {
+  _id: string;
+  title: string;
+  examDate?: string;
+  duration?: string;
+}
+
+export interface BackendClass {
+  _id: string;
+  name: string;
+}
+
+export interface BackendVersion {
+  _id: string;
+  versionCode: string;
+}
+
 export interface BackendSubmission {
   _id: string;
-  examId: string;
-  studentId: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  classId: string;
-  versionCode: string;
+  examId: BackendExam | string;
+  studentId: BackendStudent | string;
+  classId: BackendClass | string;
+  versionId: BackendVersion | string;
   answers: Array<{
     position: number;
     selectedAnswer: string | null;
@@ -23,9 +43,10 @@ export interface BackendSubmission {
   score?: number;
   totalScore: number;
   maxScore: number;
-  percentage: number;
-  status: 'scanned' | 'completed' | 'manual_review' | 'appealed';
-  submittedAt: string;
+  percentage?: number;
+  status: 'scanned' | 'completed' | 'manual_review' | 'appealed' | 'pending';
+  submittedAt?: string;
+  createdAt: string;
   gradedAt?: string;
   gradingResult?: {
     score: number;
@@ -38,7 +59,6 @@ export interface BackendSubmission {
   };
   processingStatus?: 'pending' | 'processing' | 'completed' | 'failed';
   errorMessage?: string;
-  createdAt: string;
   updatedAt: string;
 }
 

@@ -39,6 +39,19 @@ export interface BackendQuestion {
   updatedAt: string;
 }
 
+// AI-generated questions (for preview, not saved yet)
+export interface AiGeneratedQuestion {
+  content: string;
+  type: 'single_choice' | 'multiple_choice';
+  options: { id: string; content: string }[];
+  difficulty: string;
+  topicId?: string;
+  topicName?: string;
+  source: 'ai';
+  explanation?: string;
+  tags?: string[];
+}
+
 interface PaginatedQuestions {
   results: BackendQuestion[];
   page: number;
@@ -245,7 +258,8 @@ interface QuestionState {
   setFilters: (filters: Partial<QuestionState['filters']>) => void;
   clearError: () => void;
   clearCreateError: () => void;
-  generateAiQuestions: (params: { topic: string; count: number; difficulty?: string; requirements?: string }) => Promise<BackendQuestion[]>;
+  generateAiQuestions: (params: { topic: string; count: number; difficulty?: string; requirements?: string }) => Promise<AiGeneratedQuestion[]>;
+  generateSimilarQuestions: (params: { sourceQuestionIds: string[]; count: number; difficulty?: string }) => Promise<AiGeneratedQuestion[]>;
 }
 
 export const useQuestionStore = create<QuestionState>((set, get) => ({
@@ -450,14 +464,39 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
   generateAiQuestions: async (params) => {
     set({ isCreating: true, createError: null });
     try {
-      const response = await apiService.post<{ questions: BackendQuestion[] }>('/questions/generate', {
+      const response = await apiService.post<{
+        data: { questions: AiGeneratedQuestion[] }
+      }>('/questions/generate', {
         requirements: params.requirements || params.topic,
         count: params.count,
         difficulty: params.difficulty || 'medium',
       });
+      console.log('[generateAiQuestions] Response:', response);
       set({ isCreating: false });
-      return response.questions || [];
+      return response.data?.questions || [];
     } catch (error) {
+      console.error('[generateAiQuestions] Error:', error);
+      set({ createError: (error as Error).message || 'AI generation failed', isCreating: false });
+      throw error;
+    }
+  },
+
+  generateSimilarQuestions: async (params) => {
+    set({ isCreating: true, createError: null });
+    try {
+      console.log('[generateSimilarQuestions] Calling API with:', params);
+      const response = await apiService.post<{
+        data: { questions: AiGeneratedQuestion[] }
+      }>('/questions/generate-similar', {
+        sourceQuestionIds: params.sourceQuestionIds,
+        count: params.count,
+        difficulty: params.difficulty || 'medium',
+      });
+      console.log('[generateSimilarQuestions] Response:', response);
+      set({ isCreating: false });
+      return response.data?.questions || [];
+    } catch (error) {
+      console.error('[generateSimilarQuestions] Error:', error);
       set({ createError: (error as Error).message || 'AI generation failed', isCreating: false });
       throw error;
     }

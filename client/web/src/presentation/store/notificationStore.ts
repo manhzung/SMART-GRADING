@@ -3,12 +3,23 @@ import { apiService } from '../../core/api';
 
 export interface Notification {
   _id: string;
+  userId?: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'success' | 'error';
+  type: 'info' | 'warning' | 'success' | 'error' | string;
   isRead: boolean;
   actionUrl?: string;
   createdAt: string;
+  readAt?: string;
+  data?: {
+    examId?: string;
+    submissionId?: string;
+    appealId?: string;
+    classId?: string;
+    questionId?: string;
+  };
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  expiresAt?: string;
 }
 
 interface NotificationState {
@@ -35,10 +46,37 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await apiService.get<{
-        results: Notification[];
+        results: Array<{
+          _id: string;
+          userId?: string;
+          title: string;
+          body?: string;
+          message?: string;
+          type: string;
+          isRead: boolean;
+          createdAt: string;
+          readAt?: string;
+          data?: Record<string, string>;
+          priority?: string;
+          expiresAt?: string;
+        }>;
         page: number; limit: number; total: number; pages: number;
       }>('/notifications', { params: { page, limit: 20 } });
-      const results = response.results || [];
+      
+      const results: Notification[] = (response.results || []).map((n) => ({
+        _id: n._id,
+        userId: n.userId,
+        title: n.title,
+        message: n.body || n.message || '',
+        type: n.type as Notification['type'],
+        isRead: n.isRead,
+        createdAt: n.createdAt,
+        readAt: n.readAt,
+        data: n.data,
+        priority: n.priority as Notification['priority'],
+        expiresAt: n.expiresAt,
+      }));
+      
       set({
         notifications: results,
         unreadCount: results.filter(n => !n.isRead).length,

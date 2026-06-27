@@ -1,4 +1,4 @@
-import { User, Settings, HelpCircle, Info, LogOut } from 'lucide-react';
+import { User, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../presentation/store/authStore';
 import styles from './ProfilePage.module.css';
@@ -27,10 +27,6 @@ export default function ProfilePage() {
         <button className={styles.menuItem} onClick={() => navigate('/help')}>
           <HelpCircle size={20} />
           <span>Trợ giúp</span>
-        </button>
-        <button className={styles.menuItem} onClick={() => navigate('/ai-tutor')}>
-          <Info size={20} />
-          <span>Giới thiệu</span>
         </button>
         <button className={`${styles.menuItem} ${styles.logout}`} onClick={logout}>
           <LogOut size={20} />

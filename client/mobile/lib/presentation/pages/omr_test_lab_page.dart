@@ -684,26 +684,15 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
         'croppedLen=${result.croppedImageBytes?.length ?? 0}, '
         'template=${result.template.name}');
 
-    // Build scan result from processing result for overlay visualization
-    OMRTestLabScanResult? scanResult;
-    if (result.response.bubbleIntensities.isNotEmpty) {
-      scanResult = OMRTestLabScanResult(
-        responses: Map<String, String>.from(result.response.answers),
-        bubbleIntensities: Map<String, List<double>>.from(
-          result.response.bubbleIntensities.map(
-            (key, value) => MapEntry(key, List<double>.from(value.map((e) => e.meanIntensity))),
-          ),
-        ),
-      );
-      debugPrint('OMRTestLab _buildOverlayTab: created scanResult with ${scanResult.bubbleIntensities.length} fields');
-    }
+    // Build display from templateJson + response for overlay visualization
+    // (the overlay reads template directly and uses response for any future
+    // intensity overlay; no separate scan-result object is needed here.)
 
     return OMRTestLabOverlay(
       imageBytes: displayBytes,
       imageWidth: displayWidth,
       imageHeight: displayHeight,
       template: result.template,
-      scanResult: scanResult,
     );
   }
 

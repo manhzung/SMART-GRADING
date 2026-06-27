@@ -25,6 +25,7 @@ import styles from './QuestionBankPage.module.css';
 import { useQuestionStore, questionService, toFrontendQuestion, type BackendQuestion, type Question } from '../presentation/store/questionStore';
 import { useQuestionPermissions } from '../hooks/useQuestionPermissions';
 import EntityListPage, { type Column } from '../presentation/components/shared/EntityListPage';
+import EntityPageHeader from '../presentation/components/shared/EntityPageHeader';
 
 // ─── LaTeX renderer ────────────────────────────────────────────────────────────
 function Latex({ math, block = false }: { math: string; block?: boolean }) {
@@ -99,14 +100,6 @@ const difficultyBg: Record<string, string> = {
 };
 
 
-interface QuestionRow { _id: string; text: string; difficulty: string; type: string; tags?: string[]; schoolName?: string; }
-
-const questionColumns: Column<QuestionRow>[] = [
-  { key: 'text', header: 'Nội dung', render: (r) => r.text.slice(0, 80) },
-  { key: 'difficulty', header: 'Độ khó' },
-  { key: 'tags', header: 'Tags', render: (r) => (r.tags ?? []).join(', ') },
-];
-
 export default function QuestionBankPage() {
   const {
     questions,
@@ -124,6 +117,7 @@ export default function QuestionBankPage() {
     clearCreateError,
     approveQuestion,
     generateAiQuestions,
+    generateSimilarQuestions,
   } = useQuestionStore();
 
   const permissions = useQuestionPermissions();
@@ -147,6 +141,31 @@ export default function QuestionBankPage() {
   const [aiForm, setAiForm] = useState({ topic: '', count: 5, difficulty: 'medium' as 'easy' | 'medium' | 'hard', requirements: '' });
   const [aiPreview, setAiPreview] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+
+  // ─── Similar Questions (multi-select) ─────────────────────────────────────────
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
+  const [isSimilarModalOpen, setIsSimilarModalOpen] = useState(false);
+  const [similarForm, setSimilarForm] = useState({ count: 3, difficulty: 'medium' as 'easy' | 'medium' | 'hard' });
+  const [similarPreview, setSimilarPreview] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
+  const [isGeneratingSimilar, setIsGeneratingSimilar] = useState(false);
+
+  const toggleQuestionSelection = (id: string) => {
+    setSelectedQuestionIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllVisible = () => {
+    // Use 'id' field from the question object
+    if (selectedQuestionIds.size === filteredQuestions.length) {
+      setSelectedQuestionIds(new Set());
+    } else {
+      setSelectedQuestionIds(new Set(filteredQuestions.map((q: any) => q.id || q._id)));
+    }
+  };
 
   // Explanation modal - use a flexible type since Question from store has `text` not `content`
   const [activeExplanation, setActiveExplanation] = useState<{
@@ -314,24 +333,31 @@ export default function QuestionBankPage() {
   return (
     <div className={styles.container}>
       {/* ─── Top Header ─────────────────────────────────────────────────────── */}
-      <div className={styles.header}>
-        <div className={styles.headerInfo}>
-          <h1>Question Bank</h1>
-          <p>Create, manage, and filter academic questions and equations</p>
-        </div>
-        {canManage && (
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button className={styles.createBtn} style={{ backgroundColor: '#7c3aed' }} onClick={() => setIsAiModalOpen(true)}>
-              <Sparkles size={18} />
-              <span>Tạo bằng AI</span>
-            </button>
-            <button className={styles.createBtn} onClick={() => setIsAddModalOpen(true)}>
-              <Plus size={18} />
-              <span>Add Question</span>
-            </button>
-          </div>
-        )}
-      </div>
+            <EntityPageHeader
+        mode="teacher"
+        title="Question Bank"
+        subtitle="Create, manage, and filter academic questions and equations"
+        extraActions={
+          canManage ? (
+            <>
+              {selectedQuestionIds.size > 0 && (
+                <button className={styles.createBtn} style={{ backgroundColor: '#059669' }} onClick={() => setIsSimilarModalOpen(true)}>
+                  <Sparkles size={18} />
+                  <span>Tạo tương tự ({selectedQuestionIds.size})</span>
+                </button>
+              )}
+              <button className={styles.createBtn} style={{ backgroundColor: '#7c3aed' }} onClick={() => setIsAiModalOpen(true)}>
+                <Sparkles size={18} />
+                <span>Tạo bằng AI</span>
+              </button>
+              <button className={styles.createBtn} onClick={() => setIsAddModalOpen(true)}>
+                <Plus size={18} />
+                <span>Add Question</span>
+              </button>
+            </>
+          ) : undefined
+        }
+      />
 
       {/* ─── Main Layout ────────────────────────────────────────────────────── */}
       <div className={styles.pageLayout}>
@@ -447,21 +473,6 @@ export default function QuestionBankPage() {
 
         {/* ─── Right: Questions ─────────────────────────────────────────────── */}
         <section className={styles.browseContent}>
-        <EntityListPage
-          mode="teacher"
-          title="Browse Questions"
-          subtitle=""
-          searchPlaceholder="Tìm nội dung..."
-          rows={clientFiltered.map((q) => ({ _id: q._id, text: q.text, difficulty: q.difficulty, type: q.type ?? 'single_choice', tags: q.tags }))}
-          columns={questionColumns}
-          rowKey={(r) => r._id}
-          loading={isLoading}
-          error={error}
-          pagination={{ page: pagination.page, pages: pagination.pages }}
-          onSearch={(q) => setFilters({ search: q })}
-          onPageChange={(p) => fetchQuestions({ page: p, limit: pagination.limit })}
-        />
-
           {/* Browse Header */}
           <div className={styles.browseHeader}>
             <div className={styles.browseHeaderInfo}>
@@ -633,8 +644,18 @@ export default function QuestionBankPage() {
             >
               {clientFiltered.map((q) => (
                 <article key={q._id} className={styles.questionCard}>
-                  {/* Badges */}
+                  {/* Selection checkbox + Badges */}
                   <div className={styles.cardBadges}>
+                    {canManage && (
+                      <input
+                        type="checkbox"
+                        checked={selectedQuestionIds.has(q.id || q._id)}
+                        onChange={() => toggleQuestionSelection(q.id || q._id)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#7c3aed' }}
+                        title="Chọn để tạo câu hỏi tương tự"
+                      />
+                    )}
                     {q.isAiGenerated && (
                       <span className={`${styles.cardBadge} ${styles.cardBadgeAi}`}>
                         <Sparkles size={12} />
@@ -1122,24 +1143,93 @@ export default function QuestionBankPage() {
               {aiPreview.length > 0 && !isGeneratingAi && (
                 <div style={{ marginTop: '16px' }}>
                   <h4 style={{ marginBottom: '12px', color: '#0b2240', fontSize: '14px' }}>
-                    Xem trước ({aiPreview.length} câu hỏi)
+                    Xem trước &amp; chỉnh sửa ({aiPreview.length} câu hỏi)
                   </h4>
-                  <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
                     {aiPreview.map((q, idx) => (
                       <div key={idx} style={{ padding: '12px 0', borderBottom: idx < aiPreview.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                           <span style={{ fontWeight: 600, fontSize: '13px', color: '#334155' }}>Câu {idx + 1}.</span>
-                          <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: q.difficulty === 'Easy' ? '#f0fdf4' : q.difficulty === 'Hard' ? '#fef2f2' : '#fffbeb', color: q.difficulty === 'Easy' ? '#16a34a' : q.difficulty === 'Hard' ? '#dc2626' : '#d97706' }}>
-                            {q.difficulty}
-                          </span>
-                          {q.isAiGenerated && <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#f5f3ff', color: '#7c3aed' }}>AI</span>}
+                          <select
+                            value={q.difficulty}
+                            onChange={(e) => {
+                              const next = [...aiPreview];
+                              next[idx] = { ...next[idx], difficulty: e.target.value as any };
+                              setAiPreview(next);
+                            }}
+                            style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: q.difficulty === 'Easy' ? '#f0fdf4' : q.difficulty === 'Hard' ? '#fef2f2' : '#fffbeb', color: q.difficulty === 'Easy' ? '#16a34a' : q.difficulty === 'Hard' ? '#dc2626' : '#d97706' }}
+                          >
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = aiPreview.filter((_, i) => i !== idx);
+                              setAiPreview(next);
+                            }}
+                            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '2px 6px', fontSize: '11px' }}
+                            title="Xóa câu hỏi này"
+                          >
+                            <X size={14} />
+                          </button>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#475569', marginBottom: '6px' }}>{q.text}</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
-                          {q.options.map((opt) => (
-                            <div key={opt.letter} style={{ fontSize: '12px', color: '#64748b', padding: '2px 0' }}>
-                              <span style={{ fontWeight: 600 }}>{opt.letter}.</span> {opt.text}
-                              {opt.isCorrect && <span style={{ color: '#16a34a', marginLeft: '4px' }}>✓</span>}
+                        <textarea
+                          value={q.text}
+                          onChange={(e) => {
+                            const next = [...aiPreview];
+                            next[idx] = { ...next[idx], text: e.target.value };
+                            setAiPreview(next);
+                          }}
+                          style={{ width: '100%', minHeight: '50px', fontSize: '13px', color: '#475569', marginBottom: '8px', padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: '4px', resize: 'vertical', fontFamily: 'inherit' }}
+                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                          {q.options.map((opt, optIdx) => (
+                            <div key={opt.letter} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = [...aiPreview];
+                                  const updatedOptions = next[idx].options.map((o, i) => ({
+                                    ...o,
+                                    isCorrect: i === optIdx,
+                                  }));
+                                  next[idx] = { ...next[idx], options: updatedOptions };
+                                  setAiPreview(next);
+                                }}
+                                style={{
+                                  flexShrink: 0,
+                                  width: '22px',
+                                  height: '22px',
+                                  borderRadius: '50%',
+                                  border: `2px solid ${opt.isCorrect ? '#16a34a' : '#cbd5e1'}`,
+                                  backgroundColor: opt.isCorrect ? '#dcfce7' : 'transparent',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  color: opt.isCorrect ? '#16a34a' : '#94a3b8',
+                                  padding: 0,
+                                }}
+                                title={opt.isCorrect ? 'Đáp án đúng' : 'Click để chọn làm đáp án đúng'}
+                              >
+                                {opt.letter}
+                              </button>
+                              <input
+                                type="text"
+                                value={opt.text}
+                                onChange={(e) => {
+                                  const next = [...aiPreview];
+                                  const updatedOptions = [...next[idx].options];
+                                  updatedOptions[optIdx] = { ...updatedOptions[optIdx], text: e.target.value };
+                                  next[idx] = { ...next[idx], options: updatedOptions };
+                                  setAiPreview(next);
+                                }}
+                                style={{ flex: 1, fontSize: '12px', padding: '4px 6px', border: '1px solid #e2e8f0', borderRadius: '4px', color: '#475569' }}
+                              />
                             </div>
                           ))}
                         </div>
@@ -1230,6 +1320,251 @@ export default function QuestionBankPage() {
                     type="button"
                     className={styles.cancelBtn}
                     onClick={() => setAiPreview([])}
+                  >
+                    Tạo lại
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Similar Questions Modal ─────────────────────────────────────────────── */}
+      {isSimilarModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => { if (!isGeneratingSimilar) setIsSimilarModalOpen(false); }}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px', width: '100%' }}>
+            <div className={styles.modalHeader}>
+              <h2>
+                <Sparkles size={20} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#059669' }} />
+                Tạo câu hỏi tương tự
+              </h2>
+              <button className={styles.closeBtn} onClick={() => !isGeneratingSimilar && setIsSimilarModalOpen(false)} disabled={isGeneratingSimilar}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className={styles.modalForm}>
+              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                <p style={{ fontSize: '13px', color: '#166534', margin: 0 }}>
+                  <strong>Đã chọn {selectedQuestionIds.size} câu hỏi</strong> làm mẫu để tạo câu hỏi tương tự.
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className={styles.formGroup}>
+                  <label>Số lượng câu hỏi mới</label>
+                  <select
+                    value={similarForm.count}
+                    onChange={(e) => setSimilarForm({ ...similarForm, count: Number(e.target.value) })}
+                    className={styles.formInput}
+                    disabled={isGeneratingSimilar}
+                  >
+                    {[1, 2, 3, 5, 10].map(n => <option key={n} value={n}>{n} câu</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Độ khó</label>
+                  <select
+                    value={similarForm.difficulty}
+                    onChange={(e) => setSimilarForm({ ...similarForm, difficulty: e.target.value as 'easy' | 'medium' | 'hard' })}
+                    className={styles.formInput}
+                    disabled={isGeneratingSimilar}
+                  >
+                    <option value="easy">Dễ hơn</option>
+                    <option value="medium">Tương tự</option>
+                    <option value="hard">Khó hơn</option>
+                  </select>
+                </div>
+              </div>
+
+              {isGeneratingSimilar && (
+                <div style={{ textAlign: 'center', padding: '16px', color: '#059669' }}>
+                  <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
+                  <p>AI đang tạo câu hỏi tương tự, vui lòng chờ...</p>
+                </div>
+              )}
+
+              {/* Preview Section */}
+              {similarPreview.length > 0 && !isGeneratingSimilar && (
+                <div style={{ marginTop: '16px' }}>
+                  <h4 style={{ marginBottom: '12px', color: '#0b2240', fontSize: '14px' }}>
+                    Xem trước &amp; chỉnh sửa ({similarPreview.length} câu hỏi)
+                  </h4>
+                  <div style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                    {similarPreview.map((q, idx) => (
+                      <div key={idx} style={{ padding: '12px 0', borderBottom: idx < similarPreview.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                          <span style={{ fontWeight: 600, fontSize: '13px', color: '#334155' }}>Câu {idx + 1}.</span>
+                          <select
+                            value={q.difficulty}
+                            onChange={(e) => {
+                              const next = [...similarPreview];
+                              next[idx] = { ...next[idx], difficulty: e.target.value as any };
+                              setSimilarPreview(next);
+                            }}
+                            style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: q.difficulty === 'Easy' ? '#f0fdf4' : q.difficulty === 'Hard' ? '#fef2f2' : '#fffbeb', color: q.difficulty === 'Easy' ? '#16a34a' : q.difficulty === 'Hard' ? '#dc2626' : '#d97706' }}
+                          >
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = similarPreview.filter((_, i) => i !== idx);
+                              setSimilarPreview(next);
+                            }}
+                            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '2px 6px', fontSize: '11px' }}
+                            title="Xóa câu hỏi này"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                        <textarea
+                          value={q.text}
+                          onChange={(e) => {
+                            const next = [...similarPreview];
+                            next[idx] = { ...next[idx], text: e.target.value };
+                            setSimilarPreview(next);
+                          }}
+                          style={{ width: '100%', minHeight: '50px', fontSize: '13px', color: '#475569', marginBottom: '8px', padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: '4px', resize: 'vertical', fontFamily: 'inherit' }}
+                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                          {q.options.map((opt, optIdx) => (
+                            <div key={opt.letter} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = [...similarPreview];
+                                  const updatedOptions = next[idx].options.map((o, i) => ({
+                                    ...o,
+                                    isCorrect: i === optIdx,
+                                  }));
+                                  next[idx] = { ...next[idx], options: updatedOptions };
+                                  setSimilarPreview(next);
+                                }}
+                                style={{
+                                  flexShrink: 0,
+                                  width: '22px',
+                                  height: '22px',
+                                  borderRadius: '50%',
+                                  border: `2px solid ${opt.isCorrect ? '#16a34a' : '#cbd5e1'}`,
+                                  backgroundColor: opt.isCorrect ? '#dcfce7' : 'transparent',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  color: opt.isCorrect ? '#16a34a' : '#94a3b8',
+                                  padding: 0,
+                                }}
+                                title={opt.isCorrect ? 'Đáp án đúng' : 'Click để chọn làm đáp án đúng'}
+                              >
+                                {opt.letter}
+                              </button>
+                              <input
+                                type="text"
+                                value={opt.text}
+                                onChange={(e) => {
+                                  const next = [...similarPreview];
+                                  const updatedOptions = [...next[idx].options];
+                                  updatedOptions[optIdx] = { ...updatedOptions[optIdx], text: e.target.value };
+                                  next[idx] = { ...next[idx], options: updatedOptions };
+                                  setSimilarPreview(next);
+                                }}
+                                style={{ flex: 1, fontSize: '12px', padding: '4px 6px', border: '1px solid #e2e8f0', borderRadius: '4px', color: '#475569' }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {createError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', color: '#dc2626', fontSize: '13px' }}>
+                  <AlertCircle size={14} />
+                  <span>{createError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                onClick={() => !isGeneratingSimilar && setIsSimilarModalOpen(false)}
+                disabled={isGeneratingSimilar}
+              >
+                Hủy
+              </button>
+              {similarPreview.length === 0 ? (
+                <button
+                  type="button"
+                  className={styles.submitBtn}
+                  style={{ backgroundColor: '#059669' }}
+                  onClick={async () => {
+                    setIsGeneratingSimilar(true);
+                    clearCreateError();
+                    try {
+                      const sourceIds = Array.from(selectedQuestionIds);
+                      const rawQuestions = await generateSimilarQuestions({
+                        sourceQuestionIds: sourceIds,
+                        count: similarForm.count,
+                        difficulty: similarForm.difficulty,
+                      });
+                      setSimilarPreview(rawQuestions.map(toFrontendQuestion));
+                      toast.success(`Đã tạo ${rawQuestions.length} câu hỏi tương tự!`);
+                    } catch {
+                      toast.error('Tạo câu hỏi tương tự thất bại');
+                    } finally {
+                      setIsGeneratingSimilar(false);
+                    }
+                  }}
+                  disabled={isGeneratingSimilar}
+                >
+                  <Sparkles size={14} />
+                  Tạo câu hỏi tương tự
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={styles.submitBtn}
+                    style={{ backgroundColor: '#16a34a' }}
+                    onClick={async () => {
+                      for (const q of similarPreview) {
+                        try {
+                          await createQuestion({
+                            content: q.text,
+                            type: 'single_choice',
+                            options: q.options.map(o => ({ id: o.letter as 'A' | 'B' | 'C' | 'D', content: o.text, isCorrect: !!o.isCorrect })),
+                            difficulty: q.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
+                            source: 'ai',
+                            tags: q.tags,
+                          });
+                        } catch { /* individual error handled by store */ }
+                      }
+                      toast.success(`Đã lưu ${similarPreview.length} câu hỏi vào ngân hàng!`);
+                      setIsSimilarModalOpen(false);
+                      setSimilarPreview([]);
+                      setSelectedQuestionIds(new Set());
+                      setSimilarForm({ count: 3, difficulty: 'medium' });
+                      fetchQuestions({ page: 1, limit: 20 });
+                    }}
+                  >
+                    <CheckCircle size={14} />
+                    Lưu tất cả ({similarPreview.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.cancelBtn}
+                    onClick={() => setSimilarPreview([])}
                   >
                     Tạo lại
                   </button>

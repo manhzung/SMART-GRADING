@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { apiService } from '../../core/api';
-import { Exam, Question } from '../../types';
+import type { Exam, Question } from '../../types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

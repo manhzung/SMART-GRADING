@@ -190,7 +190,7 @@ class Submission {
   final String studentId;
   final String? studentName;
   final String? studentCode;
-  final List<Map<String, dynamic>>? answers;
+  final Map<String, dynamic>? answers;
   final double? score;
   final double? maxScore;
   final String? imageUrl;
@@ -225,7 +225,7 @@ class Submission {
   factory Submission.fromJson(Map<String, dynamic> json) {
     if (kDebugMode) {
       developer.log(
-        'Submission.fromJson parsing id=${(json['_id'] ?? json['id'] ?? '').toString()}',
+        'Submission.fromJson: parsing $json',
         name: 'Submission',
       );
     }
@@ -293,8 +293,6 @@ class Submission {
         classId = classData.toString();
       }
     }
-    // ignore: avoid_print
-    // print('[Submission.fromJson] classId=$classId, className=$className, student=${studentName ?? "unknown"}');
 
     final submission = Submission(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
@@ -303,9 +301,7 @@ class Submission {
       studentId: studentId,
       studentName: studentName,
       studentCode: studentCode,
-      answers: (json['answers'] as List<dynamic>?)
-          ?.whereType<Map<String, dynamic>>()
-          .toList(),
+      answers: json['answers'] as Map<String, dynamic>?,
       score: (json['totalScore'] as num?)?.toDouble(),
       maxScore: (json['maxScore'] as num?)?.toDouble(),
       imageUrl: json['images'] != null && json['images']['original'] != null
@@ -322,7 +318,7 @@ class Submission {
 
     if (kDebugMode) {
       developer.log(
-        'Submission.fromJson id=${submission.id} name=${submission.displayName} status=${submission.status} answers=${submission.answers?.length ?? 0}',
+        'Submission.fromJson: parsed id=${submission.id}, name=${submission.displayName}, status=${submission.status}',
         name: 'Submission',
       );
     }

@@ -20,7 +20,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
   bool _isLoading = true;
   bool _isSubmittingAppeal = false;
   Submission? _fullSubmission;
-  List<Map<String, dynamic>>? _answerDetails;
+  Map<String, dynamic>? _answerDetails;
 
   @override
   void initState() {
@@ -686,13 +686,15 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
     );
   }
 
-  Widget _buildAnswerList(List<Map<String, dynamic>> answers) {
+  Widget _buildAnswerList(Map<String, dynamic> answers) {
+    final entries = answers.entries.toList();
     return Column(
-      children: List.generate(answers.length, (index) {
-        final answer = answers[index];
-        final questionNum = (answer['position'] ?? index + 1).toString();
+      children: List.generate(entries.length, (index) {
+        final entry = entries[index];
+        final questionNum = entry.key;
+        final answer = entry.value;
         final isCorrect = answer['isCorrect'] == true;
-        final studentAnswer = answer['selectedAnswer'] ?? '';
+        final studentAnswer = answer['studentAnswer'] ?? '';
         final correctAnswer = answer['correctAnswer'] ?? '';
 
         return Container(
@@ -764,24 +766,22 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
     );
   }
 
-  int _getCorrectCount(List<Map<String, dynamic>>? answers) {
+  int _getCorrectCount(Map<String, dynamic>? answers) {
     if (answers == null || answers.isEmpty) return 0;
-    return answers.where((a) => a['isCorrect'] == true).length;
+    return answers.values.where((a) => a['isCorrect'] == true).length;
   }
 
-  int _getWrongCount(List<Map<String, dynamic>>? answers) {
+  int _getWrongCount(Map<String, dynamic>? answers) {
     if (answers == null || answers.isEmpty) return 0;
-    return answers.where((a) => a['isCorrect'] == false).length;
+    return answers.values.where((a) => a['isCorrect'] == false).length;
   }
 
-  int _getSkippedCount(List<Map<String, dynamic>>? answers) {
+  int _getSkippedCount(Map<String, dynamic>? answers) {
     if (answers == null || answers.isEmpty) return 0;
-    return answers
-        .where((a) => a['selectedAnswer'] == null || (a['selectedAnswer'] as String?)?.isEmpty == true)
-        .length;
+    return answers.values.where((a) => a['studentAnswer'] == null || a['studentAnswer'] == '').length;
   }
 
-  int _getTotalQuestions(List<Map<String, dynamic>>? answers) {
+  int _getTotalQuestions(Map<String, dynamic>? answers) {
     if (answers == null || answers.isEmpty) return 0;
     return answers.length;
   }

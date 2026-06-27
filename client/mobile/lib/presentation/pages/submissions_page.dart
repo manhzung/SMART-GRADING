@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/network/exam_submissions_service.dart';
@@ -37,6 +39,10 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
     super.initState();
     _effectiveExamId = widget.examId ?? widget.exam?.id ?? '';
     final service = widget.service ?? getIt<ExamSubmissionsService>();
+    developer.log(
+      '[SubmissionsPage] initState examId=$_effectiveExamId fromWidget=${widget.service != null}',
+      name: 'SubmissionsPage',
+    );
     _bloc = ExamSubmissionsBloc(service: service)
       ..add(ExamSubmissionsLoadRequested(examId: _effectiveExamId));
   }
@@ -83,15 +89,31 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
         body: SafeArea(
           child: BlocBuilder<ExamSubmissionsBloc, ExamSubmissionsState>(
             builder: (context, state) {
+              developer.log(
+                '[SubmissionsPage] build state=${state.runtimeType} examId=$_effectiveExamId',
+                name: 'SubmissionsPage',
+              );
               if (state is ExamSubmissionsLoading || state is ExamSubmissionsInitial) {
                 return const Center(child: CircularProgressIndicator(color: Color(0xFF0C2B64)));
               }
               if (state is ExamSubmissionsError) {
+                developer.log(
+                  '[SubmissionsPage] ERROR ${state.message}',
+                  name: 'SubmissionsPage',
+                );
                 return _buildErrorState(state.message);
               }
               if (state is ExamSubmissionsLoaded) {
+                developer.log(
+                  '[SubmissionsPage] LOADED classes=${state.byClass.length} ids=${state.byClass.keys.toList()}',
+                  name: 'SubmissionsPage',
+                );
                 return _buildLoadedContent(state);
               }
+              developer.log(
+                '[SubmissionsPage] unknown state ${state.runtimeType}',
+                name: 'SubmissionsPage',
+              );
               return const SizedBox.shrink();
             },
           ),
