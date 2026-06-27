@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
+import { toast } from 'sonner';
 import {
   ChevronDown,
   ChevronLeft,
@@ -230,6 +231,7 @@ export default function MyScoresPage() {
       setShowCreateForm(false);
       setFormReason('');
       setFormQuestionPosition('');
+      toast.success('Đơn phúc khảo đã được gửi thành công!');
     } catch (err) {
       setFormError((err as Error).message || 'Có lỗi xảy ra khi gửi đơn.');
     } finally {
