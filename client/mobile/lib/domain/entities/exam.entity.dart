@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Question {
   final String id;
   final String content;
@@ -222,6 +224,8 @@ class Submission {
   }) : _scannedAt = scannedAt;
 
   factory Submission.fromJson(Map<String, dynamic> json) {
+    debugPrint('[Submission.fromJson] raw JSON keys: ${json.keys.toList()}');
+
     String examId = '';
     String? examTitle;
     DateTime? examDate;
@@ -233,8 +237,10 @@ class Submission {
         examDate = exam['examDate'] != null
             ? DateTime.tryParse(exam['examDate'].toString())
             : null;
+        debugPrint('[Submission.fromJson] examId parsed: id=$examId title=$examTitle');
       } else {
         examId = json['examId'].toString();
+        debugPrint('[Submission.fromJson] examId parsed as string: $examId');
       }
     }
 
@@ -247,6 +253,7 @@ class Submission {
         studentId = (student['_id'] ?? student['id'] ?? '').toString();
         studentName = student['name']?.toString();
         studentCode = student['studentCode']?.toString();
+        debugPrint('[Submission.fromJson] student parsed: id=$studentId name=$studentName studentCode=$studentCode');
       } else {
         studentId = student.toString();
       }
@@ -300,6 +307,15 @@ class Submission {
     if (json['createdAt'] != null) {
       createdAt = DateTime.tryParse(json['createdAt'].toString());
     }
+
+    final parsedScore = (json['totalScore'] as num?)?.toDouble();
+    final parsedMaxScore = (json['maxScore'] as num?)?.toDouble();
+    final parsedStatus = (json['status'] ?? 'pending').toString();
+    debugPrint(
+      '[Submission.fromJson] FINAL: id=${json['_id'] ?? json['id']} '
+      'studentName=$studentName studentCode=$studentCode '
+      'className=$className score=$parsedScore maxScore=$parsedMaxScore status=$parsedStatus',
+    );
 
     return Submission(
       id: (json['_id'] ?? json['id'] ?? '').toString(),

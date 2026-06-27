@@ -18,6 +18,13 @@ class ScanView extends StatefulWidget {
 class _ScanViewState extends State<ScanView> {
   String _searchQuery = '';
 
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('[ScanView] initState — dispatching SubmissionLoadRequested');
+    context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+  }
+
   void _openCameraScanner(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -115,18 +122,31 @@ class _ScanViewState extends State<ScanView> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[ScanView] build called');
+    debugPrint('[ScanView] build() called');
     return BlocBuilder<SubmissionBloc, SubmissionState>(
       builder: (context, state) {
-        debugPrint('[ScanView] BlocBuilder state: ${state.runtimeType}');
+        // --- DETAILED DATA FLOW LOGGING ---
+        debugPrint('[ScanView] ████ BlocBuilder state=${state.runtimeType} ████');
         if (state is SubmissionLoaded) {
-          debugPrint('[ScanView] SubmissionLoaded: ${state.submissions.length} submissions');
-          for (final s in state.submissions.take(3)) {
-            debugPrint('[ScanView]   - id=${s.id} status="${s.status}" displayStatus="${s.statusUppercase}" name="${s.displayName}"');
+          debugPrint('[ScanView]   submissions count = ${state.submissions.length}');
+          for (final s in state.submissions) {
+            debugPrint(
+              '[ScanView]   SUB: id=${s.id} '
+              'displayName="${s.displayName}" '
+              'studentCode="${s.studentCode ?? 'null'}" '
+              'className="${s.className ?? 'null'}" '
+              'score=${s.score} '
+              'maxScore=${s.maxScore} '
+              'status="${s.status}" '
+              'statusUppercase="${s.statusUppercase}"',
+            );
           }
-        }
-        if (state is SubmissionError) {
-          debugPrint('[ScanView] SubmissionError: ${state.message}');
+        } else if (state is SubmissionError) {
+          debugPrint('[ScanView]   ERROR: ${state.message}');
+        } else if (state is SubmissionInitial) {
+          debugPrint('[ScanView]   INITIAL — bloc chua duoc load');
+        } else if (state is SubmissionLoading) {
+          debugPrint('[ScanView]   LOADING...');
         }
 
         List<Submission> submissionsToDisplay = [];
@@ -666,6 +686,14 @@ class SubmissionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtitle = _buildSubtitle();
+    debugPrint(
+      '[SubmissionRow] build() displayName="${submission.displayName}" '
+      'studentCode="${submission.studentCode ?? 'null'}" '
+      'className="${submission.className ?? 'null'}" '
+      'score=${submission.score} maxScore=${submission.maxScore} '
+      'statusUppercase="${submission.statusUppercase}" '
+      'subtitle="${subtitle ?? 'null'}"',
+    );
 
     return InkWell(
       onTap: null,
