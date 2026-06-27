@@ -541,6 +541,12 @@ class SubmissionService {
   }
 
   async getAll(query = {}) {
+    // Explicitly extract pagination params to exclude from filter
+    const page = parseInt(query.page, 10) || 1;
+    const limit = parseInt(query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
+    // Extract other filter params - exclude page/limit explicitly
     const {
       examId,
       studentId,
@@ -548,11 +554,13 @@ class SubmissionService {
       status,
       fromDate,
       toDate,
-      ...rest
+      // exclude these from rest:
+      page: _page,
+      limit: _limit,
+      ...filter
     } = query;
-    const { page, limit, skip } = parsePagination(query);
 
-    const filter = { ...rest };
+    // Build filter object
     if (examId) filter.examId = new mongoose.Types.ObjectId(examId);
     if (studentId) filter.studentId = new mongoose.Types.ObjectId(studentId);
     if (versionId) filter.versionId = new mongoose.Types.ObjectId(versionId);
@@ -563,7 +571,14 @@ class SubmissionService {
       if (toDate) filter.createdAt.$lte = new Date(toDate);
     }
 
-    const [results, total] = await Promise.all([
+    console.log('[SubmissionService.getAll] filter:', JSON.stringify(filter));
+    console.log('[SubmissionService.getAll] pagination: page=$page, limit=$limit, skip=$skip');
+
+    // Check total count first
+    const total = await Submission.countDocuments(filter);
+    console.log('[SubmissionService.getAll] total count:', total);
+
+    const [results, countAfter] = await Promise.all([
       Submission.find(filter)
         .populate('examId', 'title examDate')
         .populate('versionId', 'versionCode')
@@ -575,12 +590,78 @@ class SubmissionService {
       Submission.countDocuments(filter),
     ]);
 
+    console.log('[SubmissionService.getAll] fetched results:', results.length, 'total from count:', countAfter);
+
     return {
       results,
       page,
       limit,
-      total,
-      pages: Math.ceil(total / limit),
+      total: countAfter,
+      pages: Math.ceil(countAfter / limit),
+    };
+  }
+
+  /**
+   * Fetch submissions for an exam, grouped by class. When a submission has
+   * no classId stored, derive it from the student's classIds[0]. This
+   * recovers legacy scan data that was stored without classId.
+   */
+  async getExamSubmissionsByClass(examId, query = {}) {
+    const filter = { examId: new mongoose.Types.ObjectId(examId), ...query };
+    const submissions = await Submission.find(filter)
+      .populate('examId', 'title examDate duration')
+      .populate('versionId', 'versionCode')
+      .populate('studentId', 'name email studentCode classIds')
+      .populate('classId', 'name')
+      .sort({ createdAt: -1 });
+
+    // Collect studentIds that lack classId so we can fetch User.classIds
+    const missingClassStudentIds = [
+      ...new Set(
+        submissions
+          .filter((s) => !s.classId && s.studentId)
+          .map((s) => s.studentId._id?.toString() ?? s.studentId.toString()),
+      ),
+    ];
+
+    let studentClassMap = new Map();
+    if (missingClassStudentIds.length > 0) {
+      const { User } = require('../models');
+      const users = await User.find(
+        { _id: { $in: missingClassStudentIds.map((id) => new mongoose.Types.ObjectId(id)) } },
+        'classIds',
+      ).lean();
+      studentClassMap = new Map(
+        users
+          .filter((u) => Array.isArray(u.classIds) && u.classIds.length > 0)
+          .map((u) => [u._id.toString(), u.classIds[0].toString()]),
+      );
+    }
+
+    const groups = new Map();
+    for (const s of submissions) {
+      let classId = s.classId ? s.classId._id?.toString() ?? s.classId.toString() : null;
+      let className = s.classId && s.classId.name ? s.classId.name : null;
+      if (!classId) {
+        const studentId = s.studentId?._id?.toString() ?? s.studentId?.toString();
+        const derived = studentClassMap.get(studentId);
+        if (derived) {
+          classId = derived;
+          className = className || 'Lớp chưa đặt tên';
+        } else {
+          classId = 'unassigned';
+          className = className || 'Chưa phân lớp';
+        }
+      }
+      if (!groups.has(classId)) {
+        groups.set(classId, { classId, className, submissions: [] });
+      }
+      groups.get(classId).submissions.push(s);
+    }
+
+    return {
+      classes: Array.from(groups.values()),
+      total: submissions.length,
     };
   }
 
