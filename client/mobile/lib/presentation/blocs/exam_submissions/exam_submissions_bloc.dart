@@ -5,7 +5,6 @@ import 'exam_submissions_state.dart';
 
 class ExamSubmissionsBloc extends Bloc<ExamSubmissionsEvent, ExamSubmissionsState> {
   final ExamSubmissionsService service;
-  String? _currentExamId;
 
   ExamSubmissionsBloc({required this.service}) : super(const ExamSubmissionsInitial()) {
     on<ExamSubmissionsLoadRequested>(_onLoad);
@@ -19,7 +18,6 @@ class ExamSubmissionsBloc extends Bloc<ExamSubmissionsEvent, ExamSubmissionsStat
     ExamSubmissionsLoadRequested event,
     Emitter<ExamSubmissionsState> emit,
   ) async {
-    _currentExamId = event.examId;
     emit(const ExamSubmissionsLoading());
     try {
       final byClass = await service.getExamSubmissionsByClass(event.examId);
@@ -40,7 +38,6 @@ class ExamSubmissionsBloc extends Bloc<ExamSubmissionsEvent, ExamSubmissionsStat
     ExamSubmissionsRefreshRequested event,
     Emitter<ExamSubmissionsState> emit,
   ) async {
-    _currentExamId = event.examId;
     emit(const ExamSubmissionsLoading());
     try {
       final byClass = await service.getExamSubmissionsByClass(event.examId);
