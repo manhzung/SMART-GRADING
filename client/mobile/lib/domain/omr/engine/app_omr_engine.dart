@@ -67,14 +67,7 @@ class AppOMREngine {
   List<int> get alignmentShifts => List.unmodifiable(_shifts);
 
   /// Process image bytes and return OmrResult with annotated image bytes.
-  ///
-  /// [answerKey] - Optional map of question labels to correct answers (e.g. {"q1": "A", "q2": "B"})
-  /// If provided, annotated image will color bubbles based on correctness:
-  /// - Green: correct answer
-  /// - Red: incorrect answer
-  /// - Purple: multi-marked
-  /// - Blue: student ID / version code (always green for filled)
-  (AppOmrResult, Uint8List?) processImage(Uint8List imageBytes, {Map<String, String>? answerKey}) {
+  (AppOmrResult, Uint8List?) processImage(Uint8List imageBytes) {
     cv.Mat img;
     Uint8List? annotatedBytes;
 
@@ -228,7 +221,7 @@ class AppOMREngine {
           _shifts.clear();
         }
 
-        final (responses, details, confidence, _) = _readResponses(normalized, answerKey: answerKey);
+        final (responses, details, confidence, _) = _readResponses(normalized);
         normalized.dispose();
 
         if (origWidth > 0 && origHeight > 0) {
@@ -281,7 +274,7 @@ class AppOMREngine {
       }
 
       final (responses, details, confidence, finalMarked) =
-          _readResponses(normalized, answerKey: answerKey);
+          _readResponses(normalized);
 
       // Encode the cropped (normalized) image for overlay display
       Uint8List? croppedBytes;
@@ -1095,16 +1088,12 @@ class AppOMREngine {
   // ═══════════════════════════════════════════════════════════════════════
 
   /// Reads bubble responses from the image and returns results with annotated image.
-  ///
-  /// [answerKey] - Map of question labels to correct answers (e.g. {"q1": "A", "q2": "B"})
-  /// If provided, AppBubbleResult will include isCorrect for MCQ questions.
-  /// Student ID / version code fields (sbd*, ver*) are marked as isStudentField=true.
-  ///
+  /// 
   /// Coordinate priority:
   /// 1. If block.exactCoords is available, use those exact coordinates
   /// 2. Otherwise, compute from originX/Y + gaps (direction-based formula)
   (Map<String, String>, List<AppBubbleResult>, double, Uint8List?) _readResponses(
-      cv.Mat img, {Map<String, String>? answerKey}) {
+      cv.Mat img) {
     final responses = <String, String>{};
     final details = <AppBubbleResult>[];
 
@@ -1254,29 +1243,8 @@ class AppOMREngine {
           }
         }
 
-        // Determine if this is a student field (sbd*, student*, ver*)
-        final isStudentField = _isStudentFieldLabel(fieldLabel);
-
-        // Determine correctness for MCQ questions
-        // Normalize key matching: handle both "1" and "q1" formats
-        bool? isCorrect;
-        if (!isStudentField && answerKey != null && marked.isNotEmpty) {
-          String? correctAnswer = answerKey[fieldLabel];
-          // If not found directly, try without "q" prefix or with "q" prefix
-          if (correctAnswer == null) {
-            if (fieldLabel.startsWith('q')) {
-              final withoutQ = fieldLabel.substring(1);
-              correctAnswer = answerKey[withoutQ];
-            } else {
-              correctAnswer = answerKey['q$fieldLabel'];
-            }
-          }
-          if (correctAnswer != null) {
-            isCorrect = _matchAnswer(marked, correctAnswer);
-          }
-        }
-
-        // Calculate all bubble positions for drawing
+        // Draw bubble annotations on the annotated image
+        // Calculate all bubble positions first (for annotation)
         final List<(int, int, int, int)> bubbleRects = [];
         for (int vi = 0; vi < block.bubbleValues.length; vi++) {
           final bubbleValue = block.bubbleValues[vi];
@@ -1303,83 +1271,32 @@ class AppOMREngine {
           bubbleRects.add((bx, by, bw, bh));
         }
 
-        // Draw bubble based on type and correctness
-        final detectedBubblesSet = detectedBubbles.toSet();
+        // Draw each bubble
         for (int vi = 0; vi < bubbleRects.length; vi++) {
           final (bx, by, bw, bh) = bubbleRects[vi];
-          final isDetected = detectedBubblesSet.contains(vi);
 
-          // Determine bubble color
-          cv.Scalar bubbleColor;
-          cv.Scalar textColor;
-          int thickness;
-
-          if (isDetected) {
-            if (isStudentField) {
-              // Student fields: always green
-              bubbleColor = cv.Scalar(50, 205, 50); // Lime green
-              textColor = cv.Scalar(10, 100, 10);
-              thickness = 8;
-            } else if (multiMarked) {
-              // Multi-marked: purple
-              bubbleColor = cv.Scalar(128, 0, 128);
-              textColor = cv.Scalar(50, 0, 50);
-              thickness = 8;
-            } else if (isCorrect == true) {
-              // Correct: green
-              bubbleColor = cv.Scalar(50, 205, 50); // Lime green
-              textColor = cv.Scalar(10, 100, 10);
-              thickness = 8;
-            } else if (isCorrect == false) {
-              // Incorrect: red
-              bubbleColor = cv.Scalar(50, 50, 255); // Red
-              textColor = cv.Scalar(255, 255, 255);
-              thickness = 8;
-            } else {
-              // No answer key: default gray
-              bubbleColor = cv.Scalar(50, 50, 50);
-              textColor = cv.Scalar(200, 200, 200);
-              thickness = 8;
-            }
-          } else {
-            // Not detected: light gray outline
-            bubbleColor = cv.Scalar(128, 128, 128);
-            textColor = cv.Scalar(180, 180, 180);
-            thickness = 3;
-          }
-
-          final innerMargin = bw ~/ _rectInnerMarginNum;
-
-          if (isDetected) {
-            // Fill the bubble with solid color for better visibility
+          if (detectedBubbles.contains(vi)) {
+            final innerMargin = bw ~/ _rectInnerMarginNum;
             cv.rectangle(
               finalMarked,
               cv.Rect(bx + innerMargin, by + innerMargin, bw - innerMargin * 2, bh - innerMargin * 2),
-              bubbleColor,
-              thickness: -1, // Solid fill
+              cv.Scalar(50, 50, 50),
+              thickness: 3,
             );
-            // Draw thick border around
-            cv.rectangle(
-              finalMarked,
-              cv.Rect(bx, by, bw, bh),
-              bubbleColor,
-              thickness: thickness,
-            );
+            _putText(finalMarked, block.bubbleValues[vi],
+                (bx, by + bh ~/ 3),
+                fontScale: 0.4,
+                color: cv.Scalar(10, 10, 20),
+                thickness: 1);
           } else {
-            // Not detected: just draw outline
+            final outerMargin = bw ~/ _rectOuterMarginNum;
             cv.rectangle(
               finalMarked,
-              cv.Rect(bx, by, bw, bh),
-              bubbleColor,
-              thickness: thickness,
+              cv.Rect(bx + outerMargin, by + outerMargin, bw - outerMargin * 2, bh - outerMargin * 2),
+              cv.Scalar(128, 128, 128),
+              thickness: -1,
             );
           }
-
-          _putText(finalMarked, block.bubbleValues[vi],
-              (bx, by + bh ~/ 3),
-              fontScale: 0.5,
-              color: textColor,
-              thickness: 2);
         }
 
         if (detectedBubbles.isEmpty) {
@@ -1404,8 +1321,6 @@ class AppOMREngine {
           isMultiMarked: multiMarked,
           intensity: markedIntensity,
           allIntensities: fieldVals,
-          isCorrect: isCorrect,
-          isStudentField: isStudentField,
         ));
       }
     }
@@ -1550,19 +1465,6 @@ class AppOMREngine {
         preprocessorUsed: 'Error',
         details: [],
       );
-
-  /// Check if a label is a student ID or version code field
-  bool _isStudentFieldLabel(String label) {
-    final lower = label.toLowerCase();
-    return lower.startsWith('sbd') ||
-           lower.startsWith('student') ||
-           lower.startsWith('ver');
-  }
-
-  /// Match marked answer with correct answer (case-insensitive, trim)
-  bool _matchAnswer(String marked, String correct) {
-    return marked.trim().toUpperCase() == correct.trim().toUpperCase();
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

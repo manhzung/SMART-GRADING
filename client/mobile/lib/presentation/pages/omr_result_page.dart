@@ -16,7 +16,6 @@ class OMRResultPage extends StatelessWidget {
   final List<QuestionScoreResult>? questionScores;
   final ClassStudent? student;
   final String? studentCode;
-  final String? versionCode;
 
   const OMRResultPage({
     super.key,
@@ -28,7 +27,6 @@ class OMRResultPage extends StatelessWidget {
     this.questionScores,
     this.student,
     this.studentCode,
-    this.versionCode,
   });
 
   @override
@@ -68,11 +66,12 @@ class OMRResultPage extends StatelessWidget {
                 backgroundColor: state.submittedOnline
                     ? const Color(0xFF22C55E)
                     : const Color(0xFFF59E0B),
-                duration: const Duration(seconds: 2),
+                duration: const Duration(seconds: 3),
               ),
             );
-            // Navigate back to scan page
-            Navigator.of(context).pop();
+            if (state.submittedOnline) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }
           }
         },
         child: SingleChildScrollView(
@@ -97,20 +96,6 @@ class OMRResultPage extends StatelessWidget {
   }
 
   Widget _buildAnnotatedImage() {
-    // Build scan info lines from actual data
-    final lines = <String>[];
-    if (studentCode != null && studentCode!.isNotEmpty) {
-      lines.add('SBD: $studentCode');
-    }
-    if (versionCode != null && versionCode!.isNotEmpty) {
-      lines.add('MADE: $versionCode');
-    }
-    final correctCount = gradingResult.verdicts.where((v) => v.verdict == 'correct').length;
-    final totalCount = gradingResult.verdicts.length;
-    if (totalCount > 0) {
-      lines.add('DIEM: ${gradingResult.score.toStringAsFixed(1)} ($correctCount/$totalCount)');
-    }
-
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       decoration: BoxDecoration(
@@ -160,121 +145,12 @@ class OMRResultPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  Image.memory(
-                    processingResult!.annotatedImageBytes!,
-                    fit: BoxFit.contain,
-                  ),
-                  // Scan info overlay - top right
-                  if (lines.isNotEmpty)
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade400, width: 2),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: lines.map((line) => Text(
-                            line,
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              height: 1.4,
-                            ),
-                          )).toList(),
-                        ),
-                      ),
-                    ),
-                ],
+              child: Image.memory(
+                processingResult!.annotatedImageBytes!,
+                fit: BoxFit.contain,
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetectedInfoCard() {
-    // Hiển thị SBD và Mã đề được đọc từ OMR scan (không chỉnh sửa được)
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.qr_code, color: Colors.white70, size: 20),
-          const SizedBox(width: 12),
-          if (studentCode != null && studentCode!.isNotEmpty) ...[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Số báo danh',
-                    style: TextStyle(
-                      color: Colors.white60,
-                      fontSize: 11,
-                    ),
-                  ),
-                  Text(
-                    studentCode!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (studentCode != null && studentCode!.isNotEmpty && versionCode != null && versionCode!.isNotEmpty)
-            Container(
-              width: 1,
-              height: 36,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              color: Colors.white30,
-            ),
-          if (versionCode != null && versionCode!.isNotEmpty) ...[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Mã đề',
-                    style: TextStyle(
-                      color: Colors.white60,
-                      fontSize: 11,
-                    ),
-                  ),
-                  Text(
-                    versionCode!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -363,11 +239,6 @@ class OMRResultPage extends StatelessWidget {
         children: [
           if (student != null) ...[
             _buildStudentInfoCard(),
-            const SizedBox(height: 16),
-          ],
-          // Hiển thị SBD và Mã đề đã đọc được từ OMR
-          if (studentCode != null || versionCode != null) ...[
-            _buildDetectedInfoCard(),
             const SizedBox(height: 16),
           ],
           Row(
@@ -813,8 +684,6 @@ class OMRResultPage extends StatelessWidget {
   }
 
   Widget _buildBottomBar(BuildContext context) {
-    final hasStudent = student != null;
-    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
@@ -847,17 +716,13 @@ class OMRResultPage extends StatelessWidget {
               child: SizedBox(
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: hasStudent
-                      ? () {
-                          context.read<OMRScannerBloc>().add(OMRScannerSubmit());
-                        }
-                      : null,
+                  onPressed: () {
+                    context.read<OMRScannerBloc>().add(OMRScannerSubmit());
+                  },
                   icon: const Icon(Icons.cloud_upload_outlined),
-                  label: Text(hasStudent ? 'Submit' : 'Student Not Found'),
+                  label: const Text('Submit'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: hasStudent
-                        ? const Color(0xFF6366F1)
-                        : const Color(0xFF94A3B8),
+                    backgroundColor: const Color(0xFF6366F1),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

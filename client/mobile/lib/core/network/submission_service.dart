@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import '../../domain/entities/exam.entity.dart';
 import '../constants/app_constants.dart';
 import 'api_client.dart';
@@ -29,30 +28,10 @@ class SubmissionService {
     if (fromDate != null && fromDate.isNotEmpty) queryParams['fromDate'] = fromDate;
     if (toDate != null && toDate.isNotEmpty) queryParams['toDate'] = toDate;
 
-    developer.log(
-      'SubmissionService.getSubmissions: GET ${ApiConstants.submissions} params=$queryParams',
-      name: 'SubmissionService',
-    );
-
     return _apiClient.get<PaginatedSubmissions>(
       ApiConstants.submissions,
       queryParameters: queryParams,
-      parser: (data) {
-        developer.log(
-          'SubmissionService.getSubmissions: raw response keys=${data is Map ? data.keys.toList() : "not a map"}',
-          name: 'SubmissionService',
-        );
-        developer.log(
-          'SubmissionService.getSubmissions: raw data=${data.toString().substring(0, data.toString().length > 500 ? 500 : data.toString().length)}',
-          name: 'SubmissionService',
-        );
-        final result = PaginatedSubmissions.fromJson(data as Map<String, dynamic>);
-        developer.log(
-          'SubmissionService.getSubmissions: parsed ${result.results.length} submissions, total=${result.total}',
-          name: 'SubmissionService',
-        );
-        return result;
-      },
+      parser: (data) => PaginatedSubmissions.fromJson(data as Map<String, dynamic>),
     );
   }
 

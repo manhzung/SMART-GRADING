@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../engine/app_omr_engine.dart';
 import '../engine/app_omr_models.dart';
 import '../models/omr_template.dart';
-import '../models/field_block.dart';
 import 'omr_models.dart';
 
 class OmScanAndGradeResult {
@@ -23,8 +22,8 @@ class OmrEngineService {
   Future<OmScanAndGradeResult> scanAndGrade({
     required List<int> imageBytes,
     required Map<String, dynamic> templateJson,
-    Map<String, String>? serverAnswerKey,
   }) async {
+    // LOG: Print template info for debugging
     debugPrint('═══ OmrEngineService Template Info ═══');
     debugPrint('Template keys: ${templateJson.keys.toList()}');
     final t = templateJson['template'] ?? templateJson;
@@ -32,25 +31,21 @@ class OmrEngineService {
       debugPrint('Template pageDimensions: ${t['pageDimensions']}');
       debugPrint('Template bubbleDimensions: ${t['bubbleDimensions']}');
       debugPrint('Template fieldBlocks: ${t['fieldBlocks']?.keys.toList() ?? 'none'}');
+      if (t['fieldBlocks'] != null) {
+        for (final entry in (t['fieldBlocks'] as Map<String, dynamic>).entries) {
+          final block = entry.value as Map<String, dynamic>;
+          debugPrint('  Block "${entry.key}": origin=${block['origin']}, fieldType=${block['fieldType']}, '
+              'bubbleWidth=${block['bubbleWidth']}, bubbleHeight=${block['bubbleHeight']}, '
+              'labels=${(block['fieldLabels'] as List?)?.length ?? 0}');
+        }
+      }
       debugPrint('Template answerKey: ${t['answerKey']}');
     }
     debugPrint('═══════════════════════════════════════');
 
-    // LOG: Server answerKey override
-    if (serverAnswerKey != null) {
-      debugPrint('[OmrEngineService] Using SERVER answerKey (${serverAnswerKey.length} entries)');
-      for (final e in serverAnswerKey.entries.take(5)) {
-        debugPrint('  ${e.key} -> ${e.value}');
-      }
-      if (serverAnswerKey.length > 5) {
-        debugPrint('  ... and ${serverAnswerKey.length - 5} more');
-      }
-    } else {
-      debugPrint('[OmrEngineService] No server answerKey, using template answerKey');
-    }
-
     final template = _convertToAppOmrTemplate(templateJson);
     
+    // LOG: Print converted AppOmrTemplate
     debugPrint('═══ Converted AppOmrTemplate ═══');
     debugPrint('pageWidth=${template.pageWidth}, pageHeight=${template.pageHeight}');
     debugPrint('bubbleWidth=${template.bubbleWidth}, bubbleHeight=${template.bubbleHeight}');
@@ -64,23 +59,21 @@ class OmrEngineService {
     
     final bytes = Uint8List.fromList(imageBytes);
 
-    // Extract answer key for grading AND annotation coloring
-    // PRIORITY: serverAnswerKey > template answerKey
-    final answerKey = serverAnswerKey ?? _extractAnswerKey(templateJson);
-
-    debugPrint('[OmrEngineService] Final answerKey for grading (${answerKey.length} entries):');
-    for (final e in answerKey.entries.take(10)) {
-      debugPrint('  ${e.key} -> ${e.value}');
-    }
-
+    // Use AppOMREngine with full corner detection and warp support
     final engine = AppOMREngine(template);
-    final (appResult, annotatedBytes) = engine.processImage(bytes, answerKey: answerKey);
+    final (appResult, annotatedBytes) = engine.processImage(bytes);
 
+    // Convert AppOmrResult to OmrScanResult
     final scanResult = _convertToOmrScanResult(appResult, annotatedBytes);
+
+    // Extract answer key from template
+    final answerKey = _extractAnswerKey(templateJson);
 
     // Convert responses to answer format for grading
     final detectedAnswers = <String, String>{};
     for (final entry in appResult.responses.entries) {
+      // AppOmrEngine uses fieldLabels as keys (e.g., "q1", "q2", "roll1")
+      // We need to convert to grading format
       final label = entry.key;
       final value = entry.value;
       if (value.isNotEmpty && label.isNotEmpty) {
@@ -104,13 +97,16 @@ class OmrEngineService {
   }
 
   AppOmrTemplate _convertToAppOmrTemplate(Map<String, dynamic> json) {
+    // Check if this is the new API format with 'template' key (flat structure)
+    // or the old format with 'templateJson' key (nested structure)
     final hasTemplate = json.containsKey('template');
     final hasTemplateJson = json.containsKey('templateJson');
     
     OMRTemplate serverTemplate;
     
     if (hasTemplate) {
-      // Server format: { template: {...}, answerKey: {...}, ... }
+      // New format: { template: {...}, examId: ..., answerKey: ... }
+      // Convert to OMRTemplate.fromServerJson compatible format
       final inner = json['template'] as Map<String, dynamic>;
       final compatibleJson = {
         '_id': {'\$oid': 'generated_${DateTime.now().millisecondsSinceEpoch}'},
@@ -126,37 +122,27 @@ class OmrEngineService {
       serverTemplate = OMRTemplate.fromServerJson({'templateJson': json});
     }
     
+    // Convert to AppOmrTemplate using exact coords from templateJson
     return _serverTemplateToAppTemplate(serverTemplate);
   }
   
+  /// Convert OMRTemplate to AppOmrTemplate using exact coords from templateJson
+  /// This replicates OMREngine._toAppTemplate logic
   AppOmrTemplate _serverTemplateToAppTemplate(OMRTemplate serverTemplate) {
-    // Convert existing fieldBlocks from serverTemplate
-    final fieldBlocks = serverTemplate.fieldBlocks.map((fb) {
-      return AppOmrFieldBlock(
-        name: fb.name,
-        originX: fb.originX,
-        originY: fb.originY,
-        shift: 0,
-        bubbleWidth: fb.bubbleWidth,
-        bubbleHeight: fb.bubbleHeight,
-        fieldLabels: fb.fieldLabels,
-        bubbleValues: fb.bubbleValues,
-        bubblesGap: fb.bubblesGap.toDouble(),
-        labelsGap: fb.labelsGap.toDouble(),
-        direction: fb.direction.name,
-        emptyValue: fb.emptyValue,
-        exactCoords: _extractExactCoordsFromFieldBlock(fb),
-      );
-    }).toList();
+    // Parse MCQ blocks from templateJson.answers
+    final fieldBlocks = _parseMCQBlocks(serverTemplate.templateJson);
     
-    // Add Student ID blocks
+    // Add Student ID field blocks
     fieldBlocks.addAll(_createStudentIdBlocks(serverTemplate.templateJson, serverTemplate.studentId));
     
-    // Add Version Code blocks
+    // Add Version Code field blocks
     fieldBlocks.addAll(_createVersionCodeBlocks(serverTemplate.templateJson, serverTemplate.versionCodeZone));
     
     final preprocessors = serverTemplate.preProcessors.map((pp) {
-      return AppOmrPreProcessor(name: pp.name, options: pp.options);
+      return AppOmrPreProcessor(
+        name: pp.name,
+        options: pp.options,
+      );
     }).toList();
     
     return AppOmrTemplate(
@@ -174,242 +160,175 @@ class OmrEngineService {
     );
   }
   
-  /// Extract exact coords from FieldBlock.traverseBubbles
-  List<AppBubbleCoord>? _extractExactCoordsFromFieldBlock(FieldBlock fb) {
-    if (fb.traverseBubbles.isEmpty) return null;
-    
-    final coords = <AppBubbleCoord>[];
-    for (int labelIdx = 0; labelIdx < fb.traverseBubbles.length; labelIdx++) {
-      if (labelIdx >= fb.fieldLabels.length) break;
-      final label = fb.fieldLabels[labelIdx];
-      final row = fb.traverseBubbles[labelIdx];
-      for (int valueIdx = 0; valueIdx < row.length; valueIdx++) {
-        if (valueIdx >= fb.bubbleValues.length) break;
-        final bubble = row[valueIdx];
-        coords.add(AppBubbleCoord(
-          label: label,
-          value: fb.bubbleValues[valueIdx],
-          x: bubble.x,
-          y: bubble.y,
-          w: fb.bubbleWidth,
-          h: fb.bubbleHeight,
-        ));
-      }
-    }
-    return coords.isEmpty ? null : coords;
-  }
-  
   /// Parse MCQ blocks from templateJson.answers
-  /// Auto-detects AMC vs Hardcoded layout.
+  /// Each question becomes a block with exact bubble coordinates
   List<AppOmrFieldBlock> _parseMCQBlocks(Map<String, dynamic>? templateJson) {
     if (templateJson == null) return [];
     
     final answers = templateJson['answers'];
     if (answers is! Map) return [];
     
-    final questions = <_QInfo>[];
+    final fieldBlocks = <AppOmrFieldBlock>[];
+    
+    // Group questions by their Y position (same row = same Y ± tolerance)
+    final questionsByRow = _groupQuestionsByRow(answers);
+    
+    for (final row in questionsByRow) {
+      // Sort questions in row by X position (left to right)
+      row.sort((a, b) => a['x'].compareTo(b['x']));
+      
+      // Find the question with smallest Y to use as block origin
+      final firstQ = row.first;
+      final blockOriginY = row.map((q) => q['y']).reduce((a, b) => a < b ? a : b);
+      
+      // Find the question with smallest X to use as block origin
+      final blockOriginX = firstQ['x'];
+      
+      // Create bubble coords for all questions in this row
+      final bubbleCoords = <AppBubbleCoord>[];
+      final fieldLabels = <String>[];
+      
+      for (final q in row) {
+        final qId = q['id'];
+        final qCoords = q['coords'] as Map<String, dynamic>;
+        
+        fieldLabels.add(qId);
+        
+        // Add each option (A, B, C, D) as separate coords
+        for (final entry in qCoords.entries) {
+          final opt = entry.key;
+          final coord = entry.value as Map<String, dynamic>;
+          bubbleCoords.add(AppBubbleCoord(
+            label: qId,
+            value: opt,
+            x: (coord['x'] as num?)?.toInt() ?? 0,
+            y: (coord['y'] as num?)?.toInt() ?? 0,
+            w: (coord['w'] as num?)?.toInt() ?? 46,
+            h: (coord['h'] as num?)?.toInt() ?? 46,
+          ));
+        }
+      }
+      
+      if (bubbleCoords.isNotEmpty) {
+        // Calculate spacing
+        // Sort by label then value to find gaps
+        final sortedByYThenX = List<AppBubbleCoord>.from(bubbleCoords)
+          ..sort((a, b) {
+            if (a.label != b.label) return a.label.compareTo(b.label);
+            return a.y.compareTo(b.y);
+          });
+        
+        // Find bubblesGap (spacing between options A,B,C,D - same label, different Y)
+        int bubblesGap = 46;
+        for (int i = 0; i < sortedByYThenX.length - 1; i++) {
+          if (sortedByYThenX[i].label == sortedByYThenX[i + 1].label) {
+            final gap = sortedByYThenX[i + 1].y - sortedByYThenX[i].y;
+            if (gap > 0 && gap < 200) {
+              bubblesGap = gap;
+              break;
+            }
+          }
+        }
+        
+        // Find labelsGap (spacing between questions - different label, similar Y)
+        int labelsGap = 607;
+        final sortedByYThenLabel = List<AppBubbleCoord>.from(bubbleCoords)
+          ..sort((a, b) {
+            if ((a.y - b.y).abs() < 20) {
+              return a.x.compareTo(b.x);
+            }
+            return a.y.compareTo(b.y);
+          });
+        
+        for (int i = 0; i < sortedByYThenLabel.length - 1; i++) {
+          final curr = sortedByYThenLabel[i];
+          final next = sortedByYThenLabel[i + 1];
+          if (curr.label != next.label) {
+            final xDiff = next.x - curr.x;
+            if (xDiff > 100) {
+              labelsGap = xDiff;
+              break;
+            }
+          }
+        }
+        
+        fieldBlocks.add(AppOmrFieldBlock(
+          name: 'MCQBlock${fieldBlocks.length + 1}',
+          originX: blockOriginX,
+          originY: blockOriginY,
+          shift: 0,
+          bubbleWidth: bubbleCoords.first.w,
+          bubbleHeight: bubbleCoords.first.h,
+          fieldLabels: fieldLabels,
+          bubbleValues: ['A', 'B', 'C', 'D'],
+          bubblesGap: bubblesGap.toDouble(),
+          labelsGap: labelsGap.toDouble(),
+          direction: 'horizontal',
+          emptyValue: '',
+          exactCoords: bubbleCoords,
+        ));
+      }
+    }
+    
+    return fieldBlocks;
+  }
+  
+  /// Group questions by their row (same Y position ± tolerance)
+  List<List<Map<String, dynamic>>> _groupQuestionsByRow(Map answers) {
+    final rows = <List<Map<String, dynamic>>>[];
+    final usedKeys = <String>{};
+    
+    // Sort questions by Y position
+    final sortedQuestions = <Map<String, dynamic>>[];
     for (final entry in answers.entries) {
       final qId = entry.key.toString();
       final options = entry.value as Map;
       if (options.isEmpty) continue;
       
-      final optPositions = <String, _Point>{};
-      for (final optEntry in options.entries) {
-        final optKey = optEntry.key.toString();
-        final coord = optEntry.value as Map<String, dynamic>?;
-        if (coord != null) {
-          optPositions[optKey] = _Point(
-            (coord['x'] as num?)?.toInt() ?? 0,
-            (coord['y'] as num?)?.toInt() ?? 0,
-          );
+      // Get first option's position as question position
+      final firstOpt = options.entries.first.value as Map<String, dynamic>;
+      final y = (firstOpt['y'] as num?)?.toInt() ?? 0;
+      final x = (firstOpt['x'] as num?)?.toInt() ?? 0;
+      
+      sortedQuestions.add({
+        'id': qId,
+        'y': y,
+        'x': x,
+        'coords': options,
+      });
+    }
+    
+    sortedQuestions.sort((a, b) => a['y'].compareTo(b['y']));
+    
+    // Group by Y with tolerance
+    const yTolerance = 30;
+    for (final q in sortedQuestions) {
+      if (usedKeys.contains(q['id'])) continue;
+      
+      final row = <Map<String, dynamic>>[q];
+      usedKeys.add(q['id']);
+      
+      final qY = q['y'];
+      
+      // Find other questions in same row
+      for (final other in sortedQuestions) {
+        if (usedKeys.contains(other['id'])) continue;
+        if ((other['y'] - qY).abs() <= yTolerance) {
+          row.add(other);
+          usedKeys.add(other['id']);
         }
       }
       
-      if (optPositions.isNotEmpty) {
-        final firstOpt = optPositions.values.first;
-        questions.add(_QInfo(
-          id: qId,
-          firstX: firstOpt.x,
-          firstY: firstOpt.y,
-          options: optPositions,
-        ));
+      if (row.isNotEmpty) {
+        rows.add(row);
       }
     }
     
-    if (questions.isEmpty) return [];
-    
-    final layoutType = _detectMCQLayout(questions);
-    debugPrint('MCQ Layout detected: ${layoutType == _MCQLayoutType.amc ? "AMC" : "Hardcoded"}');
-    
-    final groups = layoutType == _MCQLayoutType.amc
-        ? _groupByColumn(questions)
-        : _groupByRow(questions);
-    
-    debugPrint('MCQ Groups: ${groups.length}');
-    for (int i = 0; i < groups.length; i++) {
-      debugPrint('  Group $i: ${groups[i].length} questions, origin=(${groups[i].first.firstX},${groups[i].first.firstY})');
-    }
-    
-    final fieldBlocks = <AppOmrFieldBlock>[];
-    
-    for (int i = 0; i < groups.length; i++) {
-      final group = groups[i];
-      
-      if (layoutType == _MCQLayoutType.amc) {
-        group.sort((a, b) => a.firstY.compareTo(b.firstY));
-      } else {
-        group.sort((a, b) => a.firstX.compareTo(b.firstX));
-      }
-      
-      final bubbleCoords = <AppBubbleCoord>[];
-      final fieldLabels = <String>[];
-      
-      for (final q in group) {
-        fieldLabels.add(q.id);
-        for (final entry in q.options.entries) {
-          bubbleCoords.add(AppBubbleCoord(
-            label: q.id,
-            value: entry.key,
-            x: entry.value.x,
-            y: entry.value.y,
-            w: 46,
-            h: 46,
-          ));
-        }
-      }
-      
-      if (bubbleCoords.isEmpty) continue;
-      
-      final originX = group.first.firstX;
-      final originY = group.first.firstY;
-      
-      int bubblesGap;
-      int labelsGap;
-      String direction;
-      
-      if (layoutType == _MCQLayoutType.amc) {
-        direction = 'horizontal';
-        
-        final firstQBubbles = bubbleCoords.where((b) => b.label == group.first.id).toList()
-          ..sort((a, b) => a.x.compareTo(b.x));
-        if (firstQBubbles.length >= 2) {
-          bubblesGap = firstQBubbles[1].x - firstQBubbles[0].x;
-        } else {
-          bubblesGap = 75;
-        }
-        
-        if (group.length >= 2) {
-          labelsGap = group[1].firstY - group[0].firstY;
-        } else {
-          labelsGap = 68;
-        }
-      } else {
-        direction = 'vertical';
-        
-        final firstQBubbles = bubbleCoords.where((b) => b.label == group.first.id).toList()
-          ..sort((a, b) => a.y.compareTo(b.y));
-        if (firstQBubbles.length >= 2) {
-          bubblesGap = firstQBubbles[1].y - firstQBubbles[0].y;
-        } else {
-          bubblesGap = 46;
-        }
-        
-        if (group.length >= 2) {
-          labelsGap = group[1].firstX - group[0].firstX;
-        } else {
-          labelsGap = 607;
-        }
-      }
-      
-      fieldBlocks.add(AppOmrFieldBlock(
-        name: 'MCQBlock${i + 1}',
-        originX: originX,
-        originY: originY,
-        shift: 0,
-        bubbleWidth: 46,
-        bubbleHeight: 46,
-        fieldLabels: fieldLabels,
-        bubbleValues: ['A', 'B', 'C', 'D'],
-        bubblesGap: bubblesGap.toDouble(),
-        labelsGap: labelsGap.toDouble(),
-        direction: direction,
-        emptyValue: '',
-        exactCoords: bubbleCoords,
-      ));
-    }
-    
-    return fieldBlocks;
+    return rows;
   }
 
-  _MCQLayoutType _detectMCQLayout(List<_QInfo> questions) {
-    if (questions.length < 2) return _MCQLayoutType.hardcoded;
-    
-    final q1 = questions[0];
-    final q2 = questions[1];
-    
-    final dX = (q2.firstX - q1.firstX).abs();
-    final dY = (q2.firstY - q1.firstY).abs();
-    
-    if (dY > dX * 2) {
-      return _MCQLayoutType.amc;
-    } else if (dX > dY * 2) {
-      return _MCQLayoutType.hardcoded;
-    }
-    
-    if (q1.options.length >= 2) {
-      final opts = q1.options.entries.toList();
-      final dx = (opts[1].value.x - opts[0].value.x).abs();
-      final dy = (opts[1].value.y - opts[0].value.y).abs();
-      return dx > dy ? _MCQLayoutType.amc : _MCQLayoutType.hardcoded;
-    }
-    
-    return _MCQLayoutType.hardcoded;
-  }
-
-  List<List<_QInfo>> _groupByColumn(List<_QInfo> questions) {
-    final columns = <_QInfoColumn>[];
-    
-    for (final q in questions) {
-      _QInfoColumn? target;
-      for (final col in columns) {
-        if ((q.firstX - col.baseX).abs() <= 50) {
-          target = col;
-          break;
-        }
-      }
-      if (target == null) {
-        target = _QInfoColumn(baseX: q.firstX);
-        columns.add(target);
-      }
-      target.questions.add(q);
-    }
-    
-    columns.sort((a, b) => a.baseX.compareTo(b.baseX));
-    return columns.map((c) => c.questions).toList();
-  }
-
-  List<List<_QInfo>> _groupByRow(List<_QInfo> questions) {
-    final rows = <_QInfoColumn>[];
-    
-    for (final q in questions) {
-      _QInfoColumn? target;
-      for (final row in rows) {
-        if ((q.firstY - row.baseY).abs() <= 70) {
-          target = row;
-          break;
-        }
-      }
-      if (target == null) {
-        target = _QInfoColumn(baseY: q.firstY);
-        rows.add(target);
-      }
-      target.questions.add(q);
-    }
-    
-    rows.sort((a, b) => a.baseY.compareTo(b.baseY));
-    return rows.map((r) => r.questions).toList();
-  }
-  
+  /// Create field blocks for Student ID from templateJson
+  /// Each digit is a separate block with 10 values (0-9)
   List<AppOmrFieldBlock> _createStudentIdBlocks(
     Map<String, dynamic>? templateJson,
     StudentIdField? studentIdField,
@@ -422,33 +341,41 @@ class OmrEngineService {
     final coords = studentId['coords'] as List<dynamic>?;
     if (coords == null || coords.isEmpty) return [];
     
-    final coordsByDigit = <int, List<Map<String, dynamic>>>{};
+    // Parse all coords
+    final allCoords = <Map<String, dynamic>>[];
     for (final c in coords) {
       if (c is Map) {
-        final digit = (c['digit'] as num?)?.toInt() ?? 0;
-        coordsByDigit.putIfAbsent(digit, () => []).add(Map<String, dynamic>.from(c));
+        allCoords.add(Map<String, dynamic>.from(c));
       }
     }
     
-    if (coordsByDigit.isEmpty) return [];
+    if (allCoords.isEmpty) return [];
     
-    final sortedDigits = coordsByDigit.keys.toList()..sort();
+    // Group coords by x coordinate (each digit has its own x)
+    final coordsByX = <int, List<Map<String, dynamic>>>{};
+    for (final coord in allCoords) {
+      final x = (coord['x'] as num?)?.toInt() ?? 0;
+      coordsByX.putIfAbsent(x, () => []).add(coord);
+    }
+    
+    // Sort x values to get digit order (left to right)
+    final sortedXValues = coordsByX.keys.toList()..sort();
+    
     final fieldBlocks = <AppOmrFieldBlock>[];
     
-    debugPrint('Student ID: ${sortedDigits.length} digits');
-    
-    for (int digitIdx = 0; digitIdx < sortedDigits.length; digitIdx++) {
-      final digit = sortedDigits[digitIdx];
-      final digitCoords = coordsByDigit[digit]!;
+    for (int digitIndex = 0; digitIndex < sortedXValues.length; digitIndex++) {
+      final x = sortedXValues[digitIndex];
+      final digitCoords = coordsByX[x]!;
       
-      // Sort by value (1-10)
-      digitCoords.sort((a, b) => ((a['value'] as num?)?.toInt() ?? 0)
-          .compareTo((b['value'] as num?)?.toInt() ?? 0));
+      // Sort by y to get value order (top to bottom: 1, 2, 3, ... 10)
+      digitCoords.sort((a, b) => ((a['y'] as num?)?.toInt() ?? 0)
+          .compareTo((b['y'] as num?)?.toInt() ?? 0));
       
+      // Create bubble coords for this digit
       final bubbleCoords = <AppBubbleCoord>[];
       for (final coord in digitCoords) {
         bubbleCoords.add(AppBubbleCoord(
-          label: 'sbd${digitIdx + 1}',
+          label: 'sbd${digitIndex + 1}',
           value: (coord['value'] ?? 0).toString(),
           x: (coord['x'] as num?)?.toInt() ?? 0,
           y: (coord['y'] as num?)?.toInt() ?? 0,
@@ -458,20 +385,21 @@ class OmrEngineService {
       }
       
       if (bubbleCoords.isNotEmpty) {
+        // Find y gap between values (vertical spacing)
         int yGap = 71;
         if (bubbleCoords.length >= 2) {
           yGap = bubbleCoords[1].y - bubbleCoords[0].y;
         }
         
         fieldBlocks.add(AppOmrFieldBlock(
-          name: 'student_code_digit_$digitIdx',
+          name: 'student_code',
           originX: bubbleCoords.first.x,
           originY: bubbleCoords.first.y,
           shift: 0,
           bubbleWidth: bubbleCoords.first.w,
           bubbleHeight: bubbleCoords.first.h,
-          fieldLabels: ['sbd${digitIdx + 1}'],
-          bubbleValues: List.generate(10, (i) => '${i + 1}'),
+          fieldLabels: ['sbd${digitIndex + 1}'],
+          bubbleValues: List.generate(10, (i) => i.toString()),
           bubblesGap: yGap.toDouble(),
           labelsGap: 0,
           direction: 'vertical',
@@ -484,6 +412,7 @@ class OmrEngineService {
     return fieldBlocks;
   }
   
+  /// Create field blocks for Version Code from templateJson
   List<AppOmrFieldBlock> _createVersionCodeBlocks(
     Map<String, dynamic>? templateJson,
     VersionCodeField? versionCodeField,
@@ -496,33 +425,13 @@ class OmrEngineService {
     final coords = versionCodeZone['coords'] as List<dynamic>?;
     if (coords == null || coords.isEmpty) return [];
     
-    final coordsByDigit = <int, List<Map<String, dynamic>>>{};
+    // Parse all coords into AppBubbleCoord list
+    final allCoords = <AppBubbleCoord>[];
     for (final c in coords) {
       if (c is Map) {
-        final digit = (c['digit'] as num?)?.toInt() ?? 0;
-        coordsByDigit.putIfAbsent(digit, () => []).add(Map<String, dynamic>.from(c));
-      }
-    }
-    
-    if (coordsByDigit.isEmpty) return [];
-    
-    final sortedDigits = coordsByDigit.keys.toList()..sort();
-    final fieldBlocks = <AppOmrFieldBlock>[];
-    
-    debugPrint('Version Code: ${sortedDigits.length} digits');
-    
-    for (int digitIdx = 0; digitIdx < sortedDigits.length; digitIdx++) {
-      final digit = sortedDigits[digitIdx];
-      final digitCoords = coordsByDigit[digit]!;
-      
-      // Sort by value (1-10)
-      digitCoords.sort((a, b) => ((a['value'] as num?)?.toInt() ?? 0)
-          .compareTo((b['value'] as num?)?.toInt() ?? 0));
-      
-      final bubbleCoords = <AppBubbleCoord>[];
-      for (final coord in digitCoords) {
-        bubbleCoords.add(AppBubbleCoord(
-          label: 'ver${digitIdx + 1}',
+        final coord = Map<String, dynamic>.from(c);
+        allCoords.add(AppBubbleCoord(
+          label: 'version_code',
           value: (coord['value'] ?? 0).toString(),
           x: (coord['x'] as num?)?.toInt() ?? 0,
           y: (coord['y'] as num?)?.toInt() ?? 0,
@@ -530,149 +439,89 @@ class OmrEngineService {
           h: (coord['h'] as num?)?.toInt() ?? 46,
         ));
       }
-      
-      if (bubbleCoords.isNotEmpty) {
-        int yGap = 71;
-        if (bubbleCoords.length >= 2) {
-          yGap = bubbleCoords[1].y - bubbleCoords[0].y;
-        }
-        
-        fieldBlocks.add(AppOmrFieldBlock(
-          name: 'version_code_digit_$digitIdx',
-          originX: bubbleCoords.first.x,
-          originY: bubbleCoords.first.y,
-          shift: 0,
-          bubbleWidth: bubbleCoords.first.w,
-          bubbleHeight: bubbleCoords.first.h,
-          fieldLabels: ['ver${digitIdx + 1}'],
-          bubbleValues: List.generate(10, (i) => '${i + 1}'),
-          bubblesGap: yGap.toDouble(),
-          labelsGap: 0,
-          direction: 'vertical',
-          emptyValue: '',
-          exactCoords: bubbleCoords,
-        ));
+    }
+    
+    if (allCoords.isEmpty) return [];
+    
+    // Sort by x then y
+    allCoords.sort((a, b) {
+      final xDiff = a.x.compareTo(b.x);
+      if (xDiff != 0) return xDiff;
+      return a.y.compareTo(b.y);
+    });
+    
+    // Find spacing
+    int xGap = 46;
+    int yGap = 71;
+    if (allCoords.length >= 2) {
+      if (allCoords[0].x == allCoords[1].x) {
+        yGap = allCoords[1].y - allCoords[0].y;
+      } else {
+        xGap = allCoords[1].x - allCoords[0].x;
       }
     }
     
-    return fieldBlocks;
+    return [
+      AppOmrFieldBlock(
+        name: 'version_code',
+        originX: allCoords.first.x,
+        originY: allCoords.first.y,
+        shift: 0,
+        bubbleWidth: allCoords.first.w,
+        bubbleHeight: allCoords.first.h,
+        fieldLabels: List.generate(allCoords.length, (i) => 'ver$i'),
+        bubbleValues: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+        bubblesGap: yGap.toDouble(),
+        labelsGap: xGap.toDouble(),
+        direction: 'vertical',
+        emptyValue: '',
+        exactCoords: allCoords,
+      ),
+    ];
   }
 
   OmrScanResult _convertToOmrScanResult(AppOmrResult result, Uint8List? annotatedBytes) {
-    // Collect all student ID and version code entries first
-    final studentIdEntries = <int, String>{};
-    final versionCodeEntries = <int, String>{};
-
-    for (final entry in result.responses.entries) {
-      final key = entry.key;
-      final value = entry.value;
-      if (value.isEmpty) continue;
-
-      if (key.startsWith('sbd') || key.startsWith('student')) {
-        // Extract digit number from label (sbd1, sbd2, etc.)
-        final digitStr = key.replaceAll(RegExp(r'[^0-9]'), '');
-        final digit = int.tryParse(digitStr) ?? 0;
-        studentIdEntries[digit] = value;
-      } else if (key.startsWith('ver')) {
-        // Extract digit number from label (ver1, ver2, etc.)
-        final digitStr = key.replaceAll(RegExp(r'[^0-9]'), '');
-        final digit = int.tryParse(digitStr) ?? 0;
-        versionCodeEntries[digit] = value;
-      }
-    }
-
-    // Build studentId and versionCode in correct order
-    // AMC layout: columns are right-to-left, so we need to iterate in reverse
-    // to read digits left-to-right (from sheet's perspective)
-    // Also: AMC uses bubble values 1-10 to represent digits 0-9
-    final studentIdDigits = studentIdEntries.keys.toList()..sort();
-    final versionCodeDigits = versionCodeEntries.keys.toList()..sort();
-
     String studentId = '';
     String versionCode = '';
 
-    // Read student ID: reverse order to correct right-to-left AMC layout
-    // Convert bubble value (1-10) to digit (0-9) by subtracting 1
-    for (final digit in studentIdDigits.reversed) {
-      final value = studentIdEntries[digit];
-      if (value != null && value.isNotEmpty) {
-        final digitValue = (int.tryParse(value) ?? 1) - 1;
-        studentId += digitValue.toString();
+    // Extract student ID and version code from responses
+    for (final entry in result.responses.entries) {
+      final key = entry.key;
+      final value = entry.value;
+
+      if (key.startsWith('roll') || key.startsWith('student')) {
+        studentId += value;
+      } else if (key.startsWith('ver') || key.startsWith('version')) {
+        versionCode += value;
       }
     }
-
-    // Read version code: reverse order to correct right-to-left AMC layout
-    // Convert bubble value (1-10) to digit (0-9) by subtracting 1
-    for (final digit in versionCodeDigits.reversed) {
-      final value = versionCodeEntries[digit];
-      if (value != null && value.isNotEmpty) {
-        final digitValue = (int.tryParse(value) ?? 1) - 1;
-        versionCode += digitValue.toString();
-      }
-    }
-
-    debugPrint('Scanned: studentId=$studentId, versionCode=$versionCode');
-    debugPrint('Responses: ${result.responses}');
 
     return OmrScanResult(
       studentId: studentId,
       versionCode: versionCode,
       answers: Map.fromEntries(
         result.responses.entries.where(
-          (e) => e.key.startsWith('q'),
+          (e) => e.key.startsWith('q') || e.key.startsWith('question'),
         ),
       ),
-      processingTime: Duration.zero,
+      processingTime: Duration.zero, // AppOMREngine doesn't track time
       processingSteps: [result.preprocessorUsed],
       wasWarped: result.warpSucceeded,
     );
   }
 
-  /// Extract answer key from template JSON.
-  /// Handles both formats:
-  /// - Server format: { answerKey: { 1: "A", 2: "B" } }  (numeric keys)
-  /// - Internal format: { template: { answerKey: { "q1": "A", "q2": "B" } } } (string keys)
   Map<String, String> _extractAnswerKey(Map<String, dynamic> templateJson) {
     final answerKey = <String, String>{};
-    
-    // Try server format first: answerKey at root level with numeric keys
-    if (templateJson.containsKey('answerKey')) {
-      final ak = templateJson['answerKey'];
-      if (ak is Map) {
-        for (final entry in ak.entries) {
-          final key = entry.key.toString();
-          final value = entry.value?.toString() ?? '';
-          // Convert numeric key to q-prefixed key
-          if (int.tryParse(key) != null) {
-            answerKey['q$key'] = value;
-          } else {
-            answerKey[key] = value;
-          }
-        }
+    final t = templateJson['template'] != null
+        ? templateJson['template'] as Map<String, dynamic>
+        : templateJson;
+
+    if (t['answerKey'] != null) {
+      for (final entry in (t['answerKey'] as Map).entries) {
+        answerKey[entry.key.toString()] = entry.value.toString();
       }
-      debugPrint('AnswerKey (from root): ${answerKey.length} entries');
     }
-    
-    // Also check nested format: template.answerKey
-    final t = templateJson['template'];
-    if (t is Map<String, dynamic> && t.containsKey('answerKey')) {
-      final ak = t['answerKey'];
-      if (ak is Map) {
-        for (final entry in ak.entries) {
-          final key = entry.key.toString();
-          final value = entry.value?.toString() ?? '';
-          if (!answerKey.containsKey(key)) {
-            if (int.tryParse(key) != null) {
-              answerKey['q$key'] = value;
-            } else {
-              answerKey[key] = value;
-            }
-          }
-        }
-      }
-      debugPrint('AnswerKey (from template): ${answerKey.length} entries');
-    }
-    
+
     return answerKey;
   }
 
@@ -686,52 +535,29 @@ class OmrEngineService {
         : templateJson;
 
     final totalScore = (t['totalScore'] as num?)?.toDouble() ?? 10.0;
-    final numQuestions = answerKey.isNotEmpty ? answerKey.length : detectedAnswers.length;
-    final scorePerQ = numQuestions > 0 ? totalScore / numQuestions : 1.0;
 
-    debugPrint('═══ GRADING STEP ═══');
-    debugPrint('[GRADING] totalScore=$totalScore, numQuestions=$numQuestions, scorePerQ=$scorePerQ');
-    debugPrint('[GRADING] AnswerKey entries:');
-    for (final e in answerKey.entries) {
-      debugPrint('  ${e.key} -> ${e.value}');
-    }
-    debugPrint('[GRADING] DetectedAnswers entries:');
-    for (final e in detectedAnswers.entries) {
-      debugPrint('  ${e.key} -> ${e.value}');
-    }
+    // Count questions
+    final outputColumns = (t['outputColumns'] as List?)?.cast<String>();
+    final numQuestions = outputColumns?.length ?? detectedAnswers.length;
+
+    // Default: equal score per question
+    final scorePerQ = numQuestions > 0 ? totalScore / numQuestions : 1.0;
 
     final questionScores = <QuestionScoreResult>[];
     int correctCount = 0;
     int incorrectCount = 0;
     int unmarkedCount = 0;
 
-    for (final entry in answerKey.entries) {
+    // Process each detected answer
+    for (final entry in detectedAnswers.entries) {
       final qId = entry.key;
-      final correct = entry.value;
-
-      // Normalize keys for matching: handle both "1" and "q1" formats
-      // answerKey might use "1" while detectedAnswers uses "q1"
-      String? detected;
-      if (detectedAnswers.containsKey(qId)) {
-        detected = detectedAnswers[qId];
-      } else if (qId.startsWith('q')) {
-        // Try without "q" prefix
-        final withoutQ = qId.substring(1);
-        if (detectedAnswers.containsKey(withoutQ)) {
-          detected = detectedAnswers[withoutQ];
-        }
-      } else {
-        // Try with "q" prefix
-        final withQ = 'q$qId';
-        if (detectedAnswers.containsKey(withQ)) {
-          detected = detectedAnswers[withQ];
-        }
-      }
+      final detected = entry.value;
+      final correct = answerKey[qId];
 
       bool isCorrect = false;
-      bool isUnmarked = detected == null || detected.isEmpty;
+      bool isUnmarked = detected.isEmpty;
 
-      if (!isUnmarked) {
+      if (!isUnmarked && correct != null) {
         isCorrect = detected == correct;
       }
 
@@ -745,7 +571,7 @@ class OmrEngineService {
 
       questionScores.add(QuestionScoreResult(
         position: int.tryParse(qId.replaceAll('q', '')) ?? questionScores.length,
-        detectedAnswer: detected,
+        detectedAnswer: detected.isNotEmpty ? detected : null,
         correctAnswer: correct,
         isCorrect: isCorrect,
         isUnmarked: isUnmarked,
@@ -754,17 +580,11 @@ class OmrEngineService {
       ));
     }
 
+    // Sort by position
     questionScores.sort((a, b) => a.position.compareTo(b.position));
 
     final obtainedScore = correctCount * scorePerQ;
     final percentage = numQuestions > 0 ? (obtainedScore / totalScore) * 100 : 0.0;
-
-    debugPrint('[GRADING] Result: score=$obtainedScore/$totalScore, correct=$correctCount, incorrect=$incorrectCount, unmarked=$unmarkedCount');
-    debugPrint('[GRADING] Question details:');
-    for (final qs in questionScores) {
-      debugPrint('  Q${qs.position}: detected=${qs.detectedAnswer ?? "unmarked"}, correct=${qs.correctAnswer}, isCorrect=${qs.isCorrect}');
-    }
-    debugPrint('═══ END GRADING ═══');
 
     return OmrGradingResult(
       totalScore: obtainedScore,
@@ -787,36 +607,4 @@ class OmrEngineService {
     if (percentage >= 40) return 'D';
     return 'F';
   }
-}
-
-// Helper classes
-class _QInfo {
-  final String id;
-  final int firstX;
-  final int firstY;
-  final Map<String, _Point> options;
-  
-  _QInfo({required this.id, required this.firstX, required this.firstY, required this.options});
-}
-
-class _QInfoColumn {
-  final int baseX;
-  final int baseY;
-  final List<_QInfo> questions;
-  
-  _QInfoColumn({int? baseX, int? baseY})
-      : baseX = baseX ?? 0,
-        baseY = baseY ?? 0,
-        questions = [];
-}
-
-class _Point {
-  final int x;
-  final int y;
-  const _Point(this.x, this.y);
-}
-
-enum _MCQLayoutType {
-  amc,
-  hardcoded,
 }

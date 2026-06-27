@@ -16,9 +16,6 @@ import 'core/network/appeal_service.dart';
 import 'core/network/analytics_service.dart';
 import 'core/network/question_service.dart';
 import 'core/network/school_service.dart';
-import 'core/network/exam_service.dart';
-import 'core/network/exam_submissions_service.dart';
-import 'core/network/activity_service.dart';
 import 'core/constants/app_constants.dart';
 import 'presentation/pages/splash_page.dart';
 import 'presentation/pages/login_page.dart';
@@ -52,7 +49,6 @@ import 'presentation/blocs/submission/submission_bloc.dart';
 import 'presentation/blocs/school/school_bloc.dart';
 import 'presentation/blocs/class/class_bloc.dart';
 import 'presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
-import 'presentation/blocs/activity/activity_bloc.dart';
 import 'presentation/blocs/admin/admin_bloc.dart';
 import 'presentation/pages/email_verification_pending_page.dart';
 import 'presentation/pages/my_scores_page.dart';
@@ -75,10 +71,7 @@ void setupDependencies() {
     () => OMRTemplateService(apiClient: getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<OMRSubmissionSyncService>(
-    () => OMRSubmissionSyncService(
-      apiClient: getIt<ApiClient>(),
-      baseUrl: ApiConstants.baseUrl.replaceAll('/api/v1', ''), // Remove /api/v1 suffix
-    ),
+    () => OMRSubmissionSyncService(apiClient: getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<UserService>(
     () => UserService(apiClient: getIt<ApiClient>()),
@@ -106,15 +99,6 @@ void setupDependencies() {
   );
   getIt.registerLazySingleton<SchoolService>(
     () => SchoolService(apiClient: getIt<ApiClient>()),
-  );
-  getIt.registerLazySingleton<ExamService>(
-    () => ExamService(apiClient: getIt<ApiClient>()),
-  );
-  getIt.registerLazySingleton<ExamSubmissionsService>(
-    () => ExamSubmissionsService(apiClient: getIt<ApiClient>()),
-  );
-  getIt.registerLazySingleton<ActivityService>(
-    () => ActivityService(apiClient: getIt<ApiClient>()),
   );
 }
 
@@ -151,9 +135,6 @@ class SmartGradingApp extends StatelessWidget {
         ),
         BlocProvider<AdminBloc>(
           create: (_) => AdminBloc(apiClient: getIt<ApiClient>()),
-        ),
-        BlocProvider<ActivityBloc>(
-          create: (_) => ActivityBloc(apiClient: getIt<ApiClient>()),
         ),
       ],
       child: MaterialApp(

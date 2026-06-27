@@ -21,7 +21,6 @@ class ApiConstants {
   static const String subjects = '/subjects';
   static const String aiReports = '/ai-reports';
   static const String aiChat = '/ai-chat';
-  static const String activities = '/activities';
 }
 
 class AppConstants {

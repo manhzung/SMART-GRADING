@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/network/api_client.dart';
@@ -15,20 +14,14 @@ class SubmissionBloc extends Bloc<SubmissionEvent, SubmissionState> {
     on<SubmissionScanRequested>(_onScanRequested);
     on<SubmissionLoadRequested>(_onLoadRequested);
     on<SubmissionLoadByExamRequested>(_onLoadByExamRequested);
-    on<SubmissionLoadMoreRequested>(_onLoadMoreRequested);
-    on<SubmissionRefreshRequested>(_onRefreshRequested);
   }
 
   final SubmissionService _submissionService;
-  int _currentPage = 1;
-  bool _hasMore = false;
-  List<Submission> _allSubmissions = [];
 
   Future<void> _onScanRequested(
     SubmissionScanRequested event,
     Emitter<SubmissionState> emit,
   ) async {
-    developer.log('SubmissionBloc: SubmissionScanRequested examId=${event.examId}', name: 'SubmissionBloc');
     emit(SubmissionScanning());
     try {
       final result = await _submissionService.scanSubmission(
@@ -37,7 +30,6 @@ class SubmissionBloc extends Bloc<SubmissionEvent, SubmissionState> {
       );
       emit(SubmissionScanned(submission: result));
     } catch (e) {
-      developer.log('SubmissionBloc: SubmissionScanRequested error=$e', name: 'SubmissionBloc');
       emit(SubmissionError(message: e.toString().replaceFirst('Exception: ', '')));
     }
   }
@@ -46,75 +38,16 @@ class SubmissionBloc extends Bloc<SubmissionEvent, SubmissionState> {
     SubmissionLoadRequested event,
     Emitter<SubmissionState> emit,
   ) async {
-    developer.log('SubmissionBloc: SubmissionLoadRequested examId=${event.examId}', name: 'SubmissionBloc');
     emit(SubmissionLoading());
-    _currentPage = 1;
-    _allSubmissions = [];
     try {
       final result = await _submissionService.getSubmissions(
         page: 1,
-        limit: 50,
+        limit: 20,
         examId: event.examId,
       );
-      developer.log(
-        'SubmissionBloc: got ${result.results.length} submissions, total=${result.total}, pages=${result.pages}',
-        name: 'SubmissionBloc',
-      );
-      _allSubmissions = result.results;
-      _hasMore = result.page < result.pages;
       emit(SubmissionLoaded(
-        submissions: _allSubmissions,
-        hasMore: _hasMore,
-        currentPage: result.page,
-      ));
-    } catch (e) {
-      developer.log('SubmissionBloc: SubmissionLoadRequested error=$e', name: 'SubmissionBloc');
-      emit(SubmissionError(message: e.toString().replaceFirst('Exception: ', '')));
-    }
-  }
-
-  Future<void> _onLoadMoreRequested(
-    SubmissionLoadMoreRequested event,
-    Emitter<SubmissionState> emit,
-  ) async {
-    if (!_hasMore) return;
-    
-    try {
-      _currentPage++;
-      final result = await _submissionService.getSubmissions(
-        page: _currentPage,
-        limit: 50,
-        examId: event.examId,
-      );
-      _allSubmissions = [..._allSubmissions, ...result.results];
-      _hasMore = result.page < result.pages;
-      emit(SubmissionLoaded(
-        submissions: _allSubmissions,
-        hasMore: _hasMore,
-        currentPage: result.page,
-      ));
-    } catch (e) {
-      emit(SubmissionError(message: e.toString().replaceFirst('Exception: ', '')));
-    }
-  }
-
-  Future<void> _onRefreshRequested(
-    SubmissionRefreshRequested event,
-    Emitter<SubmissionState> emit,
-  ) async {
-    _currentPage = 1;
-    _allSubmissions = [];
-    try {
-      final result = await _submissionService.getSubmissions(
-        page: 1,
-        limit: 50,
-        examId: event.examId,
-      );
-      _allSubmissions = result.results;
-      _hasMore = result.page < result.pages;
-      emit(SubmissionLoaded(
-        submissions: _allSubmissions,
-        hasMore: _hasMore,
+        submissions: result.results,
+        hasMore: result.page < result.pages,
         currentPage: result.page,
       ));
     } catch (e) {

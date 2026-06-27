@@ -7,10 +7,6 @@ const auth = require('../../middlewares/auth');
 const router = express.Router();
 
 router
-  .route('/debug-all')
-  .get(submissionController.debugAll);
-
-router
   .route('/scan')
   .post(auth('scanSubmissions'), validate(submissionValidation.scanSubmission), submissionController.scan);
 
@@ -20,8 +16,7 @@ router
 
 router
   .route('/')
-  .get(auth(), validate(submissionValidation.getSubmissions), submissionController.getAll)
-  .post(auth(), submissionController.create);
+  .get(auth(), validate(submissionValidation.getSubmissions), submissionController.getAll);
 
 router
   .route('/:id')
@@ -39,10 +34,6 @@ router
 router
   .route('/exam/:examId')
   .get(auth(), validate(submissionValidation.getExamSubmissions), submissionController.getByExam);
-
-router
-  .route('/exam/:examId/grouped-by-class')
-  .get(auth(), validate(submissionValidation.getExamSubmissions), submissionController.getByExamGroupedByClass);
 
 router
   .route('/exam/:examId/statistics')

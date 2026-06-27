@@ -3,11 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/exam_service.dart';
-import '../../core/network/exam_submissions_service.dart';
 import '../../core/network/submission_service.dart';
-import '../../domain/entities/class_submission_summary.entity.dart';
 import '../../domain/entities/exam.entity.dart';
-import '../../presentation/widgets/submission_summary_widget.dart';
 import 'edit_exam_page.dart';
 import 'exam_questions_page.dart';
 import 'submissions_page.dart';
@@ -24,12 +21,10 @@ class ExamDetailPage extends StatefulWidget {
 class _ExamDetailPageState extends State<ExamDetailPage> {
   late ExamService _examService;
   late SubmissionService _submissionService;
-  late ExamSubmissionsService _examSubmissionsService;
-
+  
   bool _isLoading = false;
   Exam? _fullExam;
   ExamStatistics? _statistics;
-  Map<String, ClassSubmissionSummary> _classSummaries = {};
 
   @override
   void initState() {
@@ -37,7 +32,6 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
     final apiClient = GetIt.instance<ApiClient>();
     _examService = ExamService(apiClient: apiClient);
     _submissionService = SubmissionService(apiClient: apiClient);
-    _examSubmissionsService = ExamSubmissionsService(apiClient: apiClient);
     _loadData();
   }
 
@@ -50,16 +44,12 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
       final futures = await Future.wait([
         _examService.getExamById(widget.exam.id),
         _submissionService.getExamStatistics(widget.exam.id),
-        _examSubmissionsService.getExamSubmissionsByClass(widget.exam.id),
       ]);
 
       setState(() {
         _fullExam = futures[0] as Exam;
         _statistics = futures[1] as ExamStatistics;
-        _classSummaries = futures[2] as Map<String, ClassSubmissionSummary>;
         _isLoading = false;
-        // ignore: avoid_print
-        print('[ExamDetailPage] Loaded ${_classSummaries.length} class summaries: ${_classSummaries.keys.toList()}');
       });
     } catch (e) {
       // Graceful fallback to mocked statistics/questions if server fails or is empty
@@ -119,9 +109,8 @@ Diem: ${exam.totalScore}
     final displayTotalStudents = totalStudents > 0 ? totalStudents : 0;
     final displayTotalGraded = totalGraded > 0 ? totalGraded : 0;
     
-    // ignore: unused_local_variable
-    final double progressPercent = displayTotalStudents > 0
-        ? (displayTotalGraded / displayTotalStudents) * 100
+    final double progressPercent = displayTotalStudents > 0 
+        ? (displayTotalGraded / displayTotalStudents) * 100 
         : 0.0;
         
     final double averageScore = _statistics?.averageScore ?? 0.0;
@@ -241,10 +230,75 @@ Diem: ${exam.totalScore}
                     ),
                     const SizedBox(height: 20),
 
-                    // SUBMISSIONS BY CLASS CARD
-                    SubmissionSummaryWidget(
-                      summaries: _classSummaries,
-                      examId: displayExam.id,
+                    // GRADING PROGRESS CARD
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'GRADING PROGRESS',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF64748B),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${progressPercent.round()}%',
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '$displayTotalGraded / $displayTotalStudents',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Graded',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Custom Linear Progress bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progressPercent / 100,
+                              minHeight: 8,
+                              backgroundColor: const Color(0xFFE2E8F0),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0C2B64)),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -518,11 +572,7 @@ Diem: ${exam.totalScore}
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => SubmissionsPage(
-                            exam: displayExam,
-                            examId: displayExam.id,
-                            service: _examSubmissionsService,
-                          ),
+                          builder: (context) => SubmissionsPage(exam: displayExam),
                         ),
                       );
                     },

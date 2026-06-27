@@ -247,10 +247,6 @@ class AppBubbleResult {
   final double intensity;
   /// Intensity value for every bubble option (e.g. [50, 200, 180, 195] for A,B,C,D)
   final List<double> allIntensities;
-  /// Whether this bubble's answer is correct (for MCQ questions only)
-  final bool? isCorrect;
-  /// Whether this is a student ID / version code field (no correctness check)
-  final bool isStudentField;
 
   const AppBubbleResult({
     required this.label,
@@ -258,8 +254,6 @@ class AppBubbleResult {
     required this.isMultiMarked,
     required this.intensity,
     this.allIntensities = const [],
-    this.isCorrect,
-    this.isStudentField = false,
   });
 
   factory AppBubbleResult.fromMap(Map<String, dynamic> map) {
@@ -273,8 +267,6 @@ class AppBubbleResult {
       isMultiMarked: map['isMultiMarked'] as bool? ?? false,
       intensity: (map['intensity'] as num?)?.toDouble() ?? 255.0,
       allIntensities: allIntensities,
-      isCorrect: map['isCorrect'] as bool?,
-      isStudentField: map['isStudentField'] as bool? ?? false,
     );
   }
 
@@ -284,8 +276,6 @@ class AppBubbleResult {
         'isMultiMarked': isMultiMarked,
         'intensity': intensity,
         'allIntensities': allIntensities,
-        'isCorrect': isCorrect,
-        'isStudentField': isStudentField,
       };
 }
 

@@ -174,19 +174,9 @@ class ExamBloc extends Bloc<ExamEvent, ExamState> {
   ) async {
     emit(ExamUpcomingLoading());
     try {
-      // ignore: avoid_print
-      print('[ExamBloc] Calling getUpcomingExams with limit=${event.limit}');
       final result = await _examService.getUpcomingExams(limit: event.limit);
-      // ignore: avoid_print
-      print('[ExamBloc] getUpcomingExams result: count=${result.count}, exams=${result.results.length}');
-      if (result.results.isNotEmpty) {
-        // ignore: avoid_print
-        print('[ExamBloc] First exam: ${result.results.first.title}, date=${result.results.first.examDate}, status=${result.results.first.status}');
-      }
       emit(ExamUpcomingLoaded(result.results, result.count));
     } catch (e) {
-      // ignore: avoid_print
-      print('[ExamBloc] Error loading upcoming exams: $e');
       emit(ExamError(message: e.toString().replaceFirst('Exception: ', '')));
     }
   }

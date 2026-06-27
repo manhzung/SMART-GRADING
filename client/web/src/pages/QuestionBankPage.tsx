@@ -24,7 +24,6 @@ import 'katex/dist/katex.min.css';
 import styles from './QuestionBankPage.module.css';
 import { useQuestionStore, questionService, toFrontendQuestion, type BackendQuestion, type Question } from '../presentation/store/questionStore';
 import { useQuestionPermissions } from '../hooks/useQuestionPermissions';
-import EntityListPage, { type Column } from '../presentation/components/shared/EntityListPage';
 
 // ─── LaTeX renderer ────────────────────────────────────────────────────────────
 function Latex({ math, block = false }: { math: string; block?: boolean }) {
@@ -98,14 +97,6 @@ const difficultyBg: Record<string, string> = {
   Hard: '#fef2f2',
 };
 
-
-interface QuestionRow { _id: string; text: string; difficulty: string; type: string; tags?: string[]; schoolName?: string; }
-
-const questionColumns: Column<QuestionRow>[] = [
-  { key: 'text', header: 'Nội dung', render: (r) => r.text.slice(0, 80) },
-  { key: 'difficulty', header: 'Độ khó' },
-  { key: 'tags', header: 'Tags', render: (r) => (r.tags ?? []).join(', ') },
-];
 
 export default function QuestionBankPage() {
   const {
@@ -447,21 +438,6 @@ export default function QuestionBankPage() {
 
         {/* ─── Right: Questions ─────────────────────────────────────────────── */}
         <section className={styles.browseContent}>
-        <EntityListPage
-          mode="teacher"
-          title="Browse Questions"
-          subtitle=""
-          searchPlaceholder="Tìm nội dung..."
-          rows={clientFiltered.map((q) => ({ _id: q._id, text: q.text, difficulty: q.difficulty, type: q.type ?? 'single_choice', tags: q.tags }))}
-          columns={questionColumns}
-          rowKey={(r) => r._id}
-          loading={isLoading}
-          error={error}
-          pagination={{ page: pagination.page, pages: pagination.pages }}
-          onSearch={(q) => setFilters({ search: q })}
-          onPageChange={(p) => fetchQuestions({ page: p, limit: pagination.limit })}
-        />
-
           {/* Browse Header */}
           <div className={styles.browseHeader}>
             <div className={styles.browseHeaderInfo}>

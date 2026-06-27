@@ -110,7 +110,6 @@ class _BatchScanPageState extends State<BatchScanPage> {
 
   Map<String, dynamic> _getDefaultTemplateJson() {
     // Default template for 20 MCQ questions, 4 options (A,B,C,D)
-    // With 7-digit Student ID and 2-digit Version Code
     return {
       'totalScore': 10.0,
       'template': {
@@ -118,69 +117,11 @@ class _BatchScanPageState extends State<BatchScanPage> {
         'pageHeight': 3508,
         'bubbleWidth': 47,
         'bubbleHeight': 47,
-        'autoAlign': false,
         'answerKey': {
           for (int i = 1; i <= 20; i++) 'q$i': 'A',
         },
-        // Student ID: 7 digits (sbd1-sbd7), each with 10 bubble options (1-10)
-        // Positions based on AMC template layout
-        'studentId': {
-          'digits': 7,
-          'coords': _generateStudentIdCoords(),
-        },
-        // Version Code: 2 digits (md1-md2), each with 10 bubble options (1-10)
-        'versionCodeZone': {
-          'digits': 2,
-          'coords': _generateVersionCodeCoords(),
-        },
       },
     };
-  }
-
-  List<Map<String, dynamic>> _generateStudentIdCoords() {
-    // AMC layout: Student ID bubbles
-    // X columns: 1080, 985, 890, 795, 700, 605, 511 (right to left, digit 1-7)
-    // Y values: 10 rows from 2850 to 2212 (value 1-10)
-    final xCols = [1080, 985, 890, 795, 700, 605, 511];
-    final yValues = [2850, 2779, 2708, 2637, 2567, 2496, 2425, 2354, 2283, 2212];
-    final coords = <Map<String, dynamic>>[];
-
-    for (int digit = 0; digit < 7; digit++) {
-      for (int value = 1; value <= 10; value++) {
-        coords.add({
-          'x': xCols[digit],
-          'y': yValues[value - 1],
-          'w': 47,
-          'h': 47,
-          'digit': digit,
-          'value': value,
-        });
-      }
-    }
-    return coords;
-  }
-
-  List<Map<String, dynamic>> _generateVersionCodeCoords() {
-    // AMC layout: Version code bubbles
-    // X columns: 1709, 1614 (right to left, digit 1-2)
-    // Y values: same as student ID
-    final xCols = [1709, 1614];
-    final yValues = [2850, 2779, 2708, 2637, 2567, 2496, 2425, 2354, 2283, 2212];
-    final coords = <Map<String, dynamic>>[];
-
-    for (int digit = 0; digit < 2; digit++) {
-      for (int value = 1; value <= 10; value++) {
-        coords.add({
-          'x': xCols[digit],
-          'y': yValues[value - 1],
-          'w': 47,
-          'h': 47,
-          'digit': digit,
-          'value': value,
-        });
-      }
-    }
-    return coords;
   }
 
   void _showSnackBar(String message) {

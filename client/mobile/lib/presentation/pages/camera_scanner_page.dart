@@ -8,32 +8,10 @@ import 'package:smart_grading_mobile/core/network/api_client.dart';
 import 'package:smart_grading_mobile/core/network/exam_template_service.dart';
 import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 import 'package:smart_grading_mobile/domain/omr/models/evaluation_config.dart';
-import 'package:smart_grading_mobile/domain/omr/models/grading_result.dart';
-import 'package:smart_grading_mobile/domain/omr/engine/omr_engine.dart';
-import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/omr_scanner/omr_scanner_bloc.dart';
 import 'package:smart_grading_mobile/presentation/blocs/camera/camera_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/omr_result_page.dart';
 import 'package:smart_grading_mobile/presentation/widgets/corner_overlay_painter.dart';
-
-/// Data class để lưu kết quả scan trước khi xác nhận
-class _ScanResultData {
-  final Uint8List imageBytes;
-  final OMRGradingResult gradingResult;
-  final OMRProcessingResult? processingResult;
-  final String? studentCode;
-  final String? versionCode;
-  final ClassStudent? matchedStudent;
-
-  _ScanResultData({
-    required this.imageBytes,
-    required this.gradingResult,
-    this.processingResult,
-    this.studentCode,
-    this.versionCode,
-    this.matchedStudent,
-  });
-}
 
 class CameraScannerPage extends StatefulWidget {
   final OMRTemplate? template;
@@ -67,9 +45,6 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
   late CameraBloc _cameraBloc;
   final ImagePicker _imagePicker = ImagePicker();
   late ExamTemplateService _examTemplateService;
-
-  // Lưu kết quả scan để hiển thị popup xác nhận
-  _ScanResultData? _pendingScanResult;
 
   @override
   void initState() {
@@ -199,17 +174,20 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
       child: BlocConsumer<OMRScannerBloc, OMRScannerState>(
         listener: (context, state) {
           if (state is OMRScannerSuccess) {
-            // Lưu kết quả và hiện popup xác nhận
-            setState(() {
-              _pendingScanResult = _ScanResultData(
-                imageBytes: state.imageBytes,
-                gradingResult: state.gradingResult,
-                processingResult: state.processingResult,
-                studentCode: state.studentCode,
-                versionCode: state.versionCode,
-                matchedStudent: state.matchedStudent,
-              );
-            });
+            // Auto-detected student or proceed without student selection
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => OMRResultPage(
+                  imageBytes: state.imageBytes,
+                  gradingResult: state.gradingResult,
+                  processingResult: state.processingResult,
+                  examId: widget.examId ?? '',
+                  examName: widget.examName ?? '',
+                  student: state.matchedStudent,
+                  studentCode: state.studentCode,
+                ),
+              ),
+            );
           } else if (state is OMRScannerSubmitted) {
             // Submitted successfully - show success and return
             _showSubmittedSnackbar(context, state);
@@ -240,14 +218,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
             ),
             body: BlocBuilder<CameraBloc, CameraBlocState>(
               builder: (context, cameraState) {
-                return Stack(
-                  children: [
-                    _buildBody(omrState, cameraState),
-                    // Popup xác nhận kết quả scan
-                    if (_pendingScanResult != null)
-                      _buildConfirmPopup(_pendingScanResult!),
-                  ],
-                );
+                return _buildBody(omrState, cameraState);
               },
             ),
           );
@@ -288,8 +259,22 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         ),
         backgroundColor: const Color(0xFF22C55E),
         duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
       ),
     );
+    
+    // Auto navigate back after short delay
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
   }
 
   void _showErrorSnackbar(BuildContext context, OMRScannerError state) {
@@ -802,195 +787,5 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         ],
       ),
     );
-  }
-
-  /// Hiển thị popup xác nhận kết quả scan
-  Widget _buildConfirmPopup(_ScanResultData result) {
-    final correctCount = result.gradingResult.verdicts
-        .where((v) => v.verdict == 'correct')
-        .length;
-    final totalCount = result.gradingResult.verdicts.length;
-
-    return Container(
-      color: Colors.black54,
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Header với nút đóng
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Kết quả quét',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: _dismissConfirmPopup,
-                  ),
-                ],
-              ),
-            ),
-
-            // Ảnh kết quả
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    // Ảnh annotated
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: result.processingResult?.annotatedImageBytes != null
-                          ? Image.memory(
-                              result.processingResult!.annotatedImageBytes!,
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                            )
-                          : Image.memory(
-                              result.imageBytes,
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                            ),
-                    ),
-                    // Thông tin SBD/MADE/ĐIỂM
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.95),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade400, width: 2),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (result.matchedStudent?.name != null)
-                              Text(
-                                result.matchedStudent!.name,
-                                style: TextStyle(
-                                  color: Colors.red.shade900,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            if (result.studentCode != null && result.studentCode!.isNotEmpty)
-                              Text(
-                                'SBD: ${result.studentCode}',
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            if (result.versionCode != null && result.versionCode!.isNotEmpty)
-                              Text(
-                                'MADE: ${result.versionCode}',
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            if (totalCount > 0)
-                              Text(
-                                'DIEM: ${result.gradingResult.score.toStringAsFixed(1)} ($correctCount/$totalCount)',
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // 2 nút Xác nhận (V) và Hủy (X)
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Row(
-                children: [
-                  // Nút Hủy (X)
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _dismissConfirmPopup,
-                      icon: const Icon(Icons.close, size: 28),
-                      label: const Text(
-                        'Hủy',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Nút Xác nhận (V)
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _onConfirmResult(result),
-                      icon: const Icon(Icons.check, size: 28),
-                      label: const Text(
-                        'Xác nhận',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF22C55E),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Đóng popup xác nhận
-  void _dismissConfirmPopup() {
-    setState(() {
-      _pendingScanResult = null;
-    });
-  }
-
-  /// Xử lý khi xác nhận kết quả - gửi API và quay về scan
-  void _onConfirmResult(_ScanResultData result) {
-    setState(() {
-      _pendingScanResult = null;
-    });
-
-    // Trigger submit ngay lập tức
-    context.read<OMRScannerBloc>().add(OMRScannerSubmit());
   }
 }
