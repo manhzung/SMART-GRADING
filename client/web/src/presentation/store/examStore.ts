@@ -186,6 +186,7 @@ interface ExamState {
   exams: Exam[];
   isLoading: boolean;
   error: string | null;
+  pagination: { page: number; pages: number; limit: number; total: number };
 
   // New: single exam detail
   currentExam: Exam | null;
@@ -200,7 +201,7 @@ interface ExamState {
   isLoadingTemplate: boolean;
 
   // Legacy methods
-  fetchExams: (params?: { status?: string; classId?: string }) => Promise<void>;
+  fetchExams: (params?: { status?: string; classId?: string; search?: string; page?: number; limit?: number }) => Promise<void>;
   createExam: (exam: CreateExamPayload) => Promise<Exam | null>;
   updateExam: (exam: Exam) => Promise<void>;
   deleteExam: (examId: string) => Promise<void>;
@@ -231,6 +232,7 @@ export const useExamStore = create<ExamState>((set) => ({
   exams: [],
   isLoading: false,
   error: null,
+  pagination: { page: 1, pages: 1, limit: 10, total: 0 },
 
   // New state
   currentExam: null,
@@ -249,12 +251,17 @@ export const useExamStore = create<ExamState>((set) => ({
   fetchExams: async (params) => {
     set({ isLoading: true, error: null });
     try {
-      const queryParams: Record<string, string | number> = { limit: 100 };
+      const queryParams: Record<string, string | number> = { limit: params?.limit || 100 };
       if (params?.status) queryParams.status = params.status;
       if (params?.classId) queryParams.classId = params.classId;
+      if (params?.search) queryParams.search = params.search;
+      if (params?.page) queryParams.page = params.page;
 
       const response = await apiService.get<any>('/exams', { params: queryParams });
       const examList = response.results || response || [];
+      const total = response.total || examList.length;
+      const limit = response.limit || 100;
+      const pages = Math.ceil(total / limit) || 1;
 
       const mappedExams = examList.map((e: any) => ({
         _id: e._id,
@@ -281,7 +288,7 @@ export const useExamStore = create<ExamState>((set) => ({
         updatedAt: e.updatedAt,
       }));
 
-      set({ exams: mappedExams, isLoading: false });
+      set({ exams: mappedExams, isLoading: false, pagination: { page: 1, pages, limit, total } });
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
     }
