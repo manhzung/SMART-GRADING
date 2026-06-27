@@ -414,66 +414,6 @@ class _ScanViewState extends State<ScanView> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF071D3E),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'QUEUE PERFORMANCE',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF93C5FD),
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.8,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                Text(
-                                  '98.2% Accuracy',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: const [
-                                Text(
-                                  'Processing Time',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF93C5FD),
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                Text(
-                                  '1.4s/pg',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
                       const SizedBox(height: 40),
                     ],
                   ),
