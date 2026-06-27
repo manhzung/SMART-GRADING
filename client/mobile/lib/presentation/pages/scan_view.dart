@@ -33,25 +33,10 @@ class _ScanViewState extends State<ScanView> {
     );
   }
 
-  int _getSubmissionCount(SubmissionState state) {
-    if (state is SubmissionLoaded) return state.submissions.length;
-    // Khi error: không đếm mock data
-    if (state is SubmissionError) return 0;
-    return 0;
-  }
-
   void _openReview(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => const _ReviewSubmissionsPage(),
-      ),
-    );
-  }
-
-  void _openAnalytics(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const _AnalyticsPage(),
       ),
     );
   }
@@ -165,7 +150,7 @@ class _ScanViewState extends State<ScanView> {
           final String exam = (sub.examTitle ?? sub.examId).toLowerCase();
           final String search = _searchQuery.toLowerCase();
           return name.contains(search) || exam.contains(search);
-        }).toList();
+        }).take(5).toList();
 
         final bool isLoading = state is SubmissionLoading;
 
@@ -259,22 +244,6 @@ class _ScanViewState extends State<ScanView> {
                                     ],
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: GestureDetector(
-                              onTap: () => _openAnalytics(context),
-                              child: const Center(
-                                child: Icon(Icons.bar_chart_outlined, color: Color(0xFF0F172A), size: 22),
                               ),
                             ),
                           ),
@@ -555,23 +524,6 @@ class _ScanViewState extends State<ScanView> {
                                 );
                               }),
                             ],
-
-                            InkWell(
-                              onTap: () => _openReview(context),
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'View All Submissions (${_getSubmissionCount(state)})',
-                                  style: const TextStyle(
-                                    color: Color(0xFF0C2B64),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -883,52 +835,6 @@ class _ReviewSubmissionsPage extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 48),
               child: Text(
                 'Review submissions flagged for manual review due to multiple marks or low confidence.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF64748B)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AnalyticsPage extends StatelessWidget {
-  const _AnalyticsPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
-        title: const Text(
-          'Analytics',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bar_chart_outlined, size: 64, color: Color(0xFFCBD5E1)),
-            SizedBox(height: 16),
-            Text(
-              'Grading Analytics',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            SizedBox(height: 8),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 48),
-              child: Text(
-                'View submission statistics, grade distribution, and performance trends.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Color(0xFF64748B)),
               ),
