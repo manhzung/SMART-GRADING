@@ -192,7 +192,8 @@ class Submission {
   final double? maxScore;
   final String? imageUrl;
   final String status;
-  final DateTime? scannedAt;
+  final DateTime? _scannedAt; // parsed from scanMetadata
+  final DateTime? createdAt; // from document timestamps
   final String? examTitle;
   final DateTime? examDate;
   final String? versionCode;
@@ -211,29 +212,26 @@ class Submission {
     this.maxScore,
     this.imageUrl,
     required this.status,
-    this.scannedAt,
+    DateTime? scannedAt,
+    this.createdAt,
     this.examTitle,
     this.examDate,
     this.versionCode,
     this.classId,
     this.className,
-  });
+  }) : _scannedAt = scannedAt;
 
   factory Submission.fromJson(Map<String, dynamic> json) {
     String examId = '';
     String? examTitle;
     DateTime? examDate;
     if (json['examId'] != null) {
-      if (json['examId'] is Map<String, dynamic>) {
-        final exam = json['examId'] as Map<String, dynamic>;
-        examId = (exam['_id'] ?? exam['id'] ?? '').toString();
-        examTitle = exam['title']?.toString();
-        examDate = exam['examDate'] != null
-            ? DateTime.tryParse(exam['examDate'].toString())
-            : null;
-    } else {
-      examId = json['examId'].toString();
-    }
+      final exam = json['examId'] as Map<String, dynamic>;
+      examId = (exam['_id'] ?? exam['id'] ?? '').toString();
+      examTitle = exam['title']?.toString();
+      examDate = exam['examDate'] != null
+          ? DateTime.tryParse(exam['examDate'].toString())
+          : null;
     }
 
     String studentId = '';
@@ -281,7 +279,25 @@ class Submission {
             .toList()
         : null;
 
-    final submission = Submission(
+    // Backend stores scan time in scanMetadata.scannedAt
+    DateTime? scannedAt;
+    final scanMeta = json['scanMetadata'] as Map<String, dynamic>?;
+    if (scanMeta != null && scanMeta['scannedAt'] != null) {
+      scannedAt = DateTime.tryParse(scanMeta['scannedAt'].toString());
+    }
+
+    // Fallback: root-level scannedAt field
+    if (scannedAt == null && json['scannedAt'] != null) {
+      scannedAt = DateTime.tryParse(json['scannedAt'].toString());
+    }
+
+    // Fallback: document createdAt (Mongoose timestamps)
+    DateTime? createdAt;
+    if (json['createdAt'] != null) {
+      createdAt = DateTime.tryParse(json['createdAt'].toString());
+    }
+
+    return Submission(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       examId: examId,
       versionId: versionId,
@@ -293,19 +309,40 @@ class Submission {
       maxScore: (json['maxScore'] as num?)?.toDouble(),
       imageUrl: json['images']?['original']?['url']?.toString(),
       status: (json['status'] ?? 'pending').toString(),
-      scannedAt: json['scannedAt'] != null
-          ? DateTime.tryParse(json['scannedAt'].toString())
-          : null,
+      scannedAt: scannedAt,
+      createdAt: createdAt,
       examTitle: examTitle,
       examDate: examDate,
       versionCode: versionCode,
       classId: classId,
       className: className,
     );
-    return submission;
   }
 
+  /// Returns the scan timestamp, falling back to createdAt if scannedAt is null.
+  DateTime? get scannedAt => _scannedAt;
+
+  /// Returns a human-readable display name for the student.
   String get displayName => studentName ?? studentCode ?? 'Unknown Student';
+
+  /// Returns a normalized uppercase status for UI display.
+  String get statusUppercase {
+    switch (status.toLowerCase()) {
+      case 'scanned':
+      case 'completed':
+      case 'graded':
+        return 'COMPLETED';
+      case 'scanning':
+      case 'pending':
+        return 'PROCESSING';
+      case 'manual_review':
+      case 'review':
+      case 'appealed':
+        return 'REVIEW';
+      default:
+        return 'ERROR';
+    }
+  }
 
   String get displayExam {
     if (examTitle != null) {
@@ -317,10 +354,25 @@ class Submission {
     return examId;
   }
 
-  String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
+  /// Returns the time string for display.
+  /// Prefers scannedAt > createdAt > examDate > 'Unknown'.
+  String get displayTime {
+    final dt = scannedAt ?? createdAt ?? examDate;
+    if (dt == null) return 'Unknown';
+    // Show time only: "10:24 AM"
+    final h = dt.hour;
+    final period = h >= 12 ? 'PM' : 'AM';
+    final displayHour = h > 12 ? h - 12 : (h == 0 ? 12 : h);
     final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return '$displayHour:$m $period';
+  }
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour;
+    final period = h >= 12 ? 'PM' : 'AM';
+    final displayHour = h > 12 ? h - 12 : (h == 0 ? 12 : h);
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$displayHour:$m $period';
   }
 }
 
