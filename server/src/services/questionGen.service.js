@@ -35,12 +35,12 @@ class QuestionGenService {
   /**
    * Generate multiple-choice questions using GenAI with retry and caching
    */
-  async generateQuestions({ topicId, topicName, count, difficulty, requirements, gradeLevel, subjectId, createdBy }) {
+  async generateQuestions({ topicId, topicName, count, difficulty, requirements, gradeLevel, subjectId, createdBy, schoolId }) {
     // Check cache first
     const cacheKey = this._getCacheKey(topicId, topicName, difficulty, requirements, count);
     const cached = this._getFromCache(cacheKey);
     if (cached) {
-      return cached.map(q => ({ ...q, createdBy }));
+      return cached.map(q => ({ ...q, createdBy, schoolId }));
     }
 
     const maxRetries = 3;
@@ -56,6 +56,8 @@ class QuestionGenService {
           requirements,
           gradeLevel,
           createdBy,
+          subjectId,
+          schoolId,
         });
 
         if (questions.length > 0) {
@@ -87,7 +89,7 @@ class QuestionGenService {
   /**
    * Internal generation with structured prompt
    */
-  async _generateWithPrompt({ topicId, topicName, count, difficulty, requirements, gradeLevel, createdBy }) {
+  async _generateWithPrompt({ topicId, topicName, subjectId, schoolId, count, difficulty, requirements, gradeLevel, createdBy }) {
     const prompt = this.buildQuestionPrompt({
       count,
       difficulty,
@@ -118,12 +120,111 @@ class QuestionGenService {
       topicId: topicId || null,
       topicName: topicName || '',
       subjectId: subjectId || null,
+      schoolId: schoolId || null,
       source: 'ai',
       aiPrompt: requirements || '',
       createdBy: createdBy || null,
       usageCount: 0,
       explanation: q.explanation || '',
       tags: [topicName, difficulty].filter(Boolean),
+    }));
+  }
+
+  /**
+   * Generate questions similar to provided source questions
+   */
+  async generateSimilarQuestions({ sourceContext, count, difficulty, createdBy, schoolId, tags, sourceQuestionIds }) {
+    const difficultyConfig = {
+      easy: {
+        desc: 'cơ bản, dễ hiểu, chủ yếu kiểm tra trí nhớ và khái niệm đơn giản',
+      },
+      medium: {
+        desc: 'trung bình, yêu cầu hiểu bài và vận dụng kiến thức',
+      },
+      hard: {
+        desc: 'khó, yêu cầu tư duy phân tích, so sánh, đánh giá và vận dụng cao',
+      },
+    };
+
+    const config = difficultyConfig[difficulty] || difficultyConfig.medium;
+
+    const prompt = `<system>
+BẠN LÀ MỘT GIÁO VIÊN GIỎI VỚI 15 NĂM KINH NGHIỆM.
+- Chuyên tạo câu hỏi trắc nghiệm chất lượng cao cho học sinh Việt Nam
+- Tạo các biến thể tương tự từ câu hỏi gốc nhưng KHÁC VỀ NỘI DUNG
+- Câu hỏi mới phải cùng độ khó, cùng chủ đề nhưng khác về số liệu, ngữ cảnh
+- Luôn viết bằng TIẾNG VIỆT
+</system>
+
+<source_questions>
+${sourceContext}
+</source_questions>
+
+<task>
+Tạo ${count} câu hỏi trắc nghiệm BIẾN THỂ TƯƠNG TỰ dựa trên câu hỏi nguồn trên.
+- Cùng độ khó: ${config.desc}
+- Cùng chủ đề/loại câu hỏi
+- KHÁC về số liệu cụ thể, ngữ cảnh, cách hỏi
+- Ví dụ: Nếu câu hỏi gốc hỏi "2 + 2 = ?", tạo câu mới "3 + 5 = ?" hoặc "4 + 1 = ?"
+</task>
+
+<requirements>
+1. Mỗi câu hỏi có đúng 4 đáp án: A, B, C, D
+2. Chỉ có 1 đáp án đúng
+3. Câu hỏi mới phải KHÁC với câu hỏi gốc
+4. Đáp án đúng có thể ở bất kỳ vị trí nào
+5. Đáp án sai phải hợp lý, có thể gây nhầm lẫn
+6. Thêm giải thích ngắn gọn cho đáp án đúng
+</requirements>
+
+<format>
+TRẢ LỜI ĐÚNG ĐỊNH DẠNG JSON SAU, KHÔNG THÊM GIẢI THÍCH:
+[
+  {
+    "content": "Nội dung câu hỏi mới...",
+    "options": [
+      {"id": "A", "content": "Đáp án A"},
+      {"id": "B", "content": "Đáp án B"},
+      {"id": "C", "content": "Đáp án C"},
+      {"id": "D", "content": "Đáp án D"}
+    ],
+    "correctAnswer": "A",
+    "explanation": "Giải thích ngắn..."
+  }
+]
+</format>
+
+Hãy tạo ${count} câu hỏi biến thể và trả lời đúng định dạng JSON. Chỉ trả lời JSON, không thêm gì khác.`;
+
+    let aiResponse;
+    try {
+      aiResponse = await geminiService.generateContent(prompt);
+    } catch (error) {
+      throw new ApiError(503, `AI service unavailable: ${error.message}`);
+    }
+
+    const parsedQuestions = this.parseQuestionsFromResponse(aiResponse);
+
+    if (parsedQuestions.length === 0) {
+      throw new ApiError(500, 'Failed to parse any questions from AI response');
+    }
+
+    return parsedQuestions.map((q) => ({
+      content: q.content,
+      type: 'single_choice',
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      difficulty: difficulty || 'medium',
+      topicId: null,
+      topicName: tags?.[0] || '',
+      subjectId: null,
+      schoolId: schoolId || null,
+      source: 'ai',
+      aiPrompt: 'Similar questions based on: ' + sourceQuestionIds?.join(', '),
+      createdBy: createdBy || null,
+      usageCount: 0,
+      explanation: q.explanation || '',
+      tags: tags || [],
     }));
   }
 

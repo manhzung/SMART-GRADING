@@ -53,6 +53,10 @@ router
   .delete(auth('manageExams'), examController.deleteVersion);
 
 router
+  .route('/:id/versions/:versionCode/answer-key')
+  .get(auth(), examController.getVersionAnswerKey);
+
+router
   .route('/:id/export')
   .get(auth(), validate(examValidation.exportExam), examController.exportExamPDF);
 

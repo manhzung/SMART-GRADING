@@ -359,8 +359,35 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
   const optionsPerQuestion = csvData?.meta?.optionsPerQuestion || 4;
   const optionLetters = ['A', 'B', 'C', 'D'].slice(0, optionsPerQuestion);
 
-  // Standard AMC bubble spacing (in PDF points)
-  const HORIZONTAL_SPACING_PT = 18; // spacing between A,B,C,D horizontally
+  // IMPORTANT: Calculate ACTUAL spacing from all bubbles in calage
+  let actualSpacing = Math.round(25 * scale); // ~104px at 300 DPI (default)
+  
+  if (scaledCalage.bubbles && scaledCalage.bubbles.length >= 8) {
+    const bubblesByQ = {};
+    for (const bubble of scaledCalage.bubbles) {
+      const qNum = bubble.questionNum;
+      if (!bubblesByQ[qNum]) bubblesByQ[qNum] = [];
+      bubblesByQ[qNum].push(bubble);
+    }
+    
+    const spacings = [];
+    for (const bubbles of Object.values(bubblesByQ)) {
+      if (bubbles.length >= 2) {
+        bubbles.sort((a, b) => a.x - b.x);
+        for (let i = 1; i < bubbles.length; i++) {
+          const spacing = bubbles[i].x - bubbles[i-1].x;
+          if (spacing > 50 && spacing < 200) {
+            spacings.push(spacing);
+          }
+        }
+      }
+    }
+    
+    if (spacings.length > 0) {
+      spacings.sort((a, b) => a - b);
+      actualSpacing = spacings[Math.floor(spacings.length / 2)];
+    }
+  }
 
   for (const [qNumStr, qData] of Object.entries(scaledCalage.questions)) {
     const qNum = parseInt(qNumStr, 10);
@@ -389,15 +416,15 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
       const refIndex = optionLetters.indexOf(referenceLetter);
       const refX = referenceBubble.x;
       const refY = referenceBubble.y;
-      const refW = referenceBubble.w || 15;
-      const refH = referenceBubble.h || 15;
+      const refW = referenceBubble.w || Math.round(15 * scale);
+      const refH = referenceBubble.h || Math.round(15 * scale);
 
       for (let i = 0; i < optionLetters.length; i++) {
         const letter = optionLetters[i];
         if (!answers[`q${qNum}`][letter]) {
           // Generate position for this option based on reference
           const offsetFromRef = i - refIndex;
-          const newX = refX + (offsetFromRef * HORIZONTAL_SPACING_PT * scale);
+          const newX = refX + (offsetFromRef * actualSpacing);
           
           answers[`q${qNum}`][letter] = {
             x: newX,

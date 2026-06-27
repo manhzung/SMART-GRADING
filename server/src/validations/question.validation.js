@@ -66,8 +66,16 @@ const generateQuestions = {
     topicId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
     count: Joi.number().min(1).max(50).default(5),
     difficulty: Joi.string().valid('easy', 'medium', 'hard'),
-    requirements: Joi.string().required(),
+    requirements: Joi.string().allow(''),
     gradeLevel: Joi.number().min(1).max(12),
+  }),
+};
+
+const generateSimilarQuestions = {
+  body: Joi.object().keys({
+    sourceQuestionIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).max(10).required(),
+    count: Joi.number().min(1).max(50).default(5),
+    difficulty: Joi.string().valid('easy', 'medium', 'hard'),
   }),
 };
 
@@ -103,6 +111,7 @@ module.exports = {
   getQuestion,
   getQuestions,
   generateQuestions,
+  generateSimilarQuestions,
   getQuestionsByTags,
   selectQuestionsForExam,
 };

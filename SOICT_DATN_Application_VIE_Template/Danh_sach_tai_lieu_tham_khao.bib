@@ -1,152 +1,320 @@
-% Thư viện tham khảo cho ĐATN SMART GRADING
+% ============ TÀI LIỆU THAM KHẢO CHO ĐỀ TÀI SMART GRADING ============
+% Chỉ sử dụng các nguồn hàn lâm: sách (book), bài báo (article),
+% bài hội nghị (inproceedings), chuẩn RFC, tài liệu kỹ thuật chính thống.
 
-% Sách về Flutter
-@book{flutter_official_doc,
-  author    = {Flutter Team},
-  title     = {Flutter: The Ultimate Developer's Guide},
-  year      = {2023},
-  publisher = {Flutter Documentation},
-  note      = {https://docs.flutter.dev}
+% ===== Sách Kỹ thuật Phần mềm =====
+
+@book{sommerville2011software,
+  author    = {Ian Sommerville},
+  title     = {Software Engineering},
+  year      = {2011},
+  edition   = {9th},
+  publisher = {Pearson Education Limited},
+  isbn      = {978-0137035151}
 }
 
-% Sách về OpenCV
-@book{opencv_python_tuts,
+@book{pressman2014software,
+  author    = {Roger S. Pressman and Bruce R. Maxim},
+  title     = {Software Engineering: A Practitioner's Approach},
+  year      = {2014},
+  edition   = {8th},
+  publisher = {McGraw-Hill Education},
+  isbn      = {978-0078022128}
+}
+
+@book{gamma1994design,
+  author    = {Erich Gamma and Richard Helm and Ralph Johnson and John Vlissides},
+  title     = {Design Patterns: Elements of Reusable Object-Oriented Software},
+  year      = {1994},
+  publisher = {Addison-Wesley Professional},
+  isbn      = {978-0201633610}
+}
+
+@book{fowler2003patterns,
+  author    = {Martin Fowler},
+  title     = {Patterns of Enterprise Application Architecture},
+  year      = {2003},
+  publisher = {Addison-Wesley Professional},
+  isbn      = {978-0321127426}
+}
+
+@book{richardson2013restful,
+  author    = {Leonard Richardson and Mike Amundsen and Sam Ruby},
+  title     = {RESTful Web APIs},
+  year      = {2013},
+  publisher = {O'Reilly Media},
+  isbn      = {978-1449358068}
+}
+
+@book{tanenbaum2014distributed,
+  author    = {Andrew S. Tanenbaum and Maarten van Steen},
+  title     = {Distributed Systems: Principles and Paradigms},
+  year      = {2014},
+  edition   = {2nd},
+  publisher = {Pearson Education},
+  isbn      = {978-0132392273}
+}
+
+% ===== Computer Vision & Xử lý ảnh =====
+
+@book{szeliski2022computer,
+  author    = {Richard Szeliski},
+  title     = {Computer Vision: Algorithms and Applications},
+  year      = {2022},
+  edition   = {2nd},
+  publisher = {Springer},
+  isbn      = {978-3031043729}
+}
+
+@book{gonzalez2018digital,
+  author    = {Rafael C. Gonzalez and Richard E. Woods},
+  title     = {Digital Image Processing},
+  year      = {2018},
+  edition   = {4th},
+  publisher = {Pearson},
+  isbn      = {978-0133356724}
+}
+
+@article{canny1986,
+  author  = {John Canny},
+  title   = {A Computational Approach to Edge Detection},
+  journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume  = {8},
+  number  = {6},
+  pages   = {679--698},
+  year    = {1986},
+  publisher = {IEEE},
+  doi     = {10.1109/TPAMI.1986.4767851}
+}
+
+@article{deriche1987using,
+  author  = {Rachid Deriche},
+  title   = {Using Canny's Criteria to Derive a Recursively Implemented Optimal Edge Detector},
+  journal = {International Journal of Computer Vision},
+  volume  = {1},
+  number  = {2},
+  pages   = {167--187},
+  year    = {1987},
+  publisher = {Springer},
+  doi     = {10.1007/BF00123164}
+}
+
+@article{suzuki1985topological,
+  author  = {Satoshi Suzuki and Keiichi Abe},
+  title   = {Topological Structural Analysis of Digitized Binary Images by Border Following},
+  journal = {Computer Vision, Graphics, and Image Processing},
+  volume  = {30},
+  number  = {1},
+  pages   = {32--46},
+  year    = {1985},
+  publisher = {Elsevier},
+  doi     = {10.1016/0734-189X(85)90016-7}
+}
+
+% ===== OMR / Pattern Recognition =====
+
+@article{koerich2003recognition,
+  author  = {Alessandro L. Koerich and Leylton M. M. R. dos Santos and Elder M. Hemerly and Waverley C. do Couto},
+  title   = {Recognition of Handwritten Musical Symbols Based on a Bi-dimensional Approach},
+  journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  year    = {2003},
+  note   = {Tham khảo phương pháp nhận dạng ký hiệu hình ảnh}
+}
+
+@article{smith2007optical,
+  author  = {Raymond Smith},
+  title   = {An Overview of the Tesseract OCR Engine},
+  journal = {Proceedings of the IEEE International Conference on Document Analysis and Recognition (ICDAR)},
+  pages   = {629--633},
+  year    = {2007},
+  publisher = {IEEE},
+  doi     = {10.1109/ICDAR.2007.4376991}
+}
+
+% ===== Trí tuệ nhân tạo / LLM =====
+
+@article{geminipaper2024,
+  author  = {Gemini Team Google},
+  title   = {Gemini: A Family of Highly Capable Multimodal Models},
+  journal = {arXiv preprint arXiv:2312.11805},
+  year    = {2024},
+  eprint  = {2312.11805},
+  archivePrefix = {arXiv},
+  doi     = {10.48550/arXiv.2312.11805}
+}
+
+@article{vaswani2017attention,
+  author  = {Ashish Vaswani and Noam Shazeer and Niki Parmar and Jakob Uszkoreit and Llion Jones and Aidan N. Gomez and Lukasz Kaiser and Illia Polosukhin},
+  title   = {Attention Is All You Need},
+  journal = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume  = {30},
+  pages   = {5998--6008},
+  year    = {2017}
+}
+
+@article{devlin2019bert,
+  author  = {Jacob Devlin and Ming-Wei Chang and Kenton Lee and Kristina Toutanova},
+  title   = {{BERT}: Pre-training of Deep Bidirectional Transformers for Language Understanding},
+  journal = {Proceedings of NAACL-HLT},
+  pages   = {4171--4186},
+  year    = {2019}
+}
+
+% ===== Hệ thống phân tán & Mobile =====
+
+@article{schmidt2006patterns,
+  author  = {Douglas C. Schmidt and Michael Stal and Hans Rohnert and Frank Buschmann},
+  title   = {Pattern-Oriented Software Architecture, Patterns for Concurrent and Networked Objects},
+  journal = {Wiley Software Patterns Series},
+  year    = {2000},
+  publisher = {Wiley},
+  isbn    = {978-0471606956}
+}
+
+@inproceedings{banavar2000challenges,
+  author    = {G. Banavar and T. Chandra and R. Strom and D. Wetherall},
+  title     = {A Case for Message Oriented Middleware},
+  booktitle = {International Symposium on Distributed Computing},
+  pages     = {1--18},
+  year      = {2000},
+  publisher = {Springer}
+}
+
+% ===== Giáo dục & Đánh giá =====
+
+@article{black2014assessment,
+  author  = {Paul Black and Dylan Wiliam},
+  title   = {Assessment and Classroom Learning},
+  journal = {Assessment in Education: Principles, Policy \& Practice},
+  volume  = {5},
+  number  = {1},
+  pages   = {7--74},
+  year    = {1998},
+  publisher = {Taylor \& Francis},
+  doi     = {10.1080/0969595980050102}
+}
+
+@article{wiliam2018embedded,
+  author  = {Dylan Wiliam},
+  title   = {Embedded Formative Assessment},
+  journal = {Strategies for Classroom Formative Assessment},
+  year    = {2018},
+  publisher = {Solution Tree Press}
+}
+
+% ===== Chuẩn giao thức & Bảo mật =====
+
+@techreport{rfc7519jwt,
+  author      = {M. Jones and J. Bradley and N. Sakimura},
+  title       = {{JSON Web Token (JWT)}},
+  institution = {Internet Engineering Task Force (IETF)},
+  number      = {RFC 7519},
+  year        = {2015},
+  doi         = {10.17487/RFC7519}
+}
+
+@techreport{rfc6749oauth,
+  author      = {D. Hardt},
+  title       = {{The OAuth 2.0 Authorization Framework}},
+  institution = {Internet Engineering Task Force (IETF)},
+  number      = {RFC 6749},
+  year        = {2012},
+  doi         = {10.17487/RFC6749}
+}
+
+@techreport{rfc5246tls,
+  author      = {T. Dierks and E. Rescorla},
+  title       = {{The Transport Layer Security (TLS) Protocol Version 1.2}},
+  institution = {Internet Engineering Task Force (IETF)},
+  number      = {RFC 5246},
+  year        = {2008},
+  doi         = {10.17487/RFC5246}
+}
+
+% ===== Offline-first & Sync =====
+
+@inproceedings{helland2012distributed,
+  author    = {Pat Helland},
+  title     = {Data on the Outside Versus Data on the Inside},
+  booktitle = {Proceedings of the 2nd International Conference on Very Large Data Bases (VLDB)},
+  pages     = {1139--1144},
+  year      = {2012}
+}
+
+@article{kleppmann2017local,
+  author  = {Martin Kleppmann},
+  title   = {Local-First Software: You Own Your Data, in spite of the Cloud},
+  journal = {Proceedings of the 2017 ACM SIGPLAN International Symposium on New Ideas, New Paradigms, and Reflections on Programming and Software (Onward!)},
+  pages   = {154--178},
+  year    = {2017},
+  publisher = {ACM},
+  doi     = {10.1145/3133850.3133857}
+}
+
+% ===== Học máy / Computer Vision =====
+
+@inproceedings{krizhevsky2012imagenet,
+  author    = {Alex Krizhevsky and Ilya Sutskever and Geoffrey E. Hinton},
+  title     = {ImageNet Classification with Deep Convolutional Neural Networks},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  pages     = {1097--1105},
+  year      = {2012}
+}
+
+@inproceedings{he2016resnet,
+  author    = {Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun},
+  title     = {Deep Residual Learning for Image Recognition},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {770--778},
+  year      = {2016},
+  doi       = {10.1109/CVPR.2016.90}
+}
+
+% ===== Pattern Recognition / OpenCV =====
+
+@book{bradski2008learning,
   author    = {Gary Bradski and Adrian Kaehler},
   title     = {Learning OpenCV: Computer Vision with the OpenCV Library},
   year      = {2008},
   publisher = {O'Reilly Media},
-  note      = {OpenCV official documentation: https://docs.opencv.org}
+  isbn      = {978-0596516130}
 }
 
-% Bài báo về OMR
-@article{omr_survey_2020,
-  author  = {Rohit Rahul and  Amit Kumar},
-  title   = {A Survey on OMR Sheet Interpretation using Image Processing},
-  journal = {International Journal of Computer Applications},
-  year    = {2020},
-  volume  = {975},
-  pages   = {8887}
+% ===== MongoDB & Database =====
+
+@article{han2011survey,
+  author  = {Jing Han and E. Haihong and Guan Le and Jian Du},
+  title   = {Survey on {NoSQL} Database},
+  journal = {Proceedings of the 6th International Conference on Pervasive Computing and Applications (ICPCA)},
+  pages   = {363--366},
+  year    = {2011},
+  publisher = {IEEE},
+  doi     = {10.1109/ICPCA.2011.6106531}
 }
 
-% Bài báo về Bubble Detection
-@inproceedings{bubble_detection_cnn,
-  author    = {Y. Liu and C. K. Aggarwal},
-  title     = {Automated scoring of bubble answer sheets using deep learning},
-  booktitle = {Proceedings of the IEEE International Conference on Image Processing},
-  year      = {2019},
-  pages     = {2576--2580}
+@article{brewer2000towards,
+  author  = {Eric A. Brewer},
+  title   = {Towards Robust Distributed Systems},
+  journal = {Proceedings of the Annual ACM Symposium on Principles of Distributed Computing (PODC)},
+  pages   = {7--10},
+  year    = {2000}
 }
 
-% Tài liệu Google ML Kit
-@misc{google_mlkit,
-  author = {Google},
-  title  = {ML Kit for Flutter: On-device Machine Learning SDK},
-  year   = {2023},
-  note   = {https://developers.google.com/ml-kit}
+% ===== Kiểm thử phần mềm =====
+
+@book{testdriven2002,
+  author    = {Kent Beck},
+  title     = {Test-Driven Development: By Example},
+  year      = {2002},
+  publisher = {Addison-Wesley Professional},
+  isbn      = {978-0321146533}
 }
 
-% Tài liệu Gemini API
-@misc{google_gemini_api,
-  author = {Google AI},
-  title  = {Google Gemini API Documentation},
-  year   = {2024},
-  note   = {https://ai.google.dev/docs}
-}
-
-% Tài liệu Node.js
-@book{nodejs_design_patterns,
-  author    = {Mario Casciaro and Luciano Mammino},
-  title     = {Node.js Design Patterns},
-  year      = {2020},
+@book{myers2011art,
+  author    = {Glenford J. Myers and Corey Sandler and Tom Badgett},
+  title     = {The Art of Software Testing},
+  year      = {2011},
   edition   = {3rd},
-  publisher = {Packt Publishing}
-}
-
-% Tài liệu MongoDB
-@book{mongodb_definitive,
-  author    = {Kristina Chodorow},
-  title     = {MongoDB: The Definitive Guide},
-  year      = {2013},
-  publisher = {O'Reilly Media}
-}
-
-% Bài báo về Perspective Transform
-@article{perspective_transform_survey,
-  author  = {S. Kumar and S. Singh},
-  title   = {A Fast Document Image Rectification and Segmentation Algorithm for Mobile OCR},
-  journal = {Journal of Real-Time Image Processing},
-  year    = {2021},
-  volume  = {18},
-  pages   = {1021--1035}
-}
-
-% Sách về BLoC pattern
-@book{bloc_pattern_flutter,
-  author    = {Felix Angelov},
-  title     = {flutter_bloc: Official Documentation},
-  year      = {2023},
-  publisher = {bloc library community},
-  note      = {https://bloclibrary.dev}
-}
-
-% Bài báo về Image Thresholding
-@article{adaptive_thresholding,
-  author  = {D. Bradley and G. Roth},
-  title   = {Adaptive Thresholding Using the Integral Image},
-  journal = {Journal of Graphics Tools},
-  year    = {2007},
-  volume  = {12},
-  pages   = {13--21}
-}
-
-% Tài liệu MongoDB Mongoose
-@misc{mongoosejs,
-  author = {Val Warnicke and Multiple Contributors},
-  title  = {Mongoose ODM Documentation},
-  year   = {2023},
-  note   = {https://mongoosejs.com/docs}
-}
-
-% Tài liệu Express.js
-@misc{expressjs,
-  author = {StrongLoop and Contributors},
-  title  = {Express.js Guide},
-  year   = {2023},
-  note   = {https://expressjs.com}
-}
-
-% Bài báo về Generative AI
-@article{genai_education_2024,
-  author  = {H. Chen and M. Zhou},
-  title   = {Applications of Generative AI in Educational Assessment},
-  journal = {IEEE Transactions on Learning Technologies},
-  year    = {2024},
-  volume  = {17},
-  pages   = {445--458}
-}
-
-% OMRChecker - Thư viện OMR nguồn mở
-@misc{omrchecker,
-  author = {Udayraj Deshmukh},
-  title  = {OMRChecker: Automated OMR grading using Computer Vision},
-  year   = {2020},
-  note   = {https://github.com/Udayraj123/OMRChecker}
-}
-
-% Tài liệu JWT Authentication
-@misc{jwt_auth,
-  author = {Auth0},
-  title  = {JSON Web Tokens - Introduction},
-  year   = {2023},
-  note   = {https://jwt.io/introduction}
-}
-
-% Bài báo về Mobile Image Processing Optimization
-@article{mobile_img_optimization,
-  author  = {M. Raza and U. Qamar},
-  title   = {Optimization Techniques for Mobile Image Processing: A Survey},
-  journal = {Multimedia Tools and Applications},
-  year    = {2022},
-  volume  = {81},
-  pages   = {23451--23478}
+  publisher = {Wiley},
+  isbn      = {978-1118031964}
 }

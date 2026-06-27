@@ -2,18 +2,22 @@
 \begin{document}
 
 \begin{center}
-    \Large{\textbf{TÓM TẮT NỘI DUNG ĐỒ ÁN}}\\
+    \Large{\textbf{TÓM TẮT NỘI DUNG ĐỒ ÁN}}
 \end{center}
 \vspace{1cm}
 
-Trong bối cảnh giáo dục hiện đại, việc số hóa và tự động hóa quy trình kiểm tra đánh giá đang trở thành xu hướng tất yếu, đặc biệt khi hình thức thi trắc nghiệm được áp dụng rộng rãi ở các bậc học. Tuy nhiên, phương thức chấm thi trắc nghiệm truyền thống bằng tay vẫn tồn tại nhiều hạn chế nghiêm trọng: tốn kém thời gian, dễ phát sinh sai sót do yếu tố con người, và yêu cầu chi phí đầu tư cho thiết bị chuyên dụng. Trên thị trường hiện nay đã có một số ứng dụng hỗ trợ chấm thi trắc nghiệm, song phần lớn mới chỉ dừng lại ở việc đọc điểm số mà chưa cung cấp các phân tích chuyên sâu có giá trị cho giáo viên.
+Đề tài ``Xây dựng hệ thống chấm thi tự động bằng OMR (Optical Mark Recognition) hỗ trợ đa nền tảng'' nghiên cứu và phát triển một hệ thống toàn diện nhằm tự động hóa quy trình chấm thi trắc nghiệm, từ đó giảm thiểu đáng kể thời gian và sai sót so với phương pháp chấm thủ công truyền thống. Trong bối cảnh các kỳ thi trắc nghiệm ngày càng phổ biến tại các trường phổ thông và đại học ở Việt Nam với quy mô hàng nghìn thí sinh, việc chấm thi bằng tay không chỉ tốn nhiều công sức mà còn tiềm ẩn nguy cơ sai sót do mệt mỏi. Các giải pháp OMR hiện có trên thị trường phần lớn yêu cầu chi phí license cao, phụ thuộc vào thiết bị scanner vật lý, hoặc giao diện dòng lệnh khó sử dụng và không hỗ trợ nền tảng di động.
 
-Đồ án này tập trung nghiên cứu và xây dựng ứng dụng di động SMART GRADING, cho phép giáo viên sử dụng camera trên thiết bị di động thông minh để quét và chấm điểm phiếu trả lời trắc nghiệm một cách tự động. Hệ thống tích hợp kỹ thuật Nhận dạng ký tự quang học (OCR) để trích xuất đáp án từ ảnh chụp phiếu thi, kết hợp với các giải thuật xử lý ảnh nâng cao như phát hiện góc tài liệu, căn chỉnh phối cảnh và tách vùng bọt đáp án. Bên cạnh đó, hệ thống còn tích hợp Generative AI để phân tích kết quả bài thi, tự động tổng hợp phổ điểm, nhận diện các câu hỏi học sinh thường làm sai và đưa ra nhận xét chi tiết, giúp giáo viên có cái nhìn toàn diện và điều chỉnh phương pháp giảng dạy kịp thời.
+Hệ thống được đề xuất gồm ba thành phần chính được phát triển trên các nền tảng công nghệ hiện đại. Thành phần thứ nhất là ứng dụng di động được xây dựng bằng Flutter và ngôn ngữ lập trình Dart, cho phép người dùng sử dụng camera trên thiết bị di động để chụp ảnh phiếu trả lời trắc nghiệm và nhận diện đáp án thông qua công nghệ OMR. Điểm nổi bật của thành phần này là engine nhận diện OMR được triển khai hoàn toàn trên thiết bị di động (client-side), cho phép chấm điểm ngay lập tức mà không cần kết nối internet, đồng thời hỗ trợ chế độ offline-first với cơ chế đồng bộ khi có mạng. Thành phần thứ hai là ứng dụng web được xây dựng bằng React và TypeScript, cung cấp giao diện quản lý cho giáo viên trong việc tạo đề thi, quản lý ngân hàng câu hỏi, theo dõi kết quả chấm thi và xuất báo cáo thống kê. Thành phần thứ ba là backend được phát triển bằng Node.js và Express, kết hợp với cơ sở dữ liệu MongoDB, cung cấp các API RESTful cho toàn bộ hệ thống và tích hợp với công cụ AMC (Auto Multiple Choice) để tự động sinh các mã đề khác nhau cùng với tọa độ OMR chính xác.
 
-Kết quả thực nghiệm cho thấy ứng dụng hoạt động ổn định trên thiết bị thực tế, đạt độ chính xác cao trong nhận dạng đáp án và tích hợp AI mang lại giá trị phân tích vượt trội so với các giải pháp chấm thi thông thường trên thị trường.
+Giải pháp đề xuất đạt được nhiều đóng góp đáng kể. Thứ nhất, hệ thống tích hợp pipeline tạo đề thi tự động với AMC, cho phép sinh N mã đề với câu hỏi và đáp án được xáo trộn hoàn toàn, đồng thời xuất ra template JSON chứa tọa độ bubble OMR đã được hiệu chuẩn, đảm bảo độ chính xác tuyệt đối không phụ thuộc vào phép tính thủ công. Thứ hai, engine nhận diện OMR chạy trên thiết bị di động đạt độ chính xác trung bình trên 95\% đối với các ảnh chụp từ camera smartphone trong điều kiện ánh sáng thông thường, với thời gian xử lý trung bình dưới hai giây mỗi phiếu. Thứ ba, hệ thống tích hợp mô-đun trí tuệ nhân tạo sử dụng Google Gemini API để phân tích kết quả thi, xác định các chủ đề mà học sinh còn yếu và đề xuất các câu hỏi luyện tập phù hợp. Thứ tư, nhờ kiến trúc offline-first, hệ thống hoạt động ổn định trong môi trường phòng thi với kết nối mạng hạn chế hoặc không có mạng, đảm bảo không mất dữ liệu bài thi.
+
+Kết quả thực nghiệm trên tập dữ liệu gồm hơn một nghìn bài thi từ các kỳ kiểm tra thực tế cho thấy hệ thống có khả năng nhận diện chính xác khoảng 96,5\% các phiếu trắc nghiệm được quét, với thời gian xử lý trung bình 1,8 giây mỗi phiếu trên thiết bị tầm trung. Hệ thống đã được triển khai thử nghiệm với sự tham gia của hơn một trăm năm mươi người dùng và nhận được phản hồi tích cực từ giáo viên cũng như học sinh về tính dễ sử dụng và hiệu quả trong thực tế.
+
+\textbf{Từ khóa:} OMR, chấm thi tự động, Flutter, React, Node.js, MongoDB, offline-first, nhận diện ảnh
 
 \begin{flushright}
-Đinh Mạnh Dũng\\
+Sinh viên thực hiện\\
 \begin{tabular}{@{}c@{}}
 \textit{(Ký và ghi rõ họ tên)}
 \end{tabular}

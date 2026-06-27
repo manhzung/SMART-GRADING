@@ -1,33 +1,28 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-\begin{longtable}{p{4cm} p{12cm}}
-	\hline
-   \textbf{Tiếng Anh}  & \textbf{Ý nghĩa tiếng Việt} \\ \hline
-	Android & Hệ điều hành di động phổ biến nhất thế giới, phát triển bởi Google \\
-	API (Application Programming Interface) & Giao diện lập trình ứng dụng, cho phép các phần mềm giao tiếp với nhau \\
-	Backend & Phần phía server của ứng dụng, xử lý logic nghiệp vụ và lưu trữ dữ liệu \\
-	BLoC (Business Logic Component) & Mô hình kiến trúc quản lý trạng thái ứng dụng, tách biệt logic nghiệp vụ khỏi giao diện \\
-	Computer Vision & Lĩnh vực trí tuệ nhân tạo cho phép máy tính hiểu và xử lý hình ảnh \\
-	Cross-platform & Phát triển ứng dụng chạy trên nhiều nền tảng từ một codebase duy nhất \\
-	Edge Detection & Kỹ thuật xử lý ảnh để tìm các đường biên trong ảnh \\
-	Flutter & Framework phát triển ứng dụng di động đa nền tảng của Google \\
-	Frontend & Phần giao diện người dùng của ứng dụng \\
-	Generative AI & Trí tuệ nhân tạo có khả năng tạo ra nội dung mới \\
-	Grayscale & Ảnh xám, ảnh chỉ có các mức độ xám từ trắng đến đen \\
-	iOS & Hệ điều hành di động của Apple cho iPhone và iPad \\
-	Machine Learning & Lĩnh vực trí tuệ nhân tạo cho phép máy tính học từ dữ liệu \\
-	MongoDB & Cơ sở dữ liệu NoSQL document-oriented, lưu trữ dữ liệu dạng JSON-like \\
-	OCR (Optical Character Recognition) & Nhận dạng ký tự quang học, chuyển đổi hình ảnh văn bản thành văn bản số \\
-	OMR (Optical Mark Recognition) & Nhận dạng dấu quang học, phát hiện các vùng được đánh dấu trên giấy \\
-	OpenCV (Open Source Computer Vision) & Thư viện xử lý ảnh và thị giác máy tính mã nguồn mở \\
-	Perspective Transform & Phép biến đổi phối cảnh, căn chỉnh ảnh chụp nghiêng thành nhìn thẳng \\
-	REST API & Giao diện lập trình theo kiến trúc REST, sử dụng các phương thức HTTP chuẩn \\
-	SDK (Software Development Kit) & Bộ công cụ phát triển phần mềm, cung cấp thư viện và tài liệu \\
-	State Management & Quản lý trạng thái ứng dụng, theo dõi và cập nhật dữ liệu hiển thị \\
-	Thresholding & Kỹ thuật xử lý ảnh chuyển ảnh xám thành ảnh nhị phân trắng-đen \\
-	Token & Chuỗi ký tự dùng để xác thực người dùng, được sinh ra sau khi đăng nhập \\
-	UI (User Interface) & Giao diện người dùng, phần hiển thị và tương tác của ứng dụng \\
-	UX (User Experience) & Trải nghiệm người dùng, cảm giác và sự hài lòng khi sử dụng ứng dụng \\
+\begin{longtable}{l p{14cm}}
+\hline
+   \textbf{Thuật ngữ}  & \textbf{Giải thích} \\ \hline 
+   \textbf{Optical Mark Recognition (OMR)} & Công nghệ nhận diện các vạch hoặc ô được đánh dấu trên giấy, thường dùng trong phiếu trả lời trắc nghiệm. Hệ thống quét hình ảnh phiếu và phân tích mật độ pixel để xác định đáp án được tô. \\
+   \textbf{Bubble (ô bong bóng)} & Vùng tròn hoặc hình vuông trên phiếu trả lời trắc nghiệm mà thí sinh tô đen để chọn đáp án. Mỗi câu hỏi có nhiều bubble tương ứng với các lựa chọn A, B, C, D. \\
+   \textbf{Bubble Intensity (cường độ bong bóng)} & Mật độ pixel đậm trong vùng bubble, tính bằng tổng giá trị pixel chia cho diện tích vùng. Ngưỡng intensity quyết định bubble được coi là đã tô hay chưa. \\
+   \textbf{Double Fill (tô đúp)} & Tình trạng thí sinh tô nhiều hơn một ô cho cùng một câu hỏi. Hệ thống phát hiện và cảnh báo để giáo viên xem xét. \\
+   \textbf{Perspective Transform (phép biến đổi phối cảnh)} & Kỹ thuật biến đổi hình học để chỉnh ảnh chụp nghiêng thành ảnh nhìn thẳng, đảm bảo tọa độ bubble chính xác. \\
+   \textbf{Template JSON} & Tệp định dạng JSON chứa cấu hình phiếu OMR gồm tọa độ từng bubble, đáp án đúng, thông tin mã đề và mã thí sinh. Đây là định dạng trung gian giữa hệ thống sinh đề và ứng dụng quét. \\
+   \textbf{Offline-first} & Mô hình thiết kế trong đó ứng dụng ưu tiên hoạt động không cần kết nối mạng, lưu dữ liệu cục bộ và đồng bộ khi có mạng. \\
+   \textbf{AMC (Auto Multiple Choice)} & Công cụ mã nguồn mở chạy trên LaTeX, tự động sinh đề thi trắc nghiệm với nhiều mã đề và xuất tọa độ OMR chính xác. \\
+   \textbf{BLoC Pattern (Business Logic Component)} & Mẫu thiết kế phần mềm tách biệt business logic khỏi giao diện người dùng, sử dụng luồng dữ liệu (stream) giữa các thành phần. \\
+   \textbf{RBAC (Role-Based Access Control)} & Phương pháp kiểm soát truy cập trong đó quyền được gán cho vai trò và người dùng được gán vai trò tương ứng. \\
+   \textbf{JWT (JSON Web Token)} & Chuẩn mã thông báo dạng JSON dùng để xác thực và ủy quyền người dùng trong các hệ thống web và API. \\
+   \textbf{Webhook} & Cơ chế thông báo tự động từ server tới client khi có sự kiện xảy ra, thường dùng cho cập nhật thời gian thực. \\
+   \textbf{Cloudinary} & Dịch vụ đám mây chuyên về lưu trữ, xử lý và tối ưu hóa hình ảnh và video. \\
+   \textbf{Scanning Pipeline} & Chuỗi các bước xử lý từ khi chụp ảnh phiếu đến khi có kết quả chấm điểm, bao gồm tiền xử lý, nhận diện, chấm điểm và gửi kết quả. \\
+   \textbf{Exam Version (mã đề)} & Phiên bản cụ thể của đề thi, khác với đề gốc ở thứ tự câu hỏi và thứ tự đáp án. Hệ thống sinh nhiều mã đề để chống gian lận thi cử. \\
+   \textbf{Answer Key (đáp án)} & Danh sách đáp án đúng của đề thi, thường lưu dạng cặp vị trí câu hỏi và đáp án (ví dụ: q1:C, q2:A). \\
+   \textbf{Grading Result (kết quả chấm)} & Kết quả bao gồm điểm số, số câu đúng, sai, bỏ trống, và danh sách chi tiết từng câu đúng sai. \\
+   \textbf{PDF Generation} & Quá trình tạo tệp PDF từ dữ liệu đề thi, có thể bao gồm đề thi, phiếu trả lời, hoặc báo cáo kết quả. \\
+   \textbf{Lexical Analysis} & Phương pháp phân tích văn bản dựa trên từ vựng và ngữ pháp để nhận diện và phân loại nội dung. \\
     \hline
 \end{longtable}
+
 \end{document}

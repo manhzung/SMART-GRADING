@@ -24,11 +24,11 @@ const PAPER_SIZES = {
  * (q + numeric position -> option letter -> coords)
  * NOTE: Uses 'q' prefix to match mobile expected format
  * 
- * AMC exports only correct answer bubble (A) in calage.xy.
+ * AMC exports only correct answer bubble (A) in calage.xy per question.
  * This function generates positions for B, C, D based on existing bubble + spacing.
  * 
- * @param {Object} scaledCalage - result of scaleCalage()
- * @param {number} scale - DPI scale factor
+ * @param {Object} scaledCalage - result of scaleCalage() - already scaled!
+ * @param {number} scale - DPI scale factor (used for reference only, coords already scaled)
  * @param {Object} csvData - parsed CSV with optionsPerQuestion info
  * @returns {Object}
  */
@@ -40,8 +40,44 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
   const optionsPerQuestion = csvData?.meta?.optionsPerQuestion || 4;
   const optionLetters = ['A', 'B', 'C', 'D'].slice(0, optionsPerQuestion);
 
-  // Standard AMC bubble spacing (in PDF points)
-  const HORIZONTAL_SPACING_PT = 18; // spacing between A,B,C,D horizontally
+  // IMPORTANT: Calculate ACTUAL spacing from all bubbles in calage
+  // AMC spacing is ~25pt for options, but calage only stores 1 slot per question
+  // So we must calculate spacing from the bubbles array
+  let actualSpacing = Math.round(25 * scale); // ~104px at 300 DPI (default)
+  
+  // Try to calculate spacing from bubbles array
+  if (scaledCalage.bubbles && scaledCalage.bubbles.length >= 8) {
+    // Group bubbles by question
+    const bubblesByQ = {};
+    for (const bubble of scaledCalage.bubbles) {
+      const qNum = bubble.questionNum;
+      if (!bubblesByQ[qNum]) bubblesByQ[qNum] = [];
+      bubblesByQ[qNum].push(bubble);
+    }
+    
+    // Calculate spacing from questions that have multiple bubbles
+    const spacings = [];
+    for (const bubbles of Object.values(bubblesByQ)) {
+      if (bubbles.length >= 2) {
+        bubbles.sort((a, b) => a.x - b.x);
+        for (let i = 1; i < bubbles.length; i++) {
+          const spacing = bubbles[i].x - bubbles[i-1].x;
+          if (spacing > 50 && spacing < 200) { // Valid spacing range
+            spacings.push(spacing);
+          }
+        }
+      }
+    }
+    
+    if (spacings.length > 0) {
+      // Use median spacing (more robust than average)
+      spacings.sort((a, b) => a - b);
+      actualSpacing = spacings[Math.floor(spacings.length / 2)];
+      console.log(`[buildAnswersSection] Calculated spacing from ${spacings.length} samples: ${actualSpacing}px (median)`);
+    }
+  }
+
+  console.log(`[buildAnswersSection] Using spacing: ${actualSpacing}px`);
 
   for (const [qNumStr, qData] of Object.entries(scaledCalage.questions)) {
     const qNum = parseInt(qNumStr, 10);
@@ -70,17 +106,15 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
       const refIndex = optionLetters.indexOf(referenceLetter);
       const refX = referenceBubble.x;
       const refY = referenceBubble.y;
-      const refW = referenceBubble.w || 15;
-      const refH = referenceBubble.h || 15;
+      const refW = referenceBubble.w || Math.round(15 * scale);
+      const refH = referenceBubble.h || Math.round(15 * scale);
 
       for (let i = 0; i < optionLetters.length; i++) {
         const letter = optionLetters[i];
         if (!answers[`q${qNum}`][letter]) {
           // Generate position for this option based on reference
-          // If reference is A, B is refX + spacing, C is refX + 2*spacing, etc.
-          // If reference is B (wrong fill), adjust accordingly
           const offsetFromRef = i - refIndex;
-          const newX = refX + (offsetFromRef * HORIZONTAL_SPACING_PT * scale);
+          const newX = refX + (offsetFromRef * actualSpacing);
           
           answers[`q${qNum}`][letter] = {
             x: newX,

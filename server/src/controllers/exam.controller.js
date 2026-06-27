@@ -156,6 +156,54 @@ const getVersionsWithQuestions = catchAsync(async (req, res) => {
   res.send(versions);
 });
 
+const getVersionAnswerKey = catchAsync(async (req, res) => {
+  const { id, versionCode } = req.params;
+  console.log(`[getVersionAnswerKey] INPUT: examId=${id}, versionCode=${versionCode}`);
+
+  // Lấy 2 số cuối của versionCode để so sánh
+  const versionSuffix = versionCode.slice(-2);
+  console.log(`[getVersionAnswerKey] Looking for suffix: ${versionSuffix}`);
+
+  // Tìm tất cả versions và so khớp 2 số cuối
+  const versions = await examService.getVersionsWithQuestions(id);
+  console.log(`[getVersionAnswerKey] Found ${versions.length} versions in database`);
+  console.log(`[getVersionAnswerKey] Available versionCodes: ${versions.map(v => v.versionCode).join(', ')}`);
+
+  let matchedVersion = null;
+  for (const v of versions) {
+    const vSuffix = v.versionCode.slice(-2);
+    console.log(`[getVersionAnswerKey] Checking version ${v.versionCode} (suffix: ${vSuffix})`);
+    if (vSuffix === versionSuffix) {
+      matchedVersion = v;
+      console.log(`[getVersionAnswerKey] ✓ MATCHED! versionCode=${v.versionCode}`);
+      break;
+    }
+  }
+
+  if (!matchedVersion) {
+    console.log(`[getVersionAnswerKey] ✗ No matching version found for suffix: ${versionSuffix}`);
+    return res.status(404).send({ message: 'Version not found' });
+  }
+
+  // Trả về answerKey dưới dạng object { "1": "A", "2": "B", ... }
+  const answerKey = {};
+  if (matchedVersion.answerKey) {
+    for (const [key, value] of matchedVersion.answerKey.entries()) {
+      answerKey[key] = value;
+    }
+  }
+
+  console.log(`[getVersionAnswerKey] Returning:`);
+  console.log(`  - versionCode: ${matchedVersion.versionCode}`);
+  console.log(`  - numberOfQuestions: ${matchedVersion.numberOfQuestions}`);
+  console.log(`  - answerKey (${Object.keys(answerKey).length} entries):`, answerKey);
+  res.send({
+    versionCode: matchedVersion.versionCode,
+    answerKey,
+    numberOfQuestions: matchedVersion.numberOfQuestions,
+  });
+});
+
 const exportExamPDF = catchAsync(async (req, res) => {
   const format = req.query.format || 'pdf';
 
@@ -552,4 +600,5 @@ module.exports = {
   getExamTemplate,
   getAnswerSheet,
   deleteVersion,
+  getVersionAnswerKey,
 };

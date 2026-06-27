@@ -129,11 +129,17 @@ class ExamService {
 
   async getUpcomingExams(user, limit) {
     const now = new Date();
+    // Get exams that are either upcoming (examDate in future) or recently created/completed
+    // Also include exams without examDate that were recently created
     return Exam.find({
       createdBy: user.id,
-      examDate: { $ne: null, $gte: now },
+      $or: [
+        { examDate: { $ne: null, $gte: now } },  // Upcoming exams
+        { examDate: null, createdAt: { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } }, // Recent exams without date (last 30 days)
+        { status: { $in: ['draft', 'published', 'in_progress', 'completed'] }, examDate: { $ne: null, $lt: now } }, // Past exams with date
+      ],
     })
-      .sort({ examDate: 1 })
+      .sort({ examDate: -1, createdAt: -1 })  // Sort by examDate desc, then by createdAt
       .limit(limit)
       .populate('classIds', 'name code')
       .populate('primaryClassId', 'name code')

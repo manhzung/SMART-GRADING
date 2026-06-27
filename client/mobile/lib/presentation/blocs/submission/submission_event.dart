@@ -34,21 +34,3 @@ class SubmissionLoadByExamRequested extends SubmissionEvent {
   @override
   List<Object?> get props => [examId];
 }
-
-class SubmissionLoadMoreRequested extends SubmissionEvent {
-  final String? examId;
-
-  const SubmissionLoadMoreRequested({this.examId});
-
-  @override
-  List<Object?> get props => [examId];
-}
-
-class SubmissionRefreshRequested extends SubmissionEvent {
-  final String? examId;
-
-  const SubmissionRefreshRequested({this.examId});
-
-  @override
-  List<Object?> get props => [examId];
-}

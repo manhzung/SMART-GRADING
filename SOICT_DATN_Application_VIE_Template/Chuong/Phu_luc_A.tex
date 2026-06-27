@@ -1,137 +1,68 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-\section*{Quy định chung}
-Dưới đây là một số quy định và hướng dẫn viết đồ án tốt nghiệp mà bắt buộc sinh viên phải đọc kỹ và tuân thủ nghiêm ngặt.
 
-Sinh viên cần đảm bảo tính thống nhất toàn báo cáo (font chữ, căn dòng hai bên, hình ảnh, bảng, margin trang, đánh số trang, v.v.). Để làm được như vậy, sinh viên chỉ cần sử dụng các định dạng theo đúng template ĐATN này. Khi paste nội dung văn bản từ tài liệu khác của mình, sinh viên cần chọn kiểu Copy là “Text Only” để định dạng văn bản của template không bị phá vỡ/vi phạm.
+\appendixtitleon
+\appendixtitletocon
 
-Tuyệt đối cấm sinh viên đạo văn. Sinh viên cần ghi rõ nguồn cho tất cả những gì không tự mình viết/vẽ lên, bao gồm các câu trích dẫn, các hình ảnh, bảng biểu, v.v. Khi bị phát hiện, sinh viên sẽ không được phép bảo vệ ĐATN.
+\section{Hướng dẫn cài đặt môi trường phát triển}
+\label{sec:appendix-a1}
 
-Tất cả các hình vẽ, bảng biểu, công thức, và tài liệu tham khảo trong ĐATN nhất thiết phải được SV giải thích và tham chiếu tới ít nhất một lần. Không chấp nhận các trường hợp sinh viên đưa ra hình ảnh, bảng biểu tùy hứng và không có lời mô tả/giải thích nào.
+Phần này cung cấp hướng dẫn chi tiết từng bước để thiết lập môi trường phát triển cho hệ thống SMART GRADING trên máy tính cá nhân.
 
-Sinh viên tuyệt đối không trình bày ĐATN theo kiểu viết ý hoặc gạch đầu dòng. ĐATN không phải là một slide thuyết trình; khi người đọc không hiểu sẽ không có ai giải thích hộ. Sinh viên cần viết thành các đoạn văn và phân tích, diễn giải đầy đủ, rõ ràng. Câu văn cần đúng ngữ pháp, đầy đủ chủ ngữ, vị ngữ và các thành phần câu.
-Khi thực sự cần liệt kê, sinh viên nên liệt kê theo phong cách khoa học với các ký tự La Mã. Ví dụ, nhiều sinh viên luôn cảm thấy hối hận vì (i) chưa cố gắng hết mình, (ii) chưa sắp xếp thời gian học/chơi một cách hợp lý, (iii) chưa tìm được người yêu để chia sẻ quãng đời sinh viên vất vả, và (iv) viết ĐATN một cách cẩu thả.
+\subsection{Cài đặt công cụ phát triển backend}
+\label{sec:appendix-a1-1}
 
-Trong một số trường hợp nhất thiết phải dùng các bullet để liệt kê, sinh viên cần thống nhất Style cho toàn bộ các bullet các cấp mà mình sử dụng đến trong báo cáo. Nếu dùng bullet cấp 1 là hình tròn đen, toàn bộ báo cáo cần thống nhất cách dùng như vậy; ví dụ như sau:
+Để phát triển backend server, cần cài đặt các công cụ sau. Đầu tiên là cài đặt Node.js phiên bản 20 LTS bằng cách tải installer từ trang chủ nodejs.org và chạy installer, sau khi cài đặt xong kiểm tra bằng lệnh node --version trong terminal. Thứ hai là cài đặt MongoDB phiên bản 7.0 bằng cách tham khảo hướng dẫn tại trang chủ mongodb.com cho hệ điều hành tương ứng, có thể sử dụng MongoDB Community Edition miễn phí hoặc MongoDB Atlas (cloud) cho môi trường phát triển. Thứ ba là cài đặt Git bằng cách tải và cài đặt từ trang git-scm.com, Git được sử dụng để quản lý mã nguồn và làm việc với repository.
 
-\begin{itemize}
-\item Đây là mục 1 – Thực sự không còn cách nào khác tôi mới dùng đến việc bullet trong báo cáo.
-\item Đây là mục 2 – Nghĩ lại thì tôi có thể không cần dùng bullet cũng được. Nên tôi sẽ xóa bullet và tổ chức lại hai mục này trong báo cáo của mình cho khoa học hơn. Tôi muốn thầy cô và người đọc cảm nhận được tâm huyết của tôi trong từng trang báo cáo ĐATN.
-\end{itemize}
+Sau khi cài đặt các công cụ cơ bản, tiến hành cài đặt project backend bằng các bước sau. Bước 1 là mở terminal và navigate đến thư mục muốn chứa project. Bước 2 là clone repository bằng lệnh git clone <repository-url>. Bước 3 là navigate vào thư mục server bằng lệnh cd server. Bước 4 là chạy npm install để cài đặt tất cả dependencies. Bước 5 là tạo file .env trong thư mục server với nội dung mẫu được cung cấp trong file .env.example. Bước 6 là chạy npm run dev để khởi động server ở chế độ phát triển.
 
+\subsection{Cài đặt môi trường phát triển ứng dụng mobile}
+\label{sec:appendix-a1-2}
 
-\section{Ngành học}
-Sinh viên lưu ý viết đúng ngành/chuyên ngành trên bìa và trên gáy theo đúng quy định của Trường. Ngành học hay chuyên ngành học phụ thuộc vào ngành học mà sinh viên đăng ký. Sinh viên có thể đăng nhập trên trang quản lý học tập của mình để xem lại chính xác ngành học của mình. 
+Để phát triển ứng dụng Flutter, cần cài đặt các công cụ sau. Đầu tiên là cài đặt Flutter SDK bằng cách tải Flutter SDK từ flutter.dev, giải nén vào thư mục mong muốn (ví dụ: C:\\src\\flutter), và thêm đường dẫn flutter/bin vào biến môi trường PATH. Thứ hai là cài đặt Android Studio bao gồm Android SDK, Android SDK Platform-Tools, và Android SDK Build-Tools. Thứ ba là cài đặt Xcode (chỉ dành cho macOS) để phát triển ứng dụng iOS.
 
-Một số ví dụ sinh viên có thể tham khảo dưới đây, trong trường hợp có chuyên ngành thì sinh viên không cần ghi chuyên ngành:
+Sau khi cài đặt, tiến hành cài đặt project mobile bằng các bước sau. Bước 1 là mở terminal và navigate đến thư mục chứa project. Bước 2 là chạy flutter pub get để cài đặt tất cả dependencies của project. Bước 3 là kết nối thiết bị Android hoặc iOS hoặc mở emulator. Bước 4 là chạy flutter run để khởi chạy ứng dụng trên thiết bị.
 
-\begin{enumerate}
- \item Đối với kỹ sư chính quy:
-   \begin{enumerate}
-   \item Từ K61 trở về trước: Ngành Kỹ thuật phần mềm
-   \item Từ K62 trở về sau: Ngành Khoa học máy tính
-   \end{enumerate}
- \item Đối với cử nhân:
-   \begin{enumerate}
-   \item Ngành Công nghệ thông tin
-   \end{enumerate}
- \item Đối với chương trình EliteTech:
-   \begin{enumerate}
-   \item Chương trình Việt Nhật/KSTN: Ngành Công nghệ thông tin
-   \item Chương trình ICT Global: Ngành Information Technology
-   \item Chương trình DS\&AI: Ngành Khoa học dữ liệu
-   \end{enumerate}
-\end{enumerate}
+\subsection{Cài đặt môi trường phát triển ứng dụng web}
+\label{sec:appendix-a1-3}
 
-\section{Đánh dấu (bullet) và đánh số (numering)}
-Việc sử dụng danh sách trong LaTeX khá đơn giản và không yêu cầu sinh viên phải thêm bất kỳ gói bổ sung nào. LaTeX cung cấp hai môi trường liệt kê đó là:
-\begin{itemize}
-\item Đánh dấu (bullet) là kiểu liệt kê không có thứ tự. Để sử dụng kiểu liệt kê đánh dấu, chúng ta khai báo như sau\\ 
-\verb$\begin{itemize}$\\
- \verb$\item$ Nội dung thứ nhất được viết ở đây.\\
-\verb$\item$ Nội dung thứ hai được viết ở đây.\\
- \verb$\item$ ...\\
-\verb$\end{itemize}$
-\item Đánh số (numering) là kiểu liệt kê có thứ tự. Để sử dụng kiểu liệt kê đánh số, chúng ta khai báo như sau\\
-\verb$\begin{enumerate}$\\
- \verb$\item$ Nội dung thứ nhất được viết ở đây.\\
-\verb$\item$ Nội dung thứ hai được viết ở đây.\\
- \verb$\item$ ...\\
-\verb$\end{enumerate}$
-\end{itemize}
-Chú ý các nội dung trình bày trong cả hai môi trường liệt kê theo sau lệnh \verb$\item$. Ngoài ra LaTeX còn cung cấp một số kiểu liệt kê khác, sinh viên có thể tham khảo tại \url{https://www.overleaf.com/learn/latex/Lists}
-\section{Cách thêm bảng}
-\begin{table}[h!]
-\centering
-\begin{tabular}{||c c c c||} 
- \hline
- Col1 & Col2 & Col2 & Col3 \\ [0.5ex] 
- \hline\hline
- 1 & 6 & 87837 & 787 \\ 
- 2 & 7 & 78 & 5415 \\
- 3 & 545 & 778 & 7507 \\
- 4 & 545 & 18744 & 7560 \\
- 5 & 88 & 788 & 6344 \\ [1ex] 
- \hline
-\end{tabular}
-\caption{Table to test captions and labels.}
-\label{table:1}
-\end{table}
-Bảng \ref{table:1} là ví dụ về cách tạo bảng. Tất cả các bảng biểu phải được đề cập đến trong phần nội dung và phải được phân tích và bình luận.  Chú ý: Tạo bảng trong Latex khá phức tạp và mất thời gian, vì vậy sinh viên có thể sử dụng các công cụ hỗ trợ tạo bảng (Ví dụ: \url{https://www.tablesgenerator.com/}).
-Sinh viên có thể tìm hiểu sâu hơn về cách chèn ảnh trong Latex tại link \url{https://www.overleaf.com/learn/latex/Tables}.
+Để phát triển ứng dụng React, cần cài đặt Node.js phiên bản 20 LTS (đã cài ở bước trước) và npm hoặc yarn là package manager đi kèm Node.js. Tiến hành cài đặt project web bằng các bước sau. Bước 1 là navigate đến thư mục chứa project. Bước 2 là chạy npm install để cài đặt tất cả dependencies. Bước 3 là tạo file .env với biến môi trường VITE\_API\_BASE\_URL trỏ đến backend server. Bước 4 là chạy npm run dev để khởi động development server.
 
-\section{Chèn hình ảnh}
-\begin{figure}
-\centering
-\includegraphics[width=0.75\linewidth]{Hinhve/IoT.png}
-\caption{Internet vạn vật}
-\label{fig:iot}
-\end{figure}
+\section{Cấu trúc thư mục project}
+\label{sec:appendix-a2}
 
-Hình \ref{fig:iot} là ví dụ về cách chèn ảnh. Lưu ý chú thích của hình vẽ được đặt ngay dưới hình vẽ. Sinh viên có thể tìm hiểu sâu hơn về cách chèn ảnh trong Latex tại \url{https://www.overleaf.com/learn/latex/Inserting_Images}.
+Phần này mô tả cấu trúc thư mục của các thành phần trong hệ thống SMART GRADING.
 
-Chú ý, tất cả các hình vẽ phải được đề cập đến trong phần nội dung và phải được phân tích và bình luận. 
+Cấu trúc thư mục backend bao gồm các thư mục chính sau. Thư mục src chứa mã nguồn chính, trong đó src/config chứa các file cấu hình như database.js và env.js, src/controllers chứa các route controllers, src/middlewares chứa các Express middlewares, src/models chứa các Mongoose models, src/routes chứa các định nghĩa route, src/services chứa các business logic services, src/utils chứa các utility functions, src/validations chứa các Joi validation schemas, src/app.js là Express app configuration, và src/index.js là entry point. Thư mục tests chứa các unit test và integration test. File .env chứa các biến môi trường.
 
-\section{Tài liệu tham khảo}
-\paragraph{Cách liệt kê}\mbox{}
+Cấu trúc thư mục mobile bao gồm các thư mục chính sau. Thư mục lib chứa mã nguồn chính, trong đó lib/core chứa constants, config, network và utilities, lib/domain chứa entities, models, OMR engine và repositories, lib/presentation chứa blocs, pages, widgets và screens, lib/di chứa các dependency injection setup. File pubspec.yaml chứa danh sách dependencies. Thư mục test chứa các widget test và bloc test.
 
-Áp dụng cách liệt kê theo quy định của IEEE. Ví dụ của việc trích dẫn như sau \cite{scott2013sdn}. Cụ thể, sinh viên sử dụng lệnh \verb!\cite{}! như sau \cite{ashton2009internet}. Chỉ những tài liệu được trích dẫn thì mới xuất hiện trong phần Tài liệu tham khảo. Tài liệu tham khảo cần có nguồn gốc rõ ràng và phải từ nguồn đáng tin cậy. Hạn chế trích dẫn tài liệu tham khảo từ các website, từ wikipedia.
-\paragraph{Các loại tài liệu tham khảo}\mbox{}
+Cấu trúc thư mục web bao gồm các thư mục chính sau. Thư mục src chứa mã nguồn chính, trong đó src/components chứa các React components, src/screens chứa các page components, src/hooks chứa các custom hooks, src/services chứa các API services, src/stores chứa các Zustand stores, src/types chứa các TypeScript type definitions. File package.json chứa danh sách dependencies. Thư mục src/\_\_tests\_\_ chứa các test files.
 
-Các nguồn tài liệu tham khảo chính là sách, bài báo trong các tạp chí, bài báo trong các hội nghị khoa học và các tài liệu tham khảo khác trên internet.
+\section{Danh sách các API endpoints}
+\label{sec:appendix-a3}
 
-\section{Cách viết phương trình và công thức toán học}
-Các gói amsmath, amssymb, amsfonts hỗ trợ viết phương trình/công thức toán học đã được bổ sung sẵn ở phần đầu của file main.tex. Một ví dụ về tạo phương trình \eqref{pt31} như sau 
-\begin{equation}\label{pt31}
-    F(x) = \int^a_b \frac{1}{3}x^3
-\end{equation}
-Phương trình \ref{pt31} là ví dụ về phương trình tích phân. Một phương trình khác không được đánh số thứ tự (gán nhãn)
-\begin{equation*}\label{pt32}
-    x[t_n] = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1}X[f_k]e^{j 2\pi n k/N}
-\end{equation*}
-Phương trình này thể hiện phép biến đổi Fourier rời rạc ngược (IDFT).
-\section{Qui cách đóng quyển}
-Phần bìa trước chế bản theo qui định; bìa trước và bìa sau là giấy liền khổ. Sử dụng keo nhiệt để dán gáy khi đóng quyển thay vì sử dụng băng dính và dập ghim như mô tả ở Hình~\ref{fig:Bia}
-\begin{figure}
-\centering
-\includegraphics[width=0.5\linewidth]{Hinhve/Bia.PNG}
-\caption{Qui cách đóng quyển đồ án}
-\label{fig:Bia}
-\end{figure} 
-Phần gáy ĐATN cần ghi các thông tin tóm tắt sau:
-Kỳ làm ĐATN - Ngành đào tạo - Họ và tên sinh viên - Mã số sinh viên. Ví dụ:
-\begin{quote}
-2022.1 - KỸ THUẬT MÁY TÍNH - NGUYỄN VĂN A - 20221234
-\end{quote}
-Qui cách ghi chữ phần gáy như hình dưới đây:
-\begin{figure}
-\centering
-\includegraphics[width=0.5\linewidth]{Hinhve/GayBia.PNG}
-\caption{Qui cách đóng quyển đồ án}
-\label{fig:Bia}
-\end{figure} 
+Phần này cung cấp danh sách các API endpoints chính của hệ thống SMART GRADING.
 
+Nhóm Authentication bao gồm POST /api/auth/register để đăng ký tài khoản mới, POST /api/auth/login để đăng nhập và nhận JWT token, POST /api/auth/refresh để làm mới access token, và POST /api/auth/logout để đăng xuất.
 
+Nhóm Users bao gồm GET /api/users để lấy danh sách người dùng (admin only), GET /api/users/:id để lấy thông tin một người dùng, PUT /api/users/:id để cập nhật thông tin người dùng, và DELETE /api/users/:id để xóa người dùng (admin only).
 
+Nhóm Exams bao gồm GET /api/exams để lấy danh sách đề thi, POST /api/exams để tạo đề thi mới, GET /api/exams/:id để lấy chi tiết một đề thi, PUT /api/exams/:id để cập nhật đề thi, DELETE /api/exams/:id để xóa đề thi, POST /api/exams/:id/versions để tạo các mã đề từ file LaTeX, và GET /api/exams/:id/versions để lấy danh sách mã đề.
+
+Nhóm Submissions bao gồm POST /api/submissions để nộp bài thi, GET /api/submissions để lấy danh sách kết quả, GET /api/submissions/:id để lấy chi tiết một kết quả, và POST /api/submissions/:id/appeal để nộp đơn phúc tra.
+
+Nhóm AI bao gồm POST /api/ai/generate-questions để sinh câu hỏi tự động, POST /api/ai/analyze-results để phân tích kết quả thi, và POST /api/ai/chat để giao tiếp với chatbot AI.
+
+\section{Kịch bản kiểm thử chi tiết}
+\label{sec:appendix-a4}
+
+Phần này cung cấp các kịch bản kiểm thử chi tiết cho các chức năng quan trọng của hệ thống.
+
+Kịch bản kiểm thử chức năng đăng nhập bao gồm ba trường hợp. Trường hợp thành công là nhập email và password hợp lệ, hệ thống đăng nhập thành công và chuyển hướng đến trang chủ. Trường hợp thất bại với sai password là nhập email đúng nhưng password sai, hệ thống hiển thị thông báo lỗi và không cho đăng nhập. Trường hợp thất bại với tài khoản không tồn tại là nhập email chưa đăng ký, hệ thống hiển thị thông báo tài khoản không tồn tại.
+
+Kịch bản kiểm thử chức năng quét OMR bao gồm ba trường hợp. Trường hợp thành công là chụp ảnh phiếu rõ ràng trong điều kiện ánh sáng tốt, hệ thống nhận diện đúng và hiển thị kết quả chấm điểm. Trường hợp ảnh mờ là chụp ảnh phiếu bị mờ hoặc thiếu sáng, hệ thống hiển thị cảnh báo và yêu cầu chụp lại. Trường hợp tô đúp là thí sinh tô nhiều hơn một đáp án cho một câu, hệ thống hiển thị cảnh báo double-fill và yêu cầu giáo viên xác nhận.
+
+Kịch bản kiểm thử chức năng tạo đề thi bao gồm hai trường hợp. Trường hợp thành công là upload file LaTeX hợp lệ và hệ thống tạo thành công các mã đề, hệ thống hiển thị danh sách mã đề và cho phép tải về PDF. Trường hợp thất bại với file LaTeX không hợp lệ là upload file có lỗi cú pháp LaTeX, hệ thống hiển thị thông báo lỗi từ AMC và không tạo được mã đề.
 
 \end{document}

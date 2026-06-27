@@ -204,7 +204,14 @@ function parseCalage(content) {
           if (!questions[qNum]) {
             questions[qNum] = { questionNum: qNum, slots: {} };
           }
-          questions[qNum].slots[optionLetter] = bubble;
+          
+          // Only store bubble with smallest x (leftmost) for this option
+          // AMC may have multiple bubbles per option (at different positions)
+          // We want the FIRST bubble (leftmost in the row)
+          const existing = questions[qNum].slots[optionLetter];
+          if (!existing || bubble.x < existing.x) {
+            questions[qNum].slots[optionLetter] = bubble;
+          }
         }
       }
     // Legacy format handling removed - only use modern case: format

@@ -1,11 +1,58 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-Nếu trong nội dung chính không đủ không gian cho các use case khác (ngoài các use case nghiệp vụ chính) thì đặc tả thêm cho các use case đó ở đây.
 
-\section{Đặc tả use case ``Thống kê tình hình mượn sách''}
-\ldots
+\appendixtitleon
+\appendixtitletocon
 
-\section{Đặc tả use case ``Đăng ký làm thẻ mượn''}
-\ldots
+\section{Đặc tả chi tiết template JSON cho OMR}
+\label{sec:appendix-b1}
+
+Phần này cung cấp đặc tả chi tiết về cấu trúc template JSON được sử dụng để lưu trữ thông tin cấu hình OMR cho mỗi mã đề. Template JSON là cầu nối giữa hệ thống sinh đề (AMC) và hệ thống nhận diện (mobile OMR engine), đảm bảo tọa độ bubble được sử dụng để nhận diện luôn khớp với tọa độ thực tế trên phiếu in.
+
+Cấu trúc template JSON bao gồm các trường ở cấp cao nhất được mô tả như sau. Trường examId là string chứa ID của kỳ thi trong database, dùng để liên kết template với đề thi gốc. Trường title là string chứa tiêu đề của kỳ thi để hiển thị cho người dùng. Trường paperSize là string có thể là A4 hoặc A3, xác định kích thước giấy của phiếu thi. Trường scanDpi là number xác định độ phân giải DPI mà template được tính toán, thường là 300. Trường scale là number là hệ số tỷ lệ giữa DPI thực tế và DPI thiết kế, thường là 1.0 hoặc giá trị được tính từ AMC. Trường pageWidth và pageHeight là các number xác định kích thước pixel của trang tại DPI quy định.
+
+Trường bubbleWidth và bubbleHeight là các number xác định kích thước pixel của mỗi bubble trên phiếu, thường là 28-30 pixels cho A4 ở 300 DPI. Trường studentId là object chứa cấu hình vùng số báo danh, bao gồm position với x và y là tọa độ pixel góc trên trái của vùng, digits là số chữ số của mã số báo danh, digitWidth và digitHeight là kích thước của mỗi digit bubble, và digitSpacing là khoảng cách giữa các digit.
+
+Trường versionCode là object tương tự studentId nhưng cho vùng mã đề. Trường answers là object chứa tọa độ bubble của từng câu hỏi, trong đó key là số câu hỏi (q1, q2, ...) và value là object với key là lựa chọn (A, B, C, D) và value là object chứa x, y, w, h xác định tọa độ và kích thước của bubble đó. Trường answerKey là object chứa đáp án đúng cho từng câu, key là số câu (q1, q2, ...) và value là đáp án đúng (A, B, C, D). Trường questionScores là object chứa điểm của từng câu, key là số câu và value là điểm số (thường là 0.5 hoặc 1.0). Trường totalScore là number là tổng điểm của toàn bài thi. Trường autoAlign là boolean cho biết liệu engine OMR có tự động hiệu chỉnh góc nghiêng hay không.
+
+Ví dụ về cấu trúc template JSON cho một mã đề đơn giản như sau. Template bao gồm thông tin examId là exam\_abc123, paperSize là A4, scanDpi là 300, pageWidth là 2480, pageHeight là 3508. Trường answers chứa q1 với vị trí các lựa chọn A, B, C, D. Trường answerKey chứa q1 là C, q2 là A. Trường questionScores chứa q1 là 0.5, q2 là 0.5. Trường totalScore là 10.
+
+\section{Thuật toán nhận diện bubble chi tiết}
+\label{sec:appendix-b2}
+
+Phần này mô tả chi tiết thuật toán nhận diện bubble được sử dụng trong engine OMR trên thiết bị di động.
+
+Thuật toán nhận diện bubble bao gồm các bước chính sau. Bước 1 là tiền xử lý ảnh với các thao tác chuyển ảnh màu sang ảnh xám bằng công thức lấy trung bình có trọng số của các kênh R, G, B, cân bằng histogram để cải thiện độ tương phản, và áp dụng bộ lọc Gaussian để giảm nhiễu. Bước 2 là phát hiện contour của phiếu bằng thuật toán Canny để phát hiện cạnh, tìm contour có 4 đỉnh gần với hình chữ nhật, và tính ma trận perspective transform. Bước 3 là hiệu chỉnh phối cảnh bằng cách áp dụng perspective transform để biến đổi ảnh nghiêng thành ảnh nhìn thẳng. Bước 4 là trích xuất và phân tích bubble.
+
+Bước 4 được mô tả chi tiết như sau. Với mỗi câu hỏi, lấy tọa độ của các lựa chọn A, B, C, D từ template JSON. Với mỗi lựa chọn, crop vùng ảnh chứa bubble dựa trên tọa độ và kích thước từ template. Tính mật độ pixel (intensity) của vùng bubble bằng công thức lấy trung bình giá trị grayscale của tất cả pixel trong vùng. So sánh intensity với ngưỡng threshold để quyết định tô hay không tô, trong đó intensity nhỏ hơn ngưỡng (gần đen) nghĩa là được tô, và intensity lớn hơn ngưỡng (gần trắng) nghĩa là không được tô. Ngưỡng mặc định là 180 trên thang 0-255.
+
+Sau khi có kết quả nhận diện cho tất cả các câu, tiến hành chấm điểm. Với mỗi câu hỏi, so sánh đáp án được nhận diện với đáp án đúng từ template. Nếu khớp, cộng điểm của câu đó vào tổng điểm và đánh dấu là đúng. Nếu không khớp, đánh dấu là sai. Kiểm tra các trường hợp đặc biệt như skipped (không có bubble nào được tô) và double-fill (có nhiều hơn một bubble được tô).
+
+\section{Cấu hình AMC cho đề thi trắc nghiệm}
+\label{sec:appendix-b3}
+
+Phần này cung cấp hướng dẫn cấu hình AMC cho việc tạo đề thi trắc nghiệm tương thích với hệ thống SMART GRADING.
+
+Để sử dụng AMC với SMART GRADING, file LaTeX cần tuân theo cú pháp AMC. Mỗi câu hỏi được định nghĩa trong môi trường question như sau. Đầu tiên là khai báo document class và các package cần thiết bao gồm inputencoding UTF-8, babel cho tiếng Việt, và các package AMC cần thiết. Tiếp theo là thiết lập thông tin đề thi bằng lệnh AMCcombibox. Sau đó là định nghĩa các câu hỏi trong môi trường question, mỗi câu hỏi bắt đầu bằng lệnh question và các lựa chọn được định nghĩa trong môi trường choices với mỗi lựa chọn bắt đầu bằng lệnh item. Cuối cùng là thiết lập các tùy chọn xáo trộn bằng lệnh insertgroup.
+
+Ví dụ về file LaTeX AMC đơn giản như sau. Document sử dụng class exam và package auto-multiple-choice. Mỗi câu hỏi có nội dung câu hỏi và bốn lựa chọn A, B, C, D được đánh dấu correct cho đáp án đúng. Các tùy chọn xáo trộn được thiết lập để xáo trộn cả câu hỏi và lựa chọn.
+
+Các lệnh AMC quan trọng cần sử dụng bao gồm AMCbox cho vùng trả lời trên phiếu, AMCoption cho các tùy chọn cấu hình, và automultiplechoice cho document class AMC.
+
+\section{Danh sách các thành viên trong nhóm}
+\label{sec:appendix-b4}
+
+Phần này ghi nhận danh sách các thành viên tham gia thực hiện đồ án tốt nghiệp.
+
+Thông tin sinh viên thực hiện bao gồm họ và tên đầy đủ là {\color{red}[Họ tên sinh viên]}, mã số sinh viên là {\color{red}[MSSV]}, lớp là {\color{red}[Lớp]}, chương trình đào tạo là {\color{red}[Tên chương trình đào tạo]}, và email liên hệ là {\color{red}[email@sis.hust.edu.vn]}.
+
+Thông tin giảng viên hướng dẫn bao gồm họ và tên đầy đủ là {\color{red}[Họ tên GVHD, học hàm học vị]}, và đơn vị công tác là Bộ môn Kỹ thuật Máy tính, Khoa Kỹ thuật Máy tính, Trường Công nghệ Thông tin và Truyền thông, Đại học Bách khoa Hà Nội.
+
+\section{Bảng phân công công việc}
+\label{sec:appendix-b5}
+
+Phần này ghi nhận bảng phân công công việc giữa các thành viên trong nhóm (nếu là đồ án nhóm).
+
+Công việc phân công cho sinh viên chính như sau. Phân tích yêu cầu và thiết kế hệ thống chiếm 20\% công việc. Phát triển backend server và API chiếm 30\% công việc. Phát triển engine OMR trên thiết bị di động chiếm 25\% công việc. Viết báo cáo đồ án chiếm 15\% công việc. Kiểm thử và sửa lỗi chiếm 10\% công việc.
 
 \end{document}

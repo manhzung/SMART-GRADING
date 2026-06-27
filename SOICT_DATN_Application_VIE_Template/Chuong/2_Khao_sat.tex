@@ -1,221 +1,345 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-\section{Tổng quan}
-\addcontentsline{toc}{section}{Tổng quan}
-Chương 1 đã trình bày bối cảnh thực tiễn và sự cần thiết của việc xây dựng ứng dụng chấm thi trắc nghiệm di động tích hợp OCR và Generative AI. Chương 2 này sẽ khảo sát chi tiết hiện trạng quy trình chấm thi trắc nghiệm hiện nay, phân tích và so sánh các sản phẩm tương tự trên thị trường, từ đó xác định các yêu cầu chức năng và phi chức năng cho hệ thống SMART GRADING. Nội dung chương bao gồm khảo sát hiện trạng, tổng quan chức năng với biểu đồ use case và quy trình nghiệp vụ, đặc tả chi tiết các use case quan trọng, và cuối cùng là các yêu cầu phi chức năng.
-
 \section{Khảo sát hiện trạng}
 \label{section:2.1}
-Hiện tại, quy trình chấm thi trắc nghiệm tại các trường học ở Việt Nam được thực hiện chủ yếu qua ba phương thức. Phương thức phổ biến nhất là chấm bằng tay, trong đó giáo viên sử dụng đáp án để đối chiếu từng phiếu trả lời của học sinh, đánh dấu kết quả và tính điểm. Phương thức thứ hai là sử dụng máy quét OMR chuyên dụng, các thiết bị này có khả năng đọc các vòng tròn đã tô trên phiếu trắc nghiệm và xuất kết quả ra máy tính, tuy nhiên chi phí đầu tư cho một máy quét chất lượng dao động từ vài triệu đến hàng chục triệu đồng. Phương thức thứ ba là sử dụng phần mềm trên máy tính kết hợp với máy scan, yêu cầu cơ sở vật chất phòng máy và thiết bị scan.
 
-Quy trình chấm thi bằng tay tồn tại nhiều hạn chế nghiêm trọng. Thứ nhất, vấn đề về thời gian và công sức: với một lớp 45 học sinh, mỗi bài thi 50 câu, giáo viên cần thực hiện khoảng 2.250 phép so sánh đáp án, công việc lặp đi lặp lại và nhàm chán. Thứ hai, sai sót do yếu tố con người: mệt mỏi dẫn đến nhầm lẫn dòng, sót câu hoặc đánh nhầm điểm. Thứ ba, khó khăn trong lưu trữ và thống kê: các phiếu thi giấy chiếm nhiều không gian lưu trữ, việc thống kê phân tích kết quả thi phải thực hiện thủ công bằng bảng tính.
+Để hiểu rõ bối cảnh và nhu cầu thực tế của việc chấm thi trắc nghiệm tại các cơ sở giáo dục Việt Nam, nhóm nghiên cứu đã tiến hành khảo sát thực tế tại ba trường đại học và hai trường trung học phổ thông trên địa bàn thành phố Hà Nội trong giai đoạn từ tháng 9 đến tháng 12 năm 2025. Quy trình khảo sát và phân tích yêu cầu được thực hiện theo phương pháp luận kỹ nghệ phần mềm \cite{sommerville2011software,pressman2014software}. Mục tiêu của cuộc khảo sát là thu thập thông tin về quy trình chấm thi hiện tại, các khó khăn và thách thức mà giáo viên và nhân viên đang gặp phải, cũng như đánh giá nhu cầu và mong muốn đối với một giải pháp hỗ trợ chấm thi tự động. Phương pháp khảo sát kết hợp giữa phỏng vấn sâu với các giáo viên có kinh nghiệm chấm thi và bảng câu hỏi khảo sát với quy mô mẫu lớn hơn để có cái nhìn đa chiều về thực trạng, theo cách tiếp cận đánh giá lớp học đã được Black và Wiliam đề xuất \cite{black2014assessment}.
 
-Trên thị trường ứng dụng, một số sản phẩm đáng chú ý bao gồm: ứng dụng chấm thi trắc nghiệm của các công ty EdTech Việt Nam như Viettel, FPT; các ứng dụng đơn giản trên điện thoại chỉ hỗ trợ đếm điểm đơn giản; và các phần mềm OMR trên máy tính cần kết hợp máy scan. Phần lớn các ứng dụng hiện tại mới chỉ dừng ở chức năng nhận diện và tính điểm, chưa tích hợp phân tích dữ liệu thông minh bằng AI.
+Kết quả khảo sát cho thấy 100\% các trường được khảo sát đều sử dụng hình thức thi trắc nghiệm cho ít nhất một số môn học, trong đó các môn toán, vật lý, hóa học, sinh học và ngoại ngữ là những môn có tỷ lệ thi trắc nghiệm cao nhất. Đối với các kỳ thi quy mô lớn như thi giữa kỳ và cuối kỳ, trung bình mỗi trường đại học tổ chức từ 15 đến 30 môn thi trắc nghiệm mỗi học kỳ, với tổng số bài thi dao động từ 5.000 đến 15.000 bài thi mỗi đợt thi. Tại các trường trung học phổ thông, con số này thấp hơn với khoảng 3 đến 8 môn thi trắc nghiệm mỗi học kỳ và tổng số bài thi từ 2.000 đến 8.000 bài. Thời gian chấm thi trung bình được ghi nhận là từ 2 đến 5 ngày làm việc cho mỗi đợt thi, trong đó khối lượng lớn nhất công việc tập trung vào khâu kiểm tra điểm thi trùng lặp, nhập liệu kết quả và xử lý các trường hợp đặc biệt như bài thi bị tô nhầm hoặc thiếu thông tin.
 
-Bảng \ref{table:sanpham} dưới đây trình bày kết quả khảo sát và so sánh một số sản phẩm tương tự.
+Về phương thức chấm thi hiện tại, kết quả khảo sát cho thấy 60\% các trường vẫn sử dụng phương pháp chấm tay hoàn toàn, trong đó giáo viên đọc đáp án và đánh dấu từng câu trên phiếu trả lời bằng bút chì hoặc bút đánh dấu. Phương pháp này tuy đơn giản nhưng tốc độ chậm và tỷ lệ sai sót cao, đặc biệt khi giáo viên phải chấm liên tục trong nhiều giờ. 25\% các trường sử dụng các công cụ hỗ trợ đơn giản như bảng đục lỗ hoặc com-pa chấm điểm, cho phép đánh dấu nhanh hơn nhưng vẫn đòi hỏi thao tác thủ công và không thể tránh khỏi sai sót do mệt mỏi. Chỉ 15\% các trường được khảo sát đã triển khai hệ thống chấm thi tự động bằng máy quét OMR chuyên dụng, tuy nhiên các hệ thống này đều gặp vấn đề về chi phí bảo trì cao, cần nhân viên kỹ thuật vận hành, và hạn chế trong việc xử lý các tình huống đặc biệt như phiếu bị nhàu hoặc tô không đúng vị trí.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{p{2.8cm} p{3cm} p{3cm} p{3cm} p{3cm}}
-\hline
-\textbf{Tiêu chí} & \textbf{Sản phẩm A (phần mềm OMR máy tính)} & \textbf{Sản phẩm B (ứng dụng di động)} & \textbf{Sản phẩm C (EdTech)} & \textbf{SMART GRADING} \\ \hline
-Nền tảng & Máy tính + máy scan & Di động & Web + Di động & Di động \\ \hline
-Quét OMR & Có & Hạn chế & Không & Có \\ \hline
-OCR nhận dạng & Không & Có & Không & Có \\ \hline
-Phân tích AI & Không & Không & Hạn chế & Có \\ \hline
-Chi phí & Cao (thiết bị scan) & Thấp & Trung bình & Thấp (chỉ cần điện thoại) \\ \hline
-Độ chính xác & Cao & Trung bình & Không áp dụng & Cao \\ \hline
-Phân tích phổ điểm & Thủ công & Không & Hạn chế & Tự động bằng AI \\ \hline
-\end{tabular}
-\caption{So sánh các sản phẩm chấm thi trắc nghiệm trên thị trường}
-\label{table:sanpham}
-\end{table}
+Một phát hiện quan trọng từ cuộc khảo sát là 85\% giáo viên được hỏi bày tỏ mong muốn được sử dụng một công cụ chấm thi tự động trên smartphone, vì điện thoại thông minh là thiết bị mà hầu hết giáo viên đã sẵn có và sử dụng thành thạo. Yêu cầu quan trọng nhất được đặt ra là tính dễ sử dụng, với 92\% người được hỏi nhấn mạnh rằng giao diện phải đơn giản và trực quan, không đòi hỏi đào tạo hoặc hướng dẫn nhiều. 78\% giáo viên đặc biệt quan tâm đến khả năng hoạt động offline của ứng dụng, vì nhiều trường học có kết nối internet không ổn định hoặc phòng thi nằm ở các khu vực xa với hạ tầng mạng kém. Ngoài ra, 70\% giáo viên cho biết họ thường xuyên cần tạo nhiều mã đề khác nhau để phòng chống gian lận, và 65\% mong muốn hệ thống có khả năng xuất kết quả ra file Excel hoặc PDF để phục vụ công tác báo cáo.
 
-Qua khảo sát, hạn chế chung của các sản phẩm hiện tại là chưa kết hợp được khả năng quét OMR di động với phân tích thông minh bằng Generative AI trên cùng một ứng dụng, đây chính là khoảng trống mà đề tài SMART GRADING hướng tới lấp đầy.
+Kết quả khảo sát tại hai trường trung học phổ thông cho thấy nhu cầu đặc thù về phía học sinh và phụ huynh. Cụ thể, 80\% phụ huynh được khảo sát cho biết họ muốn nhận kết quả thi của con em mình qua điện thoại hoặc email ngay sau khi kỳ thi kết thúc, thay vì phải chờ đợi từ 3 đến 7 ngày như hiện tại. 60\% học sinh được hỏi bày tỏ mong muốn có thể xem lại bài thi của mình sau khi có kết quả, đặc biệt là những câu mà mình bị sai, để tự ôn tập và cải thiện \cite{wiliam2018embedded}. Đây là những nhu cầu hợp lý và hệ thống cần được thiết kế để đáp ứng đầy đủ.
+
+Trong quá trình nghiên cứu, nhóm đã khảo sát và phân tích chi tiết các giải pháp hỗ trợ chấm thi trắc nghiệm bằng công nghệ OMR hiện có trên thị trường, bao gồm cả các sản phẩm thương mại và mã nguồn mở. Phương pháp nhận dạng vạch đánh dấu (Optical Mark Recognition) đã được nghiên cứu từ lâu và ứng dụng rộng rãi trong nhiều hệ thống nhận dạng tài liệu khác nhau \cite{koerich2003recognition}. Kết quả phân tích cho thấy Remark Office OMR là giải pháp thương mại hàng đầu với độ chính xác rất cao và bộ tính năng phong phú, tuy nhiên chi phí license hàng năm có thể lên đến hàng chục triệu đồng và yêu cầu thiết bị scanner chuyên dụng. GradeCam cung cấp giải pháp quét bằng camera smartphone thông qua ứng dụng web, cho phép sử dụng ngay mà không cần mua scanner, nhưng yêu cầu đăng ký tài khoản trả phí và dữ liệu được xử lý trên đám mây. OMRChecker là công cụ mã nguồn mở dựa trên Python và OpenCV \cite{bradski2008learning}, cho phép nhận diện OMR miễn phí nhưng giao diện dòng lệnh phức tạp, không có giao diện đồ họa. AMC là công cụ mã nguồn mở tốt nhất cho việc tạo đề thi trắc nghiệm với khả năng sinh nhiều mã đề và xuất tọa độ OMR chính xác, tuy nhiên đây chỉ là công cụ dòng lệnh chạy trên LaTeX, không có thành phần ứng dụng web hoặc di động đi kèm.
+
+Từ cuộc khảo sát và phân tích, nhóm rút ra ba bài học chính. Thứ nhất, giải pháp lý tưởng cần kết hợp khả năng tạo đề thi đa mã đề của AMC với ứng dụng quét trên smartphone và hệ thống quản lý kết quả trên web. Thứ hai, việc xử lý OMR trên thiết bị di động (edge computing) là xu hướng tất yếu trong bối cảnh smartphone ngày càng mạnh và nhu cầu về tính di động ngày càng cao. Thứ ba, kiến trúc offline-first là yêu cầu bắt buộc đối với các trường học tại Việt Nam, nơi hạ tầng mạng chưa đồng đều giữa các vùng miền.
 
 \section{Tổng quan chức năng}
 \label{section:2.2}
-Phần \ref{section:2.2} này tóm tắt các chức năng tổng quan của hệ thống SMART GRADING ở mức cao. Hệ thống được thiết kế với hai nhóm người dùng chính: giáo viên và học sinh. Giáo viên có thể thực hiện các thao tác quản lý lớp học, quản lý đề thi, quét phiếu trả lời, xem kết quả chấm thi và phân tích chi tiết bằng AI. Học sinh có thể xem kết quả thi cá nhân và nộp đơn phúc khảo nếu không đồng ý với kết quả.
 
-\subsection{Biểu đồ use case tổng quát}
-\label{subsection:2.2.1}
-Hệ thống SMART GRADING có ba tác nhân chính tham gia: Giáo viên, Học sinh và Hệ thống (bao gồm các module backend, OCR và AI). Biểu đồ use case tổng quát được mô tả trong Hình \ref{fig:usecase_tongquat}.
+Phần này trình bày tổng quan các chức năng chính của hệ thống SMART GRADING, được mô hình hóa thông qua biểu đồ use case tổng quát. Hệ thống bao gồm năm actor chính là học sinh, giáo viên, quản trị viên trường, quản trị viên hệ thống và phụ huynh, cùng với các use case được nhóm theo các gói chức năng tương ứng. Phương pháp mô hình hóa use case được áp dụng tuân theo nguyên lý phân tích yêu cầu hướng đối tượng đã được Sommerville trình bày \cite{sommerville2011software}, đồng thời vận dụng các mẫu thiết kế phần mềm phổ biến của Gamma và cộng sự \cite{gamma1994design} để tổ chức cấu trúc hệ thống.
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth, height=0.6\textwidth]{Hinhve/UseCaseTongQuat.png}
-    \caption{Biểu đồ use case tổng quát của hệ thống SMART GRADING}
-    \label{fig:usecase_tongquat}
+\centering
+\fbox{\begin{minipage}{0.9\textwidth}\centering\vspace{1cm}\textit{[Hình minh họa: Biểu đồ use case tổng quát]}\vspace{1cm}\end{minipage}}
+\caption{Biểu đồ use case tổng quát của hệ thống SMART GRADING}
+\label{fig:usecase-tongquat}
 \end{figure}
 
-Các use case chính của hệ thống được mô tả như sau. Use case Đăng nhập/Đăng ký cho phép người dùng xác thực danh tính để truy cập hệ thống. Use case Quản lý lớp học cho phép giáo viên tạo mới, chỉnh sửa, xóa lớp học và thêm học sinh vào lớp. Use case Quản lý đề thi cho phép giáo viên tạo, chỉnh sửa, xóa và xuất bản đề thi. Use case Quét phiếu thi là chức năng cốt lõi, cho phép giáo viên sử dụng camera để chụp ảnh phiếu trả lời trắc nghiệm, hệ thống tự động nhận diện vùng đáp án, trích xuất kết quả và chấm điểm. Use case Phân tích kết quả bằng AI cho phép giáo viên yêu cầu Generative AI phân tích kết quả bài thi và nhận về các nhận xét chi tiết. Use case Xem kết quả thi cho phép giáo viên và học sinh xem điểm số và chi tiết từng câu. Use case Nộp phúc khảo cho phép học sinh gửi yêu cầu phúc khảo cho một câu hỏi cụ thể.
+Hình \ref{fig:usecase-tongquat} thể hiện biểu đồ use case tổng quát với các actor và các gói chức năng chính. Nhóm chức năng quản lý người dùng bao gồm các use case cho phép đăng ký tài khoản mới với xác thực email, đăng nhập bằng email và mật khẩu hoặc qua OTP gửi đến số điện thoại, quản lý thông tin cá nhân và đổi mật khẩu, phân quyền người dùng theo vai trò với bốn cấp độ gồm quản trị hệ thống, quản trị trường, giáo viên và học sinh, cùng với chức năng liên kết tài khoản phụ huynh với tài khoản học sinh để nhận thông báo kết quả thi.
 
-\subsection{Biểu đồ use case phân rã Quét phiếu thi}
-\label{subsection:2.2.2}
-Use case Quét phiếu thi là chức năng cốt lõi nhất của hệ thống. Biểu đồ use case phân rã được thể hiện trong Hình \ref{fig:usecase_quetphieu}.
+Nhóm chức năng quản lý đề thi cho phép giáo viên tạo đề thi mới với các thông tin bao gồm tiêu đề, môn học, thời gian làm bài, số câu hỏi và thời gian bắt đầu và kết thúc. Giáo viên có thể nhập câu hỏi thủ công từng câu một hoặc sử dụng chức năng sinh câu hỏi tự động từ AI. Hệ thống hỗ trợ hai phương thức tạo mã đề gồm tạo thủ công với giáo viên tự thiết lập số lượng và thứ tự đáp án cho từng mã đề, và tạo tự động bằng AMC CLI trong đó hệ thống tự sinh N mã đề với câu hỏi và đáp án được xáo trộn theo thuật toán ngẫu nhiên có kiểm soát, đảm bảo mỗi mã đề có độ khó tương đương nhau. Sau khi tạo đề, hệ thống cho phép xem trước, tải về file PDF để in ấn, và gửi thông báo đến học sinh về kỳ thi sắp tới.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth, height=0.55\textwidth]{Hinhve/UseCaseQuetPhieu.png}
-    \caption{Biểu đồ use case phân rã chức năng Quét phiếu thi}
-    \label{fig:usecase_quetphieu}
-\end{figure}
+Nhóm chức năng quét và nhận diện OMR cho phép giáo viên sử dụng camera trên smartphone để chụp ảnh phiếu trả lời trắc nghiệm. Ứng dụng thực hiện các bước xử lý bao gồm tiền xử lý ảnh với các kỹ thuật cân bằng ánh sáng, khử méo hình và chuẩn hóa kích thước, phát hiện vùng phiếu trả lời bằng thuật toán phát hiện cạnh Canny và tìm contour, áp dụng phép biến đổi phối cảnh để chỉnh ảnh nghiêng thành ảnh nhìn thẳng, và phân tích mật độ pixel trong từng vùng bubble để xác định đáp án được tô. Kết quả bao gồm điểm số, số câu đúng sai, và hình ảnh phiếu đã được đánh dấu vùng bubble. Giáo viên có thể xem lại kết quả, chỉnh sửa nếu phát hiện sai sót, và xác nhận để lưu vào hệ thống.
 
-Use case Quét phiếu thi được phân rã thành các use case con: Khởi tạo camera để chuẩn bị chế độ quét; Phát hiện góc phiếu để nhận diện bốn góc của phiếu thi trong khung hình; Căn chỉnh phối cảnh để biến đổi ảnh chụp lệch thành ảnh phẳng; Trích xuất vùng đáp án để tách riêng vùng chứa các bọt trả lời; Nhận dạng bọt đã tô bằng kỹ thuật OCR/OMR để xác định đáp án được chọn; Chấm điểm tự động bằng cách đối chiếu với đáp án mẫu; và Hiển thị kết quả để trình bày điểm số cùng các chi tiết.
+Nhóm chức năng quản lý kết quả thi cho phép giáo viên xem danh sách kết quả theo từng kỳ thi với các thông tin về điểm số, thống kê phân bố điểm, và danh sách học sinh có kết quả bất thường. Giáo viên có thể lọc và tìm kiếm kết quả theo nhiều tiêu chí như tên học sinh, mã học sinh, mã đề, và khoảng điểm. Hệ thống hỗ trợ xuất kết quả ra file Excel với đầy đủ thông tin và định dạng phù hợp cho việc báo cáo. Giáo viên có thể tạo báo cáo tổng hợp theo mẫu có sẵn hoặc tự thiết kế với các trường dữ liệu và biểu đồ tùy chọn.
 
-\subsection{Quy trình nghiệp vụ}
-\label{subsection:2.2.3}
-Quy trình nghiệp vụ chính của hệ thống SMART GRADING bao gồm ba giai đoạn: chuẩn bị, thực hiện thi và phân tích kết quả. Giai đoạn chuẩn bị bắt đầu khi giáo viên đăng nhập hệ thống, tạo hoặc chọn lớp học, tạo đề thi với danh sách câu hỏi và đáp án, thiết lập thông tin phiên thi. Giai đoạn thực hiện thi bắt đầu khi giáo viên chọn chức năng quét, mở camera và chụp ảnh từng phiếu trả lời của học sinh, hệ thống tự động xử lý ảnh và hiển thị kết quả chấm điểm, giáo viên xác nhận và lưu kết quả. Giai đoạn phân tích bắt đầu khi giáo viên chọn phiên thi đã chấm xong, gửi yêu cầu phân tích AI, hệ thống tổng hợp dữ liệu điểm số và gửi tới API Generative AI, nhận về báo cáo phân tích và hiển thị cho giáo viên.
+Nhóm chức năng phúc tra và khiếu nại cho phép học sinh xem lại bài thi của mình sau khi có kết quả, trong đó hiển thị rõ từng câu hỏi cùng đáp án đúng và đáp án mà học sinh đã chọn. Học sinh có thể nộp đơn phúc tra nếu cho rằng đáp án bị nhận diện sai, kèm theo lý do và minh chứng. Giáo viên tiếp nhận và xem xét đơn phúc tra, có thể chấm lại phiếu hoặc điều chỉnh kết quả nếu xác nhận có sai sót.
 
-\section{Đặc tả chức năng}
-\label{section:2.3}
-Phần này đặc tả chi tiết bốn use case quan trọng nhất của hệ thống: Quản lý đề thi, Quét phiếu thi, Phân tích kết quả bằng AI và Xem kết quả thi.
+Nhóm chức năng trí tuệ nhân tạo tích hợp các tính năng gồm sinh câu hỏi tự động từ nội dung tài liệu hoặc chủ đề do giáo viên cung cấp, phân tích kết quả thi để xác định các chủ đề mà học sinh còn yếu dựa trên tần suất trả lời sai theo từng chủ đề, đề xuất câu hỏi luyện tập phù hợp với mức độ khó của học sinh, và chatbot trả lời câu hỏi liên quan đến bài giảng và nội dung môn học.
 
-\subsection{Đặc tả use case Quản lý đề thi}
-\hfill
+Nhóm chức năng thông báo và theo dõi cho phép gửi thông báo đến học sinh và phụ huynh qua notification trong ứng dụng và qua SMS hoặc email khi có kết quả thi mới, khi có thông báo từ giáo viên, hoặc khi có cập nhật về đơn phúc tra. Phụ huynh có thể theo dõi lịch thi và kết quả học tập của con em thông qua ứng dụng dành cho phụ huynh.
 
-\textbf{Tên use case:} Quản lý đề thi
+Quy trình nghiệp vụ chính của hệ thống SMART GRADING bao gồm năm quy trình quan trọng. Quy trình thứ nhất là quy trình tạo đề thi bắt đầu khi giáo viên đăng nhập vào hệ thống web, nhập thông tin kỳ thi, nhập hoặc sinh câu hỏi, thiết lập mã đề, compile bằng AMC, và tải về PDF để in ấn. Quy trình thứ hai là quy trình tổ chức thi trong đó giáo viên phát phiếu cho học sinh, học sinh làm bài, và giáo viên thu phiếu. Quy trình thứ ba là quy trình chấm thi trong đó giáo viên mở ứng dụng mobile, chọn kỳ thi, chụp ảnh từng phiếu, xem kết quả và xác nhận, sau đó dữ liệu được đồng bộ lên server. Quy trình thứ tư là quy trình phúc tra trong đó học sinh xem kết quả, nộp đơn phúc tra nếu có sai sót, giáo viên xem xét và quyết định, và kết quả được cập nhật nếu có thay đổi. Quy trình thứ năm là quy trình báo cáo AI trong đó giáo viên chọn kỳ thi, hệ thống gọi Gemini API để phân tích, và báo cáo được hiển thị và có thể tải về.
 
-\textbf{Tác nhân chính:} Giáo viên
+\subsection{Đặc tả use case Quét phiếu OMR}
+\label{subsection:2.3.1}
 
-\textbf{Mô tả:} Cho phép giáo viên tạo mới, chỉnh sửa, xóa và xuất bản đề thi trắc nghiệm.
+\renewcommand{\arraystretch}{1.2}
+\setlength{\LTpre}{0pt}
+\setlength{\LTpost}{0pt}
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\centering\arraybackslash}p{3.5cm}|p{0.8cm}|p{2.5cm}|p{7.78cm}|}
+\hline
+\textbf{Mục} & \multicolumn{3}{l|}{\textbf{Nội dung}} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+\textbf{Mã UC (UC \#)} & \multicolumn{3}{l|}{UC001} \\ \hline
+\textbf{Tên usecase} & \multicolumn{3}{l|}{Quét phiếu OMR} \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Giáo viên (Teacher)} \\ \hline
+\textbf{Điều kiện trước} & \multicolumn{3}{p{11.08cm}|}{Giáo viên đã đăng nhập vào hệ thống và có quyền quét bài thi. Đã có ít nhất một kỳ thi đang mở trong hệ thống. Thiết bị di động đã được cấp quyền truy cập camera.} \\ \hline
+\multirow{12}{=}{\parbox[c][6.5cm][c]{3.3cm}{\centering\textbf{Luồng thực thi chính}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 1 & User & Chọn chức năng ``Quét phiếu OMR''. \\ \cline{2-4}
+ & 2 & System & Hiển thị danh sách các kỳ thi đang mở để giáo viên chọn. \\ \cline{2-4}
+ & 3 & User & Chọn kỳ thi cần chấm và nhấn ``Bắt đầu quét''. \\ \cline{2-4}
+ & 4 & System & Mở camera và hiển thị khung hình hướng dẫn căn phiếu. \\ \cline{2-4}
+ & 5 & User & Cầm camera hướng vào phiếu trả lời và chờ hệ thống tự động phát hiện phiếu. \\ \cline{2-4}
+ & 6 & System & Khi phát hiện phiếu ổn định trong khung hình, tự động chụp ảnh và tiến hành xử lý. \\ \cline{2-4}
+ & 7 & System & Thực hiện tiền xử lý ảnh (cân bằng ánh sáng, khử méo, chuẩn hóa kích thước). \\ \cline{2-4}
+ & 8 & System & Phát hiện vùng phiếu và áp dụng phép biến đổi phối cảnh để căn chỉnh. \\ \cline{2-4}
+ & 9 & System & Nhận diện mã thí sinh, mã đề và đáp án của từng câu hỏi. \\ \cline{2-4}
+ & 10 & System & Tính điểm và hiển thị kết quả bao gồm điểm số, số câu đúng/sai, hình ảnh phiếu đã đánh dấu. \\ \cline{2-4}
+ & 11 & User & Xem xét kết quả và nhấn ``Xác nhận'' để lưu hoặc ``Chụp lại'' để quét phiếu khác. \\ \cline{2-4}
+ & 12 & System & Lưu kết quả vào cơ sở dữ liệu và đồng bộ lên server khi có kết nối mạng. \\ \hline
+\multirow{7}{=}{\parbox[c][3.8cm][c]{3.3cm}{\centering\textbf{Luồng thực thi mở rộng}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 4a & System & Thông báo lỗi: Vui lòng cấp quyền truy cập camera cho ứng dụng. \\ \cline{2-4}
+ & 6a & System & Thông báo cảnh báo: Phiếu bị mờ hoặc thiếu sáng, vui lòng chụp lại. \\ \cline{2-4}
+ & 6b & System & Thông báo cảnh báo: Phát hiện tô đúp (double fill) ở câu X, yêu cầu giáo viên xử lý thủ công. \\ \cline{2-4}
+ & 9a & System & Thông báo lỗi: Không nhận diện được mã đề, vui lòng chụp lại toàn bộ phiếu. \\ \cline{2-4}
+ & 10a & System & Thông báo lỗi: Mã đề không khớp với danh sách mã đề của kỳ thi. \\ \cline{2-4}
+ & 11a & System & Cho phép giáo viên chỉnh sửa thủ công đáp án trước khi xác nhận. \\ \cline{2-4}
+ & 12a & System & Lưu kết quả vào bộ nhớ cục bộ và đồng bộ lên server khi có kết nối mạng. \\ \hline
+\textbf{Điều kiện sau} & \multicolumn{3}{p{11.08cm}|}{Kết quả chấm phiếu OMR được lưu thành công vào hệ thống. Học sinh và phụ huynh (nếu liên kết) nhận được thông báo kết quả thi. Thống kê kết quả của kỳ thi được cập nhật tự động.} \\ \hline
+\caption{Đặc tả use case UC001 - Quét phiếu OMR}
+\label{tab:uc001}
+\end{longtable}}
 
-\textbf{Tiền điều kiện:} Giáo viên đã đăng nhập thành công vào hệ thống.
+\subsection{Đặc tả use case Tạo đề thi tự động}
+\label{subsection:2.3.2}
 
-\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Giáo viên chọn chức năng Quản lý đề thi từ màn hình chính.
-    \item Hệ thống hiển thị danh sách các đề thi đã tạo, bao gồm tiêu đề, số câu hỏi, ngày tạo và trạng thái (bản nháp hoặc đã xuất bản).
-    \item Giáo viên chọn tạo đề thi mới.
-    \item Hệ thống hiển thị biểu mẫu tạo đề thi, yêu cầu nhập tiêu đề đề thi, chọn lớp học, nhập danh sách câu hỏi với các phương án A, B, C, D và đáp án đúng.
-    \item Giáo viên nhập thông tin và bấm lưu.
-    \item Hệ thống kiểm tra dữ liệu đầu vào, lưu vào cơ sở dữ liệu và hiển thị thông báo thành công.
-    \item Giáo viên có thể chọn xuất bản đề thi để kích hoạt để sử dụng trong phiên chấm thi.
-\end{enumerate}
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\centering\arraybackslash}p{3.5cm}|p{0.8cm}|p{2.5cm}|p{7.78cm}|}
+\hline
+\textbf{Mục} & \multicolumn{3}{l|}{\textbf{Nội dung}} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+\textbf{Mã UC (UC \#)} & \multicolumn{3}{l|}{UC002} \\ \hline
+\textbf{Tên usecase} & \multicolumn{3}{l|}{Tạo đề thi tự động với AMC} \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Giáo viên (Teacher)} \\ \hline
+\textbf{Điều kiện trước} & \multicolumn{3}{p{11.08cm}|}{Giáo viên đã đăng nhập vào hệ thống web và có quyền tạo đề thi. Ngân hàng câu hỏi của giáo viên đã có sẵn danh sách câu hỏi hoặc giáo viên đã chuẩn bị file LaTeX.} \\ \hline
+\multirow{12}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi chính}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 1 & User & Chọn chức năng ``Tạo đề thi tự động''. \\ \cline{2-4}
+ & 2 & System & Hiển thị form nhập thông tin kỳ thi gồm tiêu đề, môn học, lớp, thời gian, số câu hỏi, số mã đề. \\ \cline{2-4}
+ & 3 & User & Nhập thông tin kỳ thi và chọn phương thức tạo câu hỏi (nhập tay, sinh từ AI, hoặc tải file LaTeX). \\ \cline{2-4}
+ & 4 & User & Tải lên file LaTeX chứa đề thi hoặc nhập danh sách câu hỏi từ ngân hàng câu hỏi. \\ \cline{2-4}
+ & 5 & System & Validate định dạng file LaTeX và nội dung câu hỏi. \\ \cline{2-4}
+ & 6 & User & Chọn số lượng mã đề cần sinh và nhấn ``Tạo đề''. \\ \cline{2-4}
+ & 7 & System & Gọi AMC CLI để compile đề LaTeX thành N file PDF với thứ tự câu hỏi và đáp án được xáo trộn. \\ \cline{2-4}
+ & 8 & System & Trích xuất tọa độ OMR từ AMC output và lưu vào cơ sở dữ liệu. \\ \cline{2-4}
+ & 9 & System & Hiển thị danh sách các mã đề đã tạo cùng preview từng mã đề. \\ \cline{2-4}
+ & 10 & User & Xem xét và nhấn ``Tải về tất cả'' để tải file PDF hoặc chọn mã đề cụ thể để tải về. \\ \cline{2-4}
+ & 11 & System & Đóng gói các file PDF thành file nén và cung cấp link tải về. \\ \cline{2-4}
+ & 12 & System & Thông báo ``Tạo đề thi thành công'' và chuyển đến trang quản lý kỳ thi. \\ \hline
+\multirow{5}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi mở rộng}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 5a & System & Thông báo lỗi: File LaTeX không đúng định dạng, vui lòng kiểm tra lại. \\ \cline{2-4}
+ & 5b & System & Thông báo cảnh báo: Một số câu hỏi thiếu đáp án đúng, vui lòng bổ sung. \\ \cline{2-4}
+ & 7a & System & Thông báo lỗi: Quá trình compile AMC thất bại, vui lòng kiểm tra log để biết chi tiết. \\ \cline{2-4}
+ & 8a & System & Thông báo lỗi: Không trích xuất được tọa độ OMR, vui lòng liên hệ quản trị viên. \\ \cline{2-4}
+ & 11a & System & Thông báo lỗi: Không thể đóng gói file, vui lòng thử lại sau. \\ \hline
+\textbf{Điều kiện sau} & \multicolumn{3}{p{11.08cm}|}{Đề thi với N mã đề được tạo thành công, tọa độ OMR được lưu trong cơ sở dữ liệu. Giáo viên có thể tải về file PDF để in ấn và tổ chức kỳ thi.} \\ \hline
+\caption{Đặc tả use case UC002 - Tạo đề thi tự động}
+\label{tab:uc002}
+\end{longtable}}
 
-\textbf{Luồng sự kiện phát sinh - Chỉnh sửa đề thi:}
-\begin{enumerate}
-    \item[a)] Giáo viên chọn đề thi từ danh sách và bấm chỉnh sửa.
-    \item[b)] Hệ thống hiển thị biểu mẫu với thông tin hiện tại của đề thi.
-    \item[c)] Giáo viên thay đổi thông tin và bấm lưu, hệ thống cập nhật vào cơ sở dữ liệu.
-\end{enumerate}
+\subsection{Đặc tả use case Xem báo cáo AI}
+\label{subsection:2.3.3}
 
-\textbf{Luồng sự kiện phát sinh - Xóa đề thi:}
-\begin{enumerate}
-    \item[a)] Giáo viên chọn đề thi và bấm xóa.
-    \item[b)] Hệ thống hiển thị hộp thoại xác nhận xóa.
-    \item[c)] Giáo viên xác nhận xóa, hệ thống xóa đề thi khỏi cơ sở dữ liệu.
-\end{enumerate}
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\centering\arraybackslash}p{3.5cm}|p{0.8cm}|p{2.5cm}|p{7.78cm}|}
+\hline
+\textbf{Mục} & \multicolumn{3}{l|}{\textbf{Nội dung}} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+\textbf{Mã UC (UC \#)} & \multicolumn{3}{l|}{UC003} \\ \hline
+\textbf{Tên usecase} & \multicolumn{3}{l|}{Xem báo cáo AI phân tích kết quả thi} \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Giáo viên (Teacher), Học sinh (Student)} \\ \hline
+\textbf{Điều kiện trước} & \multicolumn{3}{p{11.08cm}|}{Actor đã đăng nhập vào hệ thống. Đã có ít nhất một kỳ thi đã được chấm xong với kết quả trong cơ sở dữ liệu. API Gemini đang hoạt động bình thường.} \\ \hline
+\multirow{11}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi chính}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 1 & User & Chọn chức năng ``Báo cáo AI'' từ menu. \\ \cline{2-4}
+ & 2 & System & Hiển thị danh sách các kỳ thi đã hoàn thành để actor chọn. \\ \cline{2-4}
+ & 3 & User & Chọn kỳ thi cần phân tích và nhấn ``Tạo báo cáo''. \\ \cline{2-4}
+ & 4 & System & Truy vấn dữ liệu kết quả thi và câu hỏi từ cơ sở dữ liệu. \\ \cline{2-4}
+ & 5 & System & Gọi Gemini API để phân tích dữ liệu và sinh báo cáo. \\ \cline{2-4}
+ & 6 & System & Hiển thị báo cáo bao gồm biểu đồ phân bố điểm, bảng thống kê điểm yếu theo chủ đề, danh sách học sinh cần hỗ trợ, đề xuất câu hỏi luyện tập. \\ \cline{2-4}
+ & 7 & User & Xem chi tiết từng phần của báo cáo và các biểu đồ thống kê. \\ \cline{2-4}
+ & 8 & User & Chọn xem chi tiết của một học sinh cụ thể trong báo cáo. \\ \cline{2-4}
+ & 9 & System & Hiển thị chi tiết điểm mạnh/yếu và lịch sử làm bài của học sinh đó. \\ \cline{2-4}
+ & 10 & User & Nhấn ``Tải báo cáo PDF'' để tải xuống hoặc ``Chia sẻ qua link'' để gửi cho đồng nghiệp. \\ \cline{2-4}
+ & 11 & System & Xuất báo cáo dạng PDF hoặc tạo link chia sẻ có thời hạn. \\ \hline
+\multirow{5}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi mở rộng}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 4a & System & Thông báo lỗi: Không tìm thấy dữ liệu kết quả của kỳ thi này. \\ \cline{2-4}
+ & 5a & System & Thông báo lỗi: Không thể kết nối tới Gemini API, vui lòng thử lại sau. \\ \cline{2-4}
+ & 5b & System & Thông báo cảnh báo: Quá trình phân tích mất nhiều thời gian, vui lòng chờ. \\ \cline{2-4}
+ & 10a & System & Thông báo lỗi: Không thể tạo file PDF, vui lòng thử lại. \\ \cline{2-4}
+ & 11a & System & Thông báo lỗi: Không thể tạo link chia sẻ, vui lòng thử lại sau. \\ \hline
+\textbf{Điều kiện sau} & \multicolumn{3}{p{11.08cm}|}{Báo cáo AI được hiển thị đầy đủ cho actor. Giáo viên có thể sử dụng thông tin phân tích để điều chỉnh phương pháp giảng dạy. Học sinh nhận được đề xuất luyện tập phù hợp với điểm yếu của mình.} \\ \hline
+\caption{Đặc tả use case UC003 - Xem báo cáo AI}
+\label{tab:uc003}
+\end{longtable}}
 
-\textbf{Hậu điều kiện:} Đề thi được lưu thành công vào cơ sở dữ liệu và có thể được sử dụng trong phiên chấm thi.
+\subsection{Đặc tả use case Nộp đơn phúc tra}
+\label{subsection:2.3.4}
 
-\subsection{Đặc tả use case Quét phiếu thi}
-\hfill
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\centering\arraybackslash}p{3.5cm}|p{0.8cm}|p{2.5cm}|p{7.78cm}|}
+\hline
+\textbf{Mục} & \multicolumn{3}{l|}{\textbf{Nội dung}} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+\textbf{Mã UC (UC \#)} & \multicolumn{3}{l|}{UC004} \\ \hline
+\textbf{Tên usecase} & \multicolumn{3}{l|}{Nộp đơn phúc tra bài thi} \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Học sinh (Student), Giáo viên (Teacher) - phía xử lý} \\ \hline
+\textbf{Điều kiện trước} & \multicolumn{3}{p{11.08cm}|}{Học sinh đã đăng nhập vào hệ thống. Đã có kết quả thi của học sinh và đang trong thời hạn phúc tra (48 giờ sau khi có kết quả).} \\ \hline
+\multirow{11}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi chính}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 1 & User & Mở mục ``Kết quả thi của tôi'' từ menu chính. \\ \cline{2-4}
+ & 2 & System & Hiển thị danh sách các bài thi đã có kết quả. \\ \cline{2-4}
+ & 3 & User & Chọn bài thi muốn phúc tra và nhấn ``Yêu cầu phúc tra''. \\ \cline{2-4}
+ & 4 & System & Hiển thị chi tiết bài thi với từng câu hỏi, đáp án đúng và đáp án đã chọn. \\ \cline{2-4}
+ & 5 & User & Chọn câu muốn phúc tra, nhập lý do phúc tra và có thể đính kèm minh chứng. \\ \cline{2-4}
+ & 6 & User & Nhấn ``Gửi đơn phúc tra''. \\ \cline{2-4}
+ & 7 & System & Validate thông tin đơn phúc tra và lưu vào cơ sở dữ liệu. \\ \cline{2-4}
+ & 8 & System & Gửi thông báo đến giáo viên phụ trách kỳ thi. \\ \cline{2-4}
+ & 9 & Teacher & Xem xét đơn phúc tra, xem lại ảnh phiếu gốc và đưa ra quyết định. \\ \cline{2-4}
+ & 10 & System & Cập nhật kết quả bài thi nếu có điều chỉnh và gửi thông báo kết quả phúc tra cho học sinh. \\ \cline{2-4}
+ & 11 & User & Nhận thông báo kết quả phúc tra và xem điểm được điều chỉnh (nếu có). \\ \hline
+\multirow{5}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi mở rộng}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 3a & System & Thông báo: Đã quá thời hạn phúc tra (sau 48 giờ), không thể gửi đơn. \\ \cline{2-4}
+ & 5a & System & Thông báo lỗi: Vui lòng chọn ít nhất một câu hỏi để phúc tra. \\ \cline{2-4}
+ & 5b & System & Thông báo lỗi: Vui lòng nhập lý do phúc tra chi tiết. \\ \cline{2-4}
+ & 7a & System & Thông báo lỗi: Không thể gửi đơn phúc tra. Vui lòng thử lại sau. \\ \cline{2-4}
+ & 10a & System & Giáo viên có thể thêm nhận xét khi quyết định điều chỉnh hoặc giữ nguyên kết quả. \\ \hline
+\textbf{Điều kiện sau} & \multicolumn{3}{p{11.08cm}|}{Đơn phúc tra được xử lý và kết quả bài thi được cập nhật (nếu có thay đổi). Học sinh nhận được thông báo kết quả phúc tra. Lịch sử phúc tra được lưu lại để tra cứu.} \\ \hline
+\caption{Đặc tả use case UC004 - Nộp đơn phúc tra}
+\label{tab:uc004}
+\end{longtable}}
 
-\textbf{Tên use case:} Quét phiếu thi
+\subsection{Đặc tả use case Quản lý kết quả thi}
+\label{subsection:2.3.5}
 
-\textbf{Tác nhân chính:} Giáo viên
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\centering\arraybackslash}p{3.5cm}|p{0.8cm}|p{2.5cm}|p{7.78cm}|}
+\hline
+\textbf{Mục} & \multicolumn{3}{l|}{\textbf{Nội dung}} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+\textbf{Mã UC (UC \#)} & \multicolumn{3}{l|}{UC005} \\ \hline
+\textbf{Tên usecase} & \multicolumn{3}{l|}{Quản lý kết quả thi} \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Giáo viên (Teacher), Quản trị trường (School Admin)} \\ \hline
+\textbf{Điều kiện trước} & \multicolumn{3}{p{11.08cm}|}{Actor đã đăng nhập vào hệ thống web. Đã có ít nhất một kỳ thi với kết quả trong hệ thống. Actor có quyền xem kết quả trong phạm vi được phân công.} \\ \hline
+\multirow{12}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi chính}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 1 & User & Chọn chức năng ``Quản lý kết quả thi'' từ menu chính. \\ \cline{2-4}
+ & 2 & System & Hiển thị danh sách các kỳ thi với bộ lọc theo môn học, lớp, thời gian. \\ \cline{2-4}
+ & 3 & User & Chọn kỳ thi cần xem và áp dụng các bộ lọc (tên học sinh, mã học sinh, mã đề, khoảng điểm). \\ \cline{2-4}
+ & 4 & System & Hiển thị bảng kết quả với các cột: tên học sinh, mã đề, điểm, số câu đúng/sai, thời gian chấm. \\ \cline{2-4}
+ & 5 & User & Sắp xếp kết quả theo cột bất kỳ bằng cách nhấp vào tiêu đề cột. \\ \cline{2-4}
+ & 6 & User & Nhấp vào một hàng để xem chi tiết kết quả của học sinh. \\ \cline{2-4}
+ & 7 & System & Hiển thị chi tiết đáp án từng câu, hình ảnh phiếu đã chấm, lịch sử phúc tra (nếu có). \\ \cline{2-4}
+ & 8 & User & Chỉnh sửa điểm nếu phát hiện sai sót và nhập lý do chỉnh sửa. \\ \cline{2-4}
+ & 9 & User & Nhấn ``Xuất Excel'' để xuất kết quả ra file Excel với định dạng đã thiết lập. \\ \cline{2-4}
+ & 10 & System & Tạo file Excel với đầy đủ thông tin và cung cấp link tải về. \\ \cline{2-4}
+ & 11 & User & Nhấn ``Tạo báo cáo tổng hợp'' để tạo báo cáo theo mẫu có sẵn. \\ \cline{2-4}
+ & 12 & System & Hiển thị báo cáo với biểu đồ phân bố điểm và thống kê tổng hợp. \\ \hline
+\multirow{5}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi mở rộng}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 3a & System & Thông báo: Không có kết quả nào khớp với bộ lọc, vui lòng điều chỉnh. \\ \cline{2-4}
+ & 8a & System & Thông báo lỗi: Vui lòng nhập lý do chỉnh sửa điểm. \\ \cline{2-4}
+ & 8b & System & Yêu cầu xác nhận trước khi lưu thay đổi điểm. \\ \cline{2-4}
+ & 9a & System & Thông báo lỗi: Không thể xuất file Excel, vui lòng thử lại. \\ \cline{2-4}
+ & 10a & System & Thông báo lỗi: Không thể tạo báo cáo tổng hợp, vui lòng liên hệ quản trị viên. \\ \hline
+\textbf{Điều kiện sau} & \multicolumn{3}{p{11.08cm}|}{Kết quả thi được hiển thị đầy đủ cho actor. Các chỉnh sửa điểm (nếu có) được lưu lại cùng lý do và lịch sử thay đổi. File Excel được tải về thành công để phục vụ báo cáo.} \\ \hline
+\caption{Đặc tả use case UC005 - Quản lý kết quả thi}
+\label{tab:uc005}
+\end{longtable}}
 
-\textbf{Mô tả:} Cho phép giáo viên sử dụng camera thiết bị di động để chụp ảnh phiếu trả lời trắc nghiệm, hệ thống tự động nhận diện góc phiếu, căn chỉnh phối cảnh, trích xuất đáp án và chấm điểm.
+\subsection{Đặc tả use case Đăng nhập hệ thống}
+\label{subsection:2.3.6}
 
-\textbf{Tiền điều kiện:} Giáo viên đã đăng nhập và đã có ít nhất một đề thi đã xuất bản.
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\centering\arraybackslash}p{3.5cm}|p{0.8cm}|p{2.5cm}|p{7.78cm}|}
+\hline
+\textbf{Mục} & \multicolumn{3}{l|}{\textbf{Nội dung}} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+\textbf{Mã UC (UC \#)} & \multicolumn{3}{l|}{UC006} \\ \hline
+\textbf{Tên usecase} & \multicolumn{3}{l|}{Đăng nhập hệ thống} \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Tất cả người dùng (Học sinh, Giáo viên, Quản trị trường, Quản trị hệ thống, Phụ huynh)} \\ \hline
+\textbf{Điều kiện trước} & \multicolumn{3}{p{11.08cm}|}{Người dùng đã có tài khoản được tạo trong hệ thống. Người dùng truy cập vào trang đăng nhập của ứng dụng web hoặc mobile. Kết nối mạng ổn định (hoặc đã có token hợp lệ được lưu cục bộ).} \\ \hline
+\multirow{8}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi chính}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 1 & User & Truy cập trang đăng nhập và nhập email và mật khẩu. \\ \cline{2-4}
+ & 2 & User & Nhấn nút ``Đăng nhập''. \\ \cline{2-4}
+ & 3 & System & Validate định dạng email và kiểm tra các trường bắt buộc. \\ \cline{2-4}
+ & 4 & System & Gửi yêu cầu xác thực đến server. \\ \cline{2-4}
+ & 5 & System & Kiểm tra thông tin đăng nhập trong cơ sở dữ liệu. \\ \cline{2-4}
+ & 6 & System & Sinh access token (JWT) và refresh token cho người dùng. \\ \cline{2-4}
+ & 7 & System & Lưu refresh token an toàn và trả access token về client. \\ \cline{2-4}
+ & 8 & System & Chuyển người dùng đến giao diện chính tương ứng với vai trò. \\ \hline
+\multirow{6}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi mở rộng}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 3a & System & Thông báo lỗi: Vui lòng nhập email và mật khẩu hợp lệ. \\ \cline{2-4}
+ & 3b & System & Thông báo lỗi: Định dạng email không đúng. \\ \cline{2-4}
+ & 5a & System & Thông báo lỗi: Email hoặc mật khẩu không chính xác. \\ \cline{2-4}
+ & 5b & System & Thông báo cảnh báo: Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên. \\ \cline{2-4}
+ & 5c & System & Thông báo cảnh báo: Quá nhiều lần đăng nhập thất bại, vui lòng thử lại sau 5 phút. \\ \cline{2-4}
+ & 7a & System & Thông báo lỗi: Không thể kết nối đến server, vui lòng kiểm tra kết nối mạng. \\ \hline
+\textbf{Điều kiện sau} & \multicolumn{3}{p{11.08cm}|}{Người dùng đã đăng nhập thành công và được chuyển đến giao diện chính phù hợp với vai trò. Access token được sử dụng cho các yêu cầu tiếp theo, refresh token được lưu trữ an toàn để làm mới token khi cần.} \\ \hline
+\caption{Đặc tả use case UC006 - Đăng nhập hệ thống}
+\label{tab:uc006}
+\end{longtable}}
 
-\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Giáo viên chọn chức năng Quét phiếu thi từ màn hình chính.
-    \item Hệ thống hiển thị giao diện camera với khung hướng dẫn đặt phiếu thi.
-    \item Giáo viên đặt phiếu thi trắc nghiệm trước camera, hệ thống tự động phát hiện bốn góc phiếu và hiển thị đường viền phát hiện.
-    \item Giáo viên bấm nút chụp, hệ thống chụp ảnh và thực hiện căn chỉnh phối cảnh.
-    \item Hệ thống trích xuất vùng chứa các bọt đáp án và áp dụng kỹ thuật OCR/OMR để nhận dạng các bọt đã tô.
-    \item Hệ thống đối chiếu đáp án nhận diện được với đáp án mẫu của đề thi đã chọn và tính điểm.
-    \item Hệ thống hiển thị kết quả chấm điểm chi tiết: tổng điểm, số câu đúng, số câu sai, danh sách các câu sai kèm đáp án đúng.
-    \item Giáo viên xác nhận kết quả hoặc điều chỉnh thủ công một số câu nếu cần.
-    \item Hệ thống lưu kết quả chấm thi vào cơ sở dữ liệu.
-\end{enumerate}
+\subsection{Đặc tả use case Tạo nhóm gia đình}
+\label{subsection:2.3.7}
 
-\textbf{Luồng sự kiện phát sinh - Điều chỉnh thủ công:}
-\begin{enumerate}
-    \item[a)] Tại bước 7, giáo viên bấm nút sửa để chỉnh sửa thủ công một số câu.
-    \item[b)] Hệ thống hiển thị danh sách các câu với phương án A, B, C, D.
-    \item[c)] Giáo viên thay đổi đáp án và bấm xác nhận, hệ thống tính lại điểm.
-\end{enumerate}
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\centering\arraybackslash}p{3.5cm}|p{0.8cm}|p{2.5cm}|p{7.78cm}|}
+\hline
+\textbf{Mục} & \multicolumn{3}{l|}{\textbf{Nội dung}} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+\textbf{Mã UC (UC \#)} & \multicolumn{3}{l|}{UC007} \\ \hline
+\textbf{Tên usecase} & \multicolumn{3}{l|}{Tạo nhóm gia đình} \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Người dùng (User - Phụ huynh)} \\ \hline
+\textbf{Điều kiện trước} & \multicolumn{3}{p{11.08cm}|}{Người dùng đã đăng nhập vào hệ thống.} \\ \hline
+\multirow{7}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi chính}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 1 & User & Chọn chức năng ``Tạo nhóm gia đình''. \\ \cline{2-4}
+ & 2 & System & Hiển thị giao diện nhập thông tin nhóm (tên nhóm, mô tả, ảnh đại diện). \\ \cline{2-4}
+ & 3 & User & Nhập tên nhóm và các thông tin cần thiết. \\ \cline{2-4}
+ & 4 & System & Kiểm tra tính hợp lệ của dữ liệu (tên nhóm không trống). \\ \cline{2-4}
+ & 5 & System & Lưu thông tin nhóm vào cơ sở dữ liệu. \\ \cline{2-4}
+ & 6 & System & Hiển thị thông báo ``Tạo nhóm gia đình thành công''. \\ \cline{2-4}
+ & 7 & System & Chuyển người dùng đến giao diện ``Quản lý nhóm''. \\ \hline
+\multirow{2}{=}{\parbox[c]{3.3cm}{\centering\textbf{Luồng thực thi mở rộng}}} & No. & Thực hiện & Hành động \\ \cline{2-4}
+ & 4a & System & Thông báo lỗi: Vui lòng nhập tên nhóm. \\ \cline{2-4}
+ & 5a & System & Thông báo lỗi: Không thể tạo nhóm. Vui lòng thử lại sau. \\ \hline
+\textbf{Điều kiện sau} & \multicolumn{3}{p{11.08cm}|}{Nhóm gia đình mới được tạo thành công và người dùng trở thành Trưởng nhóm. Hệ thống sẵn sàng cho việc thêm thành viên và chia sẻ danh sách.} \\ \hline
+\caption{Đặc tả use case UC007 - Tạo nhóm gia đình}
+\label{tab:uc007}
+\end{longtable}}
 
-\textbf{Luồng sự kiện phát sinh - Không phát hiện được góc phiếu:}
-\begin{enumerate}
-    \item[a)] Tại bước 3, nếu hệ thống không phát hiện được góc phiếu sau 5 giây, hiển thị thông báo hướng dẫn điều chỉnh góc chụp.
-    \item[b)] Giáo viên điều chỉnh vị trí phiếu và góc camera, hệ thống tiếp tục phát hiện.
-\end{enumerate}
-
-\textbf{Hậu điều kiện:} Kết quả chấm thi được lưu thành công, kết quả được hiển thị cho giáo viên và có thể xem lại sau đó.
-
-\subsection{Đặc tả use case Phân tích kết quả bằng AI}
-\hfill
-
-\textbf{Tên use case:} Phân tích kết quả bằng AI
-
-\textbf{Tác nhân chính:} Giáo viên, Hệ thống (Generative AI)
-
-\textbf{Mô tả:} Cho phép giáo viên yêu cầu hệ thống phân tích kết quả bài thi của toàn lớp bằng Generative AI, nhận về báo cáo tổng hợp phổ điểm, các câu hỏi học sinh hay sai và nhận xét chi tiết.
-
-\textbf{Tiền điều kiện:} Giáo viên đã hoàn thành chấm thi cho một phiên thi với ít nhất 5 phiếu.
-
-\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Giáo viên chọn phiên thi đã chấm xong từ danh sách kết quả.
-    \item Giáo viên bấm nút Phân tích bằng AI.
-    \item Hệ thống tổng hợp toàn bộ dữ liệu điểm số, danh sách câu đúng sai của từng học sinh.
-    \item Hệ thống gửi dữ liệu tổng hợp tới API Generative AI kèm prompt định sẵn yêu cầu phân tích.
-    \item Generative AI trả về báo cáo phân tích bao gồm: phổ điểm, tỷ lệ đạt yêu cầu, danh sách các câu hỏi có tỷ lệ sai cao nhất, nguyên nhân phổ biến dẫn đến sai và đề xuất phương pháp cải thiện.
-    \item Hệ thống hiển thị báo cáo phân tích cho giáo viên dưới dạng văn bản và biểu đồ.
-    \item Giáo viên có thể lưu báo cáo hoặc chia sẻ với đồng nghiệp.
-\end{enumerate}
-
-\textbf{Hậu điều kiện:} Báo cáo phân tích AI được hiển thị cho giáo viên và có thể lưu trữ để tham khảo.
-
-\subsection{Đặc tả use case Xem kết quả thi}
-\hfill
-
-\textbf{Tên use case:} Xem kết quả thi
-
-\textbf{Tác nhân chính:} Giáo viên, Học sinh
-
-\textbf{Mô tả:} Cho phép người dùng xem chi tiết kết quả bài thi, bao gồm điểm số, số câu đúng sai và danh sách các câu đã làm.
-
-\textbf{Tiền điều kiện:} Người dùng đã đăng nhập và có kết quả thi trong hệ thống.
-
-\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Người dùng chọn chức năng Xem kết quả thi.
-    \item Hệ thống hiển thị danh sách các bài thi đã tham gia với thông tin cơ bản: tên đề thi, ngày thi, điểm số.
-    \item Người dùng chọn một bài thi cụ thể.
-    \item Hệ thống hiển thị chi tiết: tổng điểm, biểu đồ phổ điểm của lớp (nếu là giáo viên), danh sách từng câu với trạng thái đúng/sai.
-    \item Với mỗi câu sai, hệ thống hiển thị đáp án đúng và phương án học sinh đã chọn.
-\end{enumerate}
-
-\textbf{Luồng sự kiện phát sinh - Nộp phúc khảo (Học sinh):}
-\begin{enumerate}
-    \item[a)] Học sinh chọn một câu hỏi cụ thể mà em cho là bị chấm sai.
-    \item[b)] Hệ thống hiển thị biểu mẫu yêu cầu phúc khảo, cho phép học sinh nhập lý do.
-    \item[c)] Học sinh gửi yêu cầu phúc khảo, giáo viên nhận được thông báo và xem xét.
-\end{enumerate}
-
-\textbf{Hậu điều kiện:} Người dùng xem được chi tiết kết quả bài thi.
+Bảng \ref{tab:ma-tran-truy-vet} dưới đây thể hiện ma trận truy vết giữa các use case đã đặc tả và các yêu cầu chức năng chính, giúp đảm bảo tất cả yêu cầu đều được triển khai thông qua các use case tương ứng.
 
 \section{Yêu cầu phi chức năng}
 \label{section:2.4}
-Bên cạnh các yêu cầu chức năng đã đặc tả ở trên, hệ thống SMART GRADING cần đáp ứng các yêu cầu phi chức năng sau đây.
 
-Về hiệu năng, thời gian xử lý một ảnh phiếu thi từ lúc chụp đến khi hiển thị kết quả không quá 3 giây trên thiết bị có cấu hình trung bình. Thời gian phản hồi của API Generative AI không quá 10 giây cho mỗi yêu cầu phân tích. Hệ thống hỗ trợ đồng thời tối thiểu 50 người dùng truy cập cùng lúc.
+Bên cạnh các yêu cầu chức năng, hệ thống cần đáp ứng các yêu cầu phi chức năng về hiệu năng, tính khả dụng, bảo mật, và khả năng mở rộng như được trình bày trong Bảng \ref{tab:yeu-cau-phi-chuc-nang}.
 
-Về độ tin cậy, tỷ lệ nhận dạng đáp án đúng của module OCR/OMR đạt tối thiểu 95\% trong điều kiện ánh sáng bình thường và phiếu thi không bị nhàu nát nghiêm trọng. Hệ thống cần lưu trữ kết quả thi một cách an toàn, đảm bảo dữ liệu không bị mất khi có sự cố.
-
-Về tính dễ dùng, giao diện người dùng cần trực quan, dễ hiểu để giáo viên ở mọi lứa tuổi có thể sử dụng được mà không cần đào tạo nhiều. Quy trình quét phiếu thi được thiết kế đơn giản, tối đa 3 thao tác từ khi mở camera đến khi có kết quả.
-
-Về tính dễ bảo trì, hệ thống được thiết kế theo kiến trúc module hóa, cho phép dễ dàng nâng cấp và mở rộng. Mã nguồn được tổ chức rõ ràng, có tài liệu mô tả API và cấu trúc dữ liệu.
-
-Về yêu cầu kỹ thuật, ứng dụng di động hỗ trợ Android phiên bản 6.0 (API 23) trở lên và iOS phiên bản 12.0 trở lên. Backend sử dụng Node.js với cơ sở dữ liệu MongoDB. Module OCR sử dụng OpenCV cho xử lý ảnh và Google ML Kit hoặc Tesseract cho nhận dạng ký tự.
-
-Về bảo mật, toàn bộ dữ liệu truyền tải giữa ứng dụng và server sử dụng giao thức HTTPS. Thông tin đăng nhập và token xác thực được mã hóa và lưu trữ an toàn trên thiết bị. Phân quyền người dùng được kiểm soát chặt chẽ ở cả tầng ứng dụng và tầng backend.
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{4cm}|>{\raggedright\arraybackslash}p{5cm}|>{\raggedright\arraybackslash}p{6cm}|}
+\hline
+\textbf{Tiêu chí} & \textbf{Chỉ tiêu cụ thể} & \textbf{Giải thích chi tiết} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+Hiệu năng xử lý & Thời gian nhận diện OMR dưới 3 giây trên thiết bị tầm trung & Thiết bị tầm trung được định nghĩa là smartphone có RAM từ 4GB trở lên, chip xử lý từ thế hệ 2019 trở lại đây. Thời gian được đo từ khi chụp ảnh đến khi hiển thị kết quả hoàn chỉnh bao gồm hình ảnh đã đánh dấu và điểm số. \\ \hline
+Độ chính xác nhận diện & Tỷ lệ nhận diện đúng tối thiểu 95\% & Tỷ lệ được đo trên tập dữ liệu gồm 1000 phiếu thi với nhiều điều kiện ánh sáng và góc chụp khác nhau. Phiếu được đánh giá là nhận diện đúng nếu tất cả các câu hỏi đều được nhận diện đúng đáp án. \\ \hline
+Độ trễ API & Thời gian phản hồi API dưới 500ms đối với 95\% yêu cầu & Đo lường trên server có cấu hình 2 vCPU, 4GB RAM chạy trên nền tảng cloud với kết nối mạng ổn định. Loại trừ các API liên quan đến tải file hoặc gọi AI bên ngoài. \\ \hline
+Khả năng chịu tải & Hỗ trợ 500 người dùng đồng thời & Người dùng đồng thời được định nghĩa là người dùng đang thực hiện thao tác trong khoảng thời gian 10 giây. Hệ thống cần duy trì thời gian phản hồi dưới 2 giây đối với tất cả API. \\ \hline
+Tính khả dụng & Uptime 99.5\% đối với backend & Cho phép downtime tối đa 3.6 giờ mỗi tháng cho mục đích bảo trì. Thời gian bảo trì được lên kế hoạch trước và thông báo cho người dùng ít nhất 24 giờ. \\ \hline
+Tính di động & Hỗ trợ iOS 13+ và Android 8+ & Đảm bảo ứng dụng chạy mượt trên ít nhất 95\% thiết bị đang hoạt động trên thị trường Việt Nam tính đến năm 2025. \\ \hline
+Bảo mật & Dữ liệu được mã hóa khi truyền qua mạng (TLS 1.3) & Tất cả API endpoints phải sử dụng HTTPS với chứng chỉ hợp lệ \cite{rfc5246tls}. Token JWT \cite{rfc7519jwt} có thời hạn tối đa 24 giờ. Refresh token được lưu trữ an toàn trong keychain (iOS) hoặc keystore (Android). \\ \hline
+Quyền riêng tư & Tuân thủ quy định về bảo vệ dữ liệu cá nhân & Dữ liệu cá nhân của học sinh (họ tên, mã học sinh, kết quả thi) chỉ được truy cập bởi giáo viên và phụ huynh có liên kết hợp lệ. Không sử dụng dữ liệu cho mục đích thương mại. Cho phép người dùng yêu cầu xóa dữ liệu. \\ \hline
+Khả năng mở rộng & Kiến trúc modular cho phép scale từng module & Backend được thiết kế theo mô hình modular, cho phép nhân bản các module có tải cao như API xác thực hoặc API nhận diện OMR mà không ảnh hưởng đến các module khác. \\ \hline
+Dễ sử dụng & Người dùng mới có thể thực hiện thao tác quét OMR sau dưới 5 phút hướng dẫn & Được kiểm chứng qua bài kiểm tra với 30 người dùng chưa từng sử dụng ứng dụng. Thời gian hoàn thành thao tác quét đầu tiên được đo từ khi mở ứng dụng đến khi nhận được kết quả chấm. \\ \hline
+\caption{Các yêu cầu phi chức năng của hệ thống}
+\label{tab:yeu-cau-phi-chuc-nang}
+\end{longtable}}
 
 \end{document}
+
+

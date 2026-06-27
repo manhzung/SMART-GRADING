@@ -1,0 +1,111 @@
+\babel@toc {vietnamese}{}\relax 
+\contentsline {chapter}{\numberline {1}CHƯƠNG 1: GIỚI THIỆU ĐỀ TÀI}{11}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Đặt vấn đề}{11}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Mục tiêu và phạm vi đề tài}{12}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Tổng quan các nghiên cứu và sản phẩm hiện có}{12}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Hạn chế của các giải pháp hiện có}{13}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Mục tiêu của đề tài}{13}{subsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.2.4}Phạm vi đề tài}{13}{subsection.1.2.4}%
+\contentsline {section}{\numberline {1.3}Định hướng giải pháp}{14}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Bố cục đồ án}{15}{section.1.4}%
+\contentsline {chapter}{\numberline {2}CHƯƠNG 2: KHẢO SÁT VÀ PHÂN TÍCH YÊU CẦU}{17}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Khảo sát hiện trạng}{17}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}Khảo sát thực trạng chấm thi trắc nghiệm}{17}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}Khảo sát các giải pháp hiện có}{18}{subsection.2.1.2}%
+\contentsline {subsection}{\numberline {2.1.3}Nhận xét và đánh giá}{19}{subsection.2.1.3}%
+\contentsline {section}{\numberline {2.2}Tổng quan chức năng}{19}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Các tác nhân hệ thống}{19}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Biểu đồ Use Case tổng quát}{20}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}Mô hình hóa quy trình nghiệp vụ}{20}{subsection.2.2.3}%
+\contentsline {section}{\numberline {2.3}Đặc tả chức năng}{22}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Đặc tả Use Case Quản lý đề thi}{22}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Đặc tả Use Case Quét phiếu trả lời}{23}{subsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.3.3}Đặc tả Use Case Xem kết quả thi}{25}{subsection.2.3.3}%
+\contentsline {section}{\numberline {2.4}Yêu cầu phi chức năng}{26}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Yêu cầu về hiệu năng}{26}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}Yêu cầu về bảo mật}{26}{subsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.4.3}Yêu cầu về tính khả dụng}{27}{subsection.2.4.3}%
+\contentsline {subsection}{\numberline {2.4.4}Yêu cầu về tính dễ bảo trì}{27}{subsection.2.4.4}%
+\contentsline {chapter}{\numberline {3}CHƯƠNG 3: NỀN TẢNG LÝ THUYẾT VÀ CÔNG NGHỆ SỬ DỤNG}{29}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Công nghệ nhận diện đánh dấu quang học OMR}{29}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Giới thiệu về OMR}{29}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Quy trình xử lý ảnh OMR}{30}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}Các kỹ thuật xử lý ảnh nâng cao}{31}{subsection.3.1.3}%
+\contentsline {section}{\numberline {3.2}Framework Flutter cho ứng dụng di động}{32}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Giới thiệu về Flutter}{32}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Kiến trúc ứng dụng Flutter}{32}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}State Management với flutter\_bloc}{33}{subsection.3.2.3}%
+\contentsline {section}{\numberline {3.3}React và TypeScript cho ứng dụng web}{34}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Giới thiệu về React}{34}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Kiến trúc ứng dụng React}{35}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}State Management với Zustand}{36}{subsection.3.3.3}%
+\contentsline {section}{\numberline {3.4}Node.js và MongoDB cho Backend}{37}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Giới thiệu về Node.js}{37}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Giới thiệu về MongoDB}{37}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Kiến trúc Backend}{39}{subsection.3.4.3}%
+\contentsline {section}{\numberline {3.5}Lựa chọn và so sánh công nghệ}{40}{section.3.5}%
+\contentsline {chapter}{\numberline {4}CHƯƠNG 4: PHÂN TÍCH THIẾT KẾ VÀ TRIỂN KHAI}{43}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Thiết kế kiến trúc}{43}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Lựa chọn kiến trúc phần mềm}{43}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}Kiến trúc Mobile App (Flutter)}{44}{subsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.1.3}Kiến trúc Web App (React)}{45}{subsection.4.1.3}%
+\contentsline {subsection}{\numberline {4.1.4}Kiến trúc Backend (Node.js)}{46}{subsection.4.1.4}%
+\contentsline {section}{\numberline {4.2}Thiết kế cơ sở dữ liệu}{47}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Sơ đồ ERD}{47}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Thiết kế Collection}{48}{subsection.4.2.2}%
+\contentsline {section}{\numberline {4.3}Thiết kế chi tiết các thành phần}{49}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}OMR Engine Design}{49}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Sequence Diagram cho chức năng quét phiếu}{50}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Giao diện người dùng}{51}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Xây dựng ứng dụng}{52}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Công cụ phát triển}{52}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Triển khai OMR Engine}{53}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Triển khai API Endpoints}{54}{subsection.4.4.3}%
+\contentsline {section}{\numberline {4.5}Kiểm thử}{55}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Kiểm thử OMR Engine}{55}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Kiểm thử API}{56}{subsection.4.5.2}%
+\contentsline {section}{\numberline {4.6}Triển khai thực tế}{56}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Mô hình triển khai}{56}{subsection.4.6.1}%
+\contentsline {subsection}{\numberline {4.6.2}Cấu hình môi trường}{57}{subsection.4.6.2}%
+\contentsline {chapter}{\numberline {5}CHƯƠNG 5: CÁC GIẢI PHÁP VÀ ĐÓNG GÓP NỔI BẬT}{59}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Giải pháp 1: Thuật toán OMR thích ứng đa điều kiện}{59}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Bài toán đặt ra}{59}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}Giải pháp đề xuất}{59}{subsection.5.1.2}%
+\contentsline {subsection}{\numberline {5.1.3}Chi tiết kỹ thuật}{60}{subsection.5.1.3}%
+\contentsline {subsection}{\numberline {5.1.4}Kết quả đạt được}{62}{subsection.5.1.4}%
+\contentsline {section}{\numberline {5.2}Giải pháp 2: Kiến trúc Offline-First cho ứng dụng di động}{63}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Bài toán đặt ra}{63}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Giải pháp đề xuất}{63}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}Chi tiết kỹ thuật}{64}{subsection.5.2.3}%
+\contentsline {subsection}{\numberline {5.2.4}Kết quả đạt được}{66}{subsection.5.2.4}%
+\contentsline {section}{\numberline {5.3}Giải pháp 3: Tối ưu hóa hiệu năng OMR trên thiết bị di động}{66}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Bài toán đặt ra}{66}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Giải pháp đề xuất}{67}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Kết quả đạt được}{69}{subsection.5.3.3}%
+\contentsline {section}{\numberline {5.4}Giải pháp 4: Tích hợp AMC cho sinh đề thi đa phiên bản}{69}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Bài toán đặt ra}{69}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Giải pháp đề xuất}{70}{subsection.5.4.2}%
+\contentsline {section}{\numberline {5.5}Tổng hợp đóng góp của đề tài}{71}{section.5.5}%
+\contentsline {chapter}{\numberline {6}CHƯƠNG 6: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}{73}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Kết luận}{73}{section.6.1}%
+\contentsline {subsection}{\numberline {6.1.1}Tổng kết kết quả đạt được}{73}{subsection.6.1.1}%
+\contentsline {subsection}{\numberline {6.1.2}So sánh với các giải pháp hiện có}{74}{subsection.6.1.2}%
+\contentsline {subsection}{\numberline {6.1.3}Bài học kinh nghiệm}{75}{subsection.6.1.3}%
+\contentsline {section}{\numberline {6.2}Hạn chế và khuyết điểm}{75}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Hướng phát triển}{75}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}Hoàn thiện tính năng hiện có}{76}{subsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.3.2}Mở rộng tính năng mới}{76}{subsection.6.3.2}%
+\contentsline {subsection}{\numberline {6.3.3}Nghiên cứu và cải tiến kỹ thuật}{76}{subsection.6.3.3}%
+\contentsline {chapter}{\numberline {A}HƯỚNG DẪN CÀI ĐẶT VÀ SỬ DỤNG}{79}{appendix.A}%
+\contentsline {section}{\numberline {A.1}Cài đặt môi trường phát triển}{79}{section.A.1}%
+\contentsline {subsection}{\numberline {A.1.1}Yêu cầu hệ thống}{79}{subsection.A.1.1}%
+\contentsline {subsection}{\numberline {A.1.2}Cài đặt Backend}{79}{subsection.A.1.2}%
+\contentsline {subsection}{\numberline {A.1.3}Cài đặt Mobile App}{79}{subsection.A.1.3}%
+\contentsline {subsection}{\numberline {A.1.4}Cài đặt Web App}{80}{subsection.A.1.4}%
+\contentsline {section}{\numberline {A.2}Hướng dẫn sử dụng}{80}{section.A.2}%
+\contentsline {subsection}{\numberline {A.2.1}Đối với giáo viên}{80}{subsection.A.2.1}%
+\contentsline {subsection}{\numberline {A.2.2}Đối với học sinh}{80}{subsection.A.2.2}%
+\contentsline {section}{\numberline {A.3}Xử lý sự cố}{81}{section.A.3}%
+\contentsline {subsection}{\numberline {A.3.1}Lỗi kết nối database}{81}{subsection.A.3.1}%
+\contentsline {subsection}{\numberline {A.3.2}Lỗi build Flutter}{81}{subsection.A.3.2}%
+\contentsline {subsection}{\numberline {A.3.3}Lỗi CORS}{81}{subsection.A.3.3}%

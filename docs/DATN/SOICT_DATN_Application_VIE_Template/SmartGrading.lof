@@ -1,0 +1,23 @@
+\babel@toc {vietnamese}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Biểu đồ Use Case tổng quan hệ thống SMART GRADING}}{20}{figure.caption.6}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Biểu đồ Sequence cho quy trình quét phiếu OMR}}{21}{figure.caption.7}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Biểu đồ Use Case phân rã cho chức năng quét phiếu OMR}}{25}{figure.caption.10}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Luồng xử lý OMR từ thu ảnh đến trích xuất kết quả}}{30}{figure.caption.13}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Kiến trúc Clean Architecture trong ứng dụng Flutter}}{33}{figure.caption.15}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Cấu trúc thư mục ứng dụng React}}{36}{figure.caption.16}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Kiến trúc backend Node.js theo phân tầng}}{40}{figure.caption.17}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Kiến trúc tổng quan hệ thống SMART GRADING}}{44}{figure.caption.19}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Sơ đồ ERD cho hệ thống SMART GRADING}}{48}{figure.caption.20}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Biểu đồ Sequence cho quy trình quét phiếu OMR}}{51}{figure.caption.21}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Mockup giao diện ứng dụng Mobile}}{52}{figure.caption.22}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Mô hình triển khai hệ thống SMART GRADING}}{57}{figure.caption.27}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Luồng thuật toán AMCOMR}}{60}{figure.caption.28}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Kiến trúc Offline-First với Smart Sync}}{64}{figure.caption.30}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Luồng tích hợp AMC Bridge Service}}{70}{figure.caption.32}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }

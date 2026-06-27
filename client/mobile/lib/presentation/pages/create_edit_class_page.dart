@@ -134,6 +134,11 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
       try {
         final classService = GetIt.instance<ClassService>();
 
+        // Fallback to current user if teacher not selected (matches web behavior).
+        final teacherId = (_selectedTeacherId == null || _selectedTeacherId!.isEmpty)
+            ? currentUser.id
+            : _selectedTeacherId;
+
         if (isEdit) {
           await classService.updateClass(
             widget.cls!.id,
@@ -141,6 +146,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
             code: _codeController.text.trim(),
             gradeLevel: _selectedGradeLevel ?? 12,
             academicYear: _academicYearController.text.trim(),
+            homeroomTeacherId: teacherId,
           );
         } else {
           await classService.createClass(
@@ -149,6 +155,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
             gradeLevel: _selectedGradeLevel ?? 12,
             academicYear: _academicYearController.text.trim(),
             schoolId: schoolId,
+            homeroomTeacherId: teacherId,
           );
         }
 

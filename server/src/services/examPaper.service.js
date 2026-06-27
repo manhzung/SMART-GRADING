@@ -341,28 +341,44 @@ class ExamPaperService {
       },
     });
 
-    // 7. Create NEW OMRTemplate for this exam
-    //    Each exam gets its own template to avoid conflicts
-    //    Mobile engine_v2 uses this to:
+    // 7. Update existing OMRTemplate for this exam OR create new if none exists
+    //    Re-using the same template avoids orphaning previous template data
+    //    Mobile engine_v2 uses templateJson to:
     //      1. Know exact bubble coordinates: templateJson.answers[q1][A] = {x,y,w,h}
     //      2. Know correct answers:      templateJson.answerKey[q1] = "A"
     //      3. Know per-question scores:   templateJson.questionScores[q1] = 0.5
-    //    After this, backend and mobile both use OMRTemplate.templateJson.
     
-    // Use unique code with timestamp to allow re-generation
-    const templateCode = `AMC_${exam._id}_${Date.now()}`;
+    // Check if exam already has an AMC template - update it instead of creating new
+    let existingTemplate = null;
+    if (exam.omrTemplateId) {
+      existingTemplate = await OMRTemplate.findById(exam.omrTemplateId);
+      // Only reuse if it's an auto-generated AMC template
+      if (existingTemplate && existingTemplate.code?.startsWith('AMC_')) {
+        existingTemplate.templateJson = templateJson;
+        existingTemplate.name = `Template - ${exam.title} (${exam._id})`;
+        existingTemplate.tags = ['amc', 'auto-generated'];
+        await existingTemplate.save();
+        console.log(`[ExamPaper] Updated existing AMC template: ${existingTemplate._id}`);
+      } else {
+        existingTemplate = null;
+      }
+    }
     
-    const newTemplate = await OMRTemplate.create({
-      code: templateCode,
-      name: `Template - ${exam.title} (${exam._id})`,
-      templateJson: templateJson,
-      tags: ['amc', 'auto-generated'],
-    });
-
-    // Update exam with the new template ID
-    await Exam.findByIdAndUpdate(exam._id, {
-      omrTemplateId: newTemplate._id,
-    });
+    // Create new template only if no suitable existing template
+    if (!existingTemplate) {
+      const templateCode = `AMC_${exam._id}_${Date.now()}`;
+      existingTemplate = await OMRTemplate.create({
+        code: templateCode,
+        name: `Template - ${exam.title} (${exam._id})`,
+        templateJson: templateJson,
+        tags: ['amc', 'auto-generated'],
+      });
+      // Update exam with the new template ID
+      await Exam.findByIdAndUpdate(exam._id, {
+        omrTemplateId: existingTemplate._id,
+      });
+      console.log(`[ExamPaper] Created new AMC template: ${existingTemplate._id}`);
+    }
 
     // 8. Cleanup WSL project
     await amcRunner.cleanup(projectDir);

@@ -20,6 +20,10 @@ router
   .post(auth('manageQuestions'), validate(questionValidation.generateQuestions), questionController.generate);
 
 router
+  .route('/generate-similar')
+  .post(auth('manageQuestions'), validate(questionValidation.generateSimilarQuestions), questionController.generateSimilar);
+
+router
   .route('/by-tags')
   .get(auth(), validate(questionValidation.getQuestionsByTags), questionController.getByTags);
 

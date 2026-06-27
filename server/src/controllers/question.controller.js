@@ -1,6 +1,7 @@
 const httpStatus = require('http-status');
 const questionService = require('../services/question.service');
 const catchAsync = require('../utils/catchAsync');
+const ApiError = require('../utils/ApiError');
 
 const create = catchAsync(async (req, res) => {
   const question = await questionService.create(
@@ -54,7 +55,7 @@ const remove = catchAsync(async (req, res) => {
 const questionGenService = require('../services/questionGen.service');
 
 const generate = catchAsync(async (req, res) => {
-  const { topicId, count, difficulty, requirements, gradeLevel } = req.body;
+  const { topicId, count, difficulty, requirements, gradeLevel, subjectId } = req.body;
   const { Question } = require('../models');
 
   let topicName = '';
@@ -66,6 +67,7 @@ const generate = catchAsync(async (req, res) => {
     topicName = existingQuestion?.topicName || '';
   }
 
+  // Generate questions WITHOUT saving to DB - let client decide which to save
   const generated = await questionGenService.generateQuestions({
     topicId,
     topicName: topicName || requirements || '',
@@ -73,25 +75,69 @@ const generate = catchAsync(async (req, res) => {
     difficulty: difficulty || 'medium',
     requirements: requirements || '',
     gradeLevel: gradeLevel || 10,
-    subjectId: null,
+    subjectId: subjectId || null,
     createdBy: req.user?.id,
+    schoolId: req.user?.schoolId || null,
   });
 
-  const inserted = await Question.insertMany(generated);
-
-  res.status(httpStatus.CREATED).send({
+  // Return generated questions for preview (don't save to DB yet)
+  res.status(httpStatus.OK).send({
     success: true,
     data: {
-      count: inserted.length,
-      questions: inserted.map((q) => ({
-        _id: q._id,
+      count: generated.length,
+      questions: generated.map((q) => ({
         content: q.content,
+        type: q.type,
+        options: q.options,
         difficulty: q.difficulty,
         topicId: q.topicId,
         topicName: q.topicName,
         source: q.source,
-        isApproved: q.isApproved,
+        explanation: q.explanation || '',
+        tags: q.tags,
       })),
+    },
+  });
+});
+
+/**
+ * Generate similar questions based on source questions
+ */
+const generateSimilar = catchAsync(async (req, res) => {
+  const { sourceQuestionIds, count, difficulty } = req.body;
+  console.log('[generateSimilar] Received:', { sourceQuestionIds, count, difficulty });
+  const { Question } = require('../models');
+
+  // Fetch source questions
+  const sourceQuestions = await Question.find({ _id: { $in: sourceQuestionIds } }).lean();
+
+  if (sourceQuestions.length === 0) {
+    throw new ApiError(404, 'Không tìm thấy câu hỏi nguồn');
+  }
+
+  // Build context from source questions
+  const sourceContext = sourceQuestions.map((q, idx) =>
+    `Câu ${idx + 1}: ${q.content}\n` +
+    `Đáp án: ${q.options.find(o => o.isCorrect)?.content || 'N/A'}\n` +
+    `Độ khó: ${q.difficulty}`
+  ).join('\n\n');
+
+  // Generate similar questions
+  const generated = await questionGenService.generateSimilarQuestions({
+    sourceContext,
+    count: count || 5,
+    difficulty: difficulty || sourceQuestions[0].difficulty || 'medium',
+    createdBy: req.user?.id,
+    schoolId: req.user?.schoolId || null,
+    tags: sourceQuestions[0].tags || [],
+    sourceQuestionIds,
+  });
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    data: {
+      count: generated.length,
+      questions: generated,
     },
   });
 });
@@ -188,6 +234,7 @@ module.exports = {
   approve,
   remove,
   generate,
+  generateSimilar,
   getTags,
   getBankStats,
   getByTags,

@@ -3,8 +3,8 @@
 % Do not modify the above lines!
 %
 % This is an auxiliary file used by the 'biblatex' package.
-% This file may safely be deleted. It will be recreated by
-% biber as required.
+% This file may safely be deleted. It will be recreated as
+% required.
 %
 \begingroup
 \makeatletter
@@ -16,5 +16,1013 @@
   {}
 \endgroup
 
-\endinput
+\datalist[entry]{none/global//global/global/global}
+  \entry{black2014assessment}{article}{}{}
+    \name{author}{2}{}{%
+      {{hash=BP}{%
+         family={Black},
+         familyi={B\bibinitperiod},
+         given={Paul},
+         giveni={P\bibinitperiod},
+      }}%
+      {{hash=WD}{%
+         family={Wiliam},
+         familyi={W\bibinitperiod},
+         given={Dylan},
+         giveni={D\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Taylor \& Francis}%
+    }
+    \strng{namehash}{BPWD1}
+    \strng{fullhash}{BPWD1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.1080/0969595980050102
+    \endverb
+    \field{number}{1}
+    \field{pages}{7\bibrangedash 74}
+    \field{title}{Assessment and Classroom Learning}
+    \field{volume}{5}
+    \field{journaltitle}{Assessment in Education: Principles, Policy \&
+  Practice}
+    \field{year}{1998}
+  \endentry
 
+  \entry{sommerville2011software}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=SI}{%
+         family={Sommerville},
+         familyi={S\bibinitperiod},
+         given={Ian},
+         giveni={I\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Pearson Education Limited}%
+    }
+    \strng{namehash}{SI1}
+    \strng{fullhash}{SI1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{edition}{9th}
+    \field{isbn}{978-0137035151}
+    \field{title}{Software Engineering}
+    \field{year}{2011}
+  \endentry
+
+  \entry{pressman2014software}{book}{}{}
+    \name{author}{2}{}{%
+      {{hash=PRS}{%
+         family={Pressman},
+         familyi={P\bibinitperiod},
+         given={Roger\bibnamedelima S.},
+         giveni={R\bibinitperiod\bibinitdelim S\bibinitperiod},
+      }}%
+      {{hash=MBR}{%
+         family={Maxim},
+         familyi={M\bibinitperiod},
+         given={Bruce\bibnamedelima R.},
+         giveni={B\bibinitperiod\bibinitdelim R\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {McGraw-Hill Education}%
+    }
+    \strng{namehash}{PRSMBR1}
+    \strng{fullhash}{PRSMBR1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{edition}{8th}
+    \field{isbn}{978-0078022128}
+    \field{title}{Software Engineering: A Practitioner's Approach}
+    \field{year}{2014}
+  \endentry
+
+  \entry{wiliam2018embedded}{article}{}{}
+    \name{author}{1}{}{%
+      {{hash=WD}{%
+         family={Wiliam},
+         familyi={W\bibinitperiod},
+         given={Dylan},
+         giveni={D\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Solution Tree Press}%
+    }
+    \strng{namehash}{WD1}
+    \strng{fullhash}{WD1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{title}{Embedded Formative Assessment}
+    \field{journaltitle}{Strategies for Classroom Formative Assessment}
+    \field{year}{2018}
+  \endentry
+
+  \entry{koerich2003recognition}{article}{}{}
+    \name{author}{4}{}{%
+      {{hash=KAL}{%
+         family={Koerich},
+         familyi={K\bibinitperiod},
+         given={Alessandro\bibnamedelima L.},
+         giveni={A\bibinitperiod\bibinitdelim L\bibinitperiod},
+      }}%
+      {{hash=dSLMMR}{%
+         prefix={dos},
+         prefixi={d\bibinitperiod},
+         family={Santos},
+         familyi={S\bibinitperiod},
+         given={Leylton M. M.\bibnamedelima R.},
+         giveni={L\bibinitperiod\bibinitdelim M\bibinitperiod\bibinitdelim
+  M\bibinitperiod\bibinitdelim R\bibinitperiod},
+      }}%
+      {{hash=HEM}{%
+         family={Hemerly},
+         familyi={H\bibinitperiod},
+         given={Elder\bibnamedelima M.},
+         giveni={E\bibinitperiod\bibinitdelim M\bibinitperiod},
+      }}%
+      {{hash=dCWC}{%
+         prefix={do},
+         prefixi={d\bibinitperiod},
+         family={Couto},
+         familyi={C\bibinitperiod},
+         given={Waverley\bibnamedelima C.},
+         giveni={W\bibinitperiod\bibinitdelim C\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{KAL+1}
+    \strng{fullhash}{KALSLMMRdHEMCWCd1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{note}{Tham khảo phương pháp nhận dạng ký hiệu hình
+  ảnh}
+    \field{title}{Recognition of Handwritten Musical Symbols Based on a
+  Bi-dimensional Approach}
+    \field{journaltitle}{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}
+    \field{year}{2003}
+  \endentry
+
+  \entry{bradski2008learning}{book}{}{}
+    \name{author}{2}{}{%
+      {{hash=BG}{%
+         family={Bradski},
+         familyi={B\bibinitperiod},
+         given={Gary},
+         giveni={G\bibinitperiod},
+      }}%
+      {{hash=KA}{%
+         family={Kaehler},
+         familyi={K\bibinitperiod},
+         given={Adrian},
+         giveni={A\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {O'Reilly Media}%
+    }
+    \strng{namehash}{BGKA1}
+    \strng{fullhash}{BGKA1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{isbn}{978-0596516130}
+    \field{title}{Learning OpenCV: Computer Vision with the OpenCV Library}
+    \field{year}{2008}
+  \endentry
+
+  \entry{gamma1994design}{book}{}{}
+    \name{author}{4}{}{%
+      {{hash=GE}{%
+         family={Gamma},
+         familyi={G\bibinitperiod},
+         given={Erich},
+         giveni={E\bibinitperiod},
+      }}%
+      {{hash=HR}{%
+         family={Helm},
+         familyi={H\bibinitperiod},
+         given={Richard},
+         giveni={R\bibinitperiod},
+      }}%
+      {{hash=JR}{%
+         family={Johnson},
+         familyi={J\bibinitperiod},
+         given={Ralph},
+         giveni={R\bibinitperiod},
+      }}%
+      {{hash=VJ}{%
+         family={Vlissides},
+         familyi={V\bibinitperiod},
+         given={John},
+         giveni={J\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Addison-Wesley Professional}%
+    }
+    \strng{namehash}{GE+1}
+    \strng{fullhash}{GEHRJRVJ1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{isbn}{978-0201633610}
+    \field{title}{Design Patterns: Elements of Reusable Object-Oriented
+  Software}
+    \field{year}{1994}
+  \endentry
+
+  \entry{rfc5246tls}{report}{}{}
+    \name{author}{2}{}{%
+      {{hash=DT}{%
+         family={Dierks},
+         familyi={D\bibinitperiod},
+         given={T.},
+         giveni={T\bibinitperiod},
+      }}%
+      {{hash=RE}{%
+         family={Rescorla},
+         familyi={R\bibinitperiod},
+         given={E.},
+         giveni={E\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{DTRE1}
+    \strng{fullhash}{DTRE1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.17487/RFC5246
+    \endverb
+    \field{number}{RFC 5246}
+    \field{title}{{The Transport Layer Security (TLS) Protocol Version 1.2}}
+    \list{institution}{1}{%
+      {Internet Engineering Task Force (IETF)}%
+    }
+    \field{type}{techreport}
+    \field{year}{2008}
+  \endentry
+
+  \entry{rfc7519jwt}{report}{}{}
+    \name{author}{3}{}{%
+      {{hash=JM}{%
+         family={Jones},
+         familyi={J\bibinitperiod},
+         given={M.},
+         giveni={M\bibinitperiod},
+      }}%
+      {{hash=BJ}{%
+         family={Bradley},
+         familyi={B\bibinitperiod},
+         given={J.},
+         giveni={J\bibinitperiod},
+      }}%
+      {{hash=SN}{%
+         family={Sakimura},
+         familyi={S\bibinitperiod},
+         given={N.},
+         giveni={N\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{JM+1}
+    \strng{fullhash}{JMBJSN1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.17487/RFC7519
+    \endverb
+    \field{number}{RFC 7519}
+    \field{title}{{JSON Web Token (JWT)}}
+    \list{institution}{1}{%
+      {Internet Engineering Task Force (IETF)}%
+    }
+    \field{type}{techreport}
+    \field{year}{2015}
+  \endentry
+
+  \entry{smith2007optical}{article}{}{}
+    \name{author}{1}{}{%
+      {{hash=SR}{%
+         family={Smith},
+         familyi={S\bibinitperiod},
+         given={Raymond},
+         giveni={R\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {IEEE}%
+    }
+    \strng{namehash}{SR1}
+    \strng{fullhash}{SR1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.1109/ICDAR.2007.4376991
+    \endverb
+    \field{pages}{629\bibrangedash 633}
+    \field{title}{An Overview of the Tesseract OCR Engine}
+    \field{journaltitle}{Proceedings of the IEEE International Conference on
+  Document Analysis and Recognition (ICDAR)}
+    \field{year}{2007}
+  \endentry
+
+  \entry{gonzalez2018digital}{book}{}{}
+    \name{author}{2}{}{%
+      {{hash=GRC}{%
+         family={Gonzalez},
+         familyi={G\bibinitperiod},
+         given={Rafael\bibnamedelima C.},
+         giveni={R\bibinitperiod\bibinitdelim C\bibinitperiod},
+      }}%
+      {{hash=WRE}{%
+         family={Woods},
+         familyi={W\bibinitperiod},
+         given={Richard\bibnamedelima E.},
+         giveni={R\bibinitperiod\bibinitdelim E\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Pearson}%
+    }
+    \strng{namehash}{GRCWRE1}
+    \strng{fullhash}{GRCWRE1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{edition}{4th}
+    \field{isbn}{978-0133356724}
+    \field{title}{Digital Image Processing}
+    \field{year}{2018}
+  \endentry
+
+  \entry{canny1986}{article}{}{}
+    \name{author}{1}{}{%
+      {{hash=CJ}{%
+         family={Canny},
+         familyi={C\bibinitperiod},
+         given={John},
+         giveni={J\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {IEEE}%
+    }
+    \strng{namehash}{CJ1}
+    \strng{fullhash}{CJ1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.1109/TPAMI.1986.4767851
+    \endverb
+    \field{number}{6}
+    \field{pages}{679\bibrangedash 698}
+    \field{title}{A Computational Approach to Edge Detection}
+    \field{volume}{8}
+    \field{journaltitle}{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}
+    \field{year}{1986}
+  \endentry
+
+  \entry{deriche1987using}{article}{}{}
+    \name{author}{1}{}{%
+      {{hash=DR}{%
+         family={Deriche},
+         familyi={D\bibinitperiod},
+         given={Rachid},
+         giveni={R\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{DR1}
+    \strng{fullhash}{DR1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.1007/BF00123164
+    \endverb
+    \field{number}{2}
+    \field{pages}{167\bibrangedash 187}
+    \field{title}{Using Canny's Criteria to Derive a Recursively Implemented
+  Optimal Edge Detector}
+    \field{volume}{1}
+    \field{journaltitle}{International Journal of Computer Vision}
+    \field{year}{1987}
+  \endentry
+
+  \entry{suzuki1985topological}{article}{}{}
+    \name{author}{2}{}{%
+      {{hash=SS}{%
+         family={Suzuki},
+         familyi={S\bibinitperiod},
+         given={Satoshi},
+         giveni={S\bibinitperiod},
+      }}%
+      {{hash=AK}{%
+         family={Abe},
+         familyi={A\bibinitperiod},
+         given={Keiichi},
+         giveni={K\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Elsevier}%
+    }
+    \strng{namehash}{SSAK1}
+    \strng{fullhash}{SSAK1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.1016/0734-189X(85)90016-7
+    \endverb
+    \field{number}{1}
+    \field{pages}{32\bibrangedash 46}
+    \field{title}{Topological Structural Analysis of Digitized Binary Images by
+  Border Following}
+    \field{volume}{30}
+    \field{journaltitle}{Computer Vision, Graphics, and Image Processing}
+    \field{year}{1985}
+  \endentry
+
+  \entry{krizhevsky2012imagenet}{inproceedings}{}{}
+    \name{author}{3}{}{%
+      {{hash=KA}{%
+         family={Krizhevsky},
+         familyi={K\bibinitperiod},
+         given={Alex},
+         giveni={A\bibinitperiod},
+      }}%
+      {{hash=SI}{%
+         family={Sutskever},
+         familyi={S\bibinitperiod},
+         given={Ilya},
+         giveni={I\bibinitperiod},
+      }}%
+      {{hash=HGE}{%
+         family={Hinton},
+         familyi={H\bibinitperiod},
+         given={Geoffrey\bibnamedelima E.},
+         giveni={G\bibinitperiod\bibinitdelim E\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{KA+1}
+    \strng{fullhash}{KASIHGE1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{booktitle}{Advances in Neural Information Processing Systems
+  (NeurIPS)}
+    \field{pages}{1097\bibrangedash 1105}
+    \field{title}{ImageNet Classification with Deep Convolutional Neural
+  Networks}
+    \field{year}{2012}
+  \endentry
+
+  \entry{he2016resnet}{inproceedings}{}{}
+    \name{author}{4}{}{%
+      {{hash=HK}{%
+         family={He},
+         familyi={H\bibinitperiod},
+         given={Kaiming},
+         giveni={K\bibinitperiod},
+      }}%
+      {{hash=ZX}{%
+         family={Zhang},
+         familyi={Z\bibinitperiod},
+         given={Xiangyu},
+         giveni={X\bibinitperiod},
+      }}%
+      {{hash=RS}{%
+         family={Ren},
+         familyi={R\bibinitperiod},
+         given={Shaoqing},
+         giveni={S\bibinitperiod},
+      }}%
+      {{hash=SJ}{%
+         family={Sun},
+         familyi={S\bibinitperiod},
+         given={Jian},
+         giveni={J\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{HK+1}
+    \strng{fullhash}{HKZXRSSJ1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{booktitle}{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition (CVPR)}
+    \verb{doi}
+    \verb 10.1109/CVPR.2016.90
+    \endverb
+    \field{pages}{770\bibrangedash 778}
+    \field{title}{Deep Residual Learning for Image Recognition}
+    \field{year}{2016}
+  \endentry
+
+  \entry{han2011survey}{article}{}{}
+    \name{author}{4}{}{%
+      {{hash=HJ}{%
+         family={Han},
+         familyi={H\bibinitperiod},
+         given={Jing},
+         giveni={J\bibinitperiod},
+      }}%
+      {{hash=HE}{%
+         family={Haihong},
+         familyi={H\bibinitperiod},
+         given={E.},
+         giveni={E\bibinitperiod},
+      }}%
+      {{hash=LG}{%
+         family={Le},
+         familyi={L\bibinitperiod},
+         given={Guan},
+         giveni={G\bibinitperiod},
+      }}%
+      {{hash=DJ}{%
+         family={Du},
+         familyi={D\bibinitperiod},
+         given={Jian},
+         giveni={J\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {IEEE}%
+    }
+    \strng{namehash}{HJ+1}
+    \strng{fullhash}{HJHELGDJ1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.1109/ICPCA.2011.6106531
+    \endverb
+    \field{pages}{363\bibrangedash 366}
+    \field{title}{Survey on {NoSQL} Database}
+    \field{journaltitle}{Proceedings of the 6th International Conference on
+  Pervasive Computing and Applications (ICPCA)}
+    \field{year}{2011}
+  \endentry
+
+  \entry{brewer2000towards}{article}{}{}
+    \name{author}{1}{}{%
+      {{hash=BEA}{%
+         family={Brewer},
+         familyi={B\bibinitperiod},
+         given={Eric\bibnamedelima A.},
+         giveni={E\bibinitperiod\bibinitdelim A\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{BEA1}
+    \strng{fullhash}{BEA1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{pages}{7\bibrangedash 10}
+    \field{title}{Towards Robust Distributed Systems}
+    \field{journaltitle}{Proceedings of the Annual ACM Symposium on Principles
+  of Distributed Computing (PODC)}
+    \field{year}{2000}
+  \endentry
+
+  \entry{rfc6749oauth}{report}{}{}
+    \name{author}{1}{}{%
+      {{hash=HD}{%
+         family={Hardt},
+         familyi={H\bibinitperiod},
+         given={D.},
+         giveni={D\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{HD1}
+    \strng{fullhash}{HD1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.17487/RFC6749
+    \endverb
+    \field{number}{RFC 6749}
+    \field{title}{{The OAuth 2.0 Authorization Framework}}
+    \list{institution}{1}{%
+      {Internet Engineering Task Force (IETF)}%
+    }
+    \field{type}{techreport}
+    \field{year}{2012}
+  \endentry
+
+  \entry{geminipaper2024}{article}{}{}
+    \name{author}{1}{}{%
+      {{hash=GGT}{%
+         family={Google},
+         familyi={G\bibinitperiod},
+         given={Gemini\bibnamedelima Team},
+         giveni={G\bibinitperiod\bibinitdelim T\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{GGT1}
+    \strng{fullhash}{GGT1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.48550/arXiv.2312.11805
+    \endverb
+    \verb{eprint}
+    \verb 2312.11805
+    \endverb
+    \field{title}{Gemini: A Family of Highly Capable Multimodal Models}
+    \field{journaltitle}{arXiv preprint arXiv:2312.11805}
+    \field{eprinttype}{arXiv}
+    \field{year}{2024}
+  \endentry
+
+  \entry{vaswani2017attention}{article}{}{}
+    \name{author}{8}{}{%
+      {{hash=VA}{%
+         family={Vaswani},
+         familyi={V\bibinitperiod},
+         given={Ashish},
+         giveni={A\bibinitperiod},
+      }}%
+      {{hash=SN}{%
+         family={Shazeer},
+         familyi={S\bibinitperiod},
+         given={Noam},
+         giveni={N\bibinitperiod},
+      }}%
+      {{hash=PN}{%
+         family={Parmar},
+         familyi={P\bibinitperiod},
+         given={Niki},
+         giveni={N\bibinitperiod},
+      }}%
+      {{hash=UJ}{%
+         family={Uszkoreit},
+         familyi={U\bibinitperiod},
+         given={Jakob},
+         giveni={J\bibinitperiod},
+      }}%
+      {{hash=JL}{%
+         family={Jones},
+         familyi={J\bibinitperiod},
+         given={Llion},
+         giveni={L\bibinitperiod},
+      }}%
+      {{hash=GAN}{%
+         family={Gomez},
+         familyi={G\bibinitperiod},
+         given={Aidan\bibnamedelima N.},
+         giveni={A\bibinitperiod\bibinitdelim N\bibinitperiod},
+      }}%
+      {{hash=KL}{%
+         family={Kaiser},
+         familyi={K\bibinitperiod},
+         given={Lukasz},
+         giveni={L\bibinitperiod},
+      }}%
+      {{hash=PI}{%
+         family={Polosukhin},
+         familyi={P\bibinitperiod},
+         given={Illia},
+         giveni={I\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{VA+1}
+    \strng{fullhash}{VASNPNUJJLGANKLPI1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{pages}{5998\bibrangedash 6008}
+    \field{title}{Attention Is All You Need}
+    \field{volume}{30}
+    \field{journaltitle}{Advances in Neural Information Processing Systems
+  (NeurIPS)}
+    \field{year}{2017}
+  \endentry
+
+  \entry{devlin2019bert}{article}{}{}
+    \name{author}{4}{}{%
+      {{hash=DJ}{%
+         family={Devlin},
+         familyi={D\bibinitperiod},
+         given={Jacob},
+         giveni={J\bibinitperiod},
+      }}%
+      {{hash=CMW}{%
+         family={Chang},
+         familyi={C\bibinitperiod},
+         given={Ming-Wei},
+         giveni={M\bibinithyphendelim W\bibinitperiod},
+      }}%
+      {{hash=LK}{%
+         family={Lee},
+         familyi={L\bibinitperiod},
+         given={Kenton},
+         giveni={K\bibinitperiod},
+      }}%
+      {{hash=TK}{%
+         family={Toutanova},
+         familyi={T\bibinitperiod},
+         given={Kristina},
+         giveni={K\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{DJ+1}
+    \strng{fullhash}{DJCMWLKTK1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{pages}{4171\bibrangedash 4186}
+    \field{title}{{BERT}: Pre-training of Deep Bidirectional Transformers for
+  Language Understanding}
+    \field{journaltitle}{Proceedings of NAACL-HLT}
+    \field{year}{2019}
+  \endentry
+
+  \entry{tanenbaum2014distributed}{book}{}{}
+    \name{author}{2}{}{%
+      {{hash=TAS}{%
+         family={Tanenbaum},
+         familyi={T\bibinitperiod},
+         given={Andrew\bibnamedelima S.},
+         giveni={A\bibinitperiod\bibinitdelim S\bibinitperiod},
+      }}%
+      {{hash=vSM}{%
+         prefix={van},
+         prefixi={v\bibinitperiod},
+         family={Steen},
+         familyi={S\bibinitperiod},
+         given={Maarten},
+         giveni={M\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Pearson Education}%
+    }
+    \strng{namehash}{TASSMv1}
+    \strng{fullhash}{TASSMv1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{edition}{2nd}
+    \field{isbn}{978-0132392273}
+    \field{title}{Distributed Systems: Principles and Paradigms}
+    \field{year}{2014}
+  \endentry
+
+  \entry{richardson2013restful}{book}{}{}
+    \name{author}{3}{}{%
+      {{hash=RL}{%
+         family={Richardson},
+         familyi={R\bibinitperiod},
+         given={Leonard},
+         giveni={L\bibinitperiod},
+      }}%
+      {{hash=AM}{%
+         family={Amundsen},
+         familyi={A\bibinitperiod},
+         given={Mike},
+         giveni={M\bibinitperiod},
+      }}%
+      {{hash=RS}{%
+         family={Ruby},
+         familyi={R\bibinitperiod},
+         given={Sam},
+         giveni={S\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {O'Reilly Media}%
+    }
+    \strng{namehash}{RL+1}
+    \strng{fullhash}{RLAMRS1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{isbn}{978-1449358068}
+    \field{title}{RESTful Web APIs}
+    \field{year}{2013}
+  \endentry
+
+  \entry{fowler2003patterns}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=FM}{%
+         family={Fowler},
+         familyi={F\bibinitperiod},
+         given={Martin},
+         giveni={M\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Addison-Wesley Professional}%
+    }
+    \strng{namehash}{FM1}
+    \strng{fullhash}{FM1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{isbn}{978-0321127426}
+    \field{title}{Patterns of Enterprise Application Architecture}
+    \field{year}{2003}
+  \endentry
+
+  \entry{kleppmann2017local}{article}{}{}
+    \name{author}{1}{}{%
+      {{hash=KM}{%
+         family={Kleppmann},
+         familyi={K\bibinitperiod},
+         given={Martin},
+         giveni={M\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {ACM}%
+    }
+    \strng{namehash}{KM1}
+    \strng{fullhash}{KM1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \verb{doi}
+    \verb 10.1145/3133850.3133857
+    \endverb
+    \field{pages}{154\bibrangedash 178}
+    \field{title}{Local-First Software: You Own Your Data, in spite of the
+  Cloud}
+    \field{journaltitle}{Proceedings of the 2017 ACM SIGPLAN International
+  Symposium on New Ideas, New Paradigms, and Reflections on Programming and
+  Software (Onward!)}
+    \field{year}{2017}
+  \endentry
+
+  \entry{helland2012distributed}{inproceedings}{}{}
+    \name{author}{1}{}{%
+      {{hash=HP}{%
+         family={Helland},
+         familyi={H\bibinitperiod},
+         given={Pat},
+         giveni={P\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{HP1}
+    \strng{fullhash}{HP1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{booktitle}{Proceedings of the 2nd International Conference on Very
+  Large Data Bases (VLDB)}
+    \field{pages}{1139\bibrangedash 1144}
+    \field{title}{Data on the Outside Versus Data on the Inside}
+    \field{year}{2012}
+  \endentry
+
+  \entry{schmidt2006patterns}{article}{}{}
+    \name{author}{4}{}{%
+      {{hash=SDC}{%
+         family={Schmidt},
+         familyi={S\bibinitperiod},
+         given={Douglas\bibnamedelima C.},
+         giveni={D\bibinitperiod\bibinitdelim C\bibinitperiod},
+      }}%
+      {{hash=SM}{%
+         family={Stal},
+         familyi={S\bibinitperiod},
+         given={Michael},
+         giveni={M\bibinitperiod},
+      }}%
+      {{hash=RH}{%
+         family={Rohnert},
+         familyi={R\bibinitperiod},
+         given={Hans},
+         giveni={H\bibinitperiod},
+      }}%
+      {{hash=BF}{%
+         family={Buschmann},
+         familyi={B\bibinitperiod},
+         given={Frank},
+         giveni={F\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Wiley}%
+    }
+    \strng{namehash}{SDC+1}
+    \strng{fullhash}{SDCSMRHBF1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{isbn}{978-0471606956}
+    \field{title}{Pattern-Oriented Software Architecture, Patterns for
+  Concurrent and Networked Objects}
+    \field{journaltitle}{Wiley Software Patterns Series}
+    \field{year}{2000}
+  \endentry
+
+  \entry{testdriven2002}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=BK}{%
+         family={Beck},
+         familyi={B\bibinitperiod},
+         given={Kent},
+         giveni={K\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Addison-Wesley Professional}%
+    }
+    \strng{namehash}{BK1}
+    \strng{fullhash}{BK1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{isbn}{978-0321146533}
+    \field{title}{Test-Driven Development: By Example}
+    \field{year}{2002}
+  \endentry
+
+  \entry{myers2011art}{book}{}{}
+    \name{author}{3}{}{%
+      {{hash=MGJ}{%
+         family={Myers},
+         familyi={M\bibinitperiod},
+         given={Glenford\bibnamedelima J.},
+         giveni={G\bibinitperiod\bibinitdelim J\bibinitperiod},
+      }}%
+      {{hash=SC}{%
+         family={Sandler},
+         familyi={S\bibinitperiod},
+         given={Corey},
+         giveni={C\bibinitperiod},
+      }}%
+      {{hash=BT}{%
+         family={Badgett},
+         familyi={B\bibinitperiod},
+         given={Tom},
+         giveni={T\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Wiley}%
+    }
+    \strng{namehash}{MGJ+1}
+    \strng{fullhash}{MGJSCBT1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{edition}{3rd}
+    \field{isbn}{978-1118031964}
+    \field{title}{The Art of Software Testing}
+    \field{year}{2011}
+  \endentry
+
+  \entry{szeliski2022computer}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=SR}{%
+         family={Szeliski},
+         familyi={S\bibinitperiod},
+         given={Richard},
+         giveni={R\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{SR2}
+    \strng{fullhash}{SR2}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{edition}{2nd}
+    \field{isbn}{978-3031043729}
+    \field{title}{Computer Vision: Algorithms and Applications}
+    \field{year}{2022}
+  \endentry
+
+  \entry{banavar2000challenges}{inproceedings}{}{}
+    \name{author}{4}{}{%
+      {{hash=BG}{%
+         family={Banavar},
+         familyi={B\bibinitperiod},
+         given={G.},
+         giveni={G\bibinitperiod},
+      }}%
+      {{hash=CT}{%
+         family={Chandra},
+         familyi={C\bibinitperiod},
+         given={T.},
+         giveni={T\bibinitperiod},
+      }}%
+      {{hash=SR}{%
+         family={Strom},
+         familyi={S\bibinitperiod},
+         given={R.},
+         giveni={R\bibinitperiod},
+      }}%
+      {{hash=WD}{%
+         family={Wetherall},
+         familyi={W\bibinitperiod},
+         given={D.},
+         giveni={D\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{BG+1}
+    \strng{fullhash}{BGCTSRWD1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{booktitle}{International Symposium on Distributed Computing}
+    \field{pages}{1\bibrangedash 18}
+    \field{title}{A Case for Message Oriented Middleware}
+    \field{year}{2000}
+  \endentry
+\enddatalist
+\endinput

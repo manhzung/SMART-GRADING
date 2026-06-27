@@ -55,7 +55,7 @@ const submissionAnswerSchema = new mongoose.Schema({
   questionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Question',
-    required: true,
+    // Optional for AMC exams where mobile grades directly
   },
   selectedAnswer: {
     type: String,
@@ -64,7 +64,7 @@ const submissionAnswerSchema = new mongoose.Schema({
   },
   correctAnswer: {
     type: String,
-    required: true,
+    // Optional - may be null if mobile grades without answer key
   },
   isCorrect: {
     type: Boolean,

@@ -66,6 +66,7 @@ class ClassService {
     required int gradeLevel,
     required String academicYear,
     String? schoolId,
+    String? homeroomTeacherId,
   }) {
     return _apiClient.post<Class>(
       ApiConstants.classes,
@@ -75,6 +76,8 @@ class ClassService {
         'gradeLevel': gradeLevel,
         'academicYear': academicYear,
         if (schoolId != null) 'schoolId': schoolId,
+        if (homeroomTeacherId != null && homeroomTeacherId.isNotEmpty)
+          'homeroomTeacherId': homeroomTeacherId,
       },
       parser: (data) => Class.fromJson(data as Map<String, dynamic>),
     );
@@ -86,6 +89,7 @@ class ClassService {
     String? code,
     int? gradeLevel,
     String? academicYear,
+    String? homeroomTeacherId,
   }) {
     return _apiClient.patch<Class>(
       '${ApiConstants.classes}/$id',
@@ -94,6 +98,7 @@ class ClassService {
         if (code != null) 'code': code,
         if (gradeLevel != null) 'gradeLevel': gradeLevel,
         if (academicYear != null) 'academicYear': academicYear,
+        if (homeroomTeacherId != null) 'homeroomTeacherId': homeroomTeacherId,
       },
       parser: (data) => Class.fromJson(data as Map<String, dynamic>),
     );

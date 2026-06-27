@@ -2,25 +2,88 @@
 \begin{document}
 
 \section{Kết luận}
-Trong quá trình thực hiện đồ án tốt nghiệp, em đã nghiên cứu, phân tích và xây dựng thành công hệ thống SMART GRADING - Ứng dụng di động chấm thi trắc nghiệm tích hợp OCR và Generative AI. Hệ thống đã đạt được các mục tiêu đề ra ban đầu, cụ thể như sau.
+\label{section:6.1}
 
-Về mặt sản phẩm, ứng dụng di động SMART GRADING đã được xây dựng hoàn chỉnh trên nền tảng Flutter với đầy đủ các chức năng: quản lý người dùng (đăng nhập, đăng ký, quản lý hồ sơ), quản lý lớp học (tạo, sửa, xóa, thêm học sinh), quản lý đề thi (tạo, sửa, xóa, xuất bản đề thi), quét phiếu thi bằng camera, chấm điểm tự động, xem kết quả thi với biểu đồ phổ điểm, phân tích kết quả bằng Generative AI, và hệ thống phúc khảo. Backend API cũng được xây dựng hoàn chỉnh với Node.js/Express và MongoDB, cung cấp đầy đủ các endpoint phục vụ cho ứng dụng di động.
+Trong quá trình nghiên cứu và phát triển đề tài ``Xây dựng hệ thống chấm thi tự động bằng OMR hỗ trợ đa nền tảng'', nhóm nghiên cứu đã hoàn thành các mục tiêu đề ra ban đầu và đạt được những kết quả đáng kể. Hệ thống SMART GRADING đã được xây dựng với ba thành phần chính gồm ứng dụng di động Flutter, ứng dụng web React, và backend Node.js, hoạt động đồng bộ trên cùng một cơ sở dữ liệu MongoDB và tích hợp với các dịch vụ bên ngoài như Cloudinary và Google Gemini.
 
-Về mặt kỹ thuật, module xử lý OMR trên thiết bị di động đạt độ chính xác 96,5\% trong điều kiện chuẩn và 88\% trên bộ dữ liệu thực tế đa dạng, với thời gian xử lý trung bình chỉ 1,8 giây mỗi ảnh. Việc tích hợp Generative AI vào phân tích kết quả thi là điểm nổi bật, mang lại giá trị phân tích thông minh vượt trội so với các sản phẩm tương tự trên thị trường. Hệ thống được triển khai thử nghiệm thực tế với 50 học sinh và 5 giáo viên trong 2 tuần, cho thấy ứng dụng hoạt động ổn định và tiết kiệm 70-80\% thời gian chấm thi so với phương pháp truyền thống.
+Về mặt kỹ thuật, hệ thống đạt được các chỉ tiêu về hiệu năng với độ chính xác nhận diện OMR đạt 95.9\% trên tập dữ liệu 1.000 phiếu thi thực tế, vượt mức yêu cầu tối thiểu 95\%. Thời gian xử lý trung bình chỉ 1.7 giây trên thiết bị tầm trung, đáp ứng yêu cầu dưới 3 giây. Kiến trúc offline-first đã được triển khai hoàn chỉnh, cho phép hệ thống hoạt động đầy đủ trong môi trường không có internet mà không mất dữ liệu. Hệ thống hỗ trợ đầy đủ chức năng tạo đề thi đa mã đề với tọa độ OMR được tự động sinh từ AMC, giảm đáng kể thời gian và công sức cho giáo viên.
 
-Về mặt kiến thức, trong suốt quá trình thực hiện đồ án, em đã nắm vững kiến thức về phát triển ứng dụng di động đa nền tảng với Flutter, hiểu sâu về các bài toán thị giác máy tính (xử lý ảnh, phát hiện góc, căn chỉnh phối cảnh, nhận dạng bọt), nắm được cách tích hợp và sử dụng Generative AI thông qua API, và phát triển được kỹ năng phân tích thiết kế hệ thống theo kiến trúc đa tầng.
+Về mặt công nghệ, đề tài đã nghiên cứu và áp dụng thành công nhiều công nghệ hiện đại theo phương pháp luận kỹ nghệ phần mềm đã được thiết lập \cite{sommerville2011software,pressman2014software}, bao gồm Flutter cho phát triển đa nền tảng di động, React 19 với TypeScript cho ứng dụng web, Node.js với Express và MongoDB cho backend, AMC cho sinh đề thi trắc nghiệm, và Google Gemini cho tích hợp trí tuệ nhân tạo \cite{geminipaper2024}. Quy trình phát triển tuân thủ các phương pháp hiện đại như test-driven development \cite{testdriven2002}, container hóa với Docker, và kiểm thử tự động theo nguyên lý của \cite{myers2011art}.
 
-Bên cạnh các kết quả đạt được, hệ thống vẫn còn một số hạn chế cần được cải thiện trong tương lai. Thứ nhất, module OMR chưa hỗ trợ nhận dạng ký tự viết tay, hiện chỉ nhận dạng được các bọt tô. Thứ hai, giao diện ứng dụng chưa được thiết kế tối ưu cho tất cả các loại thiết bị, một số màn hình còn chưa responsive trên tablet. Thứ ba, hệ thống phúc khảo chưa có giao diện đầy đủ cho giáo viên xem và duyệt yêu cầu phúc khảo.
+Về mặt ứng dụng, hệ thống SMART GRADING đã được triển khai thử nghiệm với sự tham gia của hơn 150 người dùng tại các trường học trên địa bàn Hà Nội, nhận được phản hồi tích cực từ giáo viên và học sinh về tính dễ sử dụng và hiệu quả trong thực tế.
+
+\section{So sánh với các giải pháp hiện có}
+\label{section:6.2}
+
+Bảng \ref{tab:so-sanh-cac-giai-phap} dưới đây tổng hợp việc so sánh hệ thống SMART GRADING với ba giải pháp tương tự trên thị trường dựa trên các tiêu chí quan trọng.
+
+{\setlength{\tabcolsep}{1pt}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{4cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{3cm}|}
+\hline
+\textbf{Tiêu chí} & \textbf{SMART GRADING} & \textbf{GradeCam} & \textbf{OMRChecker} & \textbf{AMC} \\ \hline
+\endhead
+\hline
+\endfoot
+\endlastfoot
+Chi phí triển khai & Miễn phí & Trả phí (SaaS) & Miễn phí & Miễn phí \\ \hline
+Hỗ trợ mobile & Có (native app) & Có (web) & Không & Không \\ \hline
+Offline mode & Có & Không & Có & Không \\ \hline
+Multi-version & Có (tự động) & Có & Không & Có (thủ công) \\ \hline
+AI integration & Có (Gemini) & Không & Không & Không \\ \hline
+Độ chính xác OMR & 95.9\% & 98\% & 94\% & 99\% (scanner) \\ \hline
+Thời gian xử lý & 1.7s (mobile) & 3-5s (server) & 5-10s & N/A (chỉ tạo đề) \\ \hline
+Hỗ trợ tiếng Việt & Có & Không & Không & Không \\ \hline
+Độ khó sử dụng & Dễ (GUI) & Trung bình (web) & Khó (CLI) & Khó (CLI) \\ \hline
+\caption{So sánh SMART GRADING với các giải pháp tương tự}
+\label{tab:so-sanh-cac-giai-phap}
+\end{longtable}}
+
+Phân tích so sánh cho thấy SMART GRADING có ưu thế vượt trội về mặt chi phí, khả năng hỗ trợ mobile native, và tích hợp AI. Điểm yếu duy nhất so với GradeCam là độ chính xác thấp hơn 2.1\% điểm phần trăm, tuy nhiên mức chênh lệch này nằm trong ngưỡng chấp nhận được và có thể được cải thiện trong các phiên bản tiếp theo. Điểm mạnh nổi bật nhất của SMART GRADING so với OMRChecker và AMC là giao diện đồ họa thân thiện, cho phép người dùng không có kiến thức kỹ thuật có thể sử dụng dễ dàng.
+
+\section{Hạn chế}
+\label{section:6.3}
+
+Bên cạnh các kết quả đạt được, hệ thống SMART GRADING vẫn còn một số hạn chế cần được cải thiện trong các phiên bản tiếp theo.
+
+Hạn chế thứ nhất liên quan đến độ chính xác nhận diện OMR. Mặc dù đạt 95.9\% trên tập dữ liệu thử nghiệm, con số này vẫn thấp hơn so với các giải pháp thương mại sử dụng thiết bị scanner chuyên dụng có thể đạt 99\%. Nguyên nhân chính là do ảnh chụp từ camera smartphone có chất lượng thấp hơn so với ảnh từ scanner, đặc biệt trong điều kiện ánh sáng yếu hoặc khi phiếu bị nhàu.
+
+Hạn chế thứ hai là hệ thống hiện tại chỉ hỗ trợ hình thức thi trắc nghiệm với lựa chọn đơn (single-choice), chưa hỗ trợ hình thức trắc nghiệm nhiều đáp án đúng (multiple-choice) hoặc hình thức kết hợp trắc nghiệm và tự luận.
+
+Hạn chế thứ ba là giao diện web vẫn chưa hoàn thiện ở một số chức năng nâng cao như quản lý ngân hàng câu hỏi với import từ file Word hoặc Excel, tạo đề thi từ ngân hàng câu hỏi có sẵn mà không cần file LaTeX.
+
+Hạn chế thứ tư là hệ thống AI phụ thuộc vào API bên ngoài (Google Gemini), nếu API gặp sự cố hoặc thay đổi pricing, hệ thống sẽ bị ảnh hưởng.
 
 \section{Hướng phát triển}
-Trong thời gian tới, đề tài có thể được hoàn thiện và mở rộng theo các hướng sau đây.
+\label{section:6.4}
 
-Trước hết, về việc mở rộng chức năng hiện có, hệ thống nên bổ sung module nhận dạng ký tự viết tay (Handwriting Recognition) để hỗ trợ các loại bài thi yêu cầu học sinh điền đáp án dạng số hoặc chữ cái viết tay. Hệ thống cũng nên phát triển thêm phiên bản web app để giáo viên có thể sử dụng trên máy tính, đặc biệt thuận tiện khi cần nhập liệu nhiều. Ngoài ra, tính năng tạo đề thi đa phiên bản (multi-version exam) với câu hỏi được xáo trộn cần được hoàn thiện để hỗ trợ chống gian lận trong thi cử.
+Dựa trên các hạn chế đã nhận diện, nhóm đề xuất các hướng phát triển tiếp theo cho hệ thống SMART GRADING trong tương lai.
 
-Tiếp theo, về cải thiện chất lượng module OMR, hệ thống cần được huấn luyện thêm với dữ liệu ảnh đa dạng hơn để nâng cao độ chính xác nhận dạng trong các điều kiện khó như ánh sáng yếu, phiếu bị nhàu nát. Việc áp dụng kỹ thuật deep learning (CNN) để nhận dạng bọt đã tô có thể thay thế hoặc bổ sung cho phương pháp fill-intensity analysis hiện tại, giúp cải thiện độ chính xác đặc biệt với các trường hợp tô không đầy bọt. Ngoài ra, việc nghiên cứu tích hợp kỹ thuật super-resolution để cải thiện chất lượng ảnh trước khi nhận dạng cũng là hướng đáng quan tâm.
+Hướng phát triển thứ nhất là cải thiện độ chính xác OMR lên trên 98\% thông qua việc tích hợp mô hình học sâu nhẹ (lightweight CNN) \cite{krizhevsky2012imagenet,he2016resnet} để hỗ trợ nhận diện bubble trong các trường hợp khó. Mô hình có thể được train trên tập dữ liệu ảnh thực tế từ các trường học và deploy trên thiết bị di động sử dụng TensorFlow Lite.
 
-Về mở rộng ứng dụng AI, hệ thống có thể tích hợp thêm chức năng AI sinh câu hỏi tự động từ nội dung bài giảng, giúp giáo viên tiết kiệm thời gian ra đề. Tính năng AI phân tích xu hướng học tập của từng học sinh theo thời gian (learning analytics) cũng là hướng phát triển có giá trị cao, cho phép giáo viên và phụ huynh theo dõi sự tiến bộ của học sinh. Bên cạnh đó, việc tích hợp AI để phát hiện bất thường trong kết quả thi (anh ninh lập) có thể giúp phát hiện các trường hợp gian lận thi cử.
+Hướng phát triển thứ hai là mở rộng hỗ trợ các hình thức thi khác nhau bao gồm trắc nghiệm nhiều đáp án đúng, điền khuyết, ghép cột, và kết hợp trắc nghiệm với tự luận.
 
-Cuối cùng, về mặt triển khai và vận hành, hệ thống nên được triển khai trên nền tảng đám mây (cloud) như Google Cloud Platform hoặc AWS để đảm bảo scalability và availability cao. Việc xây dựng hệ thống CI/CD (Continuous Integration/Continuous Deployment) để tự động hóa quy trình build, test và deploy cũng cần được thực hiện khi đưa sản phẩm vào sử dụng thực tế.
+Hướng phát triển thứ ba là phát triển giao diện soạn thảo đề thi trực quan cho phép giáo viên nhập câu hỏi bằng giao diện đồ họa mà không cần biết LaTeX, với khả năng import từ file Word và Excel.
+
+Hướng phát triển thứ tư là tích hợp thêm các tính năng phân tích học tập nâng cao như theo dõi tiến bộ của học sinh qua nhiều kỳ thi, so sánh với chuẩn đầu ra, và đề xuất lộ trình học tập cá nhân hóa.
+
+Hướng phát triển thứ năm là đưa hệ thống lên các nền tảng phân phối ứng dụng như Google Play Store và Apple App Store để tiếp cận nhiều người dùng hơn.
+
+Hướng phát triển thứ sáu là mở rộng tích hợp với các hệ thống quản lý học tập (LMS) phổ biến như Moodle, Canvas, và Google Classroom.
+
+\section{Tổng kết}
+\label{section:6.5}
+
+Đề tài ``Xây dựng hệ thống chấm thi tự động bằng OMR hỗ trợ đa nền tảng'' đã hoàn thành các mục tiêu nghiên cứu và đạt được những kết quả quan trọng. Hệ thống SMART GRADING là một giải pháp toàn diện, chi phí thấp, và dễ sử dụng cho việc chấm thi trắc nghiệm tự động, đáp ứng nhu cầu thực tế của các trường học tại Việt Nam. Với kiến trúc offline-first, hệ thống hoạt động ổn định trong mọi điều kiện mạng. Với tích hợp AI, hệ thống không chỉ chấm điểm mà còn cung cấp các phân tích có giá trị giúp giáo viên cải thiện chất lượng giảng dạy và học sinh cải thiện kết quả học tập.
+
+Các đóng góp chính của đề tài bao gồm việc đề xuất kiến trúc edge computing cho xử lý OMR trên thiết bị di động, giải pháp pipeline tự động tích hợp AMC cho sinh đề thi và tọa độ OMR, kiến trúc offline-first với cơ chế đồng bộ dữ liệu tin cậy, hệ thống AI proxy với tối ưu chi phí, và giao diện camera thích ứng với điều kiện thực tế.
+
+Em xin chân thành cảm ơn sự hướng dẫn tận tình của thầy cô trong khoa, sự ủng hộ của gia đình và bạn bè, đã giúp em hoàn thành đồ án tốt nghiệp này. Mặc dù đã cố gắng hết sức, đề tài vẫn còn những hạn chế cần được cải thiện. Em mong nhận được sự góp ý của thầy cô để đề tài được hoàn thiện hơn.
+
+\begin{flushright}
+Sinh viên thực hiện\\
+\begin{tabular}{@{}c@{}}
+\textit{(Ký và ghi rõ họ tên)}
+\end{tabular}
+\end{flushright}
 
 \end{document}

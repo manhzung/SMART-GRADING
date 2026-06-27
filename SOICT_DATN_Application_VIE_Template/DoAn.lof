@@ -1,22 +1,23 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Biểu đồ use case tổng quát của hệ thống SMART GRADING}}{6}{figure.caption.9}%
-\contentsline {figure}{\numberline {2.2}{\ignorespaces Biểu đồ use case phân rã chức năng Quét phiếu thi}}{7}{figure.caption.10}%
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Biểu đồ use case tổng quát của hệ thống SMART GRADING}}{9}{figure.caption.8}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Lưu đồ quy trình xử lý OMR trong hệ thống SMART GRADING}}{25}{figure.caption.9}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Kiến trúc tổng quan của ứng dụng web SMART GRADING}}{27}{figure.caption.10}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Kiến trúc backend của hệ thống SMART GRADING}}{29}{figure.caption.11}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Lưu đồ tích hợp AMC trong hệ thống SMART GRADING}}{30}{figure.caption.12}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Kiến trúc tổng quan hệ thống SMART GRADING với ba thành phần chính}}{32}{figure.caption.13}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Sơ đồ ERD của hệ thống SMART GRADING với các collections chính}}{38}{figure.caption.14}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Mockup một số màn hình chính của ứng dụng di động SMART GRADING}}{39}{figure.caption.15}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Lưu đồ chi tiết luồng chấm điểm trên thiết bị di động}}{42}{figure.caption.16}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Biểu đồ so sánh độ chính xác OMR theo nguồn ảnh và điều kiện chụp}}{45}{figure.caption.17}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Sơ đồ triển khai hệ thống SMART GRADING với các thành phần infrastructure}}{46}{figure.caption.18}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Lưu đồ pipeline tạo đề thi với AMC tích hợp sâu}}{49}{figure.caption.19}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Lưu đồ hệ thống AI proxy với caching và queueing}}{53}{figure.caption.20}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Sơ đồ kiến trúc tổng thể hệ thống SMART GRADING}}{20}{figure.caption.11}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces Biểu đồ gói (Package Diagram) của ứng dụng di động}}{21}{figure.caption.12}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces Biểu đồ trình tự chức năng Quét phiếu thi}}{22}{figure.caption.13}%
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Minh họa thiết kế giao diện các màn hình chính}}{24}{figure.caption.14}%
-\contentsline {figure}{\numberline {4.5}{\ignorespaces Biểu đồ thực thể liên kết của hệ thống SMART GRADING}}{24}{figure.caption.15}%
-\contentsline {figure}{\numberline {4.6}{\ignorespaces Minh họa chức năng quét phiếu thi và kết quả chấm điểm}}{28}{figure.caption.18}%
-\contentsline {figure}{\numberline {4.7}{\ignorespaces Minh họa chức năng phân tích kết quả bằng Generative AI}}{28}{figure.caption.19}%
-\addvspace {10\p@ }
-\addvspace {10\p@ }
-\addvspace {10\p@ }
-\contentsline {figure}{\numberline {A.1}{\ignorespaces Internet vạn vật}}{42}{figure.caption.25}%
-\contentsline {figure}{\numberline {A.2}{\ignorespaces Qui cách đóng quyển đồ án}}{44}{figure.caption.28}%
-\contentsline {figure}{\numberline {A.3}{\ignorespaces Qui cách đóng quyển đồ án}}{44}{figure.caption.29}%
 \addvspace {10\p@ }
 \contentsfinish 
 \contentsfinish 
