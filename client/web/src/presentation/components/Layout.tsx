@@ -31,38 +31,38 @@ const iconSize = 18;
 
 const NAV: Array<{ group: string; items: NavItem[] }> = [
   {
-    group: 'Tổng quan',
+    group: 'Overview',
     items: [
       { to: '/', label: 'Dashboard', roles: ['teacher', 'student'], icon: <LayoutDashboard size={iconSize} />, end: true },
-      { to: '/admin', label: 'Dashboard hệ thống', roles: ['admin'], icon: <LayoutDashboard size={iconSize} /> },
-      { to: '/school', label: 'Dashboard trường', roles: ['school-admin'], icon: <LayoutDashboard size={iconSize} /> },
+      { to: '/admin', label: 'System Dashboard', roles: ['admin'], icon: <LayoutDashboard size={iconSize} /> },
+      { to: '/school', label: 'School Dashboard', roles: ['school-admin'], icon: <LayoutDashboard size={iconSize} /> },
     ],
   },
   {
-    group: 'Quản lý',
+    group: 'Management',
     items: [
-      { to: '/classes', label: 'Lớp học', roles: ['admin', 'school-admin', 'teacher'], icon: <GraduationCap size={iconSize} /> },
-      { to: '/exams', label: 'Đề thi', roles: ['admin', 'school-admin', 'teacher'], icon: <FileText size={iconSize} /> },
-      { to: '/submissions', label: 'Bài nộp', roles: ['admin', 'school-admin', 'teacher'], icon: <Send size={iconSize} /> },
-      { to: '/question-bank', label: 'Ngân hàng câu hỏi', roles: ['admin', 'school-admin', 'teacher'], icon: <Database size={iconSize} /> },
-      { to: '/approval', label: 'Phê duyệt', roles: ['school-admin'], icon: <CheckSquare size={iconSize} /> },
-      { to: '/admin/schools', label: 'Trường học', roles: ['admin'], icon: <Building2 size={iconSize} /> },
-      { to: '/appeals', label: 'Phúc khảo', roles: ['teacher', 'school-admin', 'admin'], icon: <FileQuestion size={iconSize} /> },
+      { to: '/classes', label: 'Classes', roles: ['admin', 'school-admin', 'teacher'], icon: <GraduationCap size={iconSize} /> },
+      { to: '/exams', label: 'Exams', roles: ['admin', 'school-admin', 'teacher'], icon: <FileText size={iconSize} /> },
+      { to: '/submissions', label: 'Submissions', roles: ['admin', 'school-admin', 'teacher'], icon: <Send size={iconSize} /> },
+      { to: '/question-bank', label: 'Question Bank', roles: ['admin', 'school-admin', 'teacher'], icon: <Database size={iconSize} /> },
+      { to: '/approval', label: 'Approval', roles: ['school-admin'], icon: <CheckSquare size={iconSize} /> },
+      { to: '/admin/schools', label: 'Schools', roles: ['admin'], icon: <Building2 size={iconSize} /> },
+      { to: '/appeals', label: 'Appeals', roles: ['teacher', 'school-admin', 'admin'], icon: <FileQuestion size={iconSize} /> },
     ],
   },
   {
-    group: 'Cá nhân',
+    group: 'Personal',
     items: [
-      { to: '/my-scores', label: 'Điểm của tôi', roles: ['student'], icon: <Award size={iconSize} /> },
-      { to: '/my-appeals', label: 'Phúc khảo của tôi', roles: ['student'], icon: <FileQuestion size={iconSize} /> },
+      { to: '/my-scores', label: 'My Scores', roles: ['student'], icon: <Award size={iconSize} /> },
+      { to: '/my-appeals', label: 'My Appeals', roles: ['student'], icon: <FileQuestion size={iconSize} /> },
     ],
   },
   {
-    group: 'Khác',
+    group: 'Other',
     items: [
-      { to: '/notifications', label: 'Thông báo', roles: ['admin', 'school-admin', 'teacher', 'student'], icon: <Bell size={iconSize} /> },
-      { to: '/help', label: 'Trợ giúp', roles: ['admin', 'school-admin', 'teacher', 'student'], icon: <HelpCircle size={iconSize} /> },
-      { to: '/settings', label: 'Cài đặt', roles: ['admin', 'school-admin', 'teacher', 'student'], icon: <Settings size={iconSize} /> },
+      { to: '/notifications', label: 'Notifications', roles: ['admin', 'school-admin', 'teacher', 'student'], icon: <Bell size={iconSize} /> },
+      { to: '/help', label: 'Help', roles: ['admin', 'school-admin', 'teacher', 'student'], icon: <HelpCircle size={iconSize} /> },
+      { to: '/settings', label: 'Settings', roles: ['admin', 'school-admin', 'teacher', 'student'], icon: <Settings size={iconSize} /> },
     ],
   },
 ];
@@ -112,7 +112,7 @@ export default function Layout() {
           </div>
           <div>
             <h1 className={styles.brandTitle}>Smart Grading</h1>
-            <p className={styles.brandSubtitle}>Chấm thi thông minh</p>
+            <p className={styles.brandSubtitle}>Smart Grading System</p>
           </div>
         </div>
         <nav className={styles.nav}>
@@ -150,11 +150,11 @@ export default function Layout() {
               }
             >
               <User size={18} />
-              <span>Hồ sơ</span>
+              <span>Profile</span>
             </NavLink>
             <button className={styles.logoutBtn} onClick={handleLogout}>
               <LogOut size={18} />
-              <span>Đăng xuất</span>
+              <span>Logout</span>
             </button>
           </div>
         </nav>
@@ -164,8 +164,8 @@ export default function Layout() {
           <div className={styles.headerRight}>
             <span className={styles.profileRole}>{profileRoleLabel}</span>
             <div className={styles.headerDivider} />
-            <button className={styles.headerIconBtn} aria-label="Thông báo"><Bell size={18} /></button>
-            <button className={styles.headerIconBtn} aria-label="Trợ giúp"><HelpCircle size={18} /></button>
+            <button className={styles.headerIconBtn} aria-label="Notifications"><Bell size={18} /></button>
+            <button className={styles.headerIconBtn} aria-label="Help"><HelpCircle size={18} /></button>
           </div>
         </header>
         <main className={styles.main}>

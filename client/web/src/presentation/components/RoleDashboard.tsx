@@ -40,7 +40,7 @@ function Kpi({ label, value, hint, icon, colorClass }: KpiProps) {
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleDateString('vi-VN');
+    return new Date(iso).toLocaleDateString('en-US');
   } catch {
     return '—';
   }
