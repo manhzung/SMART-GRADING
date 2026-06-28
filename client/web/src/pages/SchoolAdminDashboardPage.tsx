@@ -11,5 +11,6 @@ export default function SchoolAdminDashboardPage() {
     if (user && user.role !== 'school-admin') navigate('/', { replace: true });
   }, [user, navigate]);
 
+  if (!user) return null;
   return <RoleDashboard />;
 }

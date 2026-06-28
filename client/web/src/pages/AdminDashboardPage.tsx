@@ -11,5 +11,6 @@ export default function AdminDashboardPage() {
     if (user && user.role !== 'admin') navigate('/', { replace: true });
   }, [user, navigate]);
 
+  if (!user) return null;
   return <RoleDashboard />;
 }
