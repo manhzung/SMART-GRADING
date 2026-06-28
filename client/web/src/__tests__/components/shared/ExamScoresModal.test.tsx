@@ -2,12 +2,35 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Mock xlsx before importing the component
-vi.mock('xlsx', () => ({
-  default: { utils: { book_new: vi.fn(), aoa_to_sheet: vi.fn() }, writeFile: vi.fn() },
-  utils: { book_new: vi.fn(), aoa_to_sheet: vi.fn() },
-  writeFile: vi.fn(),
+// Mock sonner (used by handleExport)
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+
+// Mock xlsx before importing the component — vi.hoisted runs before hoisting
+const { mockWriteFile } = vi.hoisted(() => ({
+  mockWriteFile: vi.fn(),
 }));
+vi.mock('xlsx', () => {
+  return {
+    __esModule: true,
+    default: Object.assign(
+      vi.fn(() => ({})),
+      {
+        utils: {
+          book_new: vi.fn(() => ({})),
+          aoa_to_sheet: vi.fn(() => ({})),
+          book_append_sheet: vi.fn(),
+        },
+        writeFile: mockWriteFile,
+      },
+    ),
+    utils: {
+      book_new: vi.fn(() => ({})),
+      aoa_to_sheet: vi.fn(() => ({})),
+      book_append_sheet: vi.fn(),
+    },
+    writeFile: mockWriteFile,
+  };
+});
 
 // Mock core/api used by the component for class + submissions fetch
 vi.mock('../../../core/api', () => ({
@@ -77,5 +100,79 @@ describe('ExamScoresModal — skeleton', () => {
     renderModal({ onClose });
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+const mockSubmission = {
+  _id: 'sub1',
+  examId: 'exam1',
+  studentId: { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+  totalScore: 8,
+  maxScore: 10,
+  status: 'completed' as const,
+  submittedAt: '2026-06-28T07:32:00.000Z',
+};
+
+describe('ExamScoresModal — export', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('enables export button when submissions are loaded', async () => {
+    (apiService.get as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
+      if (String(url).includes('/submissions/exam/')) {
+        return { results: [mockSubmission] };
+      }
+      if (String(url).includes('/classes/')) {
+        return { _id: 'class1', name: 'Lớp 10A1', studentIds: ['s1'] };
+      }
+      return null;
+    });
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <ExamScoresModal
+          open={true}
+          onClose={vi.fn()}
+          examId="exam1"
+          examTitle="KT 45p"
+          classId="class1"
+          className="Lớp 10A1"
+        />
+      </QueryClientProvider>,
+    );
+    await screen.findByTestId('scores-table');
+    expect(screen.getByTestId('export-btn')).not.toBeDisabled();
+  });
+
+  it('calls xlsx.writeFile when export button is clicked', async () => {
+    (apiService.get as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
+      if (String(url).includes('/submissions/exam/')) {
+        return { results: [mockSubmission] };
+      }
+      if (String(url).includes('/classes/')) {
+        return { _id: 'class1', name: 'Lớp 10A1', studentIds: ['s1'] };
+      }
+      return null;
+    });
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <ExamScoresModal
+          open={true}
+          onClose={vi.fn()}
+          examId="exam1"
+          examTitle="KT 45p"
+          classId="class1"
+          className="Lớp 10A1"
+        />
+      </QueryClientProvider>,
+    );
+    await screen.findByTestId('scores-table');
+    fireEvent.click(screen.getByTestId('export-btn'));
+    expect(mockWriteFile).toHaveBeenCalledTimes(1);
+    const args = mockWriteFile.mock.calls[0];
+    // Filename pattern: Diem_KT_45p_Lop_10A1_<date>.xlsx
+    expect(String(args[1])).toMatch(/^Diem_.+_.+_\d{8}\.xlsx$/);
   });
 });

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { toast } from 'sonner';
 import { apiService } from '../../../core/api';
 import styles from './ExamScoresModal.module.css';
 import {
@@ -53,6 +55,12 @@ const STATUS_BADGE: Record<string, { label: string; bg: string; color: string; b
   pending: { label: 'Đang xử lý', bg: '#fefce8', color: '#a16207', border: '#fde047' },
 };
 
+function sanitizeFilenamePart(s: string): string {
+  // Replace any non-alphanumeric (allow Vietnamese letters) with _, collapse repeats
+  const stripped = s.normalize('NFC').replace(/[^\p{L}\p{N}]+/gu, '_');
+  return stripped.replace(/^_+|_+$/g, '').slice(0, 60) || 'item';
+}
+
 export function ExamScoresModal(props: ExamScoresModalProps) {
   const { open, onClose, examId, examTitle, examSubject, examDate, classId, className } = props;
 
@@ -94,6 +102,32 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
     ? classData!.studentIds.map((s) => (typeof s === 'string' ? s : s._id))
     : [];
 
+  const handleExport = () => {
+    if (!submissions.length) return;
+    const header = ['STT', 'Họ tên', 'Mã học sinh', 'Điểm', 'Xếp loại', 'Trạng thái', 'Ngày nộp'];
+    const exportRows: (string | number)[][] = submissions.map((s, idx) => {
+      const student = typeof s.studentId === 'string' ? null : s.studentId;
+      const badge = STATUS_BADGE[s.status] ?? STATUS_BADGE.pending;
+      return [
+        idx + 1,
+        student?.name ?? '—',
+        student?.studentCode ?? '—',
+        formatScore(s.totalScore, s.maxScore),
+        getGradeLabel(s.totalScore, s.maxScore),
+        badge.label,
+        formatDateTime(s.submittedAt),
+      ];
+    });
+    const ws = XLSX.utils.aoa_to_sheet([header, ...exportRows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Điểm');
+    const today = new Date();
+    const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    const filename = `Diem_${sanitizeFilenamePart(examTitle)}_${sanitizeFilenamePart(className ?? '')}_${ymd}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    toast.success('Đã xuất danh sách điểm');
+  };
+
   return (
     <div
       className={styles.overlay}
@@ -132,7 +166,12 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
               ? 'Đang tải...'
               : `${submissions.length}${rosterIds.length ? ` / ${rosterIds.length}` : ''} học sinh đã nộp`}
           </span>
-          <button className={styles.exportBtn} disabled data-testid="export-btn">
+          <button
+            className={styles.exportBtn}
+            onClick={handleExport}
+            disabled={isLoading || submissions.length === 0}
+            data-testid="export-btn"
+          >
             Xuất Excel
           </button>
         </div>
