@@ -1,9 +1,31 @@
 import { create } from 'zustand';
-import schoolManagementService, {
-  PendingSchool,
-  SchoolAdmin,
-} from '../../services/schoolManagement.service';
+import schoolManagementService from '../../services/schoolManagement.service';
 import type { School } from '../../types';
+
+interface PendingSchool {
+  id: string;
+  _id: string;
+  name: string;
+  code: string;
+  email?: string;
+  phone?: string;
+  address?: {
+    street?: string;
+    ward?: string;
+    district?: string;
+    city?: string;
+  };
+  createdAt: string;
+}
+
+interface SchoolAdmin {
+  id: string;
+  _id: string;
+  name: string;
+  email: string;
+  isActive: boolean;
+  createdAt: string;
+}
 
 interface SchoolManagementState {
   // State

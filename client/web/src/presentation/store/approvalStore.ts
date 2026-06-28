@@ -1,5 +1,32 @@
 import { create } from 'zustand';
-import approvalService, { PendingQuestion, PendingTeacher } from '../../services/approval.service';
+import approvalService from '../../services/approval.service';
+
+interface PendingQuestion {
+  id: string;
+  _id: string;
+  content: string;
+  type: 'single_choice' | 'multiple_choice';
+  difficulty: 'easy' | 'medium' | 'hard';
+  createdBy?: { _id: string; name: string };
+  createdAt: string;
+  options?: Array<{
+    id: string;
+    content: string;
+    isCorrect?: boolean;
+  }>;
+  score?: number;
+  tags?: string[];
+}
+
+interface PendingTeacher {
+  id: string;
+  _id: string;
+  name: string;
+  email: string;
+  registeredSchoolId?: string;
+  createdAt: string;
+  role?: string;
+}
 
 interface ApprovalState {
   // State
