@@ -1,185 +1,132 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  GraduationCap,
-  Database,
-  FileText,
-  BarChart3,
-  Settings,
-  HelpCircle,
-  LogOut,
-  MessageSquare,
-  ClipboardList,
-  Scale,
-  Building2,
-  Users,
-} from 'lucide-react';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { LogOut, Bell, HelpCircle } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import NotificationPanel from './NotificationPanel';
 import styles from './Layout.module.css';
 
-// Admin nav items — only visible to admin/school-admin
-const adminNavItems = [
-  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'school-admin'], group: 'admin' },
-  { path: '/admin/schools', icon: Building2, label: 'Schools', roles: ['admin'], group: 'admin' },
-  { path: '/admin/users', icon: Users, label: 'Users', roles: ['admin', 'school-admin'], group: 'admin' },
-];
-
-const allNavItems = [
-  ...adminNavItems,
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'teacher'] },
-  { path: '/classes', icon: GraduationCap, label: 'Classes', roles: ['admin', 'teacher'] },
-  { path: '/question-bank', icon: Database, label: 'Question Bank', roles: ['admin', 'teacher'] },
-  { path: '/exams', icon: FileText, label: 'Exams', roles: ['admin', 'teacher'] },
-  { path: '/appeals', icon: MessageSquare, label: 'Appeals', roles: ['admin', 'teacher'] },
-  { path: '/analytics', icon: BarChart3, label: 'Analytics', roles: ['admin', 'teacher'] },
-  { path: '/my-scores', icon: ClipboardList, label: 'Điểm của tôi', roles: ['student'] },
-  { path: '/my-appeals', icon: Scale, label: 'Phúc khảo', roles: ['student'] },
-  { path: '/settings', icon: Settings, label: 'Settings', roles: ['admin', 'teacher', 'student'] },
-];
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'ADMINISTRATOR',
-  teacher: 'PROFESSOR',
-  student: 'STUDENT',
-  parent: 'PARENT',
+type Role = 'admin' | 'school-admin' | 'teacher' | 'student';
+type NavItem = {
+  to: string;
+  label: string;
+  roles: Role[];
+  end?: boolean;
 };
 
+const NAV: Array<{ group: string; items: NavItem[] }> = [
+  {
+    group: 'Tổng quan',
+    items: [
+      { to: '/', label: 'Dashboard', roles: ['teacher', 'student'], end: true },
+      { to: '/admin', label: 'Dashboard hệ thống', roles: ['admin'] },
+      { to: '/school', label: 'Dashboard trường', roles: ['school-admin'] },
+    ],
+  },
+  {
+    group: 'Quản lý',
+    items: [
+      { to: '/classes', label: 'Lớp học', roles: ['admin', 'school-admin', 'teacher'] },
+      { to: '/exams', label: 'Đề thi', roles: ['admin', 'school-admin', 'teacher'] },
+      { to: '/submissions', label: 'Bài nộp', roles: ['admin', 'school-admin', 'teacher'] },
+      { to: '/question-bank', label: 'Ngân hàng câu hỏi', roles: ['admin', 'school-admin', 'teacher'] },
+    ],
+  },
+  {
+    group: 'Cá nhân',
+    items: [
+      { to: '/my-scores', label: 'Điểm của tôi', roles: ['student'] },
+      { to: '/my-appeals', label: 'Phúc khảo của tôi', roles: ['student'] },
+      { to: '/appeals', label: 'Phúc khảo', roles: ['teacher', 'school-admin', 'admin'] },
+      { to: '/analytics', label: 'Thống kê', roles: ['admin', 'school-admin', 'teacher'] },
+      { to: '/scan', label: 'Quét OMR', roles: ['teacher', 'school-admin'] },
+    ],
+  },
+  {
+    group: 'Khác',
+    items: [
+      { to: '/notifications', label: 'Thông báo', roles: ['admin', 'school-admin', 'teacher', 'student'] },
+      { to: '/help', label: 'Trợ giúp', roles: ['admin', 'school-admin', 'teacher', 'student'] },
+      { to: '/settings', label: 'Cài đặt', roles: ['admin', 'school-admin', 'teacher', 'student'] },
+    ],
+  },
+];
+
+function activeClass(role: string | undefined) {
+  switch (role) {
+    case 'admin': return styles.activeAdmin;
+    case 'school-admin': return styles.activeSchool;
+    case 'teacher': return styles.activeTeacher;
+    default: return '';
+  }
+}
+
 export default function Layout() {
-  const location = useLocation();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
-  const user = useAuthStore((state) => state.user);
-
-  const userRole = (user?.role as string) || 'teacher';
-  const navItems = allNavItems.filter((item) => item.roles.includes(userRole));
-
-  const displayName = user?.name || (userRole === 'student' ? 'Học sinh' : 'Dr. Sarah Miller');
-  const displayRole = ROLE_LABELS[userRole] || 'USER';
-  const avatarUrl = user?.avatarUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150';
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
+
+  const role: Role = (user?.role as Role) ?? 'student';
+  const visibleGroups = NAV
+    .map((g) => ({ ...g, items: g.items.filter((i) => i.roles.includes(role)) }))
+    .filter((g) => g.items.length > 0);
+
+  const profileRoleLabel =
+    role === 'admin' ? 'SUPER ADMIN'
+    : role === 'school-admin' ? 'SCHOOL ADMIN'
+    : role === 'teacher' ? 'TEACHER'
+    : 'STUDENT';
 
   return (
     <div className={styles.layout}>
-      {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <h1 className={styles.brandTitle}>EduGrade Pro</h1>
-          <p className={styles.brandSubtitle}>Academic Workspace</p>
+          <h1 className={styles.brandTitle}>Smart Grading</h1>
+          <p className={styles.brandSubtitle}>Nền tảng chấm thi thông minh</p>
         </div>
-        
         <nav className={styles.nav}>
-          {(() => {
-            const adminItems = navItems.filter((item) => (item as any).group === 'admin');
-            const mainItems = navItems.filter((item) => !(item as any).group);
-            if (adminItems.length === 0) {
-              return mainItems.map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                  >
-                    <item.icon size={18} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              });
-            }
-            return (
-              <>
-                <div className={styles.navGroupLabel}>Admin</div>
-                {adminItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                    >
-                      <item.icon size={18} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-                <div className={styles.navDivider} />
-                {mainItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                    >
-                      <item.icon size={18} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </>
-            );
-          })()}
+          {visibleGroups.map((g, gi) => (
+            <div key={g.group} className={styles.sidebarSection}>
+              {gi > 0 && <div className={styles.navDivider} />}
+              <div className={styles.navGroupLabel}>{g.group}</div>
+              {g.items.map((it) => (
+                <NavLink
+                  key={it.to}
+                  to={it.to}
+                  end={it.end}
+                  className={({ isActive }) =>
+                    `${styles.navItem} ${isActive ? `${styles.active} ${activeClass(role)}` : ''}`
+                  }
+                >
+                  {it.label}
+                </NavLink>
+              ))}
+            </div>
+          ))}
+          <div className={styles.sidebarBottom}>
+            <NavLink
+              to="/profile"
+              className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}
+            >
+              Hồ sơ
+            </NavLink>
+            <button className={styles.logoutBtn} onClick={handleLogout}>
+              <LogOut size={16} /> Đăng xuất
+            </button>
+          </div>
         </nav>
-
-        <div className={styles.sidebarBottom}>
-          <Link
-            to="/help"
-            className={`${styles.navItem} ${
-              location.pathname === '/help' ? styles.active : ''
-            }`}
-          >
-            <HelpCircle size={18} />
-            <span>Help Center</span>
-          </Link>
-          
-          <button className={styles.logoutBtn} onClick={handleLogout}>
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
-        </div>
       </aside>
-
-      {/* Right Content View */}
       <div className={styles.viewport}>
-        {/* Top Header */}
         <header className={styles.topHeader}>
-          {/* Right menu icons and avatar */}
           <div className={styles.headerRight}>
-            <div className={styles.headerIcons}>
-              <NotificationPanel />
-              <button className={styles.headerIconBtn} onClick={() => navigate('/settings')}>
-                <Settings size={18} />
-              </button>
-              <button className={styles.headerIconBtn} onClick={() => navigate('/help')}>
-                <HelpCircle size={18} />
-              </button>
-            </div>
-            
+            <span className={styles.profileRole}>{profileRoleLabel}</span>
             <div className={styles.headerDivider} />
-
-            <div className={styles.profileContainer}>
-              <div className={styles.profileInfo}>
-                <span className={styles.profileName}>{displayName}</span>
-                <span className={styles.profileRole}>{displayRole}</span>
-              </div>
-              <img 
-                src={avatarUrl} 
-                alt={displayName} 
-                className={styles.avatar}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName);
-                }}
-              />
-            </div>
+            <button className={styles.headerIconBtn} aria-label="Thông báo"><Bell size={18} /></button>
+            <button className={styles.headerIconBtn} aria-label="Trợ giúp"><HelpCircle size={18} /></button>
           </div>
         </header>
-
-        {/* Content body */}
         <main className={styles.main}>
           <Outlet />
         </main>

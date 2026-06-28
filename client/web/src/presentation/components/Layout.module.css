@@ -249,6 +249,12 @@
   }
 }
 
+.sidebarSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
 .navGroupLabel {
   font-size: 10px;
   font-weight: 700;
@@ -258,9 +264,11 @@
   padding: 12px 16px 4px;
   margin-top: 8px;
 }
-
 .navDivider {
   height: 1px;
-  background: #374151;
+  background: #e5e7eb;
   margin: 8px 12px;
 }
+.activeAdmin { border-left-color: #0b2240; }
+.activeSchool { border-left-color: #2563eb; }
+.activeTeacher { border-left-color: #059669; }
