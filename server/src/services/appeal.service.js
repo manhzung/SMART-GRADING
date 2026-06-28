@@ -109,7 +109,7 @@ class AppealService {
   }
 
   async getByStudent(studentId, query = {}) {
-    const { examId, status, ...rest } = query;
+    const { examId, status, page: _p, limit: _l, startDate, endDate, ...rest } = query;
     const { page, limit, skip } = parsePagination(query);
     const filter = { studentId, ...rest };
     if (examId) filter.examId = examId;
@@ -135,7 +135,7 @@ class AppealService {
   }
 
   async getMy(studentId, query = {}) {
-    const { submissionId, examId, status, ...rest } = query;
+    const { submissionId, examId, status, page: _p, limit: _l, startDate, endDate, ...rest } = query;
     const { page, limit, skip } = parsePagination(query);
     const filter = { studentId: new mongoose.Types.ObjectId(studentId), ...rest };
     if (submissionId) filter.submissionId = submissionId;
@@ -157,7 +157,7 @@ class AppealService {
   }
 
   async getByExam(examId, query = {}) {
-    const { status, ...rest } = query;
+    const { status, page: _p, limit: _l, ...rest } = query;
     const { page, limit, skip } = parsePagination(query);
     const filter = { examId, ...rest };
     if (status) filter.status = status;
