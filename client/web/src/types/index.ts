@@ -45,6 +45,10 @@ export interface User {
   classIds?: string[] | Class[];
   createdAt: string;
   updatedAt?: string;
+  // ── Registration Status (for teacher approval workflow) ─────────────────────
+  registrationStatus?: 'pending' | 'approved' | 'rejected';
+  rejectedReason?: string | null;
+  registeredSchoolId?: string | null;
 }
 
 export interface AuthTokens {
@@ -76,7 +80,12 @@ export interface School {
   email?: string;
   logo?: string;
   principalName?: string;
+  code?: string;
   createdAt: string;
+  // ── Registration Status (for school approval workflow) ─────────────────────
+  registrationStatus?: 'pending' | 'approved' | 'rejected';
+  approvedBy?: string;
+  rejectedReason?: string | null;
 }
 
 export interface Subject {
