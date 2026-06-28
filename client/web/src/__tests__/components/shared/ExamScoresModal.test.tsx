@@ -176,3 +176,106 @@ describe('ExamScoresModal — export', () => {
     expect(String(args[1])).toMatch(/^Diem_.+_.+_\d{8}\.xlsx$/);
   });
 });
+
+describe('ExamScoresModal — Chưa nộp roster merge', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('shows "Chưa nộp" rows for students in class but not in submissions', async () => {
+    (apiService.get as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
+      if (String(url).includes('/submissions/exam/')) {
+        // only s1 submitted
+        return {
+          results: [
+            {
+              _id: 'sub1',
+              examId: 'exam1',
+              studentId: { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+              totalScore: 8,
+              maxScore: 10,
+              status: 'completed',
+              submittedAt: '2026-06-28T07:32:00.000Z',
+            },
+          ],
+        };
+      }
+      if (String(url).includes('/classes/')) {
+        return {
+          _id: 'class1',
+          name: 'Lớp 10A1',
+          // s1 (submitted) and s2 (not submitted)
+          studentIds: [
+            { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+            { _id: 's2', name: 'Tran Thi B', studentCode: 'HS002', email: 'b@s' },
+          ],
+        };
+      }
+      return null;
+    });
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <ExamScoresModal
+          open={true}
+          onClose={vi.fn()}
+          examId="exam1"
+          examTitle="KT 45p"
+          classId="class1"
+          className="Lớp 10A1"
+        />
+      </QueryClientProvider>,
+    );
+    await screen.findByTestId('scores-table');
+    // s2 should appear as a "Chưa nộp" row
+    expect(screen.getByText('Tran Thi B')).toBeInTheDocument();
+    // At least one "Chưa nộp" badge should be present
+    expect(screen.getAllByText('Chưa nộp').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('does not duplicate a student who is both in roster and in submissions', async () => {
+    (apiService.get as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
+      if (String(url).includes('/submissions/exam/')) {
+        return {
+          results: [
+            {
+              _id: 'sub1',
+              examId: 'exam1',
+              studentId: { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+              totalScore: 8,
+              maxScore: 10,
+              status: 'completed',
+              submittedAt: '2026-06-28T07:32:00.000Z',
+            },
+          ],
+        };
+      }
+      if (String(url).includes('/classes/')) {
+        return {
+          _id: 'class1',
+          name: 'Lớp 10A1',
+          studentIds: [
+            { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+          ],
+        };
+      }
+      return null;
+    });
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <ExamScoresModal
+          open={true}
+          onClose={vi.fn()}
+          examId="exam1"
+          examTitle="KT 45p"
+          classId="class1"
+          className="Lớp 10A1"
+        />
+      </QueryClientProvider>,
+    );
+    await screen.findByTestId('scores-table');
+    // s1 should appear only once
+    expect(screen.getAllByText('Nguyen Van A').length).toBe(1);
+  });
+});

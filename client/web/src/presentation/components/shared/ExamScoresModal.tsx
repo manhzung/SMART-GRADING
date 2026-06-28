@@ -98,6 +98,45 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
   const isLoading = submissionsQuery.isLoading || submissionsQuery.isFetching;
   const submissions: ExamScoresModalSubmission[] = submissionsQuery.data ?? [];
   const classData = classQuery.data;
+
+  interface DisplayRow {
+    key: string;
+    student: ExamScoresModalStudent | null;
+    submission: ExamScoresModalSubmission | null;
+  }
+
+  const rows: DisplayRow[] = (() => {
+    const roster: ExamScoresModalStudent[] = Array.isArray(classData?.studentIds)
+      ? (classData!.studentIds as Array<ExamScoresModalStudent | string>).map((s) =>
+          typeof s === 'string' ? { _id: s, name: '', email: '' } : s,
+        )
+      : [];
+
+    const submittedIds = new Set(
+      submissions
+        .map((s) => (typeof s.studentId === 'string' ? s.studentId : s.studentId._id))
+        .filter(Boolean),
+    );
+
+    const out: DisplayRow[] = [];
+
+    // Submitted students first
+    for (const sub of submissions) {
+      const student = typeof sub.studentId === 'string' ? null : sub.studentId;
+      const key = student?._id ?? (typeof sub.studentId === 'string' ? sub.studentId : sub._id);
+      out.push({ key: `s-${key}`, student, submission: sub });
+    }
+
+    // Then roster students who didn't submit
+    for (const r of roster) {
+      if (!submittedIds.has(r._id)) {
+        out.push({ key: `m-${r._id}`, student: r, submission: null });
+      }
+    }
+
+    return out;
+  })();
+
   const rosterIds: string[] = Array.isArray(classData?.studentIds)
     ? classData!.studentIds.map((s) => (typeof s === 'string' ? s : s._id))
     : [];
@@ -200,15 +239,35 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
                 </tr>
               </thead>
               <tbody>
-                {submissions.map((s, idx) => {
-                  const student =
-                    typeof s.studentId === 'string' ? null : s.studentId;
+                {rows.map((row, idx) => {
+                  if (!row.submission) {
+                    // Not submitted row
+                    return (
+                      <tr key={row.key} data-testid="row-not-submitted">
+                        <td>{idx + 1}</td>
+                        <td>{row.student?.name || '—'}</td>
+                        <td>{row.student?.studentCode || '—'}</td>
+                        <td>—</td>
+                        <td>
+                          <span
+                            className={styles.badge}
+                            style={{ backgroundColor: '#f9fafb', color: '#6b7280', borderColor: '#e5e7eb' }}
+                          >
+                            Chưa nộp
+                          </span>
+                        </td>
+                        <td>—</td>
+                        <td>—</td>
+                      </tr>
+                    );
+                  }
+                  const s = row.submission;
                   const badge = STATUS_BADGE[s.status] ?? STATUS_BADGE.pending;
                   return (
-                    <tr key={s._id}>
+                    <tr key={row.key} data-testid="row-submitted">
                       <td>{idx + 1}</td>
-                      <td>{student?.name ?? '—'}</td>
-                      <td>{student?.studentCode ?? '—'}</td>
+                      <td>{row.student?.name ?? '—'}</td>
+                      <td>{row.student?.studentCode ?? '—'}</td>
                       <td>{formatScore(s.totalScore, s.maxScore)}</td>
                       <td>
                         <span
