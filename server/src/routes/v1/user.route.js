@@ -21,6 +21,34 @@ router
   .route('/:userId/change-password')
   .post(auth(), userController.changePassword);
 
+// ── Teacher Approval Routes ─────────────────────────────────────────────────────
+
+router
+  .route('/teachers/pending')
+  .get(auth('getUsers'), userController.getPendingTeachers);
+
+router
+  .route('/:userId/approve')
+  .post(auth('manageUsers'), userController.approveTeacher);
+
+router
+  .route('/:userId/reject')
+  .post(auth('manageUsers'), userController.rejectTeacher);
+
+// ── School Admin Management Routes ───────────────────────────────────────────────
+
+router
+  .route('/school-admin/:schoolId')
+  .get(auth('getUsers'), userController.getSchoolAdmins);
+
+router
+  .route('/school-admin/:schoolId')
+  .post(auth('manageUsers'), userController.addSchoolAdmin);
+
+router
+  .route('/school-admin/:schoolId/:userId')
+  .delete(auth('manageUsers'), userController.removeSchoolAdmin);
+
 module.exports = router;
 
 /**

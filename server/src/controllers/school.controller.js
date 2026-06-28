@@ -1,6 +1,8 @@
 const httpStatus = require('http-status');
 const schoolService = require('../services/school.service');
 const catchAsync = require('../utils/catchAsync');
+const ApiError = require('../utils/ApiError');
+const pick = require('../utils/pick');
 
 const create = catchAsync(async (req, res) => {
   const school = await schoolService.create(req.body);
@@ -51,6 +53,34 @@ const getAvailableTeachers = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+// ── School Approval Controllers ─────────────────────────────────────────────────
+
+const getPendingSchools = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền xem trường chờ duyệt');
+  }
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const result = await schoolService.getPendingSchools(options);
+  res.send(result);
+});
+
+const approveSchool = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền duyệt trường');
+  }
+  const school = await schoolService.approveSchool(req.params.id, req.user.id);
+  res.send(school);
+});
+
+const rejectSchool = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền từ chối trường');
+  }
+  const { reason } = req.body || {};
+  const school = await schoolService.rejectSchool(req.params.id, reason, req.user.id);
+  res.send(school);
+});
+
 module.exports = {
   create,
   getAll,
@@ -59,4 +89,7 @@ module.exports = {
   remove,
   getGradeDistribution,
   getAvailableTeachers,
+  getPendingSchools,
+  approveSchool,
+  rejectSchool,
 };

@@ -41,4 +41,8 @@ router
   .route('/:id/approve')
   .post(auth('manageQuestions'), validate(questionValidation.getQuestion), questionController.approve);
 
+router
+  .route('/:id/reject')
+  .post(auth('manageQuestions'), validate(questionValidation.getQuestion), questionController.reject);
+
 module.exports = router;

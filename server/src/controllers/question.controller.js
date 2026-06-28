@@ -44,6 +44,18 @@ const approve = catchAsync(async (req, res) => {
   res.send(question);
 });
 
+const reject = catchAsync(async (req, res) => {
+  const { reason } = req.body || {};
+  const question = await questionService.reject(
+    req.params.id,
+    req.user.id,
+    req.user.schoolId,
+    req.user.role,
+    reason
+  );
+  res.send(question);
+});
+
 const remove = catchAsync(async (req, res) => {
   const question = await questionService.delete(req.params.id, req.user);
   if (!question) {
@@ -232,6 +244,7 @@ module.exports = {
   getById,
   update,
   approve,
+  reject,
   remove,
   generate,
   generateSimilar,

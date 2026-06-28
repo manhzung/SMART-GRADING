@@ -25,4 +25,18 @@ router
   .route('/:schoolId/available-teachers')
   .get(auth('manageClasses'), validate(schoolValidation.getAvailableTeachers), schoolController.getAvailableTeachers);
 
+// ── School Approval Routes ───────────────────────────────────────────────────────
+
+router
+  .route('/pending')
+  .get(auth('manageSchools'), schoolController.getPendingSchools);
+
+router
+  .route('/:id/approve')
+  .post(auth('manageSchools'), schoolController.approveSchool);
+
+router
+  .route('/:id/reject')
+  .post(auth('manageSchools'), schoolController.rejectSchool);
+
 module.exports = router;

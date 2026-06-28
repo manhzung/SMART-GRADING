@@ -49,6 +49,62 @@ const changePassword = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+// ── Teacher Approval Controllers ───────────────────────────────────────────────
+
+const getPendingTeachers = catchAsync(async (req, res) => {
+  if (req.user.role !== 'school-admin' && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Bạn không có quyền thực hiện thao tác này');
+  }
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const result = await userService.getPendingTeachers(req.user.schoolId, options);
+  res.send(result);
+});
+
+const approveTeacher = catchAsync(async (req, res) => {
+  if (req.user.role !== 'school-admin' && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Bạn không có quyền thực hiện thao tác này');
+  }
+  const user = await userService.approveTeacher(req.params.userId, req.user.schoolId);
+  res.send(user);
+});
+
+const rejectTeacher = catchAsync(async (req, res) => {
+  if (req.user.role !== 'school-admin' && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Bạn không có quyền thực hiện thao tác này');
+  }
+  const { reason } = req.body || {};
+  const user = await userService.rejectTeacher(req.params.userId, req.user.schoolId, reason);
+  res.send(user);
+});
+
+// ── School Admin Management Controllers ────────────────────────────────────────
+
+const getSchoolAdmins = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền xem danh sách school-admin');
+  }
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const result = await userService.getSchoolAdmins(req.params.schoolId, options);
+  res.send(result);
+});
+
+const addSchoolAdmin = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền thêm school-admin');
+  }
+  const { userId } = req.body;
+  const user = await userService.addSchoolAdmin(req.params.schoolId, userId);
+  res.send(user);
+});
+
+const removeSchoolAdmin = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền xóa school-admin');
+  }
+  await userService.removeSchoolAdmin(req.params.schoolId, req.params.userId);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
 module.exports = {
   createUser,
   getUsers,
@@ -56,4 +112,10 @@ module.exports = {
   updateUser,
   deleteUser,
   changePassword,
+  getPendingTeachers,
+  approveTeacher,
+  rejectTeacher,
+  getSchoolAdmins,
+  addSchoolAdmin,
+  removeSchoolAdmin,
 };
