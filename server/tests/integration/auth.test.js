@@ -46,7 +46,7 @@ describe('Auth routes', () => {
         email: newUser.email,
         role: 'teacher',
         isEmailVerified: false,
-        schoolId: newUser.schoolId,
+        schoolId: null,
       });
 
       const dbUser = await User.findById(res.body.user.id);
@@ -56,7 +56,10 @@ describe('Auth routes', () => {
       expect(dbUser.email).toBe(newUser.email);
       expect(dbUser.role).toBe('teacher');
       expect(dbUser.isEmailVerified).toBe(false);
-      expect(dbUser.schoolId.toString()).toBe(newUser.schoolId);
+      expect(dbUser.registrationStatus).toBe('pending');
+      expect(dbUser.isActive).toBe(false);
+      expect(dbUser.registeredSchoolId.toString()).toBe(newUser.schoolId);
+      expect(dbUser.schoolId).toBeNull();
 
       expect(res.body.tokens).toEqual({
         access: { token: expect.anything(), expires: expect.anything() },

@@ -104,7 +104,9 @@ export default function RegisterPage() {
 
     try {
       await register(formData.email, formData.password, formData.fullName, formData.schoolId);
-      toast.success('Đăng ký tài khoản thành công! Vui lòng xác minh email.');
+      toast.success(
+        'Đăng ký thành công! Vui lòng xác minh email và chờ School Admin duyệt tài khoản.'
+      );
 
       navigate('/email-verification-pending', { state: { email: formData.email } });
     } catch (err: unknown) {

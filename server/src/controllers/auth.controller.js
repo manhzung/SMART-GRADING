@@ -29,7 +29,19 @@ const register = catchAsync(async (req, res) => {
     }
   }
 
-  const user = await userService.createUser({ name, email, password, schoolId: resolvedSchoolId });
+  // Self-registration is for teachers only - goes through school-admin approval
+  // before they become active. Store the requested school in registeredSchoolId
+  // and leave schoolId null until approved.
+  const user = await userService.createUser({
+    name,
+    email,
+    password,
+    role: 'teacher',
+    registeredSchoolId: resolvedSchoolId,
+    schoolId: null,
+    registrationStatus: 'pending',
+    isActive: false,
+  });
   const userResponse = {
     id: user.id,
     name: user.name,

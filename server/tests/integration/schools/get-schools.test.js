@@ -48,6 +48,8 @@ describe('POST /api/v1/auth/register (regression for "School not found")', () =>
 
     const res = await request(app).post('/api/v1/auth/register').send(newUser).expect(httpStatus.CREATED);
 
-    expect(res.body.user.schoolId).toBe(firstSchoolId);
+    // Self-registered teachers don't have schoolId until a school admin approves
+    // them; the requested school is stored in registeredSchoolId instead.
+    expect(res.body.user.schoolId).toBeNull();
   });
 });

@@ -86,7 +86,7 @@ const userSchema = mongoose.Schema(
     registrationStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: 'approved',
+      default: 'pending',
     },
     rejectedReason: {
       type: String,
