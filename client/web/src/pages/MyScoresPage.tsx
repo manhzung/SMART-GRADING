@@ -78,6 +78,15 @@ export default function MyScoresPage() {
 
   useEffect(() => {
     if (selectedId) {
+      // Always refresh appeals when user opens the appeals tab so list is in sync
+      if (activeTab === 'appeals') {
+        fetchSubmissionAppeals(selectedId);
+      }
+    }
+  }, [activeTab, selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (selectedId) {
       fetchSubmissionAppeals(selectedId);
       // Fetch full submission detail to get images
       setIsLoadingDetail(true);
@@ -686,17 +695,37 @@ export default function MyScoresPage() {
                             <div className={styles.appealHeader}>
                               <FileQuestion size={12} />
                               <span className={styles.appealQuestion}>
-                                {appeal.questionPosition ? `Câu ${appeal.questionPosition}` : 'Phúc khảo tổng quan'}
+                                {appeal.questionPosition ? `Câu ${appeal.questionPosition}` : 'Phúc khảo toàn bài'}
                               </span>
                               <span className={`${styles.statusBadge} ${statusDetails.class}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
                                 <StatusIcon size={10} />
                                 {statusDetails.text}
                               </span>
                             </div>
-                            <div className={styles.appealReason}>{appeal.reason}</div>
-                            {appeal.teacherResponse?.note && (
+                            {appeal.examTitle && (
+                              <div className={styles.appealExam}>Bài thi: {appeal.examTitle}</div>
+                            )}
+                            <div className={styles.appealReason}>
+                              <span className={styles.appealReasonLabel}>Lý do:</span> {appeal.reason}
+                            </div>
+                            {appeal.teacherResponse && (
                               <div className={styles.appealResponse}>
-                                <strong>Phản hồi:</strong> {appeal.teacherResponse.note}
+                                <div className={styles.appealResponseLabel}>
+                                  <strong>Phản hồi giáo viên:</strong>
+                                  {appeal.teacherResponse.decision && (
+                                    <span className={`${styles.statusBadge} ${appeal.teacherResponse.decision === 'approved' ? styles.approvedBadge : styles.rejectedBadge}`} style={{ fontSize: '10px', padding: '2px 8px', marginLeft: 8 }}>
+                                      {appeal.teacherResponse.decision === 'approved' ? 'Đồng ý' : 'Từ chối'}
+                                    </span>
+                                  )}
+                                </div>
+                                {appeal.teacherResponse.note && (
+                                  <div className={styles.appealResponseNote}>{appeal.teacherResponse.note}</div>
+                                )}
+                                {appeal.teacherResponse.reviewedAt && (
+                                  <div className={styles.appealResponseDate}>
+                                    Duyệt lúc: {formatDate(appeal.teacherResponse.reviewedAt)}
+                                  </div>
+                                )}
                               </div>
                             )}
                             <div className={styles.appealDate}>

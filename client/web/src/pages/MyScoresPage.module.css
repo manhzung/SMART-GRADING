@@ -751,20 +751,53 @@
   color: #0b2240;
 }
 
+.appealExam {
+  font-size: 11px;
+  color: #475569;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
 .appealReason {
   font-size: 12px;
   color: #64748b;
   line-height: 1.5;
 }
 
+.appealReasonLabel {
+  font-weight: 600;
+  color: #0b2240;
+}
+
 .appealResponse {
-  margin-top: 8px;
-  padding: 8px 12px;
+  margin-top: 10px;
+  padding: 10px 12px;
   background-color: #eff6ff;
+  border-left: 3px solid #3b82f6;
   border-radius: 6px;
   font-size: 12px;
   color: #1e40af;
   line-height: 1.5;
+}
+
+.appealResponseLabel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+  color: #1e3a8a;
+}
+
+.appealResponseNote {
+  margin: 4px 0;
+  white-space: pre-wrap;
+}
+
+.appealResponseDate {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 4px;
 }
 
 .appealDate {
