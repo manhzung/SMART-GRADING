@@ -55,7 +55,7 @@ describe('Layout nav filtering', () => {
     expect(screen.queryByText(/Dashboard trường/i)).toBeNull();
   });
 
-  it('shows Thống kê and Quét OMR for all roles', async () => {
+  it('hides Thống kê and Quét OMR for all roles', async () => {
     for (const role of ['admin', 'school-admin', 'teacher', 'student'] as const) {
       mockAuth(role);
       const { default: UniversalLayout } = await import('./Layout?' + role);
@@ -64,8 +64,8 @@ describe('Layout nav filtering', () => {
           <UniversalLayout />
         </MemoryRouter>
       );
-      expect(screen.getByText(/Thống kê/i), `Thống kê missing for ${role}`).toBeInTheDocument();
-      expect(screen.getByText(/Quét OMR/i), `Quét OMR missing for ${role}`).toBeInTheDocument();
+      expect(screen.queryByText(/Thống kê/i), `Thống kê should be hidden for ${role}`).toBeNull();
+      expect(screen.queryByText(/Quét OMR/i), `Quét OMR should be hidden for ${role}`).toBeNull();
       cleanup();
       vi.resetModules();
     }

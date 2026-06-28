@@ -35,8 +35,6 @@ const NAV: Array<{ group: string; items: NavItem[] }> = [
       { to: '/my-scores', label: 'Điểm của tôi', roles: ['student'] },
       { to: '/my-appeals', label: 'Phúc khảo của tôi', roles: ['student'] },
       { to: '/appeals', label: 'Phúc khảo', roles: ['teacher', 'school-admin', 'admin'] },
-      { to: '/analytics', label: 'Thống kê', roles: ['admin', 'school-admin', 'teacher', 'student'] },
-      { to: '/scan', label: 'Quét OMR', roles: ['admin', 'school-admin', 'teacher', 'student'] },
     ],
   },
   {
