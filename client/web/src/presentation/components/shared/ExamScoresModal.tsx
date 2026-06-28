@@ -108,16 +108,18 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
         <div className={styles.header}>
           <div>
             <h2 id="exam-scores-title" className={styles.title}>
-              {examTitle}
+              Điểm bài thi: {examTitle}
             </h2>
             <p className={styles.subline}>
-              {examDate ? `Ngày thi: ${examDate}` : ' '}
+              {[examSubject, examDate ? `Ngày thi: ${examDate}` : null]
+                .filter(Boolean)
+                .join(' · ')}
             </p>
           </div>
           <button
             className={styles.closeBtn}
             onClick={onClose}
-            aria-label="Đóng"
+            aria-label="Close window"
             data-testid="close-btn"
           >
             <X size={20} />
@@ -192,7 +194,7 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
         </div>
 
         <div className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={onClose} data-testid="close-btn-footer" aria-label="Close window">
+          <button className={styles.cancelBtn} onClick={onClose} data-testid="close-btn-footer">
             Đóng
           </button>
         </div>
