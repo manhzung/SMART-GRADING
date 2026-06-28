@@ -2,18 +2,22 @@
 \begin{document}
 
 \begin{center}
-    \Large{\textbf{ABSTRACT}}
+    \Large{\textbf{ABSTRACT}}\\
 \end{center}
 \vspace{1cm}
+In the context of large-scale multiple-choice examinations becoming increasingly common in secondary schools and universities, manual grading of paper-based answer sheets still suffers from many limitations including time consumption, proneness to errors, lack of transparency, and difficulty in statistical analysis. Existing automated grading solutions often rely on expensive specialized scanning hardware or only address a partial workflow such as question generation or answer sheet recognition, without providing an integrated system covering the entire process from question bank management and exam versioning to OMR-based grading on mobile devices, transparent appeal handling, and comprehensive reporting.
 
-The research project ``Building a Multi-Platform Automated Grading System using OMR (Optical Mark Recognition)'' investigates and develops a comprehensive system to automate the multiple-choice exam grading process, thereby significantly reducing time consumption and errors compared to traditional manual grading. In the context of increasingly widespread adoption of multiple-choice examinations at high schools and universities in Vietnam with thousands of candidates per session, manual grading is not only labor-intensive but also prone to fatigue-induced errors. Existing OMR solutions on the market predominantly require high licensing costs, rely on physical scanning hardware, or offer command-line interfaces that are difficult to operate and lack mobile platform support.
+This thesis adopts the approach of building a multi-platform smart multiple-choice grading system that integrates Optical Mark Recognition (OMR) on mobile devices, automatically generates multiple exam versions from a shared question bank, supports a transparent appeal workflow, and provides detailed statistical reports for teachers and administrators. The system follows a three-tier architecture comprising a Node.js/Express backend with MongoDB database, a Flutter mobile application that leverages the device camera for scanning and grading, a React web dashboard for administration and analytics, combined with the AMC (Auto-Multiple-Choice) LaTeX package for automatic exam paper and answer sheet generation.
 
-The proposed system comprises three principal components developed on modern technology platforms. The first component is a mobile application built with Flutter and Dart, enabling users to capture images of answer sheets using smartphone cameras and recognize answers through OMR technology. The distinctive feature of this component is that the OMR recognition engine is deployed entirely on the mobile device (client-side), allowing immediate grading without internet connectivity, while supporting an offline-first architecture with automatic synchronization upon network availability. The second component is a web application built with React and TypeScript, providing a management interface for teachers to create exams, manage question banks, monitor grading results, and export statistical reports. The third component is a backend developed with Node.js and Express, combined with MongoDB database, providing RESTful APIs for the entire system and integrating with AMC (Auto Multiple Choice) to automatically generate multiple exam versions along with precisely calibrated OMR coordinates.
-
-The proposed solution achieves several notable contributions. Firstly, the system integrates an automatic exam generation pipeline using AMC, enabling the generation of N distinct versions with fully shuffled questions and answers, while simultaneously exporting a JSON template containing calibrated bubble coordinates, ensuring absolute accuracy without reliance on manual calculations. Secondly, the mobile-based OMR recognition engine achieves an average accuracy exceeding 95\% on camera-captured images under normal lighting conditions, with an average processing time below two seconds per sheet on mid-range devices. Thirdly, the system incorporates an artificial intelligence module using Google Gemini API to analyze examination results, identify topics where students demonstrate weaknesses, and recommend suitable practice questions. Fourthly, thanks to its offline-first architecture, the system operates reliably in exam room environments with limited or no network connectivity, ensuring zero data loss.
-
-Experimental results on a dataset comprising over one thousand exam sheets from actual testing sessions demonstrate that the system achieves approximately 96.5\% recognition accuracy on scanned answer sheets, with an average processing time of 1.8 seconds per sheet on mid-range devices. The system has been deployed in a pilot program involving over one hundred and fifty users and has received positive feedback from both teachers and students regarding its usability and practical effectiveness.
-
-\textbf{Keywords:} OMR, automated grading, Flutter, React, Node.js, MongoDB, offline-first, image recognition
+The main contribution of the thesis is the complete Smart Grading system with the following capabilities:
+\begin{itemize}
+    \item management of schools, classes, teachers, and students;
+    \item question bank and exam management with AI-assisted question generation using Gemini, OpenAI, and Claude;
+    \item automatic generation of multiple exam versions and corresponding OMR answer sheets through AMC;
+    \item mobile OMR-based automatic grading with high accuracy, including detection of double marks and light marks, with manual override capability;
+    \item a transparent appeal submission and response workflow with real-time notifications;
+    \item detailed per-exam reports and analytics with system-assisted AI tutor interaction;
+    \item a cross-platform mobile application that enables grading directly in the classroom without the need for specialized scanning equipment.
+\end{itemize}
 
 \end{document}

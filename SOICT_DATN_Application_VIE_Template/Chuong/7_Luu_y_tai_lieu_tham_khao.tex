@@ -1,50 +1,40 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
+Lưu ý: Sinh viên không được đưa bài giảng/slide, các trang Wikipedia, hoặc các trang web thông thường làm tài liệu tham khảo. 
 
-\section{Hướng dẫn viết đồ án}
-\label{section:7.1}
+Một trang web được phép dùng làm tài liệu tham khảo \textbf{chỉ khi} nó là công bố chính thống của cá nhân hoặc tổ chức nào đó. Ví dụ, trang web đặc tả ngôn ngữ XML của tổ chức W3C \url{https://www.w3.org/TR/2008/REC-xml-20081126/} là TLTK hợp lệ.
 
-Phần mềm SMART GRADING là hệ thống chấm thi tự động bằng công nghệ OMR (Optical Mark Recognition) hỗ trợ đa nền tảng, được phát triển trong khuôn khổ đồ án tốt nghiệp tại Trường Công nghệ Thông tin và Truyền thông, Đại học Bách khoa Hà Nội.
+Có năm loại tài liệu tham khảo mà sinh viên phải tuân thủ đúng quy định về cách thức liệt kê thông tin như sau. Lưu ý: các phần văn bản trong cặp dấu < > dưới đây chỉ là hướng dẫn khai báo cho từng loại tài liệu tham khảo; sinh viên cần xóa các phần văn bản này trong ĐATN của mình.
 
-Phần mềm được xây dựng với kiến trúc phân tán ba lớp, bao gồm ba thành phần chính. Thành phần thứ nhất là ứng dụng di động SMART GRADING Mobile được phát triển bằng Flutter và Dart, cho phép cài đặt trên các thiết bị iOS và Android. Thành phần thứ hai là ứng dụng web SMART GRADING Web được phát triển bằng React và TypeScript, có thể truy cập qua trình duyệt web trên máy tính. Thành phần thứ ba là backend server SMART GRADING API được phát triển bằng Node.js và Express, cung cấp các RESTful API cho cả hai ứng dụng client.
+<\textbf{Bài báo đăng trên tạp chí khoa học}: Tên tác giả, tên bài báo, tên tạp chí, volume, từ trang đến trang (nếu có), nhà xuất bản, năm xuất bản >
 
-Các yêu cầu về phần cứng và phần mềm để chạy phần mềm được mô tả chi tiết trong Bảng \ref{tab:phan-mem-yeu-cau}.
 
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{4cm}|>{\raggedright\arraybackslash}p{5cm}|>{\raggedright\arraybackslash}p{6cm}|}
-\hline
-\textbf{Thành phần} & \textbf{Yêu cầu tối thiểu} & \textbf{Yêu cầu khuyến nghị} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-Ứng dụng mobile & Android 8.0+ hoặc iOS 13+ & Android 12+ hoặc iOS 16+ \\ \hline
-Ứng dụng web & Chrome 90+, Firefox 88+, Safari 14+, Edge 90+ & Chrome 120+ \\ \hline
-Backend server & 2 vCPU, 4GB RAM, 20GB SSD & 4 vCPU, 8GB RAM, 50GB SSD \\ \hline
-Database & MongoDB 6.0+ & MongoDB 7.0+ \\ \hline
-Kết nối mạng & Internet tốc độ thấp (cho backend) & Internet tốc độ cao (cho backend) \\ \hline
-\caption{Các yêu cầu phần cứng và phần mềm}
-\label{tab:phan-mem-yeu-cau}
-\end{longtable}}
 
-\section{Hướng dẫn cài đặt}
-\label{section:7.2}
+\cite{hovy1993automated} E. H. Hovy, ``Automated discourse generation using discourse structure rela-
+tions," \textit{Artificial intelligence}, vol. 63, no. 1-2, pp. 341–385, 1993
 
-Phần này cung cấp hướng dẫn chi tiết về cách cài đặt và triển khai hệ thống SMART GRADING cho mục đích thử nghiệm và phát triển.
+<\textbf{Sách}: Tên tác giả, tên sách, volume (nếu có), lần tái bản (nếu có), nhà xuất bản, năm xuất bản>
 
-Đối với backend server, quy trình cài đặt bao gồm năm bước. Bước 1 là clone repository về máy local bằng lệnh git clone. Bước 2 là cài đặt Node.js phiên bản 20 LTS và MongoDB 7.0. Bước 3 là cài đặt các dependencies bằng lệnh npm install ở thư mục server. Bước 4 là cấu hình file .env với các biến môi trường bao gồm DATABASE_URL, JWT_SECRET, CLOUDINARY_CREDENTIALS, và GEMINI_API_KEY. Bước 5 là chạy server bằng lệnh npm run dev để khởi động ở chế độ phát triển hoặc npm run start để khởi động ở chế độ production.
+\cite{peterson2007computer}	L. L. Peterson and B. S. Davie, \textit{Computer networks: a systems approach}. Elsevier, 2007.
 
-Đối với ứng dụng di động, quy trình cài đặt bao gồm ba bước. Bước 1 là clone repository và chạy flutter pub get để cài đặt dependencies. Bước 2 là cấu hình file .env với API_BASE_URL trỏ đến backend server. Bước 3 là build APK bằng lệnh flutter build apk --release để tạo file cài đặt Android.
+\cite{NguyenThucHai}	N. T. Hải, \textit{Mạng máy tính và các hệ thống mở}. Nhà xuất bản giáo dục, 1999. 
 
-Đối với ứng dụng web, quy trình cài đặt bao gồm ba bước. Bước 1 là clone repository và chạy npm install để cài đặt dependencies. Bước 2 là cấu hình file .env với VITE_API_BASE_URL trỏ đến backend server. Bước 3 là build ứng dụng bằng lệnh npm run build để tạo các file tĩnh và deploy lên web server.
+<\textbf{Tập san Báo cáo Hội nghị Khoa học}: Tên tác giả, tên báo cáo, tên hội nghị, ngày (nếu có), địa điểm hội nghị, năm xuất bản>
 
-Chi tiết đầy đủ về cài đặt và triển khai được trình bày trong file README.md trong repository của dự án.
+\cite{poesio2001discourse}	M. Poesio and B. Di Eugenio, ``Discourse structure and anaphoric accessibil-
+ity," in \textit{ESSLLI workshop on information structure, discourse structure and
+discourse semantics}, Copenhagen, Denmark, 2001, pp. 129–143.
 
-\section{Tài liệu tham khảo}
-\label{section:7.3}
+<\textbf{Đồ án tốt nghiệp, Luận văn Thạc sĩ, Tiến sĩ}: Tên tác giả, tên đồ án/luận văn, loại đồ án/luận văn, tên trường, địa điểm, năm xuất bản>
 
-\nocite{*}
-\bibliographystyle{IEEEtran}
-\bibliography{../Danh_sach_tai_lieu_tham_khao}
+\cite{knott1996data}	A. Knott, ``A data-driven methodology for motivating a set of coherence relations," Ph.D. dissertation, The University of Edinburgh, UK, 1996.
+
+<\textbf{Tài liệu tham khảo từ Internet}: Tên tác giả (nếu có), tựa đề, cơ quan (nếu có), địa chỉ trang web, thời gian lần cuối truy cập trang web>
+
+\cite{BernersTim}	T. Berners-Lee, \textit{Hypertext transfer protocol (HTTP)}. [Online]. Available: \url{ftp:/info.cern.ch/pub/www/doc/http-spec.txt.Z} (visited on
+09/30/2010).
+
+\cite{LectureA} Princeton University, \textit{Wordnet}. [Online]. Available: \url{http://www.cogsci.princeton.edu/~wn/index.shtml} (visited on 09/30/2010).
+
 
 \end{document}

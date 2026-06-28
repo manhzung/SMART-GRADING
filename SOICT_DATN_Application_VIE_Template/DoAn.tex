@@ -1,9 +1,8 @@
 \documentclass[a4paper,13pt,3p,twoside]{report}
 \usepackage{scrextend}
 \changefontsizes{13pt}
-\usepackage[utf8]{inputenc}
+\usepackage[utf8]{vietnam}
 \usepackage[top=2cm, bottom=2cm, left=3.5cm, right=2.5cm]{geometry}
-\setlength{\tabcolsep}{2pt}
 
 \usepackage{graphicx} % Cho phép chèn hỉnh ảnh
 \usepackage{fancybox} % Tạo khung box
@@ -13,9 +12,7 @@
 \usepackage{amsmath} % Hỗ trợ một số biểu thức toán học
 \usepackage{amssymb} % Bổ sung thêm kí hiệu về toán học
 \usepackage{amsbsy} % Hỗ trợ các kí hiệu in đậm
-% Times New Roman with Unicode/Vietnamese support (XeLaTeX)
-\usepackage{fontspec}
-\setmainfont{Times New Roman}
+\usepackage{times} % Chọn font Time New Romans
 \usepackage{array} % Tạo bảng array
 \usepackage{enumitem} % Cho phép thay đổi kí hiệu của list
 \usepackage{subfiles} % Chèn các file nhỏ, giúp chia các chapter ra nhiều file hơn
@@ -75,7 +72,7 @@
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}}
 
-\setlength{\headheight}{17pt}
+\setlength{\headheight}{10pt}
 
 \def \TITLE{ĐỒ ÁN TỐT NGHIỆP}
 \def \AUTHOR{NGUYỄN VĂN ABC}
@@ -137,9 +134,6 @@
 
 
 % ===================================================
-\usepackage{xcolor}
-\usepackage{tikz}
-\usetikzlibrary{shapes,arrows,positioning,calc}
 \usepackage{hyperref}
 \hypersetup{pdfborder = {0 0 0}} %
 \hypersetup{pdftitle={\TITLE},
@@ -147,7 +141,7 @@
 	
 \usepackage[all]{hypcap} % Cho phép tham chiếu chính xác đến hình ảnh và bảng biểu
 
-\graphicspath{{../../docs/DATN/SOICT_DATN_Application_VIE_Template/Hinhve/}} % Thư mục chứa các hình ảnh
+\graphicspath{{figures/}{../figures/}} % Thư mục chứa các hình ảnh
 
 \counterwithin{figure}{chapter} % Đánh số hình ảnh kèm theo chapter. Ví dụ: Hình 1.1, 1.2,..
 
@@ -182,16 +176,15 @@
 %\subfile{chapters/0_1_subject.tex}
 
 \newpage
-\pagenumbering{roman}
-\setcounter{page}{1}
+\pagenumbering{gobble}
 \subfile{Chuong/0_2_Loi_cam_on.tex}
 
 \newpage
-\pagenumbering{roman}
+\pagenumbering{gobble}
 \subfile{Chuong/0_3_Tom_tat_noi_dung.tex}
 
 \newpage
-\pagenumbering{roman}
+\pagenumbering{gobble}
 \subfile{Chuong/0_4_Tom_tat_noi_dung_English.tex}
 
 % ===================================================
@@ -340,5 +333,4 @@
 \newpage
 \chapter{ĐẶC TẢ USE CASE}
 \subfile{Chuong/Phu_luc_B}
-
 \end{document}

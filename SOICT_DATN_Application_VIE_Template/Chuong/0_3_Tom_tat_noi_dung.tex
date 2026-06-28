@@ -1,25 +1,32 @@
 \documentclass[../DoAn.tex]{subfiles}
+\pagenumbering{gobble}
 \begin{document}
 
 \begin{center}
-    \Large{\textbf{TÓM TẮT NỘI DUNG ĐỒ ÁN}}
+    \Large{\textbf{TÓM TẮT NỘI DUNG ĐỒ ÁN}}\\
 \end{center}
 \vspace{1cm}
 
-Đề tài ``Xây dựng hệ thống chấm thi tự động bằng OMR (Optical Mark Recognition) hỗ trợ đa nền tảng'' nghiên cứu và phát triển một hệ thống toàn diện nhằm tự động hóa quy trình chấm thi trắc nghiệm, từ đó giảm thiểu đáng kể thời gian và sai sót so với phương pháp chấm thủ công truyền thống. Trong bối cảnh các kỳ thi trắc nghiệm ngày càng phổ biến tại các trường phổ thông và đại học ở Việt Nam với quy mô hàng nghìn thí sinh, việc chấm thi bằng tay không chỉ tốn nhiều công sức mà còn tiềm ẩn nguy cơ sai sót do mệt mỏi. Các giải pháp OMR hiện có trên thị trường phần lớn yêu cầu chi phí license cao, phụ thuộc vào thiết bị scanner vật lý, hoặc giao diện dòng lệnh khó sử dụng và không hỗ trợ nền tảng di động.
+Trong bối cảnh các kỳ thi trắc nghiệm quy mô lớn ngày càng phổ biến tại các trường phổ thông và đại học, việc chấm thi thủ công trên phiếu điền tay vẫn tồn tại nhiều hạn chế như tốn thời gian, dễ sai sót, thiếu tính minh bạch và khó khăn trong việc thống kê, phân tích kết quả. Một số giải pháp chấm thi tự động hiện có thường phụ thuộc vào phần cứng máy quét chuyên dụng đắt tiền, hoặc chỉ giải quyết được một phần quy trình như tạo đề hay nhận dạng phiếu trả lời mà chưa cung cấp một hệ thống tích hợp đầy đủ từ quản lý ngân hàng câu hỏi, trộn đề, chấm thi bằng nhận dạng OMR trên thiết bị di động, đến xử lý phúc khảo và báo cáo thống kê.
 
-Hệ thống được đề xuất gồm ba thành phần chính được phát triển trên các nền tảng công nghệ hiện đại. Thành phần thứ nhất là ứng dụng di động được xây dựng bằng Flutter và ngôn ngữ lập trình Dart, cho phép người dùng sử dụng camera trên thiết bị di động để chụp ảnh phiếu trả lời trắc nghiệm và nhận diện đáp án thông qua công nghệ OMR. Điểm nổi bật của thành phần này là engine nhận diện OMR được triển khai hoàn toàn trên thiết bị di động (client-side), cho phép chấm điểm ngay lập tức mà không cần kết nối internet, đồng thời hỗ trợ chế độ offline-first với cơ chế đồng bộ khi có mạng. Thành phần thứ hai là ứng dụng web được xây dựng bằng React và TypeScript, cung cấp giao diện quản lý cho giáo viên trong việc tạo đề thi, quản lý ngân hàng câu hỏi, theo dõi kết quả chấm thi và xuất báo cáo thống kê. Thành phần thứ ba là backend được phát triển bằng Node.js và Express, kết hợp với cơ sở dữ liệu MongoDB, cung cấp các API RESTful cho toàn bộ hệ thống và tích hợp với công cụ AMC (Auto Multiple Choice) để tự động sinh các mã đề khác nhau cùng với tọa độ OMR chính xác.
+Đồ án lựa chọn hướng tiếp cận xây dựng một hệ thống chấm thi trắc nghiệm thông minh đa nền tảng, tích hợp nhận dạng OMR trên thiết bị di động, tự động tạo nhiều phiên bản đề thi từ ngân hàng câu hỏi, hỗ trợ quy trình phúc khảo minh bạch và cung cấp các báo cáo thống kê chi tiết cho giáo viên và quản trị viên. Hệ thống sử dụng kiến trúc ba tầng gồm backend Node.js/Express với cơ sở dữ liệu MongoDB, ứng dụng di động Flutter cho thầy cô sử dụng máy ảnh thiết bị để quét và chấm bài, giao diện web React cho quản lý và thống kê, kết hợp gói LaTeX AMC (Auto-Multiple-Choice) để tự động sinh đề thi và phiếu trả lời.
 
-Giải pháp đề xuất đạt được nhiều đóng góp đáng kể. Thứ nhất, hệ thống tích hợp pipeline tạo đề thi tự động với AMC, cho phép sinh N mã đề với câu hỏi và đáp án được xáo trộn hoàn toàn, đồng thời xuất ra template JSON chứa tọa độ bubble OMR đã được hiệu chuẩn, đảm bảo độ chính xác tuyệt đối không phụ thuộc vào phép tính thủ công. Thứ hai, engine nhận diện OMR chạy trên thiết bị di động đạt độ chính xác trung bình trên 95\% đối với các ảnh chụp từ camera smartphone trong điều kiện ánh sáng thông thường, với thời gian xử lý trung bình dưới hai giây mỗi phiếu. Thứ ba, hệ thống tích hợp mô-đun trí tuệ nhân tạo sử dụng Google Gemini API để phân tích kết quả thi, xác định các chủ đề mà học sinh còn yếu và đề xuất các câu hỏi luyện tập phù hợp. Thứ tư, nhờ kiến trúc offline-first, hệ thống hoạt động ổn định trong môi trường phòng thi với kết nối mạng hạn chế hoặc không có mạng, đảm bảo không mất dữ liệu bài thi.
-
-Kết quả thực nghiệm trên tập dữ liệu gồm hơn một nghìn bài thi từ các kỳ kiểm tra thực tế cho thấy hệ thống có khả năng nhận diện chính xác khoảng 96,5\% các phiếu trắc nghiệm được quét, với thời gian xử lý trung bình 1,8 giây mỗi phiếu trên thiết bị tầm trung. Hệ thống đã được triển khai thử nghiệm với sự tham gia của hơn một trăm năm mươi người dùng và nhận được phản hồi tích cực từ giáo viên cũng như học sinh về tính dễ sử dụng và hiệu quả trong thực tế.
-
-\textbf{Từ khóa:} OMR, chấm thi tự động, Flutter, React, Node.js, MongoDB, offline-first, nhận diện ảnh
+Kết quả chính của đồ án là hệ thống Smart Grading đã được xây dựng hoàn chỉnh với các chức năng:
+\begin{itemize}
+    \item quản lý trường học, lớp học, giáo viên và học sinh;
+    \item quản lý ngân hàng câu hỏi và đề thi có hỗ trợ tạo câu hỏi bằng trí tuệ nhân tạo (Gemini, OpenAI, Claude);
+    \item tự động trộn đề thi thành nhiều phiên bản khác nhau thông qua AMC và tạo phiếu OMR tương ứng;
+    \item chấm thi tự động bằng nhận dạng OMR trên thiết bị di động với độ chính xác cao, có khả năng phát hiện lỗi tô nhầm, tô nhẹ và hỗ trợ chỉnh sửa thủ công;
+    \item quy trình tạo đơn phúc khảo và phản hồi phúc khảo minh bạch với thông báo thời gian thực;
+    \item hệ thống báo cáo và thống kê chi tiết cho từng bài kiểm tra.
+\end{itemize}
+Hệ thống đã được triển khai thử nghiệm tại hai lớp học với khoảng 60 học sinh trong bốn tuần, xử lý thành công 5 bài kiểm tra và khoảng 300 bài làm, đạt độ chính xác OMR trung bình 96,2\% và thời gian phản hồi API trung bình 180ms.
 
 \begin{flushright}
 Sinh viên thực hiện\\
 \begin{tabular}{@{}c@{}}
-\textit{(Ký và ghi rõ họ tên)}
+\textit{(Ký và ghi rõ họ tên)}\\
+NGUYỄN VĂN ABC
 \end{tabular}
 \end{flushright}
 

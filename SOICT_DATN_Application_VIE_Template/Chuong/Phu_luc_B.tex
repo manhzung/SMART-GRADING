@@ -1,58 +1,195 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-\appendixtitleon
-\appendixtitletocon
+Phần này trình bày đặc tả chi tiết cho các use case phụ của hệ thống Smart Grading không được đặc tả trong mục 2.3 của Chương 2 do hạn chế về dung lượng. Mỗi đặc tả gồm tên use case, luồng sự kiện chính, luồng sự kiện phát sinh, tiền điều kiện và hậu điều kiện, theo đúng mẫu đặc tả đã sử dụng trong Chương 2.
 
-\section{Đặc tả chi tiết template JSON cho OMR}
-\label{sec:appendix-b1}
+\section{Đặc tả use case Quản lý trường học}
+\subsection*{Tên use case}
+Quản lý trường học.
 
-Phần này cung cấp đặc tả chi tiết về cấu trúc template JSON được sử dụng để lưu trữ thông tin cấu hình OMR cho mỗi mã đề. Template JSON là cầu nối giữa hệ thống sinh đề (AMC) và hệ thống nhận diện (mobile OMR engine), đảm bảo tọa độ bubble được sử dụng để nhận diện luôn khớp với tọa độ thực tế trên phiếu in.
+\subsection*{Tiền điều kiện}
+Quản trị viên hệ thống đã đăng nhập với vai trò admin.
 
-Cấu trúc template JSON bao gồm các trường ở cấp cao nhất được mô tả như sau. Trường examId là string chứa ID của kỳ thi trong database, dùng để liên kết template với đề thi gốc. Trường title là string chứa tiêu đề của kỳ thi để hiển thị cho người dùng. Trường paperSize là string có thể là A4 hoặc A3, xác định kích thước giấy của phiếu thi. Trường scanDpi là number xác định độ phân giải DPI mà template được tính toán, thường là 300. Trường scale là number là hệ số tỷ lệ giữa DPI thực tế và DPI thiết kế, thường là 1.0 hoặc giá trị được tính từ AMC. Trường pageWidth và pageHeight là các number xác định kích thước pixel của trang tại DPI quy định.
+\subsection*{Luồng sự kiện chính}
+\begin{enumerate}
+    \item Quản trị viên truy cập chức năng "Quản lý trường học".
+    \item Hệ thống hiển thị danh sách các trường hiện có cùng các thông tin: tên trường, mã trường, địa chỉ, số lượng giáo viên, số lượng học sinh.
+    \item Quản trị viên chọn chức năng "Tạo trường mới".
+    \item Hệ thống hiển thị form tạo trường với các trường: tên trường, mã trường, địa chỉ, số điện thoại, email, cấu hình thang điểm.
+    \item Quản trị viên nhập thông tin và nhấn "Lưu".
+    \item Hệ thống kiểm tra tính hợp lệ của thông tin, lưu trường mới vào cơ sở dữ liệu và hiển thị thông báo thành công.
+    \item Quản trị viên có thể chọn một trường để xem chi tiết, cập nhật thông tin hoặc xóa trường.
+\end{enumerate}
 
-Trường bubbleWidth và bubbleHeight là các number xác định kích thước pixel của mỗi bubble trên phiếu, thường là 28-30 pixels cho A4 ở 300 DPI. Trường studentId là object chứa cấu hình vùng số báo danh, bao gồm position với x và y là tọa độ pixel góc trên trái của vùng, digits là số chữ số của mã số báo danh, digitWidth và digitHeight là kích thước của mỗi digit bubble, và digitSpacing là khoảng cách giữa các digit.
+\subsection*{Luồng sự kiện phát sinh}
+\begin{itemize}
+    \item Tại bước 6, nếu mã trường đã tồn tại: hệ thống thông báo và yêu cầu nhập mã khác.
+    \item Tại bước 7, nếu trường đang có giáo viên hoặc học sinh hoạt động: hệ thống cảnh báo và yêu cầu xác nhận trước khi xóa.
+\end{itemize}
 
-Trường versionCode là object tương tự studentId nhưng cho vùng mã đề. Trường answers là object chứa tọa độ bubble của từng câu hỏi, trong đó key là số câu hỏi (q1, q2, ...) và value là object với key là lựa chọn (A, B, C, D) và value là object chứa x, y, w, h xác định tọa độ và kích thước của bubble đó. Trường answerKey là object chứa đáp án đúng cho từng câu, key là số câu (q1, q2, ...) và value là đáp án đúng (A, B, C, D). Trường questionScores là object chứa điểm của từng câu, key là số câu và value là điểm số (thường là 0.5 hoặc 1.0). Trường totalScore là number là tổng điểm của toàn bài thi. Trường autoAlign là boolean cho biết liệu engine OMR có tự động hiệu chỉnh góc nghiêng hay không.
+\subsection*{Hậu điều kiện}
+Nếu thành công, trường mới được tạo và có thể được gán cho quản trị viên trường.
 
-Ví dụ về cấu trúc template JSON cho một mã đề đơn giản như sau. Template bao gồm thông tin examId là exam\_abc123, paperSize là A4, scanDpi là 300, pageWidth là 2480, pageHeight là 3508. Trường answers chứa q1 với vị trí các lựa chọn A, B, C, D. Trường answerKey chứa q1 là C, q2 là A. Trường questionScores chứa q1 là 0.5, q2 là 0.5. Trường totalScore là 10.
+\section{Đặc tả use case Quản lý giáo viên}
+\subsection*{Tên use case}
+Quản lý giáo viên.
 
-\section{Thuật toán nhận diện bubble chi tiết}
-\label{sec:appendix-b2}
+\subsection*{Tiền điều kiện}
+Quản trị viên hệ thống hoặc quản trị viên trường đã đăng nhập.
 
-Phần này mô tả chi tiết thuật toán nhận diện bubble được sử dụng trong engine OMR trên thiết bị di động.
+\subsection*{Luồng sự kiện chính}
+\begin{enumerate}
+    \item Người dùng truy cập chức năng "Quản lý giáo viên".
+    \item Hệ thống hiển thị danh sách giáo viên theo trường (nếu là school-admin) hoặc toàn hệ thống (nếu là admin).
+    \item Người dùng chọn "Thêm giáo viên".
+    \item Hệ thống hiển thị form thêm giáo viên với các trường: họ tên, email, mã giáo viên, môn phụ trách.
+    \item Người dùng nhập thông tin và nhấn "Lưu".
+    \item Hệ thống tạo tài khoản giáo viên, gửi email kích hoạt đến giáo viên.
+    \item Người dùng có thể chọn một giáo viên để xem chi tiết, cập nhật thông tin, phân công môn hoặc vô hiệu hóa tài khoản.
+\end{enumerate}
 
-Thuật toán nhận diện bubble bao gồm các bước chính sau. Bước 1 là tiền xử lý ảnh với các thao tác chuyển ảnh màu sang ảnh xám bằng công thức lấy trung bình có trọng số của các kênh R, G, B, cân bằng histogram để cải thiện độ tương phản, và áp dụng bộ lọc Gaussian để giảm nhiễu. Bước 2 là phát hiện contour của phiếu bằng thuật toán Canny để phát hiện cạnh, tìm contour có 4 đỉnh gần với hình chữ nhật, và tính ma trận perspective transform. Bước 3 là hiệu chỉnh phối cảnh bằng cách áp dụng perspective transform để biến đổi ảnh nghiêng thành ảnh nhìn thẳng. Bước 4 là trích xuất và phân tích bubble.
+\subsection*{Luồng sự kiện phát sinh}
+\begin{itemize}
+    \item Tại bước 6, nếu email đã tồn tại: hệ thống thông báo và yêu cầu sử dụng email khác.
+    \item Tại bước 7, nếu vô hiệu hóa tài khoản: hệ thống yêu cầu xác nhận vì giáo viên có thể đang phụ trách lớp đang hoạt động.
+\end{itemize}
 
-Bước 4 được mô tả chi tiết như sau. Với mỗi câu hỏi, lấy tọa độ của các lựa chọn A, B, C, D từ template JSON. Với mỗi lựa chọn, crop vùng ảnh chứa bubble dựa trên tọa độ và kích thước từ template. Tính mật độ pixel (intensity) của vùng bubble bằng công thức lấy trung bình giá trị grayscale của tất cả pixel trong vùng. So sánh intensity với ngưỡng threshold để quyết định tô hay không tô, trong đó intensity nhỏ hơn ngưỡng (gần đen) nghĩa là được tô, và intensity lớn hơn ngưỡng (gần trắng) nghĩa là không được tô. Ngưỡng mặc định là 180 trên thang 0-255.
+\subsection*{Hậu điều kiện}
+Nếu thành công, tài khoản giáo viên được tạo và có thể đăng nhập vào hệ thống sau khi kích hoạt qua email.
 
-Sau khi có kết quả nhận diện cho tất cả các câu, tiến hành chấm điểm. Với mỗi câu hỏi, so sánh đáp án được nhận diện với đáp án đúng từ template. Nếu khớp, cộng điểm của câu đó vào tổng điểm và đánh dấu là đúng. Nếu không khớp, đánh dấu là sai. Kiểm tra các trường hợp đặc biệt như skipped (không có bubble nào được tô) và double-fill (có nhiều hơn một bubble được tô).
+\section{Đặc tả use case Quản lý học sinh}
+\subsection*{Tên use case}
+Quản lý học sinh.
 
-\section{Cấu hình AMC cho đề thi trắc nghiệm}
-\label{sec:appendix-b3}
+\subsection*{Tiền điều kiện}
+Quản trị viên trường hoặc giáo viên đã đăng nhập.
 
-Phần này cung cấp hướng dẫn cấu hình AMC cho việc tạo đề thi trắc nghiệm tương thích với hệ thống SMART GRADING.
+\subsection*{Luồng sự kiện chính}
+\begin{enumerate}
+    \item Người dùng truy cập chức năng "Quản lý học sinh".
+    \item Hệ thống hiển thị danh sách học sinh theo lớp hoặc theo trường.
+    \item Người dùng chọn "Thêm học sinh vào lớp".
+    \item Hệ thống cho phép thêm một học sinh mới (tạo tài khoản) hoặc thêm học sinh đã có tài khoản vào lớp.
+    \item Người dùng nhập thông tin cần thiết và nhấn "Lưu".
+    \item Hệ thống lưu thông tin và gửi thông báo cho học sinh.
+    \item Người dùng có thể chọn một học sinh để xem chi tiết, cập nhật thông tin, chuyển lớp hoặc xóa khỏi lớp.
+\end{enumerate}
 
-Để sử dụng AMC với SMART GRADING, file LaTeX cần tuân theo cú pháp AMC. Mỗi câu hỏi được định nghĩa trong môi trường question như sau. Đầu tiên là khai báo document class và các package cần thiết bao gồm inputencoding UTF-8, babel cho tiếng Việt, và các package AMC cần thiết. Tiếp theo là thiết lập thông tin đề thi bằng lệnh AMCcombibox. Sau đó là định nghĩa các câu hỏi trong môi trường question, mỗi câu hỏi bắt đầu bằng lệnh question và các lựa chọn được định nghĩa trong môi trường choices với mỗi lựa chọn bắt đầu bằng lệnh item. Cuối cùng là thiết lập các tùy chọn xáo trộn bằng lệnh insertgroup.
+\subsection*{Luồng sự kiện phát sinh}
+\begin{itemize}
+    \item Tại bước 5, nếu mã số sinh viên đã tồn tại: hệ thống thông báo và đề xuất sử dụng học sinh hiện có.
+    \item Tại bước 7, nếu chuyển lớp: hệ thống yêu cầu chọn lớp đích và xác nhận.
+\end{itemize}
 
-Ví dụ về file LaTeX AMC đơn giản như sau. Document sử dụng class exam và package auto-multiple-choice. Mỗi câu hỏi có nội dung câu hỏi và bốn lựa chọn A, B, C, D được đánh dấu correct cho đáp án đúng. Các tùy chọn xáo trộn được thiết lập để xáo trộn cả câu hỏi và lựa chọn.
+\subsection*{Hậu điều kiện}
+Nếu thành công, học sinh được thêm vào lớp và có thể tham gia các bài kiểm tra của lớp.
 
-Các lệnh AMC quan trọng cần sử dụng bao gồm AMCbox cho vùng trả lời trên phiếu, AMCoption cho các tùy chọn cấu hình, và automultiplechoice cho document class AMC.
+\section{Đặc tả use case Quản lý bài thi của học sinh}
+\subsection*{Tên use case}
+Quản lý các bài thi của học sinh.
 
-\section{Danh sách các thành viên trong nhóm}
-\label{sec:appendix-b4}
+\subsection*{Tiền điều kiện}
+Giáo viên đã đăng nhập, có bài làm đã được chấm tự động trên hệ thống.
 
-Phần này ghi nhận danh sách các thành viên tham gia thực hiện đồ án tốt nghiệp.
+\subsection*{Luồng sự kiện chính}
+\begin{enumerate}
+    \item Giáo viên truy cập chức năng "Bài nộp" và chọn bài kiểm tra tương ứng.
+    \item Hệ thống hiển thị danh sách bài làm của học sinh với các thông tin: tên học sinh, mã số, điểm, trạng thái.
+    \item Giáo viên chọn một bài làm để xem chi tiết.
+    \item Hệ thống hiển thị thông tin chi tiết: ảnh phiếu đã chấm, đáp án của học sinh, đáp án đúng, điểm từng câu, cảnh báo (nếu có).
+    \item Giáo viên có thể chỉnh sửa thủ công các câu bị nhận dạng sai bằng cách chọn lại đáp án đúng.
+    \item Giáo viên nhấn "Lưu chỉnh sửa" để cập nhật điểm.
+    \item Giáo viên có thể nhấn "Phê duyệt kết quả" để chuyển bài làm sang trạng thái sẵn sàng công bố.
+\end{enumerate}
 
-Thông tin sinh viên thực hiện bao gồm họ và tên đầy đủ là {\color{red}[Họ tên sinh viên]}, mã số sinh viên là {\color{red}[MSSV]}, lớp là {\color{red}[Lớp]}, chương trình đào tạo là {\color{red}[Tên chương trình đào tạo]}, và email liên hệ là {\color{red}[email@sis.hust.edu.vn]}.
+\subsection*{Luồng sự kiện phát sinh}
+\begin{itemize}
+    \item Tại bước 5, nếu giáo viên chỉnh sửa: hệ thống ghi nhận lịch sử chỉnh sửa và cập nhật điểm tự động.
+    \item Tại bước 7, nếu bài làm chưa được phê duyệt: học sinh chưa thể xem điểm.
+\end{itemize}
 
-Thông tin giảng viên hướng dẫn bao gồm họ và tên đầy đủ là {\color{red}[Họ tên GVHD, học hàm học vị]}, và đơn vị công tác là Bộ môn Kỹ thuật Máy tính, Khoa Kỹ thuật Máy tính, Trường Công nghệ Thông tin và Truyền thông, Đại học Bách khoa Hà Nội.
+\subsection*{Hậu điều kiện}
+Nếu thành công, bài làm được cập nhật và sẵn sàng công bố cho học sinh khi giáo viên phát hành kết quả.
 
-\section{Bảng phân công công việc}
-\label{sec:appendix-b5}
+\section{Đặc tả use case Xem bài thi và điểm số}
+\subsection*{Tên use case}
+Xem bài thi và điểm số.
 
-Phần này ghi nhận bảng phân công công việc giữa các thành viên trong nhóm (nếu là đồ án nhóm).
+\subsection*{Tiền điều kiện}
+Học sinh đã đăng nhập, bài thi đã có kết quả được công bố.
 
-Công việc phân công cho sinh viên chính như sau. Phân tích yêu cầu và thiết kế hệ thống chiếm 20\% công việc. Phát triển backend server và API chiếm 30\% công việc. Phát triển engine OMR trên thiết bị di động chiếm 25\% công việc. Viết báo cáo đồ án chiếm 15\% công việc. Kiểm thử và sửa lỗi chiếm 10\% công việc.
+\subsection*{Luồng sự kiện chính}
+\begin{enumerate}
+    \item Học sinh truy cập chức năng "Bài thi của tôi" hoặc "Điểm của tôi".
+    \item Hệ thống hiển thị danh sách các bài thi đã tham gia với điểm tổng và trạng thái.
+    \item Học sinh chọn một bài thi để xem chi tiết.
+    \item Hệ thống hiển thị: điểm tổng, điểm từng câu, đáp án của học sinh, đáp án đúng, ảnh phiếu đã chấm.
+    \item Học sinh có thể xem các đơn phúc khảo đã gửi cho bài thi này và trạng thái của chúng.
+    \item Học sinh có thể tải về báo cáo điểm cá nhân dạng PDF.
+\end{enumerate}
+
+\subsection*{Luồng sự kiện phát sinh}
+\begin{itemize}
+    \item Tại bước 4, nếu bài thi có câu bị giáo viên chỉnh sửa thủ công: hệ thống hiển thị thông báo để học sinh hiểu rõ.
+    \item Tại bước 6, nếu tải về thất bại: hệ thống thông báo và cho phép thử lại.
+\end{itemize}
+
+\subsection*{Hậu điều kiện}
+Nếu thành công, học sinh nắm được kết quả chi tiết bài thi của mình.
+
+\section{Đặc tả use case Tạo câu hỏi, đề thi}
+\subsection*{Tên use case}
+Tạo câu hỏi, đề thi.
+
+\subsection*{Tiền điều kiện}
+Giáo viên đã đăng nhập, có quyền quản lý ngân hàng câu hỏi.
+
+\subsection*{Luồng sự kiện chính}
+\begin{enumerate}
+    \item Giáo viên truy cập chức năng "Ngân hàng câu hỏi".
+    \item Hệ thống hiển thị danh sách câu hỏi hiện có theo môn học và chủ đề.
+    \item Giáo viên chọn "Tạo câu hỏi mới".
+    \item Giáo viên chọn một trong ba phương thức: tạo thủ công, sinh bằng AI, hoặc nhập từ file.
+    \item Đối với tạo thủ công: hệ thống hiển thị form với các trường nội dung, loại câu hỏi, các đáp án, đáp án đúng, độ khó, chủ đề, giải thích.
+    \item Đối với sinh bằng AI: hệ thống hiển thị form yêu cầu nhập chủ đề và số lượng câu hỏi; giáo viên nhấn "Sinh câu hỏi"; hệ thống gọi dịch vụ AI và hiển thị kết quả; giáo viên có thể chỉnh sửa trước khi lưu.
+    \item Đối với nhập từ file: hệ thống cho phép tải lên file Excel/CSV theo mẫu.
+    \item Giáo viên lưu câu hỏi vào ngân hàng; câu hỏi được đánh dấu là "chờ phê duyệt" nếu do AI sinh.
+\end{enumerate}
+
+\subsection*{Luồng sự kiện phát sinh}
+\begin{itemize}
+    \item Tại bước 6, nếu dịch vụ AI gặp lỗi: hệ thống thông báo và cho phép thử lại hoặc chuyển sang tạo thủ công.
+    \item Tại bước 7, nếu file nhập không đúng định dạng: hệ thống thông báo lỗi cụ thể và cho phép tải mẫu.
+\end{itemize}
+
+\subsection*{Hậu điều kiện}
+Nếu thành công, câu hỏi được lưu vào ngân hàng và có thể sử dụng để tạo đề thi.
+
+\section{Đặc tả use case Đăng ký/Đăng nhập}
+\subsection*{Tên use case}
+Đăng ký/Đăng nhập.
+
+\subsection*{Tiền điều kiện}
+Người dùng truy cập được vào ứng dụng web hoặc di động.
+
+\subsection*{Luồng sự kiện chính}
+\begin{enumerate}
+    \item Người dùng truy cập trang đăng nhập.
+    \item Người dùng nhập email và mật khẩu, nhấn "Đăng nhập".
+    \item Hệ thống kiểm tra thông tin đăng nhập.
+    \item Nếu hợp lệ, hệ thống cấp access token và refresh token, chuyển hướng đến dashboard phù hợp với vai trò.
+    \item Nếu người dùng chưa có tài khoản, có thể chọn "Đăng ký" và làm theo quy trình đăng ký gồm nhập thông tin cá nhân, xác thực email.
+    \item Nếu người dùng quên mật khẩu, có thể chọn "Quên mật khẩu" và làm theo quy trình khôi phục qua email.
+\end{enumerate}
+
+\subsection*{Luồng sự kiện phát sinh}
+\begin{itemize}
+    \item Tại bước 3, nếu thông tin sai: hệ thống thông báo lỗi và cho phép thử lại.
+    \item Tại bước 4, nếu tài khoản chưa xác thực email: hệ thống yêu cầu xác thực trước.
+    \item Tại bước 6, nếu email không tồn tại trong hệ thống: hệ thống thông báo và không gửi email khôi phục.
+\end{itemize}
+
+\subsection*{Hậu điều kiện}
+Nếu thành công, người dùng được đăng nhập và truy cập các chức năng theo vai trò.
 
 \end{document}

@@ -1,33 +1,37 @@
 \documentclass[DoAn.tex]{subfiles}
+\newcommand{\underwrite}[3][]{% \underwrite[<thickness>]{<numerator>}{<denominator>}
+  \genfrac{}{}{#1}{}{\textstyle #2}{\scriptstyle #3}
+}
 \begin{document}
 \begin{titlepage}
 \thispagestyle{empty}
 \begin{center}
-{\textbf{\large ĐẠI HỌC BÁCH KHOA HÀ NỘI}}\\[4cm]
 
-{\textbf{\huge ĐỒ ÁN TỐT NGHIỆP}}\\[1cm]
-{\textbf{\Large Xây dựng hệ thống chấm thi tự động bằng OMR (Optical Mark Recognition) hỗ trợ đa nền tảng}}\\[1cm]
+{\textbf{\large{ĐẠI HỌC BÁCH KHOA HÀ NỘI}}}\\[4cm]
 
-% ===========================
-% PLACEHOLDER: Thay thông tin sinh viên thực tế tại đây
-{\textbf{\large {\color{red}[Họ và tên sinh viên]}}}\\
-{\large {\color{red}[email@sis.hust.edu.vn]}}\\[0.5cm]
+{\textbf{\huge{ ĐỒ ÁN TỐT NGHIỆP}}}\\[1cm]
+{\textbf{\Large{Xây dựng hệ thống chấm thi trắc nghiệm thông minh\\
+tích hợp nhận dạng OMR và quản lý đào tạo}}\\[1cm]
 
-{\textbf{\large Chương trình đào tạo: {\color{red}[Tên chương trình đào tạo]}}}\\
-{\textbf{\large Ngành: {\color{red}[Tên ngành]}}}
+{\textbf{\large{NGUYỄN VĂN ABC}}}\\
+{\large{nguyenvanabc@sis.hust.edu.vn}}\\[0.5cm]
 
-\vspace{4cm}
-\begin{table}[H]
-\centering
-\resizebox{\textwidth}{!}{%
+{\textbf{\large{Ngành: Khoa học máy tính}}}\\[1cm]
+
+\vspace{3cm}
+
 \begin{tabular}{ll}
- \multicolumn{1}{c}{\textbf{Giảng viên hướng dẫn:}} & {\color{red}[Họ tên GVHD, học hàm học vị]} \hspace{0.5cm} \\[0.5cm]
- \multicolumn{1}{l}{\textbf{Khoa:}} & Kỹ thuật máy tính \hspace{0.5cm} \\ [0.5cm]
- \multicolumn{1}{l}{\textbf{Trường:}} & Công nghệ thông tin và Truyền thông \hspace{0.5cm} \\ [4.5cm]
- \multicolumn{2}{c}{\textbf{HÀ NỘI, {\color{red}[MM/YYYY]}}}
-\end{tabular}%
-}
-\end{table}
+\textbf{Giảng viên hướng dẫn:} & PGS. TS. Phạm Văn ABC \\[0.5cm]
+\textbf{Khoa:} & Khoa học máy tính \\[0.5cm]
+\textbf{Trường:} & Công nghệ Thông tin và Truyền thông \\
+\end{tabular}
+
+\vfill
+
+{\textbf{HÀ NỘI, 06/2026}}
+
 \end{center}
+
 \end{titlepage}
+
 \end{document}

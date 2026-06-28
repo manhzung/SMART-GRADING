@@ -1,56 +1,85 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
+\section{Tổng quan chương}
+Chương 1 mở đầu đồ án bằng việc trình bày bối cảnh thực tiễn của bài toán chấm thi trắc nghiệm hiện nay tại các trường phổ thông và đại học ở Việt Nam, từ đó nêu bật tính cấp thiết và quy mô của vấn đề mà đồ án hướng tới giải quyết. Trên cơ sở đó, chương này xác định rõ mục tiêu, phạm vi, định hướng giải pháp và bố cục tổng thể của đồ án, nhằm giúp người đọc có cái nhìn tổng quan trước khi đi vào các nội dung chi tiết ở các chương tiếp theo.
+
 \section{Đặt vấn đề}
 \label{section:1.1}
 
-Trong bối cảnh giáo dục tại Việt Nam, hình thức thi trắc nghiệm đã và đang được áp dụng rộng rãi ở hầu hết các cấp học và bậc đào tạo. Từ các kỳ thi quan trọng như kỳ thi Trung học Phổ thông Quốc gia (THPTQG) với hàng triệu thí sinh tham dự, đến các bài kiểm tra định kỳ tại trường đại học với hàng trăm sinh viên, hình thức thi trắc nghiệm mang lại nhiều ưu điểm vượt trội so với thi tự luận \cite{black2014assessment}. Khả năng đánh giá khách quan, tốc độ xử lý nhanh chóng và tính nhất quán trong việc áp dụng tiêu chuẩn chấm điểm là những lợi thế nổi bật của phương thức thi này. Tuy nhiên, quy trình chấm thi trắc nghiệm truyền thống, đặc biệt tại các trường phổ thông và đại học với số lượng thí sinh lớn, vẫn đang đối mặt với những thách thức nghiêm trọng về mặt thời gian, chi phí và chất lượng.
+Hình thức thi trắc nghiệm khách quan đang được sử dụng rộng rãi trong các kỳ thi tốt nghiệp, kỳ thi tuyển sinh đại học, các kỳ kiểm tra định kỳ tại các trường phổ thông và đại học ở Việt Nam nhờ ưu điểm khách quan, có thể chấm tự động và phù hợp với số lượng thí sinh lớn. Theo thống kê của Bộ Giáo dục và Đào tạo, mỗi năm hàng triệu thí sinh tham gia kỳ thi tốt nghiệp trung học phổ thông quốc gia, và mỗi trường đại học thường tổ chức hàng chục kỳ thi, kiểm tra với số lượng bài thi lên tới hàng trăm nghìn bài mỗi năm. Đi cùng với quy mô đó là nhu cầu tổ chức thi hiệu quả, minh bạch và giảm thiểu sai sót trong khâu chấm bài.
 
-Việc chấm thi trắc nghiệm bằng tay đòi hỏi nguồn nhân lực đáng kể. Theo ước tính thực tế, một giáo viên có thể chấm thủ công khoảng 80 đến 120 bài thi trắc nghiệm trong một giờ làm việc, và con số này giảm đáng kể khi khối lượng bài thi lên đến hàng nghìn hoặc hàng chục nghìn bài như trong các kỳ thi quy mô lớn. Khối lượng công việc khổng lồ này không chỉ gây ra tình trạng quá tải cho giáo viên mà còn làm tăng đáng kể nguy cơ sai sót do mệt mỏi và sự tập trung suy giảm theo thời gian. Các nghiên cứu trong lĩnh vực tâm lý học nhận thức đã chỉ ra rằng năng lực tập trung của con người suy giảm đáng kể sau 90 phút làm việc liên tục với các tác vụ lặp đi lặp lại, điều này trực tiếp ảnh hưởng đến chất lượng và tính chính xác của việc chấm thi thủ công.
+Tuy nhiên, quy trình chấm thi trắc nghiệm hiện nay tại nhiều trường vẫn còn tồn tại nhiều hạn chế đáng chú ý. Nhiều trường vẫn chấm bài thủ công hoặc bán thủ công trên phiếu điền tay, vừa tốn thời gian vừa dễ phát sinh sai sót do con người. Các giải pháp chấm thi bằng máy quét OMR chuyên dụng thường có chi phí đầu tư ban đầu lớn, đòi hỏi phần cứng riêng và khó triển khai đồng bộ cho các trường có quy mô nhỏ hoặc nguồn lực hạn chế. Ngoài ra, việc xử lý phúc khảo, thống kê kết quả và phân tích chất lượng đề thi cũng chưa được số hóa triệt để, dẫn đến thiếu thông tin phản hồi cho giáo viên trong việc cải tiến chất lượng giảng dạy và ra đề.
 
-Bên cạnh thách thức về thời gian và nhân lực, vấn đề chống gian lận trong thi trắc nghiệm cũng đặt ra những yêu cầu ngày càng cao về sự đa dạng của các mã đề. Khi thí sinh ngồi cạnh nhau trong phòng thi, khả năng các em nhìn bài của nhau hoặc trao đổi đáp án là rất cao nếu tất cả thí sinh cùng làm một đề duy nhất. Do đó, việc tạo ra nhiều mã đề khác nhau với thứ tự câu hỏi và đáp án được xáo trộn là biện pháp cần thiết, nhưng đồng thời lại làm tăng gấp bội khối lượng công việc cho khâu chấm thi. Mỗi mã đề lại cần một đáp án riêng và một người chấm riêng, tạo ra một vòng xoáy phức tạp về mặt tổ chức và điều phối.
-
-Trên thị trường hiện nay, đã có một số giải pháp hỗ trợ chấm thi trắc nghiệm bằng công nghệ OMR (Optical Mark Recognition). Các giải pháp thương mại như Remark Office OMR hay GradeCam cung cấp đầy đủ tính năng nhưng đòi hỏi chi phí license cao và thường gắn liền với phần cứng scanner vật lý, khiến việc triển khai trở nên khó khăn đối với các trường học với ngân sách hạn chế. Đối với các giải pháp phần mềm độc lập hoặc dịch vụ đám mây, mặc dù bỏ qua chi phí phần cứng, nhưng hầu hết đều yêu cầu kết nối internet liên tục để tải ảnh lên server xử lý, điều này hoàn toàn không khả thi trong các phòng thi thực tế tại nhiều trường học ở vùng nông thôn hoặc khu vực có hạ tầng mạng không ổn định. Các công cụ mã nguồn mở như OMRChecker tuy miễn phí nhưng giao diện dòng lệnh phức tạp, đòi hỏi kiến thức kỹ thuật chuyên sâu và hầu như không có giao diện đồ họa thân thiện, gây rào cản lớn cho giáo viên và nhân viên hành chính trong việc sử dụng.
-
-Từ những phân tích trên, bài toán đặt ra là cần xây dựng một hệ thống chấm thi trắc nghiệm tự động đáp ứng đồng thời các yêu cầu về tính chính xác cao, chi phí triển khai thấp, khả năng hoạt động offline, hỗ trợ đa nền tảng (mobile và web), và đặc biệt là giao diện thân thiện dễ sử dụng cho mọi đối tượng người dùng từ giáo viên đến học sinh \cite{sommerville2011software}.
+Những hạn chế nêu trên cho thấy nhu cầu cấp thiết về một hệ thống chấm thi trắc nghiệm thông minh, có khả năng tự động hóa toàn bộ quy trình từ khâu tạo đề thi đến chấm bài, xử lý phúc khảo và cung cấp báo cáo thống kê chi tiết. Hệ thống như vậy sẽ giúp giảm tải công việc cho giáo viên, hạn chế sai sót, tăng tính minh bạch cho học sinh, đồng thời cung cấp dữ liệu phong phú cho nhà trường trong việc đánh giá chất lượng đào tạo.
 
 \section{Mục tiêu và phạm vi đề tài}
 \label{section:1.2}
 
-Để giải quyết các vấn đề đã nêu, nghiên cứu đã khảo sát và đánh giá tổng quan các giải pháp OMR hiện có trên thị trường. Các giải pháp được phân loại theo ba nhóm chính gồm phần mềm thương mại độc quyền, các công cụ mã nguồn mở, và các nền tảng SaaS dựa trên đám mây. Nhóm phần mềm thương mại như Remark Office OMR hay GradeCam cung cấp bộ tính năng đầy đủ bao gồm quản lý đề thi, nhận diện phiếu, và xuất báo cáo, tuy nhiên chi phí license hàng năm có thể lên đến hàng chục triệu đồng cho mỗi trường, chưa kể yêu cầu về thiết bị scanner chuyên dụng với giá thành từ vài triệu đến hàng chục triệu đồng. Nhóm công cụ mã nguồn mở như OMRChecker, Auto Multiple Choice (AMC) hay bộ công cụ dựa trên OpenCV cung cấp khả năng nhận diện OMR miễn phí nhưng đòi hỏi kiến thức kỹ thuật cao để vận hành, thiếu giao diện người dùng đồ họa, và phần lớn không hỗ trợ quy trình tạo đề thi đa mã đề một cách tự động và liền mạch. Nhóm giải pháp SaaS như ScanTa hay các nền tảng tương tự hoạt động trên nền tảng đám mây với giao diện web thân thiện, nhưng yêu cầu kết nối internet liên tục và thường áp dụng mô hình tính phí theo số lượt quét hoặc theo tháng, dẫn đến chi phí vận hành lâu dài cao.
+Hiện nay đã có một số phần mềm thương mại và mã nguồn mở hỗ trợ chấm thi trắc nghiệm trên thị trường, điển hình như các phần mềm chấm thi sử dụng máy quét chuyên dụng (ví dụ: Remark Office OMR, ReadSoft, Gradescope) hoặc các công cụ mã nguồn mở xử lý OMR như OMRChecker. Bên cạnh đó, các hệ thống quản lý học tập (LMS) truyền thống như Moodle hay Google Forms cũng hỗ trợ tạo đề và chấm trắc nghiệm, nhưng thường giới hạn ở dạng thi trực tuyến thay vì xử lý phiếu trả lời giấy.
 
-Dựa trên những hạn chế của các giải pháp hiện có, đề tài đặt ra các mục tiêu cụ thể như sau. Mục tiêu thứ nhất là xây dựng một hệ thống chấm thi tự động sử dụng công nghệ OMR, cho phép nhận diện và chấm điểm phiếu trắc nghiệm một cách nhanh chóng và chính xác. Mục tiêu thứ hai là hệ thống phải hỗ trợ đa nền tảng gồm ứng dụng di động trên hệ điều hành iOS và Android cùng ứng dụng web trên trình duyệt, đảm bảo khả năng tiếp cận rộng rãi cho mọi đối tượng người dùng mà không phụ thuộc vào thiết bị cụ thể. Mục tiêu thứ ba là đạt độ chính xác nhận diện tối thiểu 95\% đối với các ảnh chụp phiếu trắc nghiệm từ camera smartphone trong điều kiện ánh sáng thông thường. Mục tiêu thứ tư là thời gian xử lý nhận diện và chấm điểm mỗi phiếu không quá ba giây trên thiết bị di động tầm trung, đảm bảo trải nghiệm người dùng mượt mà. Mục tiêu thứ năm là hệ thống hỗ trợ tạo và quản lý đề thi với nhiều mã đề khác nhau, trong đó mỗi mã đề có thứ tự câu hỏi và đáp án được xáo trộn tự động để phòng chống gian lận thi cử. Mục tiêu thứ sáu là tích hợp mô-đun trí tuệ nhân tạo để phân tích kết quả thi, xác định các điểm yếu của học sinh và đề xuất câu hỏi luyện tập phù hợp. Mục tiêu thứ bảy là thiết kế kiến trúc offline-first cho ứng dụng di động, cho phép hoạt động đầy đủ trong môi trường không có kết nối internet và tự động đồng bộ dữ liệu khi có mạng. Mục tiêu cuối cùng là triển khai hệ thống với chi phí thấp, ưu tiên sử dụng các công nghệ mã nguồn mở và miễn phí để hạ thấp rào cản tiếp cận cho các trường học.
+Qua khảo sát sơ bộ, có thể nhận thấy các giải pháp hiện có còn tồn tại các hạn chế chính như sau:
+\begin{itemize}
+    \item phụ thuộc vào phần cứng máy quét chuyên dụng nên chi phí đầu tư cao và khó mở rộng;
+    \item chưa hỗ trợ tốt việc tạo nhiều phiên bản đề thi từ ngân hàng câu hỏi để hạn chế gian lận;
+    \item quy trình phúc khảo chưa được số hóa và thiếu tính minh bạch;
+    \item thiếu tích hợp giữa phần quản lý đào tạo (lớp, học sinh, giáo viên) với phần chấm thi;
+    \item hầu hết các giải pháp chỉ chạy trên nền tảng web, chưa có ứng dụng di động cho phép giáo viên chấm bài ngay tại lớp học bằng chính chiếc điện thoại của mình.
+\end{itemize}
 
-Phạm vi nghiên cứu và phát triển của đề tài tập trung vào bài toán thi trắc nghiệm với hình thức lựa chọn một đáp án đúng trong bốn phương án A, B, C, D, phù hợp với hình thức thi phổ biến tại các trường trung học phổ thông và đại học ở Việt Nam. Mỗi phiếu thi có thể chứa từ 10 đến 50 câu hỏi, với các thông tin bổ sung về mã thí sinh và mã đề được đánh dấu trên cùng phiếu. Hệ thống được thiết kế cho quy mô sử dụng từ một lớp học nhỏ đến toàn bộ trường học, với khả năng xử lý đồng thời nhiều bài thi từ các kỳ thi khác nhau. Về đối tượng người dùng, hệ thống phục vụ ba nhóm chính gồm giáo viên sử dụng web để tạo đề và quản lý kết quả, học sinh sử dụng ứng dụng di động để quét phiếu và xem điểm, và quản trị viên quản lý người dùng và cấu hình hệ thống.
+Từ những hạn chế này, mục tiêu chính của đồ án là xây dựng hệ thống chấm thi trắc nghiệm thông minh có tên gọi Smart Grading, với các chức năng chính gồm:
+\begin{itemize}
+    \item quản lý trường học, lớp học, giáo viên và học sinh;
+    \item quản lý ngân hàng câu hỏi và đề thi có hỗ trợ tạo câu hỏi bằng trí tuệ nhân tạo;
+    \item tự động tạo nhiều phiên bản đề thi khác nhau từ cùng một ngân hàng câu hỏi;
+    \item chấm thi tự động bằng nhận dạng OMR trên thiết bị di động;
+    \item hỗ trợ quy trình tạo đơn phúc khảo và phản hồi phúc khảo minh bạch;
+    \item tạo báo cáo thống kê chi tiết cho từng bài kiểm tra;
+    \item cho phép học sinh xem bài thi và điểm số của mình.
+\end{itemize}
+Phạm vi đề tài tập trung vào môi trường thi trên giấy với phiếu trả lời dạng OMR, sử dụng tiếng Việt và phù hợp với bậc phổ thông trung học và đại học.
 
 \section{Định hướng giải pháp}
 \label{section:1.3}
 
-Từ các mục tiêu đã xác định, đề tài lựa chọn hướng tiếp cận xây dựng hệ thống phần mềm phân tán đa nền tảng, kết hợp công nghệ nhận diện ảnh OMR và trí tuệ nhân tạo, với ba thành phần chính tương ứng với ba tầng của kiến trúc ứng dụng hiện đại.
+Dựa trên mục tiêu và phạm vi đã xác định, đồ án lựa chọn hướng tiếp cận xây dựng hệ thống đa nền tảng theo kiến trúc ba tầng, trong đó tầng giao diện gồm ứng dụng di động Flutter và giao diện web React, tầng xử lý nghiệp vụ là backend Node.js/Express với cơ sở dữ liệu MongoDB, và tầng sinh đề thi được thực hiện bằng gói LaTeX AMC (Auto-Multiple-Choice) biên dịch qua WSL2. Định hướng công nghệ này được lựa chọn dựa trên ba lý do chính:
+\begin{itemize}
+    \item cho phép tận dụng camera trên điện thoại thông minh để chấm OMR mà không cần đầu tư máy quét riêng;
+    \item AMC hỗ trợ tạo nhiều phiên bản đề thi tự động, giải quyết bài toán chống gian lận;
+    \item Node.js/Express và MongoDB giúp phát triển nhanh, dễ mở rộng và có hệ sinh thái thư viện phong phú.
+\end{itemize}
 
-Về nền tảng phát triển ứng dụng di động, đề tài sử dụng Flutter, một framework cross-platform được phát triển bởi Google, cho phép xây dựng ứng dụng native cho cả iOS và Android từ một codebase duy nhất bằng ngôn ngữ lập trình Dart. Lý do lựa chọn Flutter bao gồm ba yếu tố chính. Thứ nhất, khả năng cross-platform giúp giảm đáng kể chi phí phát triển và bảo trì so với việc xây dựng hai ứng dụng riêng biệt cho iOS và Android. Thứ hai, Flutter sử dụng engine Skia để vẽ giao diện trực tiếp trên thiết bị, cho hiệu suất cao hơn so với các framework cross-platform khác sử dụng WebView hoặc bridge trung gian. Thứ ba, hệ sinh thái phong phú của Flutter với các gói thư viện hỗ trợ xử lý ảnh và camera giúp đẩy nhanh quá trình phát triển. Để quản lý trạng thái ứng dụng, hệ thống áp dụng mẫu thiết kế BLoC (Business Logic Component), cho phép tách biệt hoàn toàn logic nghiệp vụ khỏi giao diện người dùng, tăng khả năng kiểm thử và tái sử dụng mã nguồn.
+Giải pháp thực tế mà đồ án xây dựng là một hệ thống end-to-end, trong đó giáo viên sử dụng giao diện web để tạo đề thi từ ngân hàng câu hỏi, hệ thống tự động sinh nhiều mã đề và phiếu OMR tương ứng, giáo viên in phiếu và tổ chức thi, sau khi thu phiếu sử dụng ứng dụng di động để chụp và chấm bằng thuật toán nhận dạng OMR, kết quả được đồng bộ về server và cung cấp cho học sinh xem điểm, gửi phúc khảo nếu cần, đồng thời giúp giáo viên thống kê, phân tích chất lượng đề thi và đưa ra báo cáo chi tiết.
 
-Về nền tảng phát triển ứng dụng web, đề tài sử dụng React phiên bản 19 kết hợp với ngôn ngữ TypeScript và công cụ build Vite. React là thư viện JavaScript được phát triển bởi Meta, với ưu điểm nổi bật là mô hình component-based cho phép tái sử dụng giao diện cao và cộng đồng phát triển đông đảo với hàng triệu thư viện mã nguồn mở. TypeScript bổ sung hệ thống kiểu tĩnh giúp phát hiện lỗi sớm trong quá trình phát triển và cải thiện chất lượng mã nguồn. Vite được chọn làm công cụ build thay cho webpack truyền thống nhờ tốc độ khởi động và hot module replacement nhanh hơn đáng kể, đặc biệt quan trọng trong môi trường phát triển với dự án có quy mô lớn. State management cho ứng dụng web sử dụng Zustand, một thư viện nhẹ với API đơn giản nhưng đủ mạnh mẽ để quản lý trạng thái phức tạp của ứng dụng.
-
-Về kiến trúc phía backend, đề tài lựa chọn Node.js với framework Express và cơ sở dữ liệu MongoDB. Node.js là runtime JavaScript phía server cho phép xây dựng ứng dụng mạng với hiệu suất cao nhờ mô hình non-blocking I/O, đặc biệt phù hợp với các ứng dụng cần xử lý nhiều kết nối đồng thời như hệ thống API. MongoDB là cơ sở dữ liệu NoSQL document-oriented, cho phép lưu trữ dữ liệu phức tạp như cấu trúc câu hỏi, đáp án và kết quả thi dưới dạng document JSON một cách tự nhiên và linh hoạt. Mongoose được sử dụng như ODM (Object Data Modeling) để định nghĩa schema, kiểm tra dữ liệu và tạo các middleware cho các thao tác trên database. Để tạo đề thi đa mã đề, hệ thống tích hợp công cụ AMC (Auto Multiple Choice), một phần mềm mã nguồn mở chạy trên LaTeX, cho phép sinh tự động nhiều phiên bản đề thi với câu hỏi và đáp án được xáo trộn, đồng thời xuất ra tọa độ OMR chính xác phục vụ cho quá trình quét và nhận diện.
-
-Về mô-đun nhận diện OMR, đề tài triển khai engine nhận diện trực tiếp trên thiết bị di động (client-side processing) thay vì gửi ảnh lên server. Lợi ích của phương pháp này là thời gian phản hồi tức thì, không phụ thuộc vào tốc độ mạng, và hoạt động được ngay cả khi không có kết nối internet. Engine nhận diện sử dụng các kỹ thuật xử lý ảnh bao gồm tiền xử lý ảnh (chuyển đổi grayscale, cân bằng histogram, khử nhiễu Gaussian), phát hiện góc phiếu bằng thuật toán Canny edge detection và contour analysis, phép biến đổi phối cảnh (perspective transform) để chuẩn hóa phiếu, và phân tích mật độ pixel trong từng vùng bubble để xác định đáp án được tô. Điểm mấu chốt của giải pháp là sử dụng template JSON chứa tọa độ chính xác của từng bubble, được sinh tự động bởi AMC CLI khi compile đề thi, đảm bảo độ chính xác tuyệt đối không phụ thuộc vào phép tính toán thủ công.
-
-Về mô-đun trí tuệ nhân tạo, đề tài tích hợp Google Gemini API làm nền tảng chính cho các chức năng sinh câu hỏi tự động, phân tích lỗi sai của học sinh và chatbot hỗ trợ ôn tập. Gemini được lựa chọn nhờ khả năng xử lý ngữ cảnh dài, hiệu suất vượt trội trên các benchmark trong lĩnh vực suy luận và tạo sinh văn bản, cùng mô hình pricing hợp lý cho các ứng dụng có lượng sử dụng vừa phải.
-
-Hệ thống được đặt tên là SMART GRADING, viết tắt của System for Multi-Platform Automated Recognition and Testing with Grading, Intelligent Notifications, and Detailed Analytics.
+Đóng góp chính của đồ án gồm:
+\begin{itemize}
+    \item xây dựng thành công hệ thống tích hợp đầy đủ chu trình tạo đề, chấm thi, phúc khảo và báo cáo trên cùng một nền tảng;
+    \item đề xuất và triển khai phương pháp sinh tự động phiếu OMR kèm tọa độ nhận dạng dựa trên AMC, giúp rút ngắn đáng kể thời gian chuẩn bị thi;
+    \item triển khai thuật toán chấm OMR trên thiết bị di động có độ chính xác cao và khả năng phát hiện lỗi tô nhầm, tô nhẹ;
+    \item tích hợp trợ lý AI hỗ trợ sinh câu hỏi và phân tích bài làm.
+\end{itemize}
+Kết quả dự kiến là một hệ thống hoàn chỉnh có thể triển khai thử nghiệm trong môi trường học thuật thực tế.
 
 \section{Bố cục đồ án}
 \label{section:1.4}
 
-Phần còn lại của báo cáo đồ án tốt nghiệp này được tổ chức như sau. Chương 2 trình bày kết quả khảo sát hiện trạng quy trình chấm thi trắc nghiệm tại các trường phổ thông và đại học, phân tích chi tiết các giải pháp OMR hiện có trên thị trường về ưu điểm và hạn chế của từng giải pháp, đồng thời đặc tả đầy đủ các yêu cầu chức năng và phi chức năng của hệ thống thông qua biểu đồ use case, quy trình nghiệp vụ và các bảng đặc tả chi tiết cho các use case quan trọng nhất.
+Phần còn lại của đồ án được tổ chức thành các chương tiếp theo. Chương 2 trình bày kết quả khảo sát hiện trạng, tổng quan các chức năng của hệ thống thông qua biểu đồ use case, biểu đồ phân rã cho từng use case chính cùng đặc tả chi tiết cho các use case quan trọng nhất; ngoài ra, chương này cũng nêu các yêu cầu phi chức năng làm cơ sở cho thiết kế và triển khai.
 
-Trong Chương 3, em trình bày các nền tảng lý thuyết và công nghệ được sử dụng trong đề tài, bao gồm công nghệ xử lý ảnh OMR, framework phát triển ứng dụng di động Flutter, thư viện giao diện web React, kiến trúc backend Node.js, cơ sở dữ liệu MongoDB, và các công cụ hỗ trợ khác. Mỗi công nghệ được phân tích theo ba khía cạnh gồm giới thiệu tổng quan, so sánh với các lựa chọn thay thế, và lý do lựa chọn cụ thể cho đề tài này.
+Trong Chương 3, đồ án giới thiệu các nền tảng lý thuyết và công nghệ được sử dụng, bao gồm: kỹ thuật nhận dạng OMR và xử lý ảnh, nguyên lý tạo đề nhiều phiên bản với AMC, các công nghệ chính trong backend Node.js/Express, frontend React, ứng dụng di động Flutter, cùng với phân tích lý do lựa chọn từng công nghệ và so sánh với các lựa chọn thay thế.
 
-Chương 4 trình bày chi tiết quá trình phân tích và thiết kế hệ thống, bao gồm kiến trúc tổng quan theo mô hình ba lớp, biểu đồ các gói và biểu đồ lớp UML, thiết kế cơ sở dữ liệu MongoDB với sơ đồ ERD, thiết kế giao diện người dùng cho cả ứng dụng mobile và web, và kết quả triển khai thực tế bao gồm các số liệu thống kê về mã nguồn, kiểm thử và triển khai hệ thống.
+Chương 4 trình bày chi tiết quá trình phân tích thiết kế kiến trúc phần mềm, thiết kế giao diện, thiết kế lớp với biểu đồ trình tự cho các use case chính, thiết kế cơ sở dữ liệu, đồng thời mô tả kết quả xây dựng ứng dụng, minh họa các chức năng chính, kết quả kiểm thử và triển khai thử nghiệm trong môi trường thực tế.
 
-Chương 5 mô tả các giải pháp kỹ thuật nổi bật và đóng góp chính của đề tài, tập trung vào năm giải pháp cốt lõi gồm pipeline tạo đề thi tự động với AMC, engine nhận diện OMR chạy trên thiết bị di động, kiến trúc offline-first cho ứng dụng di động, tích hợp trí tuệ nhân tạo để phân tích kết quả học tập, và giao diện camera thích ứng với điều kiện thực tế. Đây là chương quan trọng nhất để đánh giá năng lực giải quyết vấn đề và khả năng áp dụng kiến thức vào thực tiễn của sinh viên.
+Chương 5 tập trung trình bày các giải pháp và đóng góp nổi bật của đồ án, trong đó phân tích chi tiết các bài toán khó đã giải quyết như: thuật toán trộn đề nhiều phiên bản với đảm bảo độ khó đồng đều, quy trình tự động sinh tọa độ phiếu OMR, thuật toán nhận dạng OMR trên thiết bị di động, và mô hình tích hợp trợ lý AI vào quy trình tạo đề và phản hồi phúc khảo.
 
-Chương 6 tổng kết các kết quả đạt được của đề tài, so sánh với các mục tiêu đã đề ra ban đầu và với các giải pháp tương tự trên thị trường, đồng thời đề xuất các hướng phát triển tiếp theo để hoàn thiện và mở rộng hệ thống trong tương lai.
+Cuối cùng, Chương 6 tổng kết những kết quả đạt được của đồ án, đối chiếu với các sản phẩm tương tự, rút ra bài học kinh nghiệm trong quá trình thực hiện, đồng thời đề xuất hướng phát triển trong tương lai để hoàn thiện hệ thống và mở rộng phạm vi ứng dụng.
+
+\section{Kết chương}
+Chương 1 đã trình bày tổng quan bối cảnh thực tiễn của bài toán chấm thi trắc nghiệm tại Việt Nam, qua đó làm nổi bật tính cấp thiết của việc xây dựng một hệ thống tích hợp đầy đủ từ quản lý đào tạo đến chấm thi và phúc khảo. Trên cơ sở đánh giá các giải pháp hiện có, chương này đã xác định rõ mục tiêu, phạm vi của hệ thống Smart Grading, đồng thời nêu định hướng giải pháp đa nền tảng kết hợp công nghệ nhận dạng OMR trên di động và tích hợp AI. Các kết quả chính được tổng kết gồm:
+\begin{itemize}
+    \item hệ thống hóa bài toán và mục tiêu rõ ràng;
+    \item xác định bảy nhóm chức năng chính cần xây dựng;
+    \item định hướng công nghệ khả thi cho từng thành phần.
+\end{itemize}
+Chương 2 sẽ trình bày chi tiết kết quả khảo sát hiện trạng và phân tích yêu cầu của hệ thống, làm cơ sở cho các quyết định thiết kế ở các chương sau.
 
 \end{document}

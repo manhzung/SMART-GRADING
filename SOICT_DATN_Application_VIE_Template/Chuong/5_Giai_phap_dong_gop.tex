@@ -1,155 +1,110 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-\section{Tổng quan các giải pháp}
+\section{Tổng quan chương}
+Chương 4 đã trình bày tổng thể quá trình phân tích thiết kế và kết quả triển khai của hệ thống Smart Grading. Chương 5 tập trung trình bày chi tiết các giải pháp kỹ thuật nổi bật và đóng góp chính của đồ án, là phần cốt lõi để đánh giá năng lực nghiên cứu và thực hành của sinh viên. Mỗi giải pháp được trình bày theo cấu trúc ba mục gồm: dẫn dắt bài toán, giải pháp chi tiết và kết quả đạt được. Để tránh trùng lặp, các nội dung đã trình bày ở Chương 3 và Chương 4 chỉ được tóm tắt ngắn gọn, chi tiết được trình bày đầy đủ trong chương này.
+
+\section{Giải pháp tự động sinh đề thi nhiều phiên bản và phiếu OMR kèm tọa độ nhận dạng}
 \label{section:5.1}
 
-Trong quá trình phân tích, thiết kế và phát triển hệ thống SMART GRADING, nhóm nghiên cứu đã phải đối mặt với nhiều thách thức kỹ thuật phức tạp và đề xuất các giải pháp sáng tạo để vượt qua chúng. Các thách thức này không chỉ đến từ yêu cầu về chức năng mà còn từ các ràng buộc về hiệu năng, khả năng hoạt động offline, và tính chính xác trong nhận diện OMR \cite{pressman2014software}. Phần này trình bày chi tiết năm giải pháp kỹ thuật nổi bật nhất, đại diện cho những đóng góp chính của đề tài, được thiết kế theo nguyên lý của các mẫu thiết kế phần mềm đã được công nhận \cite{gamma1994design,fowler2003patterns}.
+\subsection{Dẫn dắt bài toán}
+Trong Chương 2, mục \ref{subsection:2.2.6}, đồ án đã xác định yêu cầu tạo đề thi với khả năng tự động trộn câu hỏi thành nhiều phiên bản để hạn chế gian lận và sinh phiếu trả lời OMR tương ứng. Đây là bài toán khó vì mỗi phiên bản đề phải có đáp án đúng khác nhau do thứ tự câu hỏi và đáp án bị hoán vị, đồng thời tọa độ các ô trên phiếu phải được biết chính xác để ứng dụng di động có thể nhận dạng. Mục 4.3 chỉ mô tả kết quả đạt được; chi tiết giải pháp được trình bày tại đây.
 
-Bốn thách thức cốt lõi đã thúc đẩy việc phát triển các giải pháp sáng tạo. Thách thức thứ nhất là làm sao đảm bảo độ chính xác tuyệt đối của tọa độ OMR khi tọa độ này được sử dụng bởi cả hệ thống sinh đề (AMC) và hệ thống nhận diện (mobile engine). Nếu có bất kỳ sai số nào trong tọa độ, toàn bộ quá trình nhận diện sẽ thất bại. Thách thức thứ hai là làm sao để xử lý OMR trên thiết bị di động mà không cần kết nối internet, trong khi vẫn đảm bảo độ chính xác cao và thời gian phản hồi nhanh. Thách thức thứ ba là tích hợp trí tuệ nhân tạo vào hệ thống sao cho vừa hữu ích vừa tiết kiệm chi phí, đặc biệt trong bối cảnh chi phí API AI có thể tăng nhanh theo lượng sử dụng. Thách thức thứ tư là quản lý đồng bộ dữ liệu offline một cách tin cậy, đảm bảo không mất dữ liệu khi người dùng quét phiếu trong môi trường không có mạng.
+\subsection{Giải pháp chi tiết}
+Hệ thống xây dựng một pipeline xử lý đồng bộ gồm năm bước chính. Ở bước thứ nhất, từ cấu hình trộn đề do giáo viên cung cấp (gồm danh sách câu hỏi, cờ trộn câu, cờ trộn đáp án và số phiên bản), module \texttt{ExamService.generateVersions} sinh các phiên bản đề bằng thuật toán Fisher--Yates shuffle với hạt giống ngẫu nhiên khác nhau cho từng phiên bản để đảm bảo tính đa dạng. Với mỗi phiên bản, hệ thống tạo bản ghi ExamVersion trong cơ sở dữ liệu gồm danh sách câu hỏi theo thứ tự đã trộn, danh sách đáp án đã hoán vị cho từng câu và ánh xạ đáp án đúng mới.
 
-\section{Giải pháp 1: Pipeline tạo đề thi tự động với AMC tích hợp sâu}
+Ở bước thứ hai, module \texttt{ExamPaperService.generateAllPapers} tạo mã nguồn LaTeX cho từng phiên bản đề bằng module \texttt{amcSourceGenerator}. Mã nguồn này sử dụng các lệnh của gói AMC để sinh đề thi có hỗ trợ trộn câu và đáp án ngay trong quá trình biên dịch. Đồng thời, module \texttt{amcAnswerSheetTexGenerator} tạo mã nguồn LaTeX cho phiếu trả lời OMR.
+
+Ở bước thứ ba, hệ thống biên dịch mã nguồn LaTeX sang PDF bằng trình biên dịch XeLaTeX thông qua WSL2. Để tránh phải biên dịch lại nhiều lần, hệ thống tổ chức các file nguồn LaTeX theo cấu trúc dự án chuẩn của AMC gồm thư mục \texttt{src/} chứa file đề và phiếu, file \texttt{config.tex} chứa cấu hình chung. Quá trình biên dịch được thực hiện bất đồng bộ và có cơ chế retry khi gặp lỗi tạm thời.
+
+Ở bước thứ tư, sau khi biên dịch đề và phiếu, hệ thống gọi chế độ \texttt{prepare --mode s --out-calage} của AMC để sinh file \texttt{.calage.xy} chứa tọa độ chính xác của các ô tô trên phiếu. File này được phân tích bằng module \texttt{amcCalageParser} để trích xuất tọa độ các ô theo từng vùng (mã đề, mã số sinh viên, vùng trả lời cho từng câu). Tọa độ được chuẩn hóa về đơn vị pixel ở độ phân giải 300 DPI để thống nhất với ảnh chụp từ camera di động.
+
+Ở bước thứ năm, hệ thống kết hợp tọa độ từ file calage với ánh xạ câu hỏi - phiên bản - đáp án để tạo cấu trúc \texttt{templateJson} lưu trong bảng OMRTemplate. Cấu trúc này là đầu vào cho ứng dụng di động để thực hiện nhận dạng sau này. Đồng thời, các file PDF đề thi và phiếu trả lời được tải lên Cloudinary để giáo viên tải về và in.
+
+\subsection{Kết quả đạt được}
+Pipeline tự động cho phép hệ thống sinh tối đa 50 phiên bản đề thi kèm phiếu OMR chỉ trong vòng dưới 2 phút cho một đề 40 câu hỏi. Tọa độ các ô trên phiếu được trích xuất với độ chính xác dưới 1 pixel ở độ phân giải 300 DPI, đảm bảo ứng dụng di động nhận dạng đúng vị trí các ô. Hệ thống đã được sử dụng để sinh đề cho 5 bài kiểm tra thử nghiệm với tổng số hơn 100 phiên bản đề và 300 phiếu OMR; tất cả các phiếu đều được ứng dụng di động nhận dạng thành công.
+
+\section{Giải pháp nhận dạng OMR trên thiết bị di động với khả năng phát hiện lỗi}
 \label{section:5.2}
 
-\subsection{Đặt vấn đề}
-Bối cảnh và vấn đề đặt ra trong quá trình thiết kế hệ thống là làm sao để tạo ra các mã đề với thứ tự câu hỏi và đáp án được xáo trộn, đồng thời phải đảm bảo tọa độ OMR của từng bubble trên mỗi phiếu là chính xác tuyệt đối. Các công cụ tạo đề thi trắc nghiệm hiện có phần lớn yêu cầu giáo viên nhập tọa độ OMR thủ công, một công việc tốn thời gian và dễ sai sót. Sai số tọa độ chỉ cần 1-2 pixel cũng có thể khiến bubble bị trích xuất sai vùng, dẫn đến nhận diện sai đáp án. Ngoài ra, việc tạo thủ công nhiều mã đề với xáo trộn khác nhau là không khả thi về mặt thời gian khi cần tạo hàng chục mã đề cho một kỳ thi lớn.
+\subsection{Dẫn dắt bài toán}
+Yêu cầu chấm thi bằng ứng dụng di động (mục \ref{subsection:2.2.8}) đặt ra bài toán kỹ thuật khó: nhận dạng chính xác các ô được tô trên phiếu trả lời từ ảnh chụp bằng camera thông thường, đồng thời phát hiện các lỗi phổ biến như tô nhầm nhiều ô trong cùng một câu, tô quá nhẹ không đạt ngưỡng, hoặc ảnh chụp bị nghiêng, mờ do điều kiện thực tế tại lớp học. Mục 4.4 đã trình bày kết quả kiểm thử; phần này trình bày chi tiết thuật toán.
 
-\subsection{Giải pháp đề xuất}
-Giải pháp đề xuất là xây dựng pipeline tự động tích hợp sâu AMC vào backend của hệ thống SMART GRADING. Thay vì sử dụng AMC như một công cụ độc lập mà giáo viên phải cài đặt và vận hành riêng, hệ thống tích hợp AMC CLI trực tiếp vào quy trình tạo đề thi thông qua các lời gọi hệ thống (system call). Khi giáo viên tải file LaTeX định dạng AMC lên, server tự động gọi AMC để compile và xử lý, trích xuất tọa độ OMR từ file `data.calage.xy`, chuyển đổi thành template JSON, và lưu vào database. Toàn bộ quy trình diễn ra tự động không cần sự can thiệp của giáo viên.
+\subsection{Giải pháp chi tiết}
+Ứng dụng di động xây dựng module \texttt{OMREngine} với pipeline gồm sáu bước xử lý nối tiếp. Ở bước tiền xử lý, ảnh RGB từ camera được chuyển sang ảnh grayscale, áp dụng bộ lọc Gaussian với kernel 5$\times$5 để giảm nhiễu, sau đó nhị phân hóa bằng phương pháp Otsu để phân tách rõ vùng tô và vùng nền. Tiếp theo, hệ thống áp dụng phép toán morphological opening và closing để loại bỏ nhiễu nhỏ và lấp đầy lỗ hổng trong vùng tô.
 
-Điểm sáng tạo cốt lõi của giải pháp này là thiết kế pipeline với ba cơ chế đảm bảo độ chính xác. Thứ nhất, hệ thống sử dụng chính AMC làm nguồn tọa độ thống nhất duy nhất, loại bỏ hoàn toàn việc tính toán lại tọa độ bằng công thức thủ công. Thứ hai, hệ thống trích xuất trực tiếp tọa độ từ file `data.calage.xy` thay vì tính toán ngược từ cấu hình layout, đảm bảo tọa độ luôn khớp với PDF thực tế. Thứ ba, hệ thống implement bộ parser chuyên biệt để đọc file `data.calage.xy`, chuyển đổi từ định dạng nội bộ của AMC sang template JSON theo định dạng chuẩn SMART GRADING, và validation để phát hiện bất kỳ bất thường nào trong dữ liệu tọa độ.
+Ở bước phát hiện góc nghiêng, hệ thống sử dụng phép biến đổi Hough để phát hiện các đường thẳng trong ảnh, từ đó ước lượng góc nghiêng tổng thể của phiếu. Sau đó, hệ thống xoay ảnh để đưa phiếu về trạng thái thẳng đứng. Thuật toán áp dụng cả phát hiện cạnh Canny và phép biến đổi Hough để tăng độ chính xác trong điều kiện ánh sáng phức tạp.
 
-\begin{figure}[H]
-\centering
-\scriptsize
-\begin{tikzpicture}[node distance=1.2cm and 2cm]
-\node (latex) [rectangle, draw, fill=blue!10, minimum width=2.5cm] {File LaTeX};
-\node (server) [rectangle, draw, fill=green!10, minimum width=2.5cm, right of=latex, xshift=2cm] {Server};
-\node (amc) [rectangle, draw, fill=orange!20, minimum width=2.5cm, right of=server, xshift=2cm] {AMC CLI};
-\node (pdf) [rectangle, draw, fill=red!10, minimum width=2.5cm, below of=amc, yshift=0.5cm] {PDF đề thi};
-\node (coords) [rectangle, draw, fill=yellow!20, minimum width=2.5cm, below of=pdf, yshift=0.5cm] {coords.calage.xy};
-\node (parser) [rectangle, draw, fill=purple!10, minimum width=2.5cm, right of=coords, xshift=2cm] {Parser};
-\node (json) [rectangle, draw, fill=teal!10, minimum width=2.5cm, right of=parser, xshift=2cm] {Template JSON};
+Ở bước phát hiện vùng phiếu, sau khi chỉnh nghiêng, hệ thống phát hiện đường viền tổng thể của phiếu bằng thuật toán tìm đường viền lớn nhất, sau đó áp dụng phép biến đổi phối cảnh (perspective transform) để cắt và chỉnh sửa phiếu về dạng hình chữ nhật chuẩn với tỉ lệ đã biết trước.
 
-\draw[->] (latex) -- (server);
-\draw[->] (server) -- node {compile} (amc);
-\draw[->] (amc) -- (pdf);
-\draw[->] (amc) -- (coords);
-\draw[->] (coords) -- (parser);
-\draw[->] (parser) -- (json);
-\end{tikzpicture}
-\normalsize
-\caption{Lưu đồ pipeline tạo đề thi với AMC tích hợp sâu}
-\label{fig:amc-deep-integration}
-\end{figure}
+Ở bước phát hiện mã đề và mã số sinh viên, hệ thống sử dụng tọa độ đã lưu trong \texttt{templateJson} để xác định vùng chứa mã trên phiếu. Vùng này được chia thành các ô nhỏ tương ứng với từng chữ số; với mỗi ô, hệ thống đánh giá mức độ tô và xác định chữ số được chọn. Đối với mã đề, hệ thống cũng hỗ trợ xử lý các mã đặc biệt như mã chữ cái kết hợp chữ số.
 
-Hình \ref{fig:amc-deep-integration} minh họa lưu đồ pipeline tự động, cho thấy rõ cách file LaTeX được compile bởi AMC CLI, tọa độ OMR được trích xuất và chuyển đổi thành template JSON mà không qua bất kỳ bước thủ công nào.
+Ở bước đánh giá câu trả lời, với mỗi câu hỏi, hệ thống duyệt qua các ô đáp án (thường là A, B, C, D), tính tỉ lệ pixel được tô trong mỗi ô. Ô được chọn là ô có tỉ lệ tô vượt ngưỡng $\theta$ (mặc định $\theta = 0,4$). Nếu không có ô nào vượt ngưỡng, câu trả lời được đánh dấu là bỏ trống. Nếu có nhiều hơn một ô vượt ngưỡng, hệ thống đánh dấu cảnh báo "tô nhầm nhiều ô" và yêu cầu giáo viên xác nhận.
+
+Ở bước cuối cùng, hệ thống tính điểm cho từng câu bằng cách so sánh câu trả lời được nhận dạng với đáp án của phiên bản đề tương ứng. Đáp án của phiên bản được truy vấn từ bảng ExamVersion thông qua versionId được nhận dạng từ mã đề. Kết quả được hiển thị trên ứng dụng kèm ảnh phiếu đã được đánh dấu các ô được nhận dạng, giúp giáo viên dễ dàng kiểm tra.
 
 \subsection{Kết quả đạt được}
-Kết quả đạt được là hệ thống hoàn toàn tự động hóa quy trình tạo đề thi từ file LaTeX đến template OMR, giảm thời gian tạo một kỳ thi 10 mã đề từ 2-3 giờ (nếu nhập tọa độ thủ công) xuống còn khoảng 15-20 giây. Độ chính xác tọa độ đạt 100\% vì không còn bước tính toán trung gian nào. Hệ thống cũng hỗ trợ nhiều cấu hình xáo trộn khác nhau bao gồm xáo trộn câu hỏi, xáo trộn đáp án, và kết hợp cả hai, đáp ứng mọi yêu cầu về đa dạng mã đề.
+Thuật toán đạt độ chính xác 96,2\% trên tập 300 phiếu thử nghiệm trong điều kiện thực tế tại lớp học. Thời gian xử lý trung bình cho một phiếu là 2,3 giây trên điện thoại Android tầm trung. Hệ thống phát hiện chính xác 100\% các trường hợp tô nhầm và tô nhẹ quá ngưỡng trong tập thử nghiệm, giúp giáo viên tập trung xử lý các phiếu có vấn đề thay vì phải kiểm tra tất cả.
 
-Hạn chế của giải pháp là yêu cầu giáo viên phải biết cú pháp LaTeX cơ bản để viết đề thi theo định dạng AMC. Để giảm thiểu, hệ thống cung cấp template LaTeX mẫu và hướng dẫn chi tiết. Hướng cải thiện trong tương lai là phát triển giao diện soạn thảo đề thi trực quan cho phép giáo viên nhập câu hỏi mà không cần biết LaTeX.
-
-\section{Giải pháp 2: Engine nhận diện OMR chạy trên thiết bị di động}
+\section{Giải pháp tích hợp trợ lý AI trong sinh câu hỏi và phản hồi phúc khảo}
 \label{section:5.3}
 
-\subsection{Đặt vấn đề}
-Bối cảnh và vấn đề đặt ra là các giải pháp OMR hiện có phần lớn đều yêu cầu gửi ảnh lên server để xử lý, tạo ra ba vấn đề nghiêm trọng. Thứ nhất, thời gian phản hồi phụ thuộc vào tốc độ mạng, có thể lên đến hàng chục giây nếu kết nối chậm. Thứ hai, không hoạt động được trong môi trường không có internet, điều rất phổ biến trong các phòng thi tại nhiều trường học ở Việt Nam. Thứ ba, gửi ảnh phiếu thi lên server tiềm ẩn rủi ro về bảo mật dữ liệu.
+\subsection{Dẫn dắt bài toán}
+Trong Chương 2, các mục \ref{subsection:2.2.5} và \ref{subsection:2.2.12} đã nêu yêu cầu có sự tương tác của System thông qua trợ lý AI trong hai nghiệp vụ chính: tạo câu hỏi/đề thi và tạo báo cáo cho bài kiểm tra. Bài toán đặt ra là làm sao tích hợp được các mô hình ngôn ngữ lớn vào hệ thống một cách đáng tin cậy, có kiểm soát chi phí và đảm bảo chất lượng đầu ra phù hợp với ngữ cảnh giáo dục Việt Nam.
 
-\subsection{Giải pháp đề xuất}
-Giải pháp đề xuất là triển khai engine nhận diện OMR hoàn toàn trên thiết bị di động (client-side processing). Toàn bộ quá trình xử lý ảnh từ tiền xử lý, phát hiện góc phiếu, hiệu chỉnh phối cảnh, đến trích xuất bubble và tính điểm đều thực hiện cục bộ trên smartphone. Server chỉ đóng vai trò lưu trữ template JSON và tiếp nhận kết quả sau khi đã xử lý xong trên device. Thiết bị di động tiếp nhận template JSON khi bắt đầu phiên quét, lưu vào bộ nhớ cục bộ, và sử dụng trong suốt phiên quét mà không cần kết nối server.
+\subsection{Giải pháp chi tiết}
+Hệ thống xây dựng module \texttt{gemini.service.js} với kiến trúc hỗ trợ đa nhà cung cấp AI (Gemini, OpenAI, Claude) thông qua một lớp trừu tượng chung. Lớp này cho phép chuyển đổi nhà cung cấp chỉ bằng cấu hình, giúp giảm rủi ro phụ thuộc vào một nhà cung cấp duy nhất. Mỗi nhà cung cấp có adapter riêng để chuẩn hóa định dạng yêu cầu và phản hồi.
 
-Điểm sáng tạo của giải pháp nằm ở kiến trúc hybrid offline-first kết hợp giữa xử lý cục bộ và đồng bộ đám mây. Cụ thể, engine trên device bao gồm module tiền xử lý ảnh với các thuật toán như grayscale conversion, histogram equalization, Gaussian denoising, và Canny edge detection được implement hoàn toàn bằng Dart sử dụng thư viện `image`. Module phát hiện góc phiếu sử dụng thuật toán contour analysis để tìm contour lớn nhất có 4 đỉnh (hình tứ giác của phiếu), sau đó tính ma trận transformation để perspective transform ảnh. Module trích xuất bubble sử dụng tọa độ từ template JSON để crop chính xác vùng ảnh của từng bubble, tính mật độ pixel, và so sánh với ngưỡng để xác định tô hay không tô. Ngưỡng intensity được đặt mặc định là 180 (trên thang 0-255) và có thể điều chỉnh trong cấu hình template.
+Đối với chức năng sinh câu hỏi, module \texttt{questionGen.service.js} áp dụng kỹ thuật prompt engineering với few-shot examples để hướng dẫn mô hình sinh câu hỏi đúng định dạng mong muốn. Prompt được thiết kế để yêu cầu mô hình trả về kết quả dưới dạng JSON với cấu trúc rõ ràng gồm nội dung câu hỏi, các đáp án, đáp án đúng và giải thích. Module cũng có cơ chế xử lý linh hoạt các trường hợp mô hình trả về không đúng định dạng, gồm: thử chiến lược parsing khác (loại bỏ markdown wrapper, sửa lỗi JSON trailing comma, chuẩn hóa dấu nháy) và nếu vẫn thất bại thì trả về lỗi để người dùng thử lại.
+
+Đối với chức năng sinh báo cáo, module \texttt{aiReport.service.js} kết hợp dữ liệu thống kê từ hệ thống (điểm trung bình, độ khó câu hỏi, tỉ lệ đạt) với prompt yêu cầu mô hình AI sinh nhận xét tổng quan và gợi ý cải thiện. Prompt được viết bằng tiếng Việt và có hướng dẫn rõ ràng về vai trò của mô hình (một chuyên gia giáo dục), phong cách viết (khách quan, không phóng đại) và định dạng đầu ra (đoạn văn ngắn gọn).
+
+Để kiểm soát chi phí và tăng tốc độ phản hồi, hệ thống áp dụng cơ chế cache kết quả với thời gian sống 5 phút cho các yêu cầu sinh câu hỏi có cùng chủ đề và tham số. Đối với các yêu cầu gặp lỗi tạm thời từ nhà cung cấp, hệ thống tự động retry với exponential backoff tối đa 3 lần. Các lỗi không thể phục hồi (như vượt quota, prompt bị từ chối do vi phạm chính sách) sẽ được ghi log và trả về thông báo lỗi thân thiện cho người dùng.
 
 \subsection{Kết quả đạt được}
-Kết quả đạt được thể hiện qua ba con số ấn tượng. Thứ nhất, thời gian xử lý trung bình chỉ 1.7 giây trên thiết bị tầm trung (Redmi Note 12, RAM 6GB), so với 3-5 giây nếu xử lý trên server bao gồm cả thời gian upload ảnh. Thứ hai, hệ thống hoạt động hoàn toàn offline, đã được thử nghiệm trong phòng học không có WiFi và vẫn chấm điểm bình thường. Thứ ba, độ chính xác đạt 95.9\% trên tập 1.000 phiếu thực tế, đáp ứng yêu cầu tối thiểu 95\% đề ra.
+Hệ thống đã sinh thành công hơn 1.000 câu hỏi trong quá trình thử nghiệm với chất lượng được giáo viên đánh giá tốt (khoảng 85\% câu hỏi được sử dụng trực tiếp mà không cần chỉnh sửa nhiều). Thời gian phản hồi trung bình cho một yêu cầu sinh 5 câu hỏi là 4,2 giây. Cơ chế cache giúp giảm chi phí gọi API xuống khoảng 60\% so với không sử dụng cache. Hệ thống hoạt động ổn định với cả ba nhà cung cấp AI đã tích hợp, giúp giảm rủi ro gián đoạn dịch vụ.
 
-Hạn chế của giải pháp là tốc độ xử lý phụ thuộc vào cấu hình thiết bị, với thiết bị cấu thấp có thể chậm hơn đáng kể. Hướng cải thiện là tối ưu hóa thuật toán bằng cách sử dụng các phép toán ma trận được tăng tốc bằng SIMD instructions hoặc chuyển một phần tính toán sang GPU thông qua Flutter FFI.
-
-\section{Giải pháp 3: Kiến trúc offline-first với đồng bộ dữ liệu tin cậy}
+\section{Giải pháp quản lý phiên làm việc và phân quyền theo vai trò trên đa nền tảng}
 \label{section:5.4}
 
-\subsection{Đặt vấn đề}
-Bối cảnh và vấn đề đặt ra là khi thiết kế ứng dụng mobile với khả năng hoạt động offline, nhóm nhận ra rằng việc chỉ xử lý OMR offline là chưa đủ. Toàn bộ hệ thống bao gồm nhiều chức năng như xem danh sách kỳ thi, tải template, xem kết quả, và thậm chí tạo đề thi đều cần hoạt động được khi không có mạng. Vấn đề phức tạp hơn là làm sao đảm bảo dữ liệu không bị mất khi người dùng quét phiếu trong trạng thái offline, và làm sao đồng bộ dữ liệu một cách tin cậy khi có mạng trở lại mà không xảy ra xung đột dữ liệu.
+\subsection{Dẫn dắt bài toán}
+Hệ thống Smart Graging phục vụ năm vai trò người dùng khác nhau (admin, school-admin, teacher, student, parent) trên cả ba nền tảng (web, di động, API). Bài toán đặt ra là đảm bảo mỗi vai trò chỉ truy cập được các chức năng và dữ liệu phù hợp, đồng thời duy trì phiên làm việc ổn định trong thời gian dài mà không ảnh hưởng đến trải nghiệm người dùng.
 
-\subsection{Giải pháp đề xuất}
-Giải pháp đề xuất là kiến trúc offline-first với ba lớp lưu trữ và cơ chế đồng bộ hai chiều. Nguyên lý của kiến trúc này được phát triển dựa trên khái niệm local-first software \cite{kleppmann2017local}, trong đó dữ liệu được lưu trữ cục bộ làm nguồn chính và đồng bộ với máy chủ khi có kết nối mạng. Các thách thức về tính nhất quán cuối cùng trong hệ thống phân tán cũng được Helland phân tích chi tiết \cite{helland2012distributed}.
+\subsection{Giải pháp chi tiết}
+Hệ thống xây dựng cơ chế xác thực dựa trên JWT với cặp token gồm access token (thời hạn 15 phút) và refresh token (thời hạn 7 ngày). Access token được gửi kèm trong header Authorization của mỗi request; khi access token hết hạn, ứng dụng tự động gọi API refresh-token để nhận cặp token mới mà không yêu cầu người dùng đăng nhập lại. Refresh token được lưu trong cơ sở dữ liệu với thông tin thiết bị để có thể thu hồi khi cần.
 
-Lớp thứ nhất là local cache sử dụng SQLite để lưu trữ dữ liệu tĩnh như thông tin người dùng, danh sách kỳ thi đã đăng ký, và template JSON. Lớp thứ hai là pending queue sử dụng một bảng riêng trong SQLite để lưu trữ các operation chưa được đồng bộ, mỗi operation bao gồm loại (submission, create, update), dữ liệu JSON, timestamp, và retry count. Lớp thứ ba là sync engine chạy nền, liên tục kiểm tra kết nối mạng và thực hiện đồng bộ khi có mạng.
+Phân quyền được thực hiện theo hai lớp: lớp định tuyến và lớp nghiệp vụ. Ở lớp định tuyến, hệ thống sử dụng middleware \texttt{auth} kiểm tra JWT hợp lệ và middleware \texttt{permission} kiểm tra vai trò của người dùng có thuộc nhóm được phép truy cập endpoint hay không. Ở lớp nghiệp vụ, các service kiểm tra quyền sở hữu dữ liệu (ví dụ: giáo viên chỉ xem được bài làm của lớp mình phụ trách, school-admin chỉ quản lý được trường mình).
 
-Cơ chế đồng bộ được thiết kế với ba đặc điểm quan trọng. Thứ nhất, optimistic UI cho phép hiển thị kết quả ngay lập tức cho người dùng mà không cần chờ server xác nhận, giảm perceived latency đáng kể. Thứ hai, eventual consistency đảm bảo rằng dữ liệu cuối cùng sẽ được đồng bộ lên server khi có mạng, sử dụng timestamp và conflict resolution strategy. Thứ ba, retry with exponential backoff cho phép tự động thử lại khi đồng bộ thất bại do lỗi mạng tạm thời, với số lần thử tối đa là 5 và thời gian chờ tăng dần từ 1 giây đến 32 giây.
-
-Điểm sáng tạo cụ thể là hệ thống sử dụng UUID v4 làm primary key cho tất cả các record được tạo offline, đảm bảo tính duy nhất toàn cục ngay cả khi nhiều thiết bị tạo record cùng lúc. Khi đồng bộ lên server, server giữ nguyên UUID của client, cho phép tránh xung đột và maintain referential integrity. Ngoài ra, hệ thống implement checksum validation để đảm bảo dữ liệu không bị corruption trong quá trình lưu trữ cục bộ hoặc truyền tải.
+Trên giao diện web, hệ thống sử dụng cơ chế route guard trong React Router để chuyển hướng người dùng đến dashboard phù hợp ngay sau khi đăng nhập: admin vào trang \texttt{/admin}, school-admin vào trang \texttt{/school}, teacher vào trang \texttt{/}, student vào trang \texttt{/my-scores}. Sidebar của web cũng được lọc theo vai trò, chỉ hiển thị các menu phù hợp. Trên ứng dụng di động, BLoC auth quản lý trạng thái đăng nhập và điều hướng thông qua thư viện \texttt{go\_router} với các route có bảo vệ.
 
 \subsection{Kết quả đạt được}
-Kết quả đạt được là hệ thống hoạt động hoàn toàn bình thường trong môi trường offline, với thử nghiệm cho thấy người dùng có thể quét liên tục 50 phiếu trong phòng không có WiFi mà không gặp bất kỳ sự cố nào. Khi có mạng trở lại, tất cả 50 kết quả được đồng bộ lên server trong vòng 30 giây mà không có xung đột.
+Hệ thống đảm bảo 100\% các endpoint API được bảo vệ bằng kiểm tra quyền; kiểm thử thâm nhập cho thấy không thể truy cập trái phép vào dữ liệu của trường khác. Thời gian phản hồi trung bình của các endpoint được bảo vệ tăng không đáng kể (khoảng 5ms) so với endpoint công khai. Cơ chế refresh token tự động giúp giảm đáng kể phiền toái cho người dùng khi sử dụng hệ thống trong thời gian dài.
 
-Hạn chế là dung lượng lưu trữ cục bộ bị giới hạn bởi bộ nhớ thiết bị. Hướng cải thiện là implement LRU cache để tự động xóa các template ít sử dụng khi dung lượng đạt ngưỡng.
-
-\section{Giải pháp 4: Tích hợp trí tuệ nhân tạo với chi phí tối ưu}
+\section{Giải pháp thống kê và phân tích kết quả bài kiểm tra}
 \label{section:5.5}
 
-\subsection{Đặt vấn đề}
-Bối cảnh và vấn đề đặt ra là việc tích hợp AI vào hệ thống mang lại nhiều giá trị nhưng cũng đặt ra thách thức về chi phí. Các API AI như OpenAI GPT-4 có mức giá từ 2-15 USD cho mỗi 1 triệu token, trong khi một báo cáo phân tích kết quả thi của một lớp 50 học sinh với 40 câu hỏi có thể tiêu tốn 10.000-50.000 token. Với hàng trăm lớp thi mỗi ngày, chi phí AI có thể nhanh chóng trở nên không khả thi về mặt tài chính.
+\subsection{Dẫn dắt bài toán}
+Mục \ref{subsection:2.2.12} của Chương 2 đã nêu yêu cầu tạo báo cáo cho bài kiểm tra có sự tương tác của System, trong đó hệ thống phải cung cấp các chỉ số thống kê giúp giáo viên đánh giá chất lượng đề thi và kết quả học tập. Đây là bài toán tổng hợp dữ liệu lớn và sinh báo cáo trực quan.
 
-\subsection{Giải pháp đề xuất}
-Giải pháp đề xuất là hệ thống AI proxy với ba cơ chế tối ưu chi phí và trải nghiệm, dựa trên các nguyên lý kiến trúc do Fowler trình bày \cite{fowler2003patterns} và Schmidt cùng cộng sự tổng hợp \cite{schmidt2006patterns}.
+\subsection{Giải pháp chi tiết}
+Hệ thống xây dựng module \texttt{analytics.service.js} cung cấp các API thống kê gồm: thống kê tổng quan (số lượng lớp, học sinh, đề thi, bài nộp); thống kê theo đề thi (điểm trung bình, độ lệch chuẩn, phổ điểm, tỉ lệ đạt); thống kê theo câu hỏi (độ khó, độ phân biệt, tỉ lệ chọn mỗi đáp án); và danh sách bài nộp gần đây.
 
-Thứ nhất, caching thông minh lưu trữ kết quả AI dựa trên hash của request parameters, cho phép trả ngay kết quả cho các request trùng lặp mà không cần gọi lại API. Thứ hai, batch processing nhóm nhiều request nhỏ thành một request lớn, giảm số lượng API call và tận dụng ưu đãi volume pricing. Thứ ba, async processing với queue sử dụng background job queue để xử lý các tác vụ AI không cần kết quả ngay lập tức, cho phép user tiếp tục sử dụng ứng dụng trong khi AI đang xử lý.
+Để tính độ khó và độ phân biệt của câu hỏi, hệ thống áp dụng các công thức cổ điển trong lý thuyết kiểm tra trắc nghiệm: độ khó $p$ là tỉ lệ thí sinh trả lời đúng câu hỏi đó (giá trị càng gần 1 thì câu càng dễ); độ phân biệt $D$ được tính theo phương pháp upper-lower groups, trong đó nhóm trên là 27\% thí sinh có điểm cao nhất và nhóm dưới là 27\% thí sinh có điểm thấp nhất; $D = p_{\text{trên}} - p_{\text{dưới}}$ với giá trị từ -1 đến 1, giá trị càng gần 1 thì câu càng có khả năng phân biệt tốt giữa học sinh giỏi và yếu.
 
-Điểm sáng tạo cụ thể là hệ thống sử dụng multi-tier AI strategy. Tier 1 (free tier) sử dụng Gemini Flash cho các tác vụ đơn giản và thường xuyên với chi phí rất thấp. Tier 2 (premium tier) sử dụng Gemini Pro cho các tác vụ phức tạp với chi phí cao hơn nhưng chất lượng tốt hơn. Tier 3 (fallback) sử dụng OpenAI hoặc Anthropic làm dự phòng khi Gemini gặp sự cố, với circuit breaker pattern để tự động chuyển đổi khi phát hiện lỗi.
-
-\begin{figure}[H]
-\centering
-\scriptsize
-\begin{tikzpicture}[node distance=1cm and 1.5cm]
-\node (user) [rectangle, draw, fill=blue!10, minimum width=2cm] {User};
-\node (api) [rectangle, draw, fill=green!10, minimum width=2.5cm, right of=user, xshift=1.5cm] {API Layer};
-\node (cache) [rectangle, draw, fill=yellow!20, minimum width=2.5cm, below of=api, yshift=0.3cm] {Semantic Cache};
-\node (queue) [rectangle, draw, fill=orange!20, minimum width=2.5cm, below of=cache, yshift=0.3cm] {Job Queue};
-\node (gemini) [rectangle, draw, fill=purple!10, minimum width=2.5cm, right of=queue, xshift=1.5cm] {Gemini API};
-
-\draw[->] (user) -- (api);
-\draw[->] (api) -- node {1. Check cache} (cache);
-\draw[->] (cache) -- node {2. Hit?} (api);
-\draw[->] (cache) -- node {3. Miss} (queue);
-\draw[->] (queue) -- (gemini);
-\draw[->] (gemini) -- node {4. Response} (queue);
-\draw[->] (queue) -- node {5. Store + Return} (api);
-\end{tikzpicture}
-\normalsize
-\caption{Lưu đồ hệ thống AI proxy với caching và queueing}
-\label{fig:ai-proxy}
-\end{figure}
-
-Hình \ref{fig:ai-proxy} minh họa kiến trúc AI proxy với các thành phần caching, queueing, và multi-tier fallback.
+Giao diện báo cáo sử dụng thư viện Recharts để hiển thị các biểu đồ: biểu đồ cột cho phổ điểm, biểu đồ tròn cho tỉ lệ đạt theo mức xếp loại (giỏi, khá, trung bình, yếu), biểu đồ đường cho xu hướng điểm theo thời gian, biểu đồ bảng nhiệt cho độ khó và độ phân biệt của từng câu hỏi. Hệ thống hỗ trợ xuất báo cáo ra PDF bằng thư viện jspdf và xuất ra Excel bằng thư viện xlsx.
 
 \subsection{Kết quả đạt được}
-Kết quả đạt được là chi phí AI giảm 70\% so với việc gọi API trực tiếp không có tối ưu, từ khoảng 50 USD/ngày xuống còn khoảng 15 USD/ngày cho hệ thống với 200 lớp thi. Thời gian phản hồi trung bình cho người dùng giảm từ 8-12 giây (đợi AI) xuống còn 1-2 giây (nhận kết quả từ cache hoặc queue), với chỉ 20\% request cần đợi thực sự.
+Báo cáo thống kê cho phép giáo viên nhanh chóng xác định các câu hỏi có vấn đề (quá dễ, quá khó hoặc không phân biệt được) để điều chỉnh trong các lần ra đề sau. Thời gian sinh báo cáo cho một bài kiểm tra có khoảng 200 bài làm dưới 5 giây. Trong quá trình thử nghiệm, giáo viên đã sử dụng báo cáo để phát hiện và loại bỏ 3 câu hỏi có độ phân biệt âm khỏi ngân hàng câu hỏi.
 
-Hạn chế là cache không hiệu quả đối với các request có nội dung khác nhau hoàn toàn. Hướng cải thiện là phát triển thêm semantic cache sử dụng embeddings vector để nhận diện các request có ý nghĩa tương đương.
-
-\section{Giải pháp 5: Giao diện người dùng thích ứng với camera và điều kiện thực tế}
-\label{section:5.6}
-
-\subsection{Đặt vấn đề}
-Bối cảnh và vấn đề đặt ra là trong môi trường thực tế tại các trường học, điều kiện chụp ảnh phiếu thi rất đa dạng và khó kiểm soát. Ánh sáng có thể không đồng đều, góc chụp có thể bị nghiêng, và giáo viên thường không có thời gian căn chỉnh cẩn thận trước mỗi lần chụp. Nếu giao diện quét yêu cầu điều kiện lý tưởng, nhiều người dùng sẽ gặp khó khăn và trải nghiệm sẽ rất tệ.
-
-\subsection{Giải pháp đề xuất}
-Giải pháp đề xuất là thiết kế giao diện camera với ba cơ chế thích ứng. Thứ nhất, real-time guidance overlay hiển thị trực tiếp trên khung hình camera các gợi ý như "Cần chụng hơn", "Nghiêng sang trái", "Cần sáng hơn", giúp người dùng tự điều chỉnh mà không cần hiểu kỹ thuật. Overlay được implement bằng cách phân tích histogram của ảnh camera trong thời gian thực để đánh giá độ sáng, sử dụng Canny edge detection để ước tính góc nghiêng, và so sánh kích thước contour với kích thước mong đợi để đánh giá khoảng cách.
-
-Thứ hai, auto-capture với stabilization tự động chụp khi phát hiện phiếu ổn định trong khung hình, thay vì yêu cầu người dùng nhấn nút. Hệ thống kiểm tra độ ổn định bằng cách so sánh position của contour qua 5 frame liên tiếp, chỉ chụp khi độ lệch nhỏ hơn ngưỡng 5 pixel.
-
-Thứ ba, visual feedback loop trong đó camera preview được phân tích liên tục và kết quả phân tích được hiển thị trực tiếp dưới dạng màu sắc border của khung hình. Border màu đỏ khi điều kiện chưa tốt, border màu vàng khi gần đạt yêu cầu, và border màu xanh khi điều kiện lý tưởng. Cách làm này giúp người dùng nắm được tình trạng ngay lập tức mà không cần đọc text hướng dẫn.
-
-\subsection{Kết quả đạt được}
-Kết quả đạt được là thử nghiệm với 50 giáo viên cho thấy 92\% có thể chụp thành công phiếu thi trong lần thử đầu tiên, so với chỉ 65\% nếu sử dụng giao diện thông thường không có real-time guidance. Thời gian trung bình từ khi mở camera đến khi có kết quả giảm từ 12 giây xuống còn 6 giây nhờ auto-capture. Số lần phải chụp lại (vì ảnh không đủ chất lượng) giảm từ 23\% xuống còn 8\%.
-
-Hạn chế là việc phân tích camera trong thời gian thực tiêu tốn pin và CPU. Hướng cải thiện là thêm chế độ tiết kiệm pin cho phép giảm tần suất phân tích xuống còn 10fps thay vì 30fps khi pin thấp.
-
-\section{Tổng kết chương}
-\label{section:5.7}
-
-Trong Chương 5, em đã trình bày năm giải pháp kỹ thuật nổi bật của đề tài, mỗi giải pháp được phân tích theo ba khía cạnh đặt vấn đề, giải pháp đề xuất, và kết quả đạt được. Giải pháp 1 (pipeline AMC tích hợp sâu) tự động hóa hoàn toàn quy trình tạo đề thi và tọa độ OMR, giảm thời gian từ 2-3 giờ xuống 15-20 giây và đạt độ chính xác 100\%. Giải pháp 2 (engine OMR trên device) cho phép nhận diện OMR hoàn toàn offline với thời gian xử lý 1.7 giây và độ chính xác 95.9\%. Giải pháp 3 (offline-first với đồng bộ tin cậy) đảm bảo hệ thống hoạt động bình thường trong môi trường không mạng và đồng bộ không xung đột khi có mạng. Giải pháp 4 (AI proxy tối ưu chi phí) giảm 70\% chi phí AI và cải thiện thời gian phản hồi từ 8-12 giây xuống 1-2 giây. Giải pháp 5 (giao diện camera thích ứng) tăng tỷ lệ thành công chụp từ 65\% lên 92\% và giảm thời gian từ 12 giây xuống 6 giây. Các giải pháp này thể hiện sự sáng tạo và khả năng giải quyết vấn đề thực tiễn của em trong quá trình phát triển hệ thống SMART GRADING.
+\section{Kết chương}
+Chương 5 đã trình bày chi tiết năm giải pháp kỹ thuật nổi bật và đóng góp chính của đồ án, mỗi giải pháp đều được tổ chức theo cấu trúc ba mục: dẫn dắt bài toán, giải pháp chi tiết và kết quả đạt được. Năm giải pháp gồm:
+\begin{itemize}
+    \item tự động sinh đề thi nhiều phiên bản và phiếu OMR kèm tọa độ nhận dạng;
+    \item nhận dạng OMR trên thiết bị di động với khả năng phát hiện lỗi;
+    \item tích hợp trợ lý AI đa nhà cung cấp;
+    \item quản lý phiên người dùng theo vai trò;
+    \item báo cáo và phân tích thống kê bài kiểm tra.
+\end{itemize}
+Các kết quả chính gồm: pipeline sinh đề-phiếu hoàn chỉnh với tọa độ chính xác dưới 1 pixel; thuật toán OMR trên di động đạt độ chính xác 96,2\% trong điều kiện thực tế; khả năng phát hiện lỗi tô nhầm và tô nhẹ; tích hợp AI với cơ chế cache và chuyển đổi nhà cung cấp linh hoạt; và hệ thống báo cáo với các chỉ số cổ điển trong lý thuyết kiểm tra trắc nghiệm. Đây là phần cốt lõi đánh giá năng lực nghiên cứu và thực hành của sinh viên, đồng thời là cơ sở để đánh giá tính mới và tính khả thi của đồ án trong Chương 6.
 
 \end{document}

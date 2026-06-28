@@ -2,203 +2,113 @@
 \makenoidxglossaries
 
 % Danh mục thuật ngữ và từ viết tắt
-
-% --- Từ viết tắt tiếng Anh ---
 \newglossaryentry{omr}{
     type=\acronymtype,
     name={OMR},
-    description={Optical Mark Recognition - Nhận diện vạch quang học},
-    first={OMR}
+    description={Nhận dạng dấu quang học (Optical Mark Recognition)}
 }
 \newglossaryentry{amc}{
     type=\acronymtype,
     name={AMC},
-    description={Auto Multiple Choice - Công cụ tạo đề thi trắc nghiệm tự động bằng LaTeX},
-    first={AMC}
+    description={Auto-Multiple-Choice - gói LaTeX hỗ trợ tạo đề và phiếu trả lời trắc nghiệm}
 }
 \newglossaryentry{api}{
     type=\acronymtype,
     name={API},
-    description={Application Programming Interface - Giao diện lập trình ứng dụng},
-    first={API}
-}
-\newglossaryentry{bloc}{
-    type=\acronymtype,
-    name={BLoC},
-    description={Business Logic Component - Thành phần xử lý logic nghiệp vụ},
-    first={BLoC}
-}
-\newglossaryentry{rest}{
-    type=\acronymtype,
-    name={REST},
-    description={Representational State Transfer - Kiến trúc chuyển trạng thái đại diện},
-    first={REST}
+    description={Giao diện lập trình ứng dụng (Application Programming Interface)}
 }
 \newglossaryentry{jwt}{
     type=\acronymtype,
     name={JWT},
-    description={JSON Web Token - Mã thông báo web JSON},
-    first={JWT}
+    description={JSON Web Token - chuẩn mã thông báo truy cập dạng JSON}
 }
-\newglossaryentry{rbac}{
+\newglossaryentry{rest}{
     type=\acronymtype,
-    name={RBAC},
-    description={Role-Based Access Control - Kiểm soát truy cập dựa trên vai trò},
-    first={RBAC}
-}
-\newglossaryentry{sdk}{
-    type=\acronymtype,
-    name={SDK},
-    description={Software Development Kit - Bộ công cụ phát triển phần mềm},
-    first={SDK}
-}
-\newglossaryentry{json}{
-    type=\acronymtype,
-    name={JSON},
-    description={JavaScript Object Notation - Định dạng dữ liệu theo cấu trúc đối tượng JavaScript},
-    first={JSON}
-}
-\newglossaryentry{crud}{
-    type=\acronymtype,
-    name={CRUD},
-    description={Create, Read, Update, Delete - Tạo, đọc, cập nhật, xóa},
-    first={CRUD}
+    name={REST},
+    description={Representational State Transfer - kiểu kiến trúc API phổ biến trên HTTP}
 }
 \newglossaryentry{mvc}{
     type=\acronymtype,
     name={MVC},
-    description={Model-View-Controller - Mô hình ba lớp Mô hình - Giao diện - Điều khiển},
-    first={MVC}
+    description={Model-View-Controller - mô hình kiến trúc phần mềm phân tách dữ liệu, giao diện và điều khiển}
 }
-\newglossaryentry{uuid}{
+\newglossaryentry{crud}{
     type=\acronymtype,
-    name={UUID},
-    description={Universal Unique Identifier - Định danh duy nhất phổ quát},
-    first={UUID}
+    name={CRUD},
+    description={Create - Read - Update - Delete: bốn thao tác cơ bản trên dữ liệu}
 }
-\newglossaryentry{url}{
+\newglossaryentry{ai}{
     type=\acronymtype,
-    name={URL},
-    description={Uniform Resource Locator - Địa chỉ tài nguyên thống nhất},
-    first={URL}
+    name={AI},
+    description={Trí tuệ nhân tạo (Artificial Intelligence)}
 }
-\newglossaryentry{http}{
+\newglossaryentry{llm}{
     type=\acronymtype,
-    name={HTTP},
-    description={HyperText Transfer Protocol - Giao thức truyền siêu văn bản},
-    first={HTTP}
+    name={LLM},
+    description={Mô hình ngôn ngữ lớn (Large Language Model)}
 }
-\newglossaryentry{https}{
+\newglossaryentry{cv}{
     type=\acronymtype,
-    name={HTTPS},
-    description={HyperText Transfer Protocol Secure - Giao thức truyền siêu văn bản bảo mật},
-    first={HTTPS}
+    name={CV},
+    description={Thị giác máy tính (Computer Vision)}
 }
-\newglossaryentry{html}{
+\newglossaryentry{odm}{
     type=\acronymtype,
-    name={HTML},
-    description={HyperText Markup Language - Ngôn ngữ đánh dấu siêu văn bản},
-    first={HTML}
+    name={ODM},
+    description={Object Document Mapper - lớp ánh xạ giữa đối tượng và tài liệu trong CSDL}
 }
-\newglossaryentry{css}{
+\newglossaryentry{orm}{
     type=\acronymtype,
-    name={CSS},
-    description={Cascading Style Sheets - Bảng kiểu xếp chồng},
-    first={CSS}
+    name={ORM},
+    description={Object Relational Mapper - lớp ánh xạ giữa đối tượng và quan hệ trong CSDL}
 }
-\newglossaryentry{sql}{
+\newglossaryentry{wsr}{
     type=\acronymtype,
-    name={SQL},
-    description={Structured Query Language - Ngôn ngữ truy vấn có cấu trúc},
-    first={SQL}
-}
-\newglossaryentry{nosql}{
-    type=\acronymtype,
-    name={NoSQL},
-    description={Not Only SQL - Không chỉ SQL},
-    first={NoSQL}
-}
-\newglossaryentry{ui}{
-    type=\acronymtype,
-    name={UI},
-    description={User Interface - Giao diện người dùng},
-    first={UI}
-}
-\newglossaryentry{ux}{
-    type=\acronymtype,
-    name={UX},
-    description={User Experience - Trải nghiệm người dùng},
-    first={UX}
-}
-\newglossaryentry{ocr}{
-    type=\acronymtype,
-    name={OCR},
-    description={Optical Character Recognition - Nhận diện ký tự quang học},
-    first={OCR}
+    name={WSL2},
+    description={Windows Subsystem for Linux phiên bản 2 - môi trường Linux chạy trên Windows}
 }
 \newglossaryentry{dpi}{
     type=\acronymtype,
     name={DPI},
-    description={Dots Per Inch - Số chấm trên inch},
-    first={DPI}
+    description={Dots Per Inch - số điểm ảnh trên mỗi inch, đơn vị đo độ phân giải in ấn}
 }
-\newglossaryentry{otp}{
+\newglossaryentry{cdn}{
     type=\acronymtype,
-    name={OTP},
-    description={One-Time Password - Mật khẩu dùng một lần},
-    first={OTP}
+    name={CDN},
+    description={Mạng phân phối nội dung (Content Delivery Network)}
 }
-\newglossaryentry{ssl}{
+\newglossaryentry{ux}{
     type=\acronymtype,
-    name={SSL},
-    description={Secure Sockets Layer - Tầng ổ bảo mật giao thức},
-    first={SSL}
+    name={UX},
+    description={Trải nghiệm người dùng (User Experience)}
 }
-\newglossaryentry{ssh}{
+\newglossaryentry{ui}{
     type=\acronymtype,
-    name={SSH},
-    description={Secure Shell - Giao thức truy cập từ xa bảo mật},
-    first={SSH}
+    name={UI},
+    description={Giao diện người dùng (User Interface)}
 }
-\newglossaryentry{iot}{
+\newglossaryentry{sdk}{
     type=\acronymtype,
-    name={IoT},
-    description={Internet of Things - Internet vạn vật},
-    first={IoT}
+    name={SDK},
+    description={Bộ công cụ phát triển phần mềm (Software Development Kit)}
 }
-\newglossaryentry{saas}{
+\newglossaryentry{css}{
     type=\acronymtype,
-    name={SaaS},
-    description={Software as a Service - Phần mềm như dịch vụ},
-    first={SaaS}
+    name={CSS},
+    description={Cascading Style Sheets - ngôn ngữ định dạng giao diện web}
 }
-\newglossaryentry{docker}{
+\newglossaryentry{dom}{
     type=\acronymtype,
-    name={Docker},
-    description={Docker - Nền tảng đóng gói ứng dụng dạng container},
-    first={Docker}
+    name={DOM},
+    description={Document Object Model - mô hình đối tượng tài liệu trong trình duyệt web}
 }
-\newglossaryentry{pm2}{
+\newglossaryentry{opencv}{
     type=\acronymtype,
-    name={PM2},
-    description={Process Manager 2 - Trình quản lý tiến trình Node.js},
-    first={PM2}
+    name={OpenCV},
+    description={Thư viện mã nguồn mở dùng cho thị giác máy tính và xử lý ảnh (Open Source Computer Vision Library)}
 }
-\newglossaryentry{cnn}{
+\newglossaryentry{latex}{
     type=\acronymtype,
-    name={CNN},
-    description={Convolutional Neural Network - Mạng nơ-ron tích chập},
-    first={CNN}
-}
-\newglossaryentry{cntn}{
-    type=\acronymtype,
-    name={CNTT},
-    description={Công nghệ thông tin},
-    first={Công nghệ thông tin (CNTT)}
-}
-\newglossaryentry{datn}{
-    type=\acronymtype,
-    name={ĐATN},
-    description={Đồ án tốt nghiệp},
-    first={Đồ án tốt nghiệp (ĐATN)}
+    name={LaTeX},
+    description={Hệ thống sắp chữ khoa học dựa trên TeX, dùng để soạn thảo tài liệu kỹ thuật}
 }

@@ -1,398 +1,244 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-\section{Tổng quan kiến trúc hệ thống}
+\section{Tổng quan chương}
+Chương 3 đã trình bày các nền tảng lý thuyết và công nghệ được lựa chọn để xây dựng hệ thống Smart Grading. Trên cơ sở đó, Chương 4 trình bày chi tiết quá trình phân tích thiết kế, kết quả triển khai và đánh giá hệ thống. Nội dung chương gồm: thiết kế kiến trúc tổng thể và các gói thành phần, thiết kế chi tiết giao diện, lớp và cơ sở dữ liệu, kết quả xây dựng ứng dụng với minh họa các chức năng chính, kết quả kiểm thử và triển khai thử nghiệm trong môi trường thực tế.
+
+\section{Thiết kế kiến trúc}
 \label{section:4.1}
 
-Hệ thống SMART GRADING được xây dựng theo kiến trúc phân tán ba lớp (three-tier distributed architecture) \cite{tanenbaum2014distributed}, trong đó mỗi lớp đảm nhận một nhiệm vụ riêng biệt và giao tiếp với các lớp khác thông qua các giao thức đã được chuẩn hóa. Kiến trúc này cho phép mở rộng theo chiều ngang (horizontal scaling) khi lượng người dùng tăng lên, đồng thời đảm bảo tính độc lập giữa các thành phần để dễ dàng bảo trì và nâng cấp. Hệ thống bao gồm ba thành phần chính tương ứng với ba lớp hoặc ba platform riêng biệt, mỗi thành phần được phát triển trên nền tảng công nghệ phù hợp nhất với yêu cầu và đặc điểm sử dụng của nó.
+\subsection{Lựa chọn kiến trúc phần mềm}
+\label{subsection:4.1.1}
+
+Hệ thống Smart Grading lựa chọn kiến trúc phân lớp kết hợp với mô hình client--server, phù hợp với đặc thù của ứng dụng có nhiều thành phần tương tác qua mạng. Toàn bộ hệ thống được chia thành ba tầng chính:
+\begin{itemize}
+    \item tầng trình bày gồm ứng dụng di động Flutter và giao diện web React;
+    \item tầng xử lý nghiệp vụ là backend Node.js/Express;
+    \item tầng dữ liệu gồm MongoDB và dịch vụ lưu trữ đám mây Cloudinary.
+\end{itemize}
+
+Trong tầng backend, hệ thống áp dụng biến thể của mô hình MVC gồm bốn lớp: lớp định tuyến (\texttt{routes}) tiếp nhận và phân loại yêu cầu; lớp điều khiển (\texttt{controllers}) điều phối luồng xử lý và định dạng phản hồi; lớp dịch vụ (\texttt{services}) chứa toàn bộ logic nghiệp vụ; và lớp mô hình (\texttt{models}) quản lý tương tác với cơ sở dữ liệu. Các thành phần này được tổ chức thành các gói (module) độc lập theo từng miền nghiệp vụ như \texttt{auth}, \texttt{user}, \texttt{exam}, \texttt{submission}, \texttt{appeal}, \texttt{question} và \texttt{notification}.
+
+Trong tầng giao diện web, kiến trúc áp dụng mô hình component với React và phân tách rõ ràng giữa ba lớp: lớp trình bày (pages và components), lớp quản lý trạng thái (Zustand stores) và lớp dịch vụ (services) để giao tiếp với backend thông qua REST API. Trong tầng di động, kiến trúc BLoC kết hợp với Repository pattern được áp dụng, trong đó BLoC xử lý logic nghiệp vụ, Repository đóng vai trò trung gian giữa BLoC và các nguồn dữ liệu (API server, lưu trữ cục bộ).
+
+\subsection{Thiết kế tổng quan}
+\label{subsection:4.1.2}
+
+Biểu đồ gói UML của toàn bộ hệ thống được mô tả như trong Hình \ref{fig:package_diagram}, thể hiện sự phụ thuộc một chiều giữa các gói theo từng tầng.
 
 \begin{figure}[H]
-\centering
-\fbox{\begin{minipage}{0.9\textwidth}\centering\vspace{1.5cm}\textit{[Hình minh họa: Kiến trúc tổng quan hệ thống]}\vspace{1.5cm}\end{minipage}}
-\caption{Kiến trúc tổng quan hệ thống SMART GRADING với ba thành phần chính}
-\label{fig:system-arch}
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/Picture3.png}
+    \caption{Biểu đồ gói tổng quan của hệ thống Smart Grading}
+    \label{fig:package_diagram}
 \end{figure}
 
-Hình \ref{fig:system-arch} thể hiện kiến trúc tổng quan của toàn bộ hệ thống SMART GRADING, trong đó phần bên trái là ứng dụng di động Flutter, phần trung tâm là backend Node.js/Express, phần bên phải là ứng dụng web React, và phần dưới là các thành phần dữ liệu và dịch vụ bên ngoài. Các mũi tên biểu diễn hướng đi của dữ liệu và lời gọi API. Điểm đặc biệt trong kiến trúc này là sự phân chia rõ ràng giữa hai luồng xử lý chính gồm luồng AMC Exam (mobile-first với OMR chạy trên thiết bị) và luồng Legacy Exam (backend-side với Python bridge xử lý OMR trên server), cho phép hệ thống linh hoạt hỗ trợ nhiều loại đề thi khác nhau.
+\noindent\textbf{Nhóm gói tầng trình bày (Presentation Layer).} Gồm hai gói con: \texttt{web} chứa các trang và component React, \texttt{mobile} chứa các màn hình và widget Flutter. Các gói này chỉ phụ thuộc vào tầng dịch vụ chung và không phụ thuộc trực tiếp vào tầng dữ liệu.
 
-Lớp thứ nhất là lớp trình bày (Presentation Layer) bao gồm hai ứng dụng client được phát triển trên hai nền tảng khác nhau. Ứng dụng di động SMART GRADING Mobile được xây dựng bằng Flutter phiên bản 3.22 và ngôn ngữ Dart phiên bản 3.4, cho phép cài đặt trên cả hệ điều hành iOS (từ iOS 13 trở lên) và Android (từ Android 8.0 trở lên). Điểm nổi bật của ứng dụng mobile là engine nhận diện OMR (OMR Engine v2) được triển khai hoàn toàn trên thiết bị client (edge computing), cho phép xử lý ảnh và chấm điểm ngay lập tức mà không cần gửi dữ liệu lên server. Ứng dụng web SMART GRADING Web được xây dựng bằng React phiên bản 19 và TypeScript phiên bản 5.5, sử dụng công cụ build Vite phiên bản 5 để đảm bảo tốc độ phát triển và production build nhanh chóng. Ứng dụng web cung cấp giao diện quản lý cho giáo viên và quản trị viên, cho phép tạo đề thi, quản lý kết quả, xuất báo cáo, và cấu hình hệ thống.
+\noindent\textbf{Nhóm gói tầng dịch vụ chung (Service Layer).} Gồm ba gói: \texttt{api-client} (web) và \texttt{network} (mobile) cung cấp các hàm tiện ích để gọi REST API; \texttt{state-management} quản lý trạng thái phía client; \texttt{routing} định tuyến và phân quyền truy cập theo vai trò.
 
-Lớp thứ hai là lớp ứng dụng (Application Layer) là backend server được phát triển bằng Node.js phiên bản 20 LTS và framework Express phiên bản 4.21. Backend server đóng vai trò là API Gateway, tiếp nhận và định tuyến tất cả các request từ các ứng dụng client, thực thi logic nghiệp vụ, và tương tác với cơ sở dữ liệu cũng như các dịch vụ bên ngoài. Thiết kế RESTful API tuân theo các nguyên tắc đã được Richardson và cộng sự trình bày \cite{richardson2013restful}. Backend được thiết kế theo kiểu monolith modular, trong đó các module (auth, exam, submission, ai) được tổ chức trong các thư mục riêng biệt nhưng triển khai trong cùng một process Node.js, đơn giản hóa quá trình phát triển trong giai đoạn đầu trong khi vẫn duy trì sự tách biệt về mặt logic giữa các module. Kiến trúc này thuận tiện cho việc tách ra thành microservices trong tương lai khi hệ thống mở rộng.
+\noindent\textbf{Nhóm gói tầng nghiệp vụ (Business Layer).} Gồm các gói backend: \texttt{routes} định nghĩa điểm cuối API; \texttt{controllers} xử lý request; \texttt{services} chứa logic nghiệp vụ được chia theo miền; \texttt{validations} xác thực đầu vào; \texttt{middlewares} xử lý xác thực, phân quyền và ghi log.
 
-Lớp thứ ba là lớp dữ liệu (Data Layer) bao gồm ba thành phần lưu trữ chính. MongoDB phiên bản 7.0 đóng vai trò là cơ sở dữ liệu chính, lưu trữ toàn bộ dữ liệu cấu trúc của hệ thống bao gồm thông tin người dùng, đề thi, kết quả, và cấu hình OMR. Cloudinary là dịch vụ lưu trữ file đám mây chuyên về hình ảnh, được sử dụng để lưu trữ các file đề thi PDF, ảnh gốc phiếu thi, và ảnh đã được ghi chú sau khi quét. Redis là hệ thống cache in-memory được sử dụng để tăng tốc các truy vấn thường xuyên và giảm tải cho MongoDB.
+\noindent\textbf{Nhóm gói tầng dữ liệu (Data Layer).} Gồm các gói \texttt{models} (định nghĩa schema MongoDB thông qua Mongoose), \texttt{amc} (sinh và xử lý đề thi bằng AMC), \texttt{ai-services} (tích hợp các nhà cung cấp AI), \texttt{storage} (tương tác với Cloudinary), \texttt{utils} (các hàm tiện ích chung).
 
-Điểm kiến trúc quan trọng nhất và cũng là điểm khác biệt cốt lõi so với các giải pháp OMR truyền thống là việc engine nhận diện OMR được triển khai trên thiết bị di động (client-side) thay vì trên server (server-side). Thiết kế này, thường được gọi là edge computing hoặc fog computing, mang lại ba lợi ích quan trọng. Thứ nhất, thời gian phản hồi tức thì không phụ thuộc vào độ trễ mạng, với kết quả được hiển thị ngay sau khi chụp ảnh mà không cần chờ round-trip đến server. Thứ hai, hệ thống hoạt động được hoàn toàn offline trong môi trường không có internet, đặc biệt quan trọng đối với các trường học tại vùng nông thôn hoặc khu vực có hạ tầng mạng không ổn định. Thứ ba, dữ liệu phiếu thi không rời khỏi thiết bị của giáo viên, đảm bảo tính riêng tư và bảo mật dữ liệu. Template JSON chứa tọa độ OMR được đồng bộ từ server về thiết bị khi bắt đầu phiên quét, sau đó mọi tính toán nhận diện đều thực hiện cục bộ trên thiết bị.
+\subsection{Thiết kế chi tiết gói}
+\label{subsection:4.1.3}
 
-Hệ thống hỗ trợ hai luồng chấm điểm song song được quyết định bởi trường exam.paperEngine trong database. Luồng AMC Exam (mới) sử dụng AMC CLI để sinh đề thi, mobile OMR engine (engine\_v2) để quét OMR trên thiết bị di động, và templateJson từ OMRTemplate.templateJson để nhận diện. Luồng Legacy Exam (pdfkit) sử dụng pdfkit để sinh đề thi, Python bridge (OMRChecker) để quét OMR trên server, và zones từ OMRTemplate.zones cho cấu hình vị trí. Việc phân tách rõ ràng này cho phép hệ thống tương thích ngược với các đề thi được tạo bằng phương pháp cũ đồng thời hỗ trợ luồng mới với độ chính xác cao hơn.
+Biểu đồ lớp của nhóm gói nghiệp vụ chính (gồm các gói liên quan đến đề thi, bài làm và phúc khảo) được mô tả như trong Hình \ref{fig:class_diagram}, trong đó chỉ hiển thị tên lớp và quan hệ giữa các lớp.
 
-Bảng \ref{tab:cong-cu-phat-trien} dưới đây tổng hợp các công cụ và môi trường phát triển đã sử dụng trong toàn bộ hệ thống.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/Picture2.png}
+    \caption{Ví dụ thiết kế gói biểu đồ lớp}
+    \label{fig:class_diagram}
+\end{figure}
 
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{4cm}|>{\raggedright\arraybackslash}p{4cm}|>{\raggedright\arraybackslash}p{7cm}|}
-\hline
-\textbf{Thành phần} & \textbf{Công cụ} & \textbf{Phiên bản} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-Ngôn ngữ lập trình (Mobile) & Dart & 3.4.x \\ \hline
-Framework (Mobile) & Flutter & 3.22.x \\ \hline
-State management (Mobile) & flutter\_bloc & 8.x \\ \hline
-Dependency injection (Mobile) & GetIt & 7.x \\ \hline
-HTTP client (Mobile) & Dio & 5.x \\ \hline
-Local storage (Mobile) & SharedPreferences, SQLite & - \\ \hline
-Ngôn ngữ lập trình (Web) & TypeScript & 5.5.x \\ \hline
-Framework (Web) & React & 19.x \\ \hline
-Build tool (Web) & Vite & 5.x \\ \hline
-State management (Web) & Zustand & 4.x \\ \hline
-Server state (Web) & TanStack Query & 5.x \\ \hline
-Routing (Web) & React Router & 6.x \\ \hline
-Ngôn ngữ lập trình (Backend) & JavaScript (ES2024) & - \\ \hline
-Runtime (Backend) & Node.js & 20.x LTS \\ \hline
-Framework (Backend) & Express.js & 4.21.x \\ \hline
-Database & MongoDB & 7.0.x \\ \hline
-ODM & Mongoose & 8.x \\ \hline
-Validation (Backend) & Joi & 17.x \\ \hline
-Logging (Backend) & Winston & 3.x \\ \hline
-Authentication & Passport.js + JWT & - \\ \hline
-Image storage & Cloudinary & - \\ \hline
-Cache & Redis & 7.x \\ \hline
-Container & Docker & 26.x \\ \hline
-Process Manager & PM2 & 5.x \\ \hline
-Version Control & Git & 2.45.x \\ \hline
-CI/CD & GitHub Actions & - \\ \hline
-LaTeX Compiler & TeX Live / AMC & 2024 \\ \hline
-AI API & Google Gemini & 1.5 Flash \\ \hline
-API Documentation & Swagger & - \\ \hline
-\caption{Bảng tổng hợp công cụ phát triển}
-\label{tab:cong-cu-phat-trien}
-\end{longtable}}
+Trong nhóm gói quản lý đề thi, các lớp chính gồm \texttt{ExamController}, \texttt{ExamService}, \texttt{ExamModel}, \texttt{ExamVersionModel}, \texttt{QuestionModel}, \texttt{OMRTemplateModel} và \texttt{ExamPaperService}. Lớp \texttt{ExamController} kế thừa \texttt{BaseController} và có quan hệ phụ thuộc với \texttt{ExamService}. Lớp \texttt{ExamService} có quan hệ kết tập với \texttt{ExamModel} và \texttt{ExamVersionModel}, đồng thời có quan hệ kết hợp với \texttt{ExamPaperService} để sinh đề thi bằng AMC. Lớp \texttt{ExamModel} thực thi giao diện \texttt{IDocument} của Mongoose.
+
+Trong nhóm gói quản lý bài làm, các lớp chính gồm \texttt{SubmissionController}, \texttt{SubmissionService}, \texttt{SubmissionModel}, \texttt{AppealModel} và \texttt{AppealService}. Lớp \texttt{SubmissionModel} có quan hệ tham chiếu (reference) tới \texttt{ExamModel}, \texttt{ExamVersionModel} và \texttt{UserModel}. Khi một bài làm có phúc khảo, lớp \texttt{AppealService} sẽ tương tác với cả \texttt{SubmissionModel} và \texttt{ExamModel} để tính lại điểm khi phúc khảo được phê duyệt.
 
 \section{Thiết kế chi tiết}
 \label{section:4.2}
 
-Phần này trình bày chi tiết việc thiết kế cơ sở dữ liệu MongoDB, thiết kế giao diện người dùng, và thiết kế lớp của hệ thống SMART GRADING.
+\subsection{Thiết kế giao diện}
+\label{subsection:4.2.1}
+
+Hệ thống Smart Grading hỗ trợ hai nhóm nền tảng giao diện với các chuẩn thiết kế thống nhất. Đối với ứng dụng di động Flutter, hệ thống hướng tới các thiết bị Android từ phiên bản 7.0 trở lên và iOS từ phiên bản 13 trở lên, kích thước màn hình tối thiểu 5.0 inch, độ phân giải tối thiểu HD (1280$\times$720). Đối với giao diện web, hệ thống hỗ trợ các trình duyệt phổ biến (Chrome, Edge, Firefox, Safari) ở độ phân giải tối thiểu 1366$\times$768 và tối ưu cho độ phân giải 1920$\times$1080.
+
+Chuẩn phối màu được sử dụng xuyên suốt hệ thống gồm: màu chủ đạo xanh đậm \texttt{\#0b2240} cho tiêu đề và thanh điều hướng; màu phụ xanh dương \texttt{\#2563eb} cho các nút hành động chính; màu thành công xanh lá \texttt{\#059669} cho trạng thái tích cực; màu cảnh báo đỏ \texttt{\#dc2626} cho trạng thái lỗi; màu nền xám nhạt \texttt{\#f3f4f6} cho vùng nền. Phông chữ chính là phông không chân (sans-serif) để đảm bảo dễ đọc trên màn hình, với kích thước tiêu chuẩn 14pt cho nội dung, 16pt cho tiêu đề phụ và 20pt cho tiêu đề chính. Thông báo phản hồi được đặt ở góc trên bên phải màn hình với biểu tượng phù hợp, tự động biến mất sau 3 giây.
+
+Hình \ref{fig:mockup_dashboard} và Hình \ref{fig:mockup_scan} minh họa một số màn hình chính của hệ thống.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Hinhve/Picture1.png}
+    \caption{Minh họa mockup giao diện dashboard trên web}
+    \label{fig:mockup_dashboard}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Hinhve/Picture2.png}
+    \caption{Minh họa mockup giao diện quét phiếu trên di động}
+    \label{fig:mockup_scan}
+\end{figure}
+
+\subsection{Thiết kế lớp}
+\label{subsection:4.2.2}
+
+Trong phần này, đồ án trình bày chi tiết hai lớp chủ đạo của hệ thống là \texttt{ExamService} và \texttt{SubmissionService}, cùng với biểu đồ trình tự minh họa luồng truyền thông điệp cho hai use case quan trọng.
+
+\noindent\textbf{Lớp ExamService.} Lớp này chịu trách nhiệm quản lý toàn bộ vòng đời của một đề thi từ khi tạo đến khi phát hành. Các thuộc tính chính gồm: \texttt{examModel} (tham chiếu đến model Exam), \texttt{versionModel} (tham chiếu đến model ExamVersion), \texttt{questionService} (tham chiếu đến service câu hỏi), \texttt{omrTemplateService} (tham chiếu đến service mẫu OMR), \texttt{examPaperService} (tham chiếu đến service sinh đề bằng AMC), \texttt{notificationService} (tham chiếu đến service thông báo), \texttt{aiService} (tham chiếu đến dịch vụ AI hỗ trợ sinh câu hỏi). Các phương thức chính gồm: \texttt{createExam(data)} tạo đề thi mới với danh sách câu hỏi và cấu hình trộn; \texttt{generateVersions(examId, numberOfVersions)} sinh các phiên bản đề bằng cách hoán vị câu hỏi và đáp án; \texttt{generatePapers(examId)} gọi service sinh PDF bằng AMC; \texttt{publishExam(examId)} chuyển trạng thái đề thi thành "đã phát hành" và gửi thông báo cho học sinh; \texttt{getExamById(examId)} truy vấn thông tin chi tiết đề thi.
+
+\noindent\textbf{Lớp SubmissionService.} Lớp này chịu trách nhiệm xử lý bài làm của học sinh từ khi chấm đến khi công bố điểm và hỗ trợ phúc khảo. Các thuộc tính chính gồm: \texttt{submissionModel} (tham chiếu đến model Submission), \texttt{appealModel} (tham chiếu đến model Appeal), \texttt{examService} (tham chiếu đến service đề thi), \texttt{aiReportService} (tham chiếu đến service báo cáo AI). Các phương thức chính gồm: \texttt{createSubmissionFromScan(scanData)} tạo bài làm từ dữ liệu quét OMR; \texttt{manualOverride(submissionId, overrides)} cho phép giáo viên chỉnh sửa thủ công; \texttt{publishScores(examId)} công bố điểm cho học sinh; \texttt{recalculateScore(submissionId, questionId)} tính lại điểm khi phúc khảo được phê duyệt; \texttt{getSubmissionDetail(submissionId)} truy vấn chi tiết bài làm.
+
+\noindent\textbf{Biểu đồ trình tự use case Chấm thi bằng ứng dụng.} Luồng truyền thông điệp cho use case Chấm thi bằng ứng dụng được mô tả tổng quan như sau. Đầu tiên, giáo viên mở chức năng quét phiếu trên ứng dụng di động; \texttt{MobileBloc} gửi yêu cầu lấy mẫu OMR đến \texttt{OMRTemplateService} trên server; server trả về mẫu OMR gồm tọa độ các ô; giáo viên chụp ảnh phiếu; module \texttt{OMREngine} trên di động thực hiện tiền xử lý ảnh và nhận dạng; kết quả nhận dạng được gửi đến \texttt{SubmissionController} thông qua \texttt{SubmissionService} để lưu vào cơ sở dữ liệu; hệ thống tính điểm và trả kết quả về ứng dụng di động; giáo viên kiểm tra và có thể chỉnh sửa; cuối cùng kết quả được lưu chính thức.
+
+\noindent\textbf{Biểu đồ trình tự use case Phản hồi phúc khảo.} Luồng truyền thông điệp cho use case Phản hồi phúc khảo diễn ra như sau. Học sinh gửi đơn phúc khảo thông qua \texttt{AppealController} trên web; \texttt{AppealService} tạo đơn với trạng thái "đang chờ" và gửi thông báo cho giáo viên; giáo viên truy cập danh sách đơn, chọn đơn cần xử lý; \texttt{SubmissionService} trả về chi tiết bài làm; giáo viên quyết định phê duyệt hoặc từ chối; \texttt{AppealService} cập nhật trạng thái và gọi \texttt{SubmissionService.recalculateScore} nếu phê duyệt; hệ thống gửi thông báo kết quả cho học sinh.
 
 \subsection{Thiết kế cơ sở dữ liệu}
-\label{section:4.2.1}
+\label{subsection:4.2.3}
 
-Phần này trình bày chi tiết việc thiết kế cơ sở dữ liệu MongoDB của hệ thống SMART GRADING, bao gồm lý do lựa chọn NoSQL, cấu trúc các collection chính, các trường được đánh index để tối ưu hiệu năng truy vấn, và chiến lược lưu trữ dữ liệu.
+Hệ thống sử dụng cơ sở dữ liệu MongoDB phiên bản 5.0 trở lên với 17 bảng (collection) chính, được thiết kế để đảm bảo tính nhất quán và hiệu quả truy vấn. Một số bảng cốt lõi gồm \texttt{users}, \texttt{schools}, \texttt{classes}, \texttt{subjects}, \texttt{questions}, \texttt{exams}, \texttt{examVersions}, \texttt{omrTemplates}, \texttt{submissions}, \texttt{appeals}, \texttt{notifications}, \texttt{aiReports}, \texttt{aiChats}, \texttt{studentProgress}, \texttt{examReports} và \texttt{uploadAuditLogs}.
 
-Lý do lựa chọn MongoDB thay vì cơ sở dữ liệu quan hệ (SQL) cho hệ thống SMART GRADING dựa trên bốn yếu tố chính. Thứ nhất, MongoDB là cơ sở dữ liệu document-oriented lưu trữ dữ liệu dưới dạng BSON (Binary JSON), rất phù hợp với cấu trúc dữ liệu phức tạp và thay đổi thường xuyên như cấu trúc câu hỏi trong ngân hàng đề thi (mỗi câu hỏi có thể có số lượng phương án khác nhau, có thể chứa công thức LaTeX, hình ảnh, và metadata đa dạng), cấu trúc đáp án trong kết quả thi (cần lưu chi tiết từng câu với nhiều trường metadata), và cấu trúc template OMR với tọa độ không gian phức tạp. Thứ hai, MongoDB hỗ trợ nested documents cho phép lưu trữ các cấu trúc phân cấp tự nhiên như câu hỏi lồng nhau trong đề thi, đáp án lồng nhau trong submission, mà không cần phải tách thành nhiều bảng liên kết phức tạp như trong SQL. Thứ ba, MongoDB có khả năng mở rộng ngang (horizontal scaling) thông qua sharding, cho phép hệ thống xử lý lượng dữ liệu lớn khi số lượng người dùng và kỳ thi tăng lên mà không cần thay đổi kiến trúc. Thứ tư, MongoDB là mã nguồn mở với cộng đồng sử dụng rộng lớn và chi phí vận hành thấp khi sử dụng MongoDB Atlas cloud service hoặc tự host trên server riêng.
+\noindent\textbf{Bảng users.} Lưu trữ thông tin tài khoản người dùng với các trường chính: \texttt{\_id} (ObjectId), \texttt{name} (String), \texttt{email} (String, unique), \texttt{password} (String, hash), \texttt{role} (Enum: admin, school-admin, teacher, student, parent), \texttt{schoolId} (ObjectId tham chiếu schools), \texttt{classIds} (Array of ObjectId tham chiếu classes), \texttt{studentCode} (String, mã số sinh viên), \texttt{isEmailVerified} (Boolean), \texttt{timestamps} (createdAt, updatedAt).
 
-Cơ sở dữ liệu SMART GRADING bao gồm các collection chính sau đây. Collection User lưu trữ thông tin về người dùng hệ thống với cấu trúc document như sau. Trường email là duy nhất trên toàn bộ hệ thống và được đánh index để phục vụ truy vấn đăng nhập. Trường passwordHash lưu mật khẩu đã được băm bằng thuật toán bcrypt với salt rounds bằng 12, đảm bảo bảo mật ngay cả khi database bị lộ. Trường role là enum với năm giá trị gồm admin cho quản trị viên hệ thống có toàn quyền, school-admin cho quản trị viên trường có quyền quản lý trong phạm vi trường mình, teacher cho giáo viên có quyền tạo đề và xem kết quả, student cho học sinh có quyền xem điểm và nộp phúc tra, và parent cho phụ huynh có quyền theo dõi kết quả học tập của con em. Trường schoolId và classId tham chiếu đến các collection tương ứng. Trường linkedParentIds là mảng chứa các user ID của phụ huynh được liên kết, cho phép một học sinh có thể được theo dõi bởi nhiều phụ huynh.
+\noindent\textbf{Bảng exams.} Lưu trữ thông tin đề thi với các trường chính: \texttt{\_id}, \texttt{title}, \texttt{description}, \texttt{classIds} (danh sách lớp áp dụng), \texttt{primaryClassId} (lớp chính), \texttt{omrTemplateId} (tham chiếu mẫu OMR), \texttt{questionIds} (danh sách câu hỏi), \texttt{examDate}, \texttt{duration} (phút), \texttt{totalScore}, \texttt{numberOfVersions}, \texttt{status} (draft, scheduled, published, completed), \texttt{shuffleConfig} (gồm shuffleQuestions và shuffleOptions), \texttt{paperEngine} (amc hoặc pdfkit).
 
-Collection Exam là thực thể trung tâm của hệ thống, lưu trữ thông tin về kỳ thi với vai trò quan trọng trong việc điều phối luồng chấm điểm. Trường paperEngine là trường quyết định then chốt, là enum với hai giá trị gồm amc cho luồng AMC mới sử dụng mobile OMR engine, và pdfkit hoặc legacy cho luồng cũ sử dụng Python bridge. Trường status là enum với năm giá trị gồm draft khi đề thi đang được soạn thảo, published khi đề thi đã được công bố cho học sinh, in-progress khi đang trong thời gian thi, completed khi kỳ thi đã kết thúc, và archived khi đề thi được lưu trữ. Trường settings là embedded document chứa các cấu hình bao gồm allowLateSubmission cho phép nộp muộn, showResultToStudent cho phép học sinh xem kết quả, requiresRecheck yêu cầu giáo viên xác nhận trước khi công bố, allowMultipleAttempts cho phép thi nhiều lần, và shuffleOptions xáo trộn thứ tự phương án khi hiển thị.
+\noindent\textbf{Bảng submissions.} Lưu trữ bài làm của học sinh với các trường chính: \texttt{\_id}, \texttt{examId}, \texttt{versionId} (tham chiếu phiên bản đề), \texttt{studentId}, \texttt{answers} (Array gồm questionId, selectedAnswer, isCorrect, score), \texttt{images} (danh sách URL ảnh phiếu), \texttt{scanMetadata} (thông tin quét), \texttt{omrSummary} (tóm tắt kết quả OMR), \texttt{status}, \texttt{manualOverrides}, \texttt{totalScore}, \texttt{timestamps}.
 
-Collection OMRTemplate là KEY COLLECTION lưu trữ cấu hình OMR với cấu trúc đặc biệt bao gồm hai phần chính. Phần thứ nhất là trường templateJson là embedded document chứa cấu hình OMR theo định dạng AMC, đây là single source of truth cho mobile OMR engine và được sử dụng khi exam.paperEngine bằng amc. Phần thứ hai là trường zones là mảng embedded document chứa cấu hình OMR theo định dạng mm-based cũ, được sử dụng khi exam.paperEngine bằng pdfkit hoặc legacy.
+\noindent\textbf{Bảng appeals.} Lưu trữ đơn phúc khảo với các trường chính: \texttt{\_id}, \texttt{submissionId}, \texttt{examId}, \texttt{studentId}, \texttt{questionId}, \texttt{reason} (lý do), \texttt{expectedAnswer} (đáp án mong đợi), \texttt{evidenceImages} (danh sách URL ảnh minh chứng), \texttt{status} (pending, approved, rejected), \texttt{teacherResponse} (phản hồi giáo viên), \texttt{processedBy} (giáo viên xử lý), \texttt{processedAt}, \texttt{timestamps}.
 
-Collection Submission lưu trữ kết quả bài thi với cấu trúc phức tạp bao gồm nhiều thông tin chi tiết. Trường answers là mảng embedded document, mỗi phần tử chứa position là thứ tự câu, selectedAnswer là đáp án được chọn từ kết quả quét, correctAnswer là đáp án đúng được lấy từ ExamVersion.answerKey, isCorrect là boolean cho biết đúng hay sai, score là điểm đạt được cho câu đó, maxScore là điểm tối đa của câu, và status là enum gồm correct, incorrect, skipped, double-fill, và invalid. Trường images là mảng embedded document chứa thông tin về các ảnh liên quan đến submission. Trường scanMetadata chứa thông tin về quá trình quét bao gồm processingTime là thời gian xử lý tính bằng mili giây, detectedAt là thời điểm quét, và scannerVersion là v1 hoặc v2 cho biết engine được sử dụng.
-
-Bảng \ref{tab:mongo-indexes} dưới đây liệt kê các trường được đánh index và loại index tương ứng cùng với lý do đánh index để tối ưu hiệu năng truy vấn.
-
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{3.5cm}|>{\raggedright\arraybackslash}p{3cm}|>{\raggedright\arraybackslash}p{3cm}|>{\raggedright\arraybackslash}p{5cm}|}
-\hline
-\textbf{Collection} & \textbf{Trường} & \textbf{Loại index} & \textbf{Lý do / Truy vấn thường xuyên} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-User & email & unique & Đăng nhập, tìm user theo email \\ \hline
-User & role, schoolId & compound & Lọc người dùng theo vai trò trong trường \\ \hline
-User & classId & single & Lấy danh sách học sinh trong lớp \\ \hline
-User & linkedParentIds & single (array) & Tìm phụ huynh liên kết với học sinh \\ \hline
-School & code & unique & Tìm trường theo mã trường \\ \hline
-Class & schoolId, grade & compound & Lấy danh sách lớp theo trường và khối \\ \hline
-Exam & teacherId, status & compound & Lấy đề thi của giáo viên theo trạng thái \\ \hline
-Exam & schoolId, status, openTime & compound & Lấy đề thi đang mở của trường \\ \hline
-Exam & paperEngine & single & Xác định loại engine để định tuyến xử lý \\ \hline
-ExamVersion & examId & single & Lấy tất cả mã đề của một kỳ thi \\ \hline
-ExamVersion & versionCode & unique (trong exam) & Đảm bảo mã đề không trùng lặp trong exam \\ \hline
-Submission & examId, studentId & compound unique & Mỗi học sinh chỉ nộp một bài cho mỗi kỳ thi \\ \hline
-Submission & studentId, submittedAt & compound & Lấy lịch sử thi của học sinh sắp xếp theo thời gian \\ \hline
-Submission & examId, score & compound & Sắp xếp kết quả theo điểm để xếp hạng \\ \hline
-Submission & status & single & Lọc submission theo trạng thái (pending, graded) \\ \hline
-Question & topics & multi-key & Tìm câu hỏi theo chủ đề cho AI phân tích \\ \hline
-Question & difficulty, subjectId & compound & Tạo đề tự động theo độ khó \\ \hline
-OMRTemplate & code & unique & Tìm template theo mã \\ \hline
-AIReport & studentId, createdAt & compound & Lấy báo cáo AI của học sinh theo thời gian \\ \hline
-AIChat & studentId, createdAt & compound & Lấy lịch sử chat của học sinh \\ \hline
-\caption{Các trường được đánh index trong MongoDB}
-\label{tab:mongo-indexes}
-\end{longtable}}
-
-\begin{figure}[H]
-\centering
-\fbox{\begin{minipage}{0.9\textwidth}\centering\vspace{1.5cm}\textit{[Hình minh họa: Sơ đồ ERD]}\vspace{1.5cm}\end{minipage}}
-\caption{Sơ đồ ERD của hệ thống SMART GRADING với các collections chính}
-\label{fig:erd}
-\end{figure}
-
-Hình \ref{fig:erd} thể hiện sơ đồ ERD với các thực thể chính và mối quan hệ giữa chúng.
-
-\subsection{Thiết kế giao diện}
-\label{section:4.2.2}
-
-Phần này trình bày chi tiết thiết kế giao diện người dùng cho cả ứng dụng di động và ứng dụng web, bao gồm nguyên tắc thiết kế, cấu trúc điều hướng, các màn hình chính, và các luồng người dùng quan trọng.
-
-Về nguyên tắc thiết kế tổng quan, hệ thống tuân thủ các nguyên tắc thiết kế Material Design 3 cho ứng dụng mobile và thiết kế custom clean aesthetic cho ứng dụng web. Màu sắc chủ đạo là xanh dương (#1565C0) mang lại cảm giác chuyên nghiệp và đáng tin cậy, kết hợp với màu xanh lá (#2E7D32) cho các trạng thái thành công, màu đỏ (#D32F2F) cho các trạng thái lỗi và cảnh báo, và màu cam (#F57C00) cho các trạng thái đang xử lý. Font chữ sử dụng là Roboto cho mobile và Inter cho web, cả hai đều là font sans-serif dễ đọc trên màn hình. Grid system 8-point được áp dụng nhất quán để đảm bảo spacing và alignment hài hòa trên mọi kích thước màn hình.
-
-Về nguyên tắc UX cụ thể cho ứng dụng quét OMR, hệ thống được thiết kế với ba cơ chế thích ứng. Thứ nhất, real-time guidance overlay hiển thị trực tiếp trên khung hình camera các gợi ý như "Cần chụng hơn", "Nghiêng sang trái", "Cần sáng hơn", giúp người dùng tự điều chỉnh mà không cần hiểu kỹ thuật. Thứ hai, auto-capture với stabilization tự động chụp khi phát hiện phiếu ổn định trong khung hình. Hệ thống kiểm tra độ ổn định bằng cách so sánh position của contour qua 5 frame liên tiếp, chỉ chụp khi độ lệch nhỏ hơn ngưỡng 5 pixel và độ ổn định được duy trì trong 0.5 giây. Thứ ba, visual feedback loop trong đó border của khung hình đổi màu theo điều kiện chụp: border màu đỏ khi điều kiện chưa tốt, border màu vàng khi gần đạt yêu cầu, và border màu xanh khi điều kiện lý tưởng.
-
-\begin{figure}[H]
-\centering
-\fbox{\begin{minipage}{0.9\textwidth}\centering\vspace{1.5cm}\textit{[Hình minh họa: Mockup giao diện di động]}\vspace{1.5cm}\end{minipage}}
-\caption{Mockup một số màn hình chính của ứng dụng di động SMART GRADING}
-\label{fig:ui-mobile}
-\end{figure}
-
-Hình \ref{fig:ui-mobile} thể hiện mockup của các màn hình chính trong ứng dụng di động. Bảng \ref{tab:screens} dưới đây mô tả chi tiết chức năng của từng màn hình.
-
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{3.5cm}|>{\raggedright\arraybackslash}p{5cm}|>{\raggedright\arraybackslash}p{6.5cm}|}
-\hline
-\textbf{Màn hình} & \textbf{Chức năng chính} & \textbf{Các thành phần UI} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-LoginScreen & Đăng nhập người dùng & Form email/password, nút đăng nhập, link đăng ký, OAuth Google button \\ \hline
-HomeScreen & Dashboard chính & Card kỳ thi sắp tới, card kỳ thi đang mở, card kết quả gần đây, FAB cho quét nhanh, Bottom navigation bar \\ \hline
-ExamListScreen & Danh sách kỳ thi & Filter chips, list view với card exam, search bar, pull-to-refresh \\ \hline
-OMRScanScreen & Quét phiếu OMR & Full-screen camera preview, overlay hướng dẫn, border feedback, nút flash toggle, nút chụp \\ \hline
-ScanResultScreen & Kết quả quét & Điểm số nổi bật, biểu đồ tròn đúng/sai, danh sách câu, nút sửa, nút xác nhận \\ \hline
-HistoryScreen & Lịch sử quét & List view với card submission, filter, pull-to-refresh, swipe-to-delete (offline) \\ \hline
-ProfileScreen & Thông tin cá nhân & Avatar và tên, email, vai trò, settings, logout button \\ \hline
-\caption{Các màn hình chính của ứng dụng di động}
-\label{tab:screens}
-\end{longtable}}
-
-Bảng \ref{tab:web-screens} dưới đây mô tả các màn hình chính của ứng dụng web.
-
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{3.5cm}|>{\raggedright\arraybackslash}p{5cm}|>{\raggedright\arraybackslash}p{6.5cm}|}
-\hline
-\textbf{Trang} & \textbf{Chức năng chính} & \textbf{Các thành phần UI} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-Dashboard & Tổng quan hệ thống & Thống kê tổng quan, biểu đồ hoạt động, danh sách kỳ thi gần đây, quick actions \\ \hline
-ExamListPage & Quản lý đề thi & Table với các cột, filter sidebar, bulk actions, pagination, search, create button \\ \hline
-ExamCreatePage & Tạo đề thi mới & Form multi-step, file upload cho LaTeX, preview panel, save draft button \\ \hline
-SubmissionListPage & Danh sách kết quả & Filterable table, sort options, export CSV button, bulk actions, detail modal \\ \hline
-AIReportPage & Báo cáo AI & Student selector, radar chart theo topics, weakness analysis, recommendations list, export PDF \\ \hline
-UserManagementPage & Quản lý người dùng & User table với role badges, invite user modal, bulk role assignment \\ \hline
-\caption{Các màn hình chính của ứng dụng web}
-\label{tab:web-screens}
-\end{longtable}}
-
-\subsection{Thiết kế lớp và biểu đồ trình tự}
-\label{section:4.2.3}
-
-Phần này trình bày chi tiết thiết kế lớp của hệ thống SMART GRADING, bao gồm biểu đồ package, biểu đồ lớp của các module quan trọng, và biểu đồ trình tự cho các use case chính.
-
-Biểu đồ package của hệ thống được tổ chức theo cấu trúc phân lớp rõ ràng. Gói backend bao gồm các gói con là routes chứa các file định nghĩa API endpoints, controllers chứa các hàm xử lý request và validation, services chứa logic nghiệp vụ chính, models chứa các Mongoose schema và model, middleware chứa các middleware như authentication và authorization, utils chứa các hàm tiện ích, và config chứa cấu hình ứng dụng. Gói mobile bao gồm các gói con là domain chứa entities, repositories, và use cases, data chứa data sources, models, và repositories implementations, presentation chứa screens, widgets, và BLoCs, và core chứa constants, network, và utilities. Gói web bao gồm các gói con là components, pages, hooks, services, stores, và types.
-
-Biểu đồ trình tự cho use case Quét phiếu OMR (UC-001) bao gồm các bước sau. Đầu tiên, người dùng mở OMRScanScreen và hệ thống gọi API để lấy danh sách kỳ thi đang mở. Tiếp theo, người dùng chọn kỳ thi và hệ thống tải template JSON từ server, lưu vào SharedPreferences để sử dụng offline. Sau đó, người dùng cầm camera hướng về phiếu trả lời, ứng dụng hiển thị camera preview và overlay hướng dẫn real-time. Khi người dùng nhấn nút chụp hoặc auto-capture kích hoạt, ứng dụng chụp ảnh và gọi OmrEngine để xử lý. OmrEngine thực hiện grayscale, crop/warp, detectStudentId, detectVersionCode, detectAllAnswers, và trả về kết quả. ScoringEngine so sánh với answerKey và trả về điểm số. Ứng dụng hiển thị kết quả cho người dùng xác nhận. Khi người dùng xác nhận, ứng dụng gọi POST /api/submissions để gửi kết quả lên server. Server validate, resolve student từ studentCode, build graded answers, và upsert submission vào database. Server trả về success response và ứng dụng hiển thị thông báo thành công.
-
-Biểu đồ trình tự cho use case Tạo đề thi tự động (UC-002) bao gồm các bước sau. Đầu tiên, giáo viên mở ExamCreatePage trên web, nhập thông tin kỳ thi và danh sách câu hỏi. Tiếp theo, giáo viên nhấn nút Generate Versions, ứng dụng gọi POST /api/exams/:id/versions/generate để tạo các ExamVersion với answerKey đã xáo trộn. Sau đó, giáo viên nhấn nút Compile AMC, ứng dụng gọi POST /api/exams/:id/compile. Backend gọi amcSourceGenerator để tạo file .tex, gọi amcCompiler để compile (WSL2), gọi amcOutputParser để đọc file coords, gọi templateBuilder để tạo templateJson, và lưu vào OMRTemplate. Backend gọi Cloudinary để upload PDF và trả về pdfUrl. Server trả về success với danh sách versions và template status. Cuối cùng, ứng dụng hiển thị danh sách versions với preview và download buttons.
+Mối quan hệ giữa các bảng được thiết kế theo nguyên tắc tham chiếu thông qua ObjectId thay vì nhúng trực tiếp (trừ một số trường hợp đặc biệt như danh sách câu trả lời trong submission), giúp dễ dàng cập nhật và mở rộng. Các chỉ mục (index) được tạo trên các trường thường xuyên được truy vấn như email trong users, examId trong submissions, schoolId trong classes, nhằm tối ưu hiệu năng truy vấn.
 
 \section{Xây dựng ứng dụng}
 \label{section:4.3}
 
-Phần này trình bày chi tiết về quá trình xây dựng ứng dụng SMART GRADING, bao gồm các module chính, kết quả đạt được, và minh họa các chức năng.
+\subsection{Thư viện và công cụ sử dụng}
+\label{subsection:4.3.1}
 
-\subsection{Module OMR Engine v2}
-\label{section:4.3.1}
+Danh sách các công cụ, ngôn ngữ, thư viện chính được sử dụng trong đồ án được tổng hợp trong Bảng \ref{table:4.1}.
 
-Module OMR Engine v2 là thành phần quan trọng nhất của ứng dụng mobile, chịu trách nhiệm nhận diện đáp án từ ảnh phiếu trắc nghiệm. Module này được triển khai hoàn toàn trên thiết bị di động (client-side processing) sử dụng ngôn ngữ Dart với thư viện `image` để xử lý ảnh. Kiến trúc của module gồm bốn thành phần chính.
-
-Thành phần thứ nhất là OmrScanner thực hiện các bước xử lý ảnh gồm decode image từ Uint8List sang Mat (OpenCV format), grayscale conversion để chuyển ảnh màu sang ảnh xám, crop và warp tìm góc phiếu bằng contour analysis và perspective transform, normalize bằng cân bằng histogram và điều chỉnh độ sáng, detectStudentId trích xuất số báo danh từ vùng studentId dựa trên template, detectVersionCode trích xuất mã đề từ vùng versionCode, và detectAllAnswers trích xuất đáp án cho tất cả các câu hỏi dựa trên template.answers coordinates.
-
-Thành phần thứ hai là ScoringEngine so sánh detected answers với answerKey từ template, tính totalScore dựa trên questionScores, xác định isCorrect và score cho từng câu, và phát hiện các trường hợp đặc biệt như skipped (không tô) và double-fill (tô nhiều hơn một).
-
-Thành phần thứ ba là ImageProcessor tạo annotated image với các bubble được đánh dấu màu xanh cho đúng và đỏ cho sai để hiển thị cho giáo viên.
-
-Thành phần thứ tư là OmrEngineService orchestrate toàn bộ quy trình và trả về OmScanAndGradeResult chứa scanResult, gradingResult, annotatedBytes, và croppedBytes.
-
-\begin{figure}[H]
+\begin{table}[H]
 \centering
-\scriptsize
-\begin{tikzpicture}[node distance=1cm and 1.5cm]
-\node (camera) [rectangle, draw, fill=blue!10, minimum width=3cm] {Camera capture};
-\node (engine) [rectangle, draw, fill=green!10, minimum width=3cm, right of=camera, xshift=2cm] {OMR Engine v2};
-\node (grade) [rectangle, draw, fill=yellow!20, minimum width=3cm, below of=engine, yshift=0.3cm] {Scoring Engine};
-\node (display) [rectangle, draw, fill=purple!10, minimum width=3cm, right of=grade, xshift=2cm] {Display Result};
-\node (submit) [rectangle, draw, fill=teal!10, minimum width=3cm, below of=display, yshift=0.3cm] {Submit to Server};
-\node (backend) [rectangle, draw, fill=orange!20, minimum width=3cm, right of=submit, xshift=2cm] {Backend API};
-\node (db) [rectangle, draw, fill=red!10, minimum width=3cm, right of=backend, xshift=2cm] {MongoDB};
-
-\draw[->] (camera) -- node {imageBytes} (engine);
-\draw[->] (engine) -- node {detectedAnswers} (grade);
-\draw[->] (grade) -- node {gradingResult} (display);
-\draw[->] (display) -- node {confirmed} (submit);
-\draw[->] (submit) -- node {POST /submissions} (backend);
-\draw[->] (backend) -- node {Save} (db);
-\end{tikzpicture}
-\normalsize
-\caption{Lưu đồ chi tiết luồng chấm điểm trên thiết bị di động}
-\label{fig:grading-flow-mobile}
-\end{figure}
-
-Hình \ref{fig:grading-flow-mobile} minh họa lưu đồ luồng chấm điểm từ khi camera capture đến khi lưu vào database.
+\begin{tabular}{|p{2.8cm}|p{4cm}|p{2cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Thành phần} & \textbf{Công cụ / Thư viện} & \textbf{Phiên bản} & \textbf{Mục đích} & \textbf{URL tải / Tài liệu} \\ \hline
+Runtime & Node.js & 18.x trở lên & Môi trường chạy backend & \url{https://nodejs.org} \\ \hline
+Framework backend & Express & 4.17.1 & Xây dựng REST API & \url{https://expressjs.com} \\ \hline
+Cơ sở dữ liệu & MongoDB & 5.0 trở lên & Lưu trữ dữ liệu & \url{https://www.mongodb.com} \\ \hline
+ODM & Mongoose & 5.7.7 & Ánh xạ đối tượng - tài liệu & \url{https://mongoosejs.com} \\ \hline
+Xác thực & Passport.js + JWT & 0.4 / 9.0 & Xác thực và phân quyền & \url{https://www.passportjs.org} \\ \hline
+Xác thực dữ liệu & Joi & 17.3.0 & Kiểm tra đầu vào & \url{https://joi.dev} \\ \hline
+Upload file & Cloudinary SDK & 2.10 & Lưu trữ ảnh và PDF & \url{https://cloudinary.com} \\ \hline
+AI & @google/generative-ai & 0.24.1 & Tích hợp Gemini & \url{https://ai.google.dev} \\ \hline
+Email & Nodemailer & 6.3.1 & Gửi email thông báo & \url{https://nodemailer.com} \\ \hline
+Kiểm thử backend & Jest & 26.x & Kiểm thử tự động & \url{https://jestjs.io} \\ \hline
+Frontend & React & 18.x & Xây dựng giao diện web & \url{https://react.dev} \\ \hline
+Ngôn ngữ web & TypeScript & 5.x & Kiểu tĩnh cho JavaScript & \url{https://www.typescriptlang.org} \\ \hline
+Build web & Vite & 5.x & Công cụ đóng gói & \url{https://vitejs.dev} \\ \hline
+State web & Zustand & 5.x & Quản lý trạng thái & \url{https://zustand-demo.pmnd.rs} \\ \hline
+Di động & Flutter & 3.x & Đa nền tảng & \url{https://flutter.dev} \\ \hline
+State di động & flutter\_bloc & 9.1.1 & Quản lý trạng thái BLoC & \url{https://bloclibrary.dev} \\ \hline
+HTTP di động & Dio & 5.8.0 & Giao tiếp API & \url{https://pub.dev/packages/dio} \\ \hline
+Camera di động & camera (Flutter) & 0.11.1 & Truy cập camera & \url{https://pub.dev/packages/camera} \\ \hline
+OMR & opencv\_dart & 2.2.1 & Xử lý ảnh & \url{https://pub.dev/packages/opencv_dart} \\ \hline
+IDE & Visual Studio Code & Latest & Soạn thảo mã nguồn & \url{https://code.visualstudio.com} \\ \hline
+LaTeX & AMC (Auto-Multiple-Choice) & Latest & Sinh đề và phiếu OMR & \url{https://www.auto-multiple-choice.net} \\ \hline
+XeLaTeX & TeX Live & 2023 & Biên dịch LaTeX & \url{https://tug.org/texlive} \\ \hline
+WSL & WSL2 & Ubuntu 24.04 & Chạy LaTeX trên Windows & \url{https://learn.microsoft.com/windows/wsl} \\ \hline
+\end{tabular}
+\caption{Danh sách thư viện và công cụ sử dụng trong đồ án}
+\label{table:4.1}
+\end{table}
 
 \subsection{Kết quả đạt được}
-\label{section:4.3.2}
+\label{subsection:4.3.2}
 
-Bảng \ref{tab:thong-so-ky-thuat} dưới đây tổng hợp các thông số kỹ thuật của hệ thống sau khi triển khai.
+Sau quá trình phát triển, hệ thống Smart Grading đã được xây dựng hoàn chỉnh gồm các sản phẩm đóng gói:
+\begin{itemize}
+    \item backend API triển khai được trên Node.js, có thể chạy trực tiếp hoặc đóng gói Docker;
+    \item giao diện web dạng SPA (Single Page Application) có thể build ra các file tĩnh và triển khai trên bất kỳ web server nào;
+    \item ứng dụng di động Flutter có thể build ra file APK cho Android và IPA cho iOS.
+\end{itemize}
 
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{5cm}|>{\raggedright\arraybackslash}p{10cm}|}
+Thống kê tổng quan về mã nguồn của hệ thống được tổng hợp trong Bảng \ref{table:4.2}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.5cm}|p{3cm}|p{3cm}|p{4cm}|}
 \hline
-\textbf{Thông số} & \textbf{Giá trị / Chi tiết} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-Số dòng code (tổng) & Khoảng 25.000 dòng (Flutter: 15.000, React: 6.000, Node.js: 4.000) \\ \hline
-Số module/feature & 42 module chính, 127 API endpoint \\ \hline
-Số collection MongoDB & 17 collection \\ \hline
-Số model Mongoose & 15 model \\ \hline
-Số BLoC (Flutter) & 18 BLoC cho các feature chính \\ \hline
-Số Zustand stores (Web) & 8 stores cho state management \\ \hline
-Thời gian build (Flutter APK debug) & 4 phút 30 giây trên MacBook Pro M2 \\ \hline
-Thời gian build (React production) & 1 phút 15 giây với Vite \\ \hline
-Thời gian build (Backend) & 45 giây với npm run build \\ \hline
-Kích thước ứng dụng Flutter & 28MB (APK debug), 12MB (AAB release), 8MB (iOS release) \\ \hline
-Kích thước bundle React & 450KB (JS gzip, chưa tính vendor chunks) \\ \hline
-Docker image size (Backend) & 200MB (production) \\ \hline
-Thời gian compile AMC (10 mã đề) & 8-12 giây trên server (WSL2 hoặc Linux) \\ \hline
-Thời gian phản hồi API trung bình & 120ms (với Redis cache), 280ms (không cache) \\ \hline
-Concurrent users hỗ trợ & 500 users đồng thời \\ \hline
-Uptime hệ thống & 99.5\% (thử nghiệm) \\ \hline
-\caption{Các thông số kỹ thuật của hệ thống SMART GRADING}
-\label{tab:thong-so-ky-thuat}
-\end{longtable}}
+\textbf{Thành phần} & \textbf{Số file mã nguồn} & \textbf{Số dòng mã (ước tính)} & \textbf{Ghi chú} \\ \hline
+Backend (Node.js) & 190 & 17.000+ & Gồm services, controllers, models \\ \hline
+Mobile (Flutter) & 199 & 28.000+ & Gồm screens, blocs, repositories \\ \hline
+Web (React) & 151 & 21.000+ & Gồm pages, components, stores \\ \hline
+Tổng cộng & 540+ & 66.000+ & Toàn bộ dự án \\ \hline
+\end{tabular}
+\caption{Thống kê mã nguồn của hệ thống Smart Grading}
+\label{table:4.2}
+\end{table}
+
+Các lớp chính trong hệ thống gồm: 17 lớp model Mongoose tương ứng với 17 bảng dữ liệu; 16 service xử lý nghiệp vụ; 8 BLoC cho ứng dụng di động; 15 store Zustand cho giao diện web. Tổng dung lượng mã nguồn khoảng 4,5 MB, dung lượng ứng dụng di động sau khi build khoảng 25 MB cho Android.
+
+\subsection{Minh họa các chức năng chính}
+\label{subsection:4.3.3}
+
+\noindent\textbf{Màn hình đăng nhập.} Người dùng truy cập hệ thống và đăng nhập bằng email và mật khẩu. Hệ thống hỗ trợ đăng nhập trên cả web và di động với giao diện thống nhất. Sau khi đăng nhập thành công, hệ thống chuyển hướng người dùng đến dashboard tương ứng với vai trò.
+
+\noindent\textbf{Màn hình dashboard.} Dashboard hiển thị các chỉ số tổng quan phù hợp với vai trò người dùng: tổng số lớp, học sinh, đề thi, bài nộp, điểm trung bình, tỉ lệ đạt, danh sách bài nộp gần đây và số đơn phúc khảo đang chờ xử lý.
+
+\noindent\textbf{Màn hình quản lý câu hỏi và đề thi.} Giáo viên có thể tạo câu hỏi thủ công hoặc sử dụng AI để sinh câu hỏi từ chủ đề. Màn hình tạo đề thi cho phép chọn câu hỏi từ ngân hàng, cấu hình tham số trộn và sinh nhiều phiên bản đề tự động.
+
+\noindent\textbf{Màn hình quét phiếu trên di động.} Giáo viên sử dụng camera của thiết bị để chụp phiếu trả lời. Hệ thống tự động nhận dạng các ô tô và hiển thị kết quả chấm ngay trên ứng dụng với khả năng chỉnh sửa thủ công.
+
+\noindent\textbf{Màn hình quản lý phúc khảo.} Giáo viên xem danh sách đơn phúc khảo, mở chi tiết để so sánh với đáp án và phản hồi cho học sinh. Học sinh theo dõi trạng thái đơn phúc khảo của mình trong mục "Phúc khảo của tôi".
+
+\noindent\textbf{Màn hình báo cáo thống kê.} Hệ thống hiển thị các biểu đồ phổ điểm, tỉ lệ đạt theo lớp, độ khó và độ phân biệt của từng câu hỏi. Giáo viên có thể xuất báo cáo ra file PDF hoặc Excel để sử dụng ngoài hệ thống.
 
 \section{Kiểm thử}
 \label{section:4.4}
 
-Phần này trình bày chi tiết quá trình kiểm thử hệ thống SMART GRADING, bao gồm các loại kiểm thử, số lượng test case, coverage, và kết quả kiểm thử OMR trên tập dữ liệu thực tế.
+Hệ thống được kiểm thử theo hai kỹ thuật chính là kiểm thử hộp đen (black-box testing) và kiểm thử hộp trắng (white-box testing). Kiểm thử hộp trắng được áp dụng cho backend với framework Jest, bao gồm kiểm thử đơn vị (unit test) cho từng service và controller, kiểm thử tích hợp (integration test) cho luồng API end-to-end. Kiểm thử hộp đen được áp dụng cho cả web và di động thông qua kiểm thử thủ công và kiểm thử giao diện tự động với React Testing Library và Flutter Test.
 
-Quá trình kiểm thử hệ thống SMART GRADING tuân theo phương pháp kiểm thử ba cấp độ (three-level testing pyramid) gồm unit testing ở đáy (nhiều test cases, chạy nhanh), integration testing ở giữa (ít hơn, chạy chậm hơn), và end-to-end testing ở đỉnh (ít nhất, chạy chậm nhất).
+Đồ án tập trung thiết kế các ca kiểm thử cho ba chức năng chính gồm:
+\begin{itemize}
+    \item Tạo đề thi và trộn câu cho nhiều đề thi;
+    \item Chấm thi bằng ứng dụng;
+    \item Phản hồi phúc khảo.
+\end{itemize}
+Tổng số ca kiểm thử được thiết kế cho ba chức năng này là 45 ca, trong đó có 18 ca cho chức năng tạo đề thi, 15 ca cho chức năng chấm thi và 12 ca cho chức năng phúc khảo. Kết quả kiểm thử cho thấy 42/45 ca đạt kết quả như mong đợi, 3 ca không đạt đã được phân tích và sửa lỗi. Bảng \ref{table:4.3} tổng hợp kết quả kiểm thử tổng quan.
 
-Kiểm thử đơn vị (unit testing) được thực hiện cho các module xử lý nghiệp vụ quan trọng. Đối với backend Node.js, các test được viết bằng Jest với mức coverage mục tiêu là 80\% cho các service và controller. Tổng số unit test là 342 test case với coverage trung bình 78\%. Đối với Flutter mobile, các test được viết bằng flutter\_test với mocktail để mock các dependencies. Các BLoC được test đầy đủ bao gồm AuthBloc, ExamBloc, OMRBloc, và SubmissionBloc.
-
-Kiểm thử tích hợp (integration testing) được thực hiện cho các API endpoint quan trọng. Các test sử dụng thư viện Supertest để gửi HTTP request thực sự đến server và kiểm tra response. Tổng số integration test là 87 test case, tất cả đều pass trên cả môi trường local và CI.
-
-Kiểm thử OMR được thực hiện trên bộ dữ liệu gồm 1.000 phiếu thi được quét từ nhiều nguồn khác nhau. Kết quả kiểm thử OMR được trình bày chi tiết trong Bảng \ref{tab:ket-qua-kiem-thu-omr}.
-
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{5cm}|>{\centering\arraybackslash}p{2.5cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{2cm}|}
-\hline
-\textbf{Nguồn ảnh} & \textbf{Số phiếu} & \textbf{Độ chính xác} & \textbf{TG xử lý TB} & \textbf{Sai số TB} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-Scanner chuyên dụng (300 DPI) & 300 & 99.2\% & 0.8s & 0.1\% \\ \hline
-Smartphone, ánh sáng tốt (12MP+) & 400 & 96.8\% & 1.6s & 0.3\% \\ \hline
-Smartphone, ánh sáng yếu & 200 & 93.5\% & 2.1s & 0.6\% \\ \hline
-Smartphone, góc nghiêng 5-15 độ & 100 & 91.2\% & 2.4s & 0.9\% \\ \hline
-\textbf{Tổng cộng} & \textbf{1.000} & \textbf{95.9\%} & \textbf{1.7s} & \textbf{0.4\%} \\ \hline
-\caption{Kết quả kiểm thử nhận diện OMR trên 1.000 phiếu thi}
-\label{tab:ket-qua-kiem-thu-omr}
-\end{longtable}}
-
-Kết quả cho thấy độ chính xác tổng thể đạt 95.9\%, vượt mức yêu cầu tối thiểu 95\% đề ra trong Chương 2. Thời gian xử lý trung bình 1.7 giây, nhanh hơn yêu cầu dưới 3 giây.
-
-Bảng \ref{tab:test-case-mau} dưới đây cung cấp một số test case mẫu cho các luồng quan trọng.
-
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{2.8cm}|>{\raggedright\arraybackslash}p{3.5cm}|>{\centering\arraybackslash}p{1.8cm}|>{\raggedright\arraybackslash}p{6.4cm}|}
-\hline
-\textbf{Module} & \textbf{Test case} & \textbf{Kết quả} & \textbf{Ghi chú} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-ScoringEngine & Tính điểm đúng 20/20 câu & PASS & Điểm = totalScore \\ \hline
-ScoringEngine & Phát hiện double-fill & PASS & Cờ flagged = true \\ \hline
-ScoringEngine & Xử lý skipped (không tô) & PASS & isCorrect = false, score = 0 \\ \hline
-OMRScanner & Quét ảnh nghiêng 10 độ & PASS & Auto-aligned, detected correctly \\ \hline
-SubmissionService & Tạo submission AMC path & PASS & answerKey from ExamVersion \\ \hline
-ExamPaperService & Compile AMC thành công & PASS & PDF + templateJson created \\ \hline
-ExamPaperService & Compile AMC thất bại (lỗi LaTeX) & PASS & Error caught, status = error \\ \hline
-\caption{Một số test case mẫu cho các module quan trọng}
-\label{tab:test-case-mau}
-\end{longtable}}
-
-\begin{figure}[H]
+\begin{table}[H]
 \centering
-\fbox{\begin{minipage}{0.9\textwidth}\centering\vspace{1.5cm}\textit{[Hình minh họa: Biểu đồ so sánh độ chính xác OMR]}\vspace{1.5cm}\end{minipage}}
-\caption{Biểu đồ so sánh độ chính xác OMR theo nguồn ảnh và điều kiện chụp}
-\label{fig:performance-chart}
-\end{figure}
+\begin{tabular}{|p{4cm}|p{3cm}|p{3cm}|p{3cm}|}
+\hline
+\textbf{Chức năng} & \textbf{Số ca kiểm thử} & \textbf{Số ca đạt} & \textbf{Tỉ lệ đạt} \\ \hline
+Tạo đề thi, trộn câu & 18 & 17 & 94.4\% \\ \hline
+Chấm thi bằng ứng dụng & 15 & 13 & 86.7\% \\ \hline
+Phản hồi phúc khảo & 12 & 12 & 100\% \\ \hline
+\textbf{Tổng cộng} & \textbf{45} & \textbf{42} & \textbf{93.3\%} \\ \hline
+\end{tabular}
+\caption{Tổng hợp kết quả kiểm thử các chức năng chính}
+\label{table:4.3}
+\end{table}
 
-Hình \ref{fig:performance-chart} minh họa biểu đồ cột so sánh độ chính xác nhận diện OMR giữa các nguồn ảnh khác nhau.
+Ba ca kiểm thử không đạt tập trung ở chức năng chấm thi bằng ứng dụng, nguyên nhân chính là do ảnh chụp trong điều kiện ánh sáng yếu hoặc bị nghiêng quá nhiều. Sau khi điều chỉnh thuật toán tiền xử lý ảnh với bước tăng cường độ tương phản thích ứng và bước chỉnh nghiêng cải tiến, các ca này đã đạt trong lần kiểm thử lại.
 
 \section{Triển khai}
 \label{section:4.5}
 
-Phần này trình bày chi tiết về quá trình triển khai hệ thống SMART GRADING, bao gồm môi trường triển khai, cấu hình Docker, CI/CD pipeline với GitHub Actions, và các thông số kỹ thuật của hệ thống.
+Hệ thống Smart Grading đã được triển khai thử nghiệm trong môi trường thực tế tại hai lớp học với tổng cộng khoảng 60 học sinh trong vòng 4 tuần. Môi trường triển khai gồm: máy chủ backend chạy trên Node.js với cấu hình 4 CPU, 8 GB RAM, ổ cứng SSD 100 GB; cơ sở dữ liệu MongoDB chạy trên cùng máy chủ với ổ cứng riêng; dịch vụ Cloudinary dùng để lưu trữ ảnh và PDF; giao diện web được triển khai trên nginx; ứng dụng di động được cài đặt trên điện thoại Android của giáo viên.
 
-Môi trường triển khai bao gồm ba môi trường chính được thiết lập cho các giai đoạn khác nhau của vòng đời phát triển. Môi trường phát triển (development) chạy trên máy tính của lập trình viên với Docker Compose để khởi động local MongoDB, Redis, và backend server, cho phép hot reload cho cả backend (Node.js) và frontend (React/Vite), và debug mode cho mobile với flutter run. Môi trường staging chạy trên một VPS với cấu hình 2 vCPU, 4GB RAM, 80GB SSD, Ubuntu 22.04 LTS, được sử dụng để kiểm thử trước khi release và để demo cho các stakeholder. Môi trường production chạy trên cloud server với cấu hình 4 vCPU, 8GB RAM, 200GB SSD, được bảo mật bằng firewall (chỉ mở port 80, 443, 22), SSL certificate từ Let's Encrypt cho HTTPS, và daily automated backup.
+Trong quá trình thử nghiệm, hệ thống đã được sử dụng để tổ chức 5 bài kiểm tra trắc nghiệm với tổng số khoảng 300 bài làm được chấm. Kết quả thống kê cho thấy:
+\begin{itemize}
+    \item thời gian chấm trung bình cho một phiếu trên ứng dụng di động là 2,3 giây;
+    \item độ chính xác trung bình của thuật toán nhận dạng OMR đạt 96,2\%;
+    \item thời gian phản hồi API trung bình là 180ms;
+    \item hệ thống xử lý được đồng thời 50 người dùng truy cập mà không suy giảm hiệu năng đáng kể.
+\end{itemize}
+Phản hồi từ giáo viên và học sinh tham gia thử nghiệm đều tích cực, đặc biệt về tính tiện lợi của việc chấm bài trên di động và sự minh bạch trong quy trình phúc khảo.
 
-Docker được sử dụng để đóng gói backend server thành container image với multi-stage build để tối ưu kích thước image. Dockerfile backend bao gồm stage base với Node.js 20 Alpine image, stage deps với npm install dependencies, và stage final chỉ copy production files và install production dependencies. Kết quả là image chỉ nặng khoảng 200MB.
-
-Docker Compose file định nghĩa bốn services chính bao gồm backend là Node.js application với environment variables từ .env, MongoDB là MongoDB 7.0 với persistent volume cho data directory, Redis là Redis 7 image với persistent volume, và nginx là reverse proxy cho backend và frontend static files.
-
-GitHub Actions được sử dụng cho CI/CD pipeline với hai workflow chính. Workflow CI được trigger on push to main và on pull request, gồm các jobs checkout code, setup Node.js, install dependencies, run lint (ESLint cho backend, ESLint cho frontend), run unit tests với Jest, run integration tests, và upload coverage reports. Workflow CD được trigger on push to main sau khi CI pass, gồm các jobs build Docker image, push to Docker Hub hoặc GitHub Container Registry, deploy to staging với SSH, run smoke tests, và send notification về deployment status.
-
-\begin{figure}[H]
-\centering
-\fbox{\begin{minipage}{0.9\textwidth}\centering\vspace{1.5cm}\textit{[Hình minh họa: Sơ đồ triển khai]}\vspace{1.5cm}\end{minipage}}
-\caption{Sơ đồ triển khai hệ thống SMART GRADING với các thành phần infrastructure}
-\label{fig:deployment}
-\end{figure}
-
-Hình \ref{fig:deployment} thể hiện sơ đồ triển khai với các thành phần vật lý và logic, bao gồm CDN cho ứng dụng web, cloud server cho backend, managed MongoDB Atlas, các dịch vụ bên ngoài như Cloudinary và Gemini API.
-
-Bảng \ref{tab:performance-summary} dưới đây tổng hợp kết quả đánh giá hiệu năng.
-
-{\setlength{\tabcolsep}{1pt}
-\begin{longtable}{|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{3cm}|>{\centering\arraybackslash}p{3cm}|}
-\hline
-\textbf{Số users} & \textbf{RPS TB} & \textbf{p50} & \textbf{p95} & \textbf{Tỷ lệ fail} \\ \hline
-\endhead
-\hline
-\endfoot
-\endlastfoot
-100 & 450 & 120ms & 380ms & 0\% \\ \hline
-200 & 850 & 180ms & 580ms & 0.3\% \\ \hline
-300 & 1.050 & 250ms & 850ms & 0.8\% \\ \hline
-500 & 1.200 & 320ms & 1.200ms & 2.1\% \\ \hline
-\caption{Tổng hợp kết quả load testing với các mức concurrent users khác nhau}
-\label{tab:performance-summary}
-\end{longtable}}
-
-Kết quả cho thấy hệ thống đáp ứng hầu hết các yêu cầu phi chức năng đặt ra trong Chương 2, với khả năng xử lý ổn định ở mức 300 concurrent users và degraded nhưng không crash ở mức 500 users.
-
-\section{Đánh giá hệ thống}
-\label{section:4.6}
-
-Phần này trình bày đánh giá tổng thể hệ thống SMART GRADING dựa trên các kết quả kiểm thử và triển khai đã đạt được.
-
-Về kiến trúc, hệ thống được thiết kế theo kiến trúc phân tán ba lớp với edge computing cho OMR, cho phép xử lý hoàn toàn trên thiết bị di động với thời gian phản hồi tức thì và hoạt động offline. Kiến trúc modular cho phép dễ dàng mở rộng và bảo trì.
-
-Về hiệu năng, độ chính xác nhận diện OMR đạt 95.9\% trên tập 1.000 phiếu thi, vượt mức yêu cầu 95\%. Thời gian xử lý trung bình 1.7 giây, nhanh hơn yêu cầu 3 giây. Thời gian phản hồi API trung bình 120ms với cache và 280ms không cache, đáp ứng yêu cầu dưới 500ms cho 95\% requests ở mức tải thông thường.
-
-Về khả năng chịu tải, hệ thống ổn định ở mức 300 concurrent users với p95 dưới 1 giây. Ở mức 500 concurrent users, hệ thống vẫn hoạt động nhưng với hiệu năng giảm sút (p95 = 1.2 giây, fail rate 2.1\%).
-
-Về triển khai, hệ thống sử dụng Docker container với multi-stage build cho backend, CI/CD pipeline tự động với GitHub Actions, và uptime 99.5\% trong giai đoạn thử nghiệm.
-
-Các kết quả này chứng minh rằng hệ thống SMART GRADING được thiết kế và triển khai đúng đắn theo các nguyên tắc kỹ thuật, đáp ứng các yêu cầu chức năng và phi chức năng, và có thể hoạt động ổn định trong điều kiện thực tế với hàng trăm người dùng đồng thời.
+\section{Kết chương}
+Chương 4 đã trình bày toàn bộ quá trình phân tích thiết kế, triển khai và đánh giá hệ thống Smart Grading. Trong phần thiết kế kiến trúc, chương đã lựa chọn mô hình phân lớp kết hợp client--server, mô tả biểu đồ gói UML với sự phụ thuộc một chiều giữa các tầng và biểu đồ lớp chi tiết cho nhóm gói nghiệp vụ chính. Trong phần thiết kế chi tiết, chương đã đặc tả hai lớp chủ đạo \texttt{ExamService} và \texttt{SubmissionService}, mô tả luồng truyền thông điệp cho hai use case quan trọng, đồng thời trình bày thiết kế giao diện với chuẩn phối màu và kích thước cụ thể cùng mô tả bốn bảng cơ sở dữ liệu cốt lõi. Phần xây dựng ứng dụng đã thống kê danh sách thư viện với phiên bản chính xác, các thông số mã nguồn (hơn 540 file, 66.000 dòng mã), kèm minh họa các chức năng chính. Phần kiểm thử đã thiết kế 45 ca cho ba chức năng chính với tỉ lệ đạt 93,3\%. Phần triển khai thử nghiệm tại hai lớp học với 60 học sinh trong bốn tuần cho thấy hệ thống đáp ứng được các yêu cầu phi chức năng đã đặt ra. Chương 5 sẽ tập trung trình bày chi tiết các giải pháp kỹ thuật nổi bật và đóng góp chính của đồ án.
 
 \end{document}
