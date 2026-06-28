@@ -54,18 +54,21 @@ describe('ExamScoresModal — skeleton', () => {
   it('renders dialog with exam title when open=true', () => {
     renderModal();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('Kiểm tra 45 phút Toán')).toBeInTheDocument();
+    // Title has prefix per spec §6.3 — use a regex to match the substring
+    expect(screen.getByText(/Kiểm tra 45 phút Toán/)).toBeInTheDocument();
   });
 
   it('shows subject and date in subline when provided', () => {
     renderModal();
-    expect(screen.getByText(/Toán/)).toBeInTheDocument();
+    // Subline shows subject + date; target the subline paragraph specifically
+    expect(screen.getByText(/Toán · Ngày thi: 2026-06-28/)).toBeInTheDocument();
   });
 
   it('calls onClose when close button clicked', () => {
     const onClose = vi.fn();
     renderModal({ onClose });
-    fireEvent.click(screen.getByRole('button', { name: /đóng/i }));
+    // Footer "Đóng" button has accessible name exactly "Đóng"
+    fireEvent.click(screen.getByRole('button', { name: 'Đóng' }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

@@ -119,7 +119,7 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
           <button
             className={styles.closeBtn}
             onClick={onClose}
-            aria-label="Close window"
+            aria-label="Đóng cửa sổ"
             data-testid="close-btn"
           >
             <X size={20} />
