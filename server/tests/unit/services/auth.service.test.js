@@ -29,6 +29,7 @@ describe('Auth Service - loginUserWithEmailAndPassword', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
     try {
+      await User.updateOne({ _id: studentOne._id }, { $set: { registrationStatus: 'approved' } });
       const user = await authService.loginUserWithEmailAndPassword(studentOne.email, password);
       expect(user).toBeDefined();
       expect(user.email).toBe(studentOne.email);
@@ -40,5 +41,26 @@ describe('Auth Service - loginUserWithEmailAndPassword', () => {
     } finally {
       process.env.NODE_ENV = originalEnv;
     }
+  });
+
+  it('should reject login when registrationStatus is "pending"', async () => {
+    await User.updateOne({ _id: studentOne._id }, { $set: { registrationStatus: 'pending' } });
+    await expect(authService.loginUserWithEmailAndPassword(studentOne.email, password)).rejects.toThrow(
+      /chờ Super Admin phê duyệt/,
+    );
+  });
+
+  it('should reject login when registrationStatus is "rejected"', async () => {
+    await User.updateOne({ _id: studentOne._id }, { $set: { registrationStatus: 'rejected' } });
+    await expect(authService.loginUserWithEmailAndPassword(studentOne.email, password)).rejects.toThrow(
+      /bị từ chối/,
+    );
+  });
+
+  it('should allow login when registrationStatus is "approved"', async () => {
+    await User.updateOne({ _id: studentOne._id }, { $set: { registrationStatus: 'approved' } });
+    const user = await authService.loginUserWithEmailAndPassword(studentOne.email, password);
+    expect(user).toBeDefined();
+    expect(user.email).toBe(studentOne.email);
   });
 });

@@ -111,7 +111,12 @@ describe('Auth routes', () => {
 
   describe('POST /api/v1/auth/login', () => {
     beforeEach(async () => {
-      const userWithVerified = { ...userOne, isEmailVerified: true, schoolId: schoolA._id };
+      const userWithVerified = {
+        ...userOne,
+        isEmailVerified: true,
+        schoolId: schoolA._id,
+        registrationStatus: 'approved',
+      };
       await insertUsers([userWithVerified]);
     });
 

@@ -24,6 +24,18 @@ const loginUserWithEmailAndPassword = async (email, password) => {
   } else if (!user.isEmailVerified) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Please verify your email before logging in');
   }
+  if (user.registrationStatus === 'pending') {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      'Tài khoản của bạn đang chờ Super Admin phê duyệt'
+    );
+  }
+  if (user.registrationStatus === 'rejected') {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      'Tài khoản của bạn đã bị từ chối. Vui lòng liên hệ Super Admin'
+    );
+  }
   return user;
 };
 
