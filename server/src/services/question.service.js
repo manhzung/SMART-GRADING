@@ -228,6 +228,28 @@ class QuestionService {
     return updated;
   }
 
+  async reject(id, rejecterId, rejecterSchoolId, rejecterRole, reason = null) {
+    const question = await Question.findById(id);
+    if (!question) {
+      throw new ApiError(404, 'Question not found');
+    }
+
+    // Chỉ admin hoặc teacher cùng trường được từ chối
+    if (rejecterRole !== 'admin') {
+      if (!rejecterSchoolId || question.schoolId?.toString() !== rejecterSchoolId.toString()) {
+        throw new ApiError(403, 'Bạn không có quyền từ chối câu hỏi này');
+      }
+    }
+
+    const uid = rejecterId ? (rejecterId.toString ? rejecterId.toString() : String(rejecterId)) : null;
+    const updated = await Question.findByIdAndUpdate(
+      id,
+      { isApproved: false, rejectedReason: reason, rejectedBy: uid, rejectedAt: new Date() },
+      { new: true }
+    );
+    return updated;
+  }
+
   async delete(id, user = null) {
     const question = await Question.findById(id);
     if (!question) {

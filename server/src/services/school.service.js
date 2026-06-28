@@ -119,6 +119,67 @@ class SchoolService {
       pages: Math.ceil(total / limit),
     };
   }
+
+  // ── School Approval Methods ──────────────────────────────────────────────────
+
+  async getPendingSchools(options = {}) {
+    const { page = 1, limit = 20, sortBy = 'createdAt', order = 'desc' } = options;
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 20;
+    const skip = (pageNum - 1) * limitNum;
+    const sortOrder = order === 'asc' ? 1 : -1;
+
+    const filter = { registrationStatus: 'pending' };
+
+    const [results, total] = await Promise.all([
+      School.find(filter)
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(limitNum),
+      School.countDocuments(filter),
+    ]);
+
+    return {
+      results,
+      page: pageNum,
+      limit: limitNum,
+      total,
+      pages: Math.ceil(total / limitNum),
+    };
+  }
+
+  async approveSchool(schoolId, adminId) {
+    const school = await School.findById(schoolId);
+    if (!school) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'School not found');
+    }
+
+    if (school.registrationStatus !== 'pending') {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Trường không trong trạng thái chờ duyệt');
+    }
+
+    school.registrationStatus = 'approved';
+    school.approvedBy = adminId;
+    school.isActive = true;
+    await school.save();
+    return school;
+  }
+
+  async rejectSchool(schoolId, reason = null, adminId = null) {
+    const school = await School.findById(schoolId);
+    if (!school) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'School not found');
+    }
+
+    if (school.registrationStatus !== 'pending') {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Trường không trong trạng thái chờ duyệt');
+    }
+
+    school.registrationStatus = 'rejected';
+    school.rejectedReason = reason;
+    await school.save();
+    return school;
+  }
 }
 
 module.exports = new SchoolService();
