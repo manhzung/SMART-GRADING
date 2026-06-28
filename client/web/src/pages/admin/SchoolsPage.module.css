@@ -249,6 +249,7 @@
   gap: 8px;
 }
 
+.btnView,
 .btnEdit,
 .btnDelete {
   padding: 8px;
@@ -258,6 +259,11 @@
   background: #f3f4f6;
   color: #6b7280;
   transition: all 0.2s;
+}
+
+.btnView:hover {
+  background: #dbeafe;
+  color: #2563eb;
 }
 
 .btnEdit:hover {

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../presentation/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useSchoolManagementStore } from '../../presentation/store/schoolManagementStore';
-import { Building2, Check, X, Plus, Edit, Trash2, Clock, Search, Users } from 'lucide-react';
+import { Building2, Check, X, Plus, Edit, Trash2, Clock, Search, Eye } from 'lucide-react';
 import ConfirmDialog from '../../presentation/components/shared/ConfirmDialog';
+import SchoolFormModal from '../../presentation/components/admin/SchoolFormModal';
+import SchoolDetailModal from '../../presentation/components/admin/SchoolDetailModal';
 import styles from './SchoolsPage.module.css';
 import type { School } from '../../types';
 
@@ -19,6 +21,8 @@ export default function SchoolsPage() {
     approveSchool,
     rejectSchool,
     deleteSchool,
+    createSchool,
+    updateSchool,
     totalPending,
     totalSchools,
   } = useSchoolManagementStore();
@@ -30,6 +34,13 @@ export default function SchoolsPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [processing, setProcessing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailSchool, setDetailSchool] = useState<School | null>(null);
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -84,6 +95,36 @@ export default function SchoolsPage() {
     }
   };
 
+  const handleOpenCreate = () => {
+    setEditingSchool(null);
+    setFormOpen(true);
+  };
+
+  const handleOpenEdit = (school: School) => {
+    setEditingSchool(school);
+    setFormOpen(true);
+  };
+
+  const handleOpenDetail = (school: School) => {
+    setDetailSchool(school);
+    setDetailOpen(true);
+  };
+
+  const handleFormSubmit = async (data: Partial<School>) => {
+    setFormSubmitting(true);
+    try {
+      if (editingSchool) {
+        await updateSchool(editingSchool._id, data);
+      } else {
+        await createSchool(data);
+      }
+      setFormOpen(false);
+      setEditingSchool(null);
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
   const filteredSchools = schools.filter((school) =>
     school.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     school.code?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -119,7 +160,18 @@ export default function SchoolsPage() {
       </td>
       <td>
         <div className={styles.actions}>
-          <button className={styles.btnEdit} title="Sửa">
+          <button
+            className={styles.btnView}
+            title="Xem chi tiết / School Admins"
+            onClick={() => handleOpenDetail(school)}
+          >
+            <Eye size={16} />
+          </button>
+          <button
+            className={styles.btnEdit}
+            title="Sửa"
+            onClick={() => handleOpenEdit(school)}
+          >
             <Edit size={16} />
           </button>
           <button
@@ -191,7 +243,7 @@ export default function SchoolsPage() {
           <Building2 size={28} />
           Quản lý Trường học
         </h1>
-        <button className={styles.btnPrimary}>
+        <button className={styles.btnPrimary} onClick={handleOpenCreate}>
           <Plus size={18} />
           Thêm trường
         </button>
@@ -230,10 +282,6 @@ export default function SchoolsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <button className={styles.btnSecondary}>
-                <Users size={16} />
-                Quản lý School-Admin
-              </button>
             </div>
 
             {filteredSchools.length === 0 ? (
@@ -324,6 +372,26 @@ export default function SchoolsPage() {
           />
         </div>
       </ConfirmDialog>
+
+      <SchoolFormModal
+        open={formOpen}
+        school={editingSchool}
+        submitting={formSubmitting}
+        onClose={() => {
+          setFormOpen(false);
+          setEditingSchool(null);
+        }}
+        onSubmit={handleFormSubmit}
+      />
+
+      <SchoolDetailModal
+        open={detailOpen}
+        school={detailSchool}
+        onClose={() => {
+          setDetailOpen(false);
+          setDetailSchool(null);
+        }}
+      />
     </div>
   );
 }
