@@ -41,7 +41,7 @@ describe('Layout nav filtering', () => {
     expect(screen.queryByText(/Dashboard hệ thống/i)).toBeNull();
   });
 
-  it('shows my-scores for student', async () => {
+  it('shows my-scores for student and hides admin items', async () => {
     mockAuth('student');
     const { default: StudentLayout } = await import('./Layout');
     render(
@@ -50,5 +50,7 @@ describe('Layout nav filtering', () => {
       </MemoryRouter>
     );
     expect(screen.getByText(/Điểm của tôi/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Dashboard hệ thống/i)).toBeNull();
+    expect(screen.queryByText(/Dashboard trường/i)).toBeNull();
   });
 });
