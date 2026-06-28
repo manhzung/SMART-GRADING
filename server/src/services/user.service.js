@@ -174,7 +174,8 @@ const getSchoolAdmins = async (schoolId, options = {}) => {
 };
 
 /**
- * Add a school admin to a school
+ * Add a school admin to a school.
+ * Promotes an existing teacher of the school to the school-admin role.
  */
 const addSchoolAdmin = async (schoolId, userId) => {
   const user = await getUserById(userId);
@@ -182,12 +183,21 @@ const addSchoolAdmin = async (schoolId, userId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  if (user.role !== 'school-admin') {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Người dùng phải có role school-admin');
+  if (user.role !== 'teacher') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Chỉ có thể nâng cấp giáo viên thành School Admin');
   }
 
+  if (!user.schoolId || user.schoolId.toString() !== schoolId.toString()) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Giáo viên phải thuộc trường này trước khi được nâng cấp thành School Admin'
+    );
+  }
+
+  user.role = 'school-admin';
   user.schoolId = schoolId;
   user.registrationStatus = 'approved';
+  user.isActive = true;
   await user.save();
   return user;
 };
