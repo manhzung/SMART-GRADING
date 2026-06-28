@@ -1,319 +1,321 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useAdminStore, type School } from '../../presentation/store/adminStore';
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '../../presentation/store/authStore';
+import { useNavigate } from 'react-router-dom';
+import { useSchoolManagementStore } from '../../presentation/store/schoolManagementStore';
+import { Building2, Check, X, Plus, Edit, Trash2, Clock, Search, Users } from 'lucide-react';
+import ConfirmDialog from '../../presentation/components/shared/ConfirmDialog';
 import styles from './SchoolsPage.module.css';
-
-interface SchoolFormData {
-  name: string;
-  code: string;
-  type: string;
-  address: string;
-  phone: string;
-  email: string;
-  principal: string;
-  gradingScale: number;
-  passingScore: number;
-  gradeLevelsMin: number;
-  gradeLevelsMax: number;
-}
-
-const EMPTY_FORM: SchoolFormData = {
-  name: '',
-  code: '',
-  type: 'THPT',
-  address: '',
-  phone: '',
-  email: '',
-  principal: '',
-  gradingScale: 10,
-  passingScore: 5,
-  gradeLevelsMin: 1,
-  gradeLevelsMax: 12,
-};
-
-const SCHOOL_TYPES = ['THPT', 'THCS', 'TH', 'Mầm non'];
+import type { School } from '../../types';
 
 export default function SchoolsPage() {
+  const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
   const {
-    schools, schoolsPagination, schoolsLoading, schoolsError,
-    fetchSchools, createSchool, updateSchool, deleteSchool,
-  } = useAdminStore();
+    schools,
+    pendingSchools,
+    isLoading,
+    fetchSchools,
+    fetchPendingSchools,
+    approveSchool,
+    rejectSchool,
+    deleteSchool,
+    totalPending,
+    totalSchools,
+  } = useSchoolManagementStore();
 
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editSchool, setEditSchool] = useState<School | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<School | null>(null);
-  const [formData, setFormData] = useState<SchoolFormData>(EMPTY_FORM);
-  const [formError, setFormError] = useState('');
-  const [formSubmitting, setFormSubmitting] = useState(false);
-  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
-  const searchRef = useRef<ReturnType<typeof setTimeout>>();
+  const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const load = useCallback((s = search, t = typeFilter, p = page) => {
-    fetchSchools({ search: s || undefined, type: t || undefined, page: p, limit: 10 });
-  }, [fetchSchools, search, typeFilter, page]);
+  useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      navigate('/', { replace: true });
+      return;
+    }
+    fetchSchools();
+    fetchPendingSchools();
+  }, [user, navigate, fetchSchools, fetchPendingSchools]);
 
-  useEffect(() => { load(); }, []);
-
-  const handleSearchChange = (val: string) => {
-    setSearch(val);
-    setPage(1);
-    clearTimeout(searchRef.current);
-    searchRef.current = setTimeout(() => load(val, typeFilter, 1), 300);
+  const handleDeleteClick = (schoolId: string) => {
+    setSelectedSchoolId(schoolId);
+    setDeleteDialogOpen(true);
   };
 
-  const handleTypeFilter = (val: string) => {
-    setTypeFilter(val);
-    setPage(1);
-    load(search, val, 1);
-  };
-
-  const handlePageChange = (newPage: number) => { setPage(newPage); load(search, typeFilter, newPage); };
-
-  const openCreate = () => { setFormData(EMPTY_FORM); setFormError(''); setEditSchool(null); setModalOpen(true); };
-  const closeModal = () => { setModalOpen(false); setEditSchool(null); setFormError(''); };
-
-  const openEdit = (school: School) => {
-    setFormData({
-      name: school.name,
-      code: school.code,
-      type: school.type || 'THPT',
-      address: school.address || '',
-      phone: school.phone || '',
-      email: school.email || '',
-      principal: school.principal || '',
-      gradingScale: school.gradingScale ?? 10,
-      passingScore: school.passingScore ?? 5,
-      gradeLevelsMin: school.gradeLevels?.min ?? 1,
-      gradeLevelsMax: school.gradeLevels?.max ?? 12,
-    });
-    setFormError('');
-    setEditSchool(school);
-    setModalOpen(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    setFormSubmitting(true);
+  const handleDeleteConfirm = async () => {
+    if (!selectedSchoolId) return;
+    setProcessing(true);
     try {
-      const payload = {
-        name: formData.name.trim(),
-        code: formData.code.trim().toUpperCase(),
-        type: formData.type,
-        address: formData.address.trim() || undefined,
-        phone: formData.phone.trim() || undefined,
-        email: formData.email.trim() || undefined,
-        principal: formData.principal.trim() || undefined,
-        gradingScale: formData.gradingScale,
-        passingScore: formData.passingScore,
-        gradeLevels: { min: formData.gradeLevelsMin, max: formData.gradeLevelsMax },
-      };
-      if (editSchool) {
-        await updateSchool((editSchool._id || editSchool.id)!, payload);
-      } else {
-        await createSchool(payload);
-      }
-      closeModal();
-      load();
-    } catch (err: any) {
-      setFormError(err.message || 'Đã xảy ra lỗi, vui lòng thử lại.');
+      await deleteSchool(selectedSchoolId);
+      setDeleteDialogOpen(false);
+      setSelectedSchoolId(null);
     } finally {
-      setFormSubmitting(false);
+      setProcessing(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleteSubmitting(true);
+  const handleRejectClick = (schoolId: string) => {
+    setSelectedSchoolId(schoolId);
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!selectedSchoolId) return;
+    setProcessing(true);
     try {
-      await deleteSchool((deleteTarget._id || deleteTarget.id)!);
-      setDeleteTarget(null);
-      load();
-    } catch (err: any) {
-      setFormError(err.message || 'Xóa thất bại.');
+      await rejectSchool(selectedSchoolId, rejectReason);
+      setRejectDialogOpen(false);
+      setRejectReason('');
+      setSelectedSchoolId(null);
     } finally {
-      setDeleteSubmitting(false);
+      setProcessing(false);
     }
   };
 
-  const totalPages = schoolsPagination.pages || 1;
-  const pageNumbers = Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-    if (totalPages <= 5) return i + 1;
-    if (page <= 3) return i + 1;
-    if (page >= totalPages - 2) return totalPages - 4 + i;
-    return page - 2 + i;
-  });
+  const handleApproveSchool = async (schoolId: string) => {
+    setProcessing(true);
+    try {
+      await approveSchool(schoolId);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const filteredSchools = schools.filter((school) =>
+    school.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    school.code?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const renderSchoolRow = (school: School) => (
+    <tr key={school._id} className={styles.row}>
+      <td className={styles.schoolCell}>
+        <Building2 size={18} className={styles.icon} />
+        <div>
+          <strong>{school.name}</strong>
+          <span>{school.code || '-'}</span>
+        </div>
+      </td>
+      <td>{school.address || '-'}</td>
+      <td>
+        <div className={styles.contactCell}>
+          {school.email && <span>{school.email}</span>}
+          {school.phone && <span>{school.phone}</span>}
+        </div>
+      </td>
+      <td>
+        <span className={`${styles.status} ${school.isActive ? styles.active : styles.inactive}`}>
+          {school.isActive ? 'Hoạt động' : 'Không hoạt động'}
+        </span>
+      </td>
+      <td>
+        <div className={styles.actions}>
+          <button className={styles.btnEdit} title="Sửa">
+            <Edit size={16} />
+          </button>
+          <button
+            className={styles.btnDelete}
+            title="Xóa"
+            onClick={() => handleDeleteClick(school._id)}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+
+  const renderPendingSchoolRow = (school: any) => (
+    <tr key={school.id || school._id} className={styles.row}>
+      <td className={styles.schoolCell}>
+        <Building2 size={18} className={styles.icon} />
+        <div>
+          <strong>{school.name}</strong>
+          <span>{school.code}</span>
+        </div>
+      </td>
+      <td>
+        <div className={styles.contactCell}>
+          {school.email && <span>{school.email}</span>}
+          {school.phone && <span>{school.phone}</span>}
+          {school.address && (
+            <span>
+              {school.address.street}, {school.address.ward}, {school.address.district}
+            </span>
+          )}
+        </div>
+      </td>
+      <td>
+        <span className={styles.pendingBadge}>
+          <Clock size={14} />
+          Chờ duyệt
+        </span>
+      </td>
+      <td>
+        <div className={styles.actions}>
+          <button
+            className={styles.btnApprove}
+            onClick={() => handleApproveSchool(school.id || school._id)}
+            disabled={processing}
+          >
+            <Check size={16} />
+            Duyệt
+          </button>
+          <button
+            className={styles.btnReject}
+            onClick={() => handleRejectClick(school.id || school._id)}
+            disabled={processing}
+          >
+            <X size={16} />
+            Từ chối
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Quản lý Trường học</h1>
-          <p className={styles.subtitle}>Thêm, sửa, xóa trường học trong hệ thống</p>
-        </div>
-        <button className={styles.primaryBtn} onClick={openCreate}>
-          <Plus size={16} /> Thêm Trường
+        <h1>
+          <Building2 size={28} />
+          Quản lý Trường học
+        </h1>
+        <button className={styles.btnPrimary}>
+          <Plus size={18} />
+          Thêm trường
         </button>
       </div>
 
-      <div className={styles.filters}>
-        <select className={styles.select} value={typeFilter} onChange={(e) => handleTypeFilter(e.target.value)}>
-          <option value="">Tất cả loại</option>
-          {SCHOOL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <div className={styles.searchWrap}>
-          <Search size={16} className={styles.searchIcon} />
-          <input className={styles.searchInput} placeholder="Tìm tên trường..." value={search} onChange={(e) => handleSearchChange(e.target.value)} />
-          {search && <button className={styles.clearSearch} onClick={() => handleSearchChange('')}><X size={14} /></button>}
-        </div>
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${activeTab === 'all' ? styles.active : ''}`}
+          onClick={() => setActiveTab('all')}
+        >
+          <Building2 size={16} />
+          Tất cả trường ({totalSchools})
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'pending' ? styles.active : ''}`}
+          onClick={() => setActiveTab('pending')}
+        >
+          <Clock size={16} />
+          Chờ duyệt
+          {totalPending > 0 && <span className={styles.tabBadge}>{totalPending}</span>}
+        </button>
       </div>
 
-      {schoolsError && <div className={styles.errorBanner}>{schoolsError}</div>}
-
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Tên trường</th><th>Mã</th><th>Loại</th><th>Địa chỉ</th><th>Hiệu trưởng</th><th style={{ width: 80 }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {schoolsLoading && schools.length === 0 ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className={styles.skeletonRow}>
-                  <td><span className={styles.skeleton} style={{ width: '160px', height: '16px' }} /></td>
-                  <td><span className={styles.skeleton} style={{ width: '50px', height: '16px' }} /></td>
-                  <td><span className={styles.skeleton} style={{ width: '60px', height: '22px' }} /></td>
-                  <td><span className={styles.skeleton} style={{ width: '120px', height: '16px' }} /></td>
-                  <td><span className={styles.skeleton} style={{ width: '100px', height: '16px' }} /></td>
-                  <td></td>
-                </tr>
-              ))
-            ) : schools.length === 0 ? (
-              <tr>
-                <td colSpan={6} className={styles.emptyRow}>
-                  <Building2 size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-                  <p>Chưa có trường học nào.</p>
-                  <button className={styles.linkBtn} onClick={openCreate}>Thêm Trường đầu tiên</button>
-                </td>
-              </tr>
-            ) : (
-              schools.map((school) => (
-                <tr key={school._id || school.id}>
-                  <td className={styles.nameCell}><div className={styles.schoolName}>{school.name}</div></td>
-                  <td><code className={styles.codeTag}>{school.code}</code></td>
-                  <td><span className={styles.typeBadge}>{school.type || '—'}</span></td>
-                  <td className={styles.metaCell}>{school.address || '—'}</td>
-                  <td className={styles.metaCell}>{school.principal || '—'}</td>
-                  <td>
-                    <div className={styles.actions}>
-                      <button className={styles.iconBtn} onClick={() => openEdit(school)} title="Sửa"><Edit2 size={15} /></button>
-                      <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => setDeleteTarget(school)} title="Xóa"><Trash2 size={15} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className={styles.pagination}>
-          <button className={styles.pageBtn} disabled={page <= 1} onClick={() => handlePageChange(page - 1)}><ChevronLeft size={16} /></button>
-          {pageNumbers.map((p) => (
-            <button key={p} className={`${styles.pageBtn} ${p === page ? styles.pageBtnActive : ''}`} onClick={() => handlePageChange(p)}>{p}</button>
-          ))}
-          <button className={styles.pageBtn} disabled={page >= totalPages} onClick={() => handlePageChange(page + 1)}><ChevronRight size={16} /></button>
-        </div>
-      )}
-
-      {modalOpen && (
-        <div className={styles.modalOverlay} onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>{editSchool ? 'Chỉnh Sửa Trường Học' : 'Thêm Trường Học'}</h2>
-              <button className={styles.modalClose} onClick={closeModal}><X size={18} /></button>
-            </div>
-            <form className={styles.modalForm} onSubmit={handleSubmit}>
-              <div className={styles.formGrid}>
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label className={styles.label}>Tên trường <span className={styles.required}>*</span></label>
-                  <input className={styles.input} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="VD: THPT Nguyễn Huệ" />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Mã trường <span className={styles.required}>*</span></label>
-                  <input className={styles.input} value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })} required placeholder="VD: NHTH" maxLength={10} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Loại trường</label>
-                  <select className={styles.input} value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })}>
-                    {SCHOOL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label className={styles.label}>Địa chỉ</label>
-                  <input className={styles.input} value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="VD: 123 Đường ABC, Q.1, TP.HCM" />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Số điện thoại</label>
-                  <input className={styles.input} type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="VD: 02812345678" />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Email</label>
-                  <input className={styles.input} type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="VD: contact@school.edu.vn" />
-                </div>
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label className={styles.label}>Hiệu trưởng</label>
-                  <input className={styles.input} value={formData.principal} onChange={(e) => setFormData({ ...formData, principal: e.target.value })} placeholder="VD: Nguyễn Văn A" />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Thang điểm</label>
-                  <input className={styles.input} type="number" value={formData.gradingScale} onChange={(e) => setFormData({ ...formData, gradingScale: Number(e.target.value) })} min={1} max={100} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Điểm đạt</label>
-                  <input className={styles.input} type="number" value={formData.passingScore} onChange={(e) => setFormData({ ...formData, passingScore: Number(e.target.value) })} min={0} max={formData.gradingScale} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Số khối (từ)</label>
-                  <input className={styles.input} type="number" value={formData.gradeLevelsMin} onChange={(e) => setFormData({ ...formData, gradeLevelsMin: Number(e.target.value) })} min={0} max={12} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Số khối (đến)</label>
-                  <input className={styles.input} type="number" value={formData.gradeLevelsMax} onChange={(e) => setFormData({ ...formData, gradeLevelsMax: Number(e.target.value) })} min={0} max={12} />
-                </div>
+      <div className={styles.content}>
+        {isLoading ? (
+          <div className={styles.loading}>Đang tải...</div>
+        ) : activeTab === 'all' ? (
+          <>
+            <div className={styles.toolbar}>
+              <div className={styles.searchBox}>
+                <Search size={18} />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm trường..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-              {formError && <div className={styles.formError}>{formError}</div>}
-              <div className={styles.modalFooter}>
-                <button type="button" className={styles.cancelBtn} onClick={closeModal}>Hủy bỏ</button>
-                <button type="submit" className={styles.submitBtn} disabled={formSubmitting}>
-                  {formSubmitting ? 'Đang lưu...' : editSchool ? 'Lưu thay đổi' : 'Tạo Trường'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {deleteTarget && (
-        <div className={styles.modalOverlay} onClick={(e) => e.target === e.currentTarget && setDeleteTarget(null)}>
-          <div className={styles.confirmModal}>
-            <h3 className={styles.confirmTitle}>Xóa Trường Học?</h3>
-            <p className={styles.confirmText}>Bạn có chắc muốn xóa <strong>{deleteTarget.name}</strong>? Hành động này không thể hoàn tác.</p>
-            {formError && <div className={styles.formError}>{formError}</div>}
-            <div className={styles.confirmFooter}>
-              <button className={styles.cancelBtn} onClick={() => setDeleteTarget(null)}>Hủy bỏ</button>
-              <button className={`${styles.submitBtn} ${styles.danger}`} onClick={handleDelete} disabled={deleteSubmitting}>
-                {deleteSubmitting ? 'Đang xóa...' : 'Xóa'}
+              <button className={styles.btnSecondary}>
+                <Users size={16} />
+                Quản lý School-Admin
               </button>
             </div>
-          </div>
+
+            {filteredSchools.length === 0 ? (
+              <div className={styles.empty}>
+                <Building2 size={48} />
+                <p>Không có trường học nào</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Tên trường</th>
+                      <th>Địa chỉ</th>
+                      <th>Liên hệ</th>
+                      <th>Trạng thái</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>{filteredSchools.map(renderSchoolRow)}</tbody>
+                </table>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {pendingSchools.length === 0 ? (
+              <div className={styles.empty}>
+                <Clock size={48} />
+                <p>Không có trường nào đang chờ duyệt</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Tên trường</th>
+                      <th>Thông tin</th>
+                      <th>Trạng thái</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>{pendingSchools.map(renderPendingSchoolRow)}</tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="Xóa trường học"
+        message="Bạn có chắc chắn muốn xóa trường học này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        danger
+        submitting={processing}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setDeleteDialogOpen(false);
+          setSelectedSchoolId(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={rejectDialogOpen}
+        title="Từ chối trường học"
+        message="Bạn có chắc chắn muốn từ chối trường học này?"
+        confirmLabel="Từ chối"
+        cancelLabel="Hủy"
+        danger
+        submitting={processing}
+        onConfirm={handleRejectConfirm}
+        onCancel={() => {
+          setRejectDialogOpen(false);
+          setRejectReason('');
+          setSelectedSchoolId(null);
+        }}
+      >
+        <div className={styles.rejectForm}>
+          <label>Lý do từ chối (tùy chọn):</label>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Nhập lý do từ chối..."
+            rows={3}
+          />
         </div>
-      )}
+      </ConfirmDialog>
     </div>
   );
 }

@@ -30,6 +30,8 @@ import HelpPage from '../../pages/HelpPage';
 import NotFoundPage from '../../pages/NotFoundPage';
 import NotificationsPage from '../pages/NotificationsPage';
 import AITutorPage from '../../features/ai-tutor/AITutorPage';
+import ApprovalPage from '../../pages/ApprovalPage';
+import SchoolsPage from '../../pages/admin/SchoolsPage';
 import Layout from '../components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -144,6 +146,8 @@ export default function AppRoutes() {
           <Route path="help" element={<HelpPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="ai-tutor" element={<AITutorPage />} />
+          <Route path="approval" element={<ApprovalPage />} />
+          <Route path="admin/schools" element={<SchoolsPage />} />
         </Route>
 
         {/* Catch-all 404 route */}

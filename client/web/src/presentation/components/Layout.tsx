@@ -27,6 +27,8 @@ const NAV: Array<{ group: string; items: NavItem[] }> = [
       { to: '/exams', label: 'Đề thi', roles: ['admin', 'school-admin', 'teacher'] },
       { to: '/submissions', label: 'Bài nộp', roles: ['admin', 'school-admin', 'teacher'] },
       { to: '/question-bank', label: 'Ngân hàng câu hỏi', roles: ['admin', 'school-admin', 'teacher'] },
+      { to: '/approval', label: 'Phê duyệt', roles: ['school-admin'] },
+      { to: '/admin/schools', label: 'Trường học', roles: ['admin'] },
     ],
   },
   {
