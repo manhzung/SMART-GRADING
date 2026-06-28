@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
@@ -14,6 +14,7 @@ function mockAuth(role: 'admin' | 'school-admin' | 'teacher' | 'student') {
 
 describe('Layout nav filtering', () => {
   afterEach(() => {
+    cleanup();
     vi.resetModules();
   });
 
@@ -52,5 +53,21 @@ describe('Layout nav filtering', () => {
     expect(screen.getByText(/Điểm của tôi/i)).toBeInTheDocument();
     expect(screen.queryByText(/Dashboard hệ thống/i)).toBeNull();
     expect(screen.queryByText(/Dashboard trường/i)).toBeNull();
+  });
+
+  it('shows Thống kê and Quét OMR for all roles', async () => {
+    for (const role of ['admin', 'school-admin', 'teacher', 'student'] as const) {
+      mockAuth(role);
+      const { default: UniversalLayout } = await import('./Layout?' + role);
+      render(
+        <MemoryRouter>
+          <UniversalLayout />
+        </MemoryRouter>
+      );
+      expect(screen.getByText(/Thống kê/i), `Thống kê missing for ${role}`).toBeInTheDocument();
+      expect(screen.getByText(/Quét OMR/i), `Quét OMR missing for ${role}`).toBeInTheDocument();
+      cleanup();
+      vi.resetModules();
+    }
   });
 });
