@@ -90,8 +90,8 @@ interface StudentState {
   createAppeal: (payload: {
     submissionId: string;
     examId: string;
-    questionId: string;
-    questionPosition: number;
+    questionId?: string;
+    questionPosition?: number;
     reason: string;
   }) => Promise<StudentExamAppeal>;
   clearError: () => void;

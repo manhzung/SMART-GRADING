@@ -576,6 +576,71 @@
 
 .overviewSubtext { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
+.detailInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.detailInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailInfoLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.detailInfoValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b2240;
+}
+
+.detailScoreHighlight {
+  font-size: 18px;
+  font-weight: 800;
+  color: #2563eb;
+  font-family: 'Outfit', sans-serif;
+}
+
+.detailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b2240;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.spinIcon {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .questionResultItem {
   border: 1px solid #e2e8f0;
   border-radius: 8px;

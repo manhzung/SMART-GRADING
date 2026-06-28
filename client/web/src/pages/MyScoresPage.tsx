@@ -17,11 +17,15 @@ import {
   MinusCircle,
   FileQuestion,
   Scale,
+  Image as ImageIcon,
+  Loader,
 } from 'lucide-react';
 import { useStudentStore } from '../presentation/store/studentStore';
+import { apiService } from '../core/api';
+import { ImageGallery } from '../components/submission/ImageGallery';
 import styles from './MyScoresPage.module.css';
 
-type ScoreTab = 'overview' | 'questions' | 'appeals';
+type ScoreTab = 'questions' | 'appeals';
 
 export default function MyScoresPage() {
   const {
@@ -44,14 +48,15 @@ export default function MyScoresPage() {
   const statusRef = useRef<HTMLDivElement>(null);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ScoreTab>('overview');
+  const [activeTab, setActiveTab] = useState<ScoreTab>('questions');
+  const [submissionDetail, setSubmissionDetail] = useState<any | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formReason, setFormReason] = useState('');
-  const [formQuestionPosition, setFormQuestionPosition] = useState<number | ''>('');
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -74,8 +79,16 @@ export default function MyScoresPage() {
   useEffect(() => {
     if (selectedId) {
       fetchSubmissionAppeals(selectedId);
+      // Fetch full submission detail to get images
+      setIsLoadingDetail(true);
+      apiService
+        .get<any>(`/submissions/${selectedId}`)
+        .then((data) => setSubmissionDetail(data))
+        .catch(() => setSubmissionDetail(null))
+        .finally(() => setIsLoadingDetail(false));
     } else {
       clearSubmissionAppeals();
+      setSubmissionDetail(null);
     }
   }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -207,13 +220,8 @@ export default function MyScoresPage() {
       setFormError('Lý do phúc khảo phải có ít nhất 10 ký tự.');
       return;
     }
-    if (formQuestionPosition === '' || !selectedSubmission) {
-      setFormError('Vui lòng chọn câu cần phúc khảo.');
-      return;
-    }
-    const answer = selectedSubmission.answers?.find(a => a.position === formQuestionPosition);
-    if (!answer) {
-      setFormError('Câu hỏi không hợp lệ.');
+    if (!selectedSubmission) {
+      setFormError('Vui lòng chọn bài thi.');
       return;
     }
 
@@ -223,14 +231,11 @@ export default function MyScoresPage() {
       await createAppeal({
         submissionId: selectedSubmission._id,
         examId: selectedSubmission.examId?._id || '',
-        questionId: answer.questionId,
-        questionPosition: formQuestionPosition as number,
         reason: formReason.trim(),
       });
       await fetchSubmissionAppeals(selectedSubmission._id);
       setShowCreateForm(false);
       setFormReason('');
-      setFormQuestionPosition('');
       toast.success('Đơn phúc khảo đã được gửi thành công!');
     } catch (err) {
       setFormError((err as Error).message || 'Có lỗi xảy ra khi gửi đơn.');
@@ -420,7 +425,7 @@ export default function MyScoresPage() {
                         className={styles.viewBtn}
                         onClick={() => {
                           setSelectedId(submission._id);
-                          setActiveTab('overview');
+                          setActiveTab('questions');
                         }}
                       >
                         <Eye size={14} />
@@ -489,10 +494,6 @@ export default function MyScoresPage() {
             </div>
 
             <div className={styles.tabs}>
-              <button className={`${styles.tab} ${activeTab === 'overview' ? styles.tabActive : ''}`} onClick={() => setActiveTab('overview')}>
-                <FileText size={14} />
-                Tổng quan
-              </button>
               <button className={`${styles.tab} ${activeTab === 'questions' ? styles.tabActive : ''}`} onClick={() => setActiveTab('questions')}>
                 <FileQuestion size={14} />
                 Câu hỏi
@@ -504,110 +505,108 @@ export default function MyScoresPage() {
             </div>
 
             <div className={styles.modalContent}>
-              {activeTab === 'overview' && (
+              {activeTab === 'questions' && (
                 <div>
-                  <div className={styles.overviewGrid}>
-                    <div className={styles.overviewCard}>
-                      <div className={styles.overviewLabel}>ĐIỂM SỐ</div>
-                      <div className={`${styles.overviewValue} ${getScoreColorClass(selectedSubmission.totalScore, selectedSubmission.maxScore)}`}>
-                        {selectedSubmission.totalScore}
-                      </div>
-                      <div className={styles.overviewSubtext}>trên {selectedSubmission.maxScore} điểm</div>
+                  {/* Summary info grid (like teacher modal) */}
+                  <div className={styles.detailInfoGrid}>
+                    <div className={styles.detailInfoItem}>
+                      <span className={styles.detailInfoLabel}>Bài thi:</span>
+                      <span className={styles.detailInfoValue}>
+                        {selectedSubmission.examId?.title || '—'}
+                      </span>
                     </div>
-                    <div className={styles.overviewCard}>
-                      <div className={styles.overviewLabel}>PHẦN TRĂM</div>
-                      <div className={styles.overviewValue}>
-                        {selectedSubmission.maxScore
-                          ? `${Math.round((selectedSubmission.totalScore / selectedSubmission.maxScore) * 100)}%`
-                          : 'N/A'}
-                      </div>
-                      <div className={styles.overviewSubtext}>
-                        {getGradeText(selectedSubmission.totalScore, selectedSubmission.maxScore)}
-                      </div>
+                    <div className={styles.detailInfoItem}>
+                      <span className={styles.detailInfoLabel}>Điểm:</span>
+                      <span className={styles.detailScoreHighlight}>
+                        {selectedSubmission.totalScore} / {selectedSubmission.maxScore}
+                      </span>
                     </div>
-                    <div className={styles.overviewCard}>
-                      <div className={styles.overviewLabel}>NGÀY NỘP</div>
-                      <div className={styles.overviewValue} style={{ fontSize: '16px' }}>
+                    <div className={styles.detailInfoItem}>
+                      <span className={styles.detailInfoLabel}>Số câu đúng:</span>
+                      <span className={styles.detailInfoValue} style={{ color: '#16a34a' }}>
+                        {selectedSubmission.answers?.filter((a) => a.isCorrect).length || 0}/
+                        {selectedSubmission.answers?.length || 0}
+                      </span>
+                    </div>
+                    <div className={styles.detailInfoItem}>
+                      <span className={styles.detailInfoLabel}>Ngày nộp:</span>
+                      <span className={styles.detailInfoValue}>
                         {formatDate(selectedSubmission.submittedAt || selectedSubmission.createdAt)}
-                      </div>
-                      <div className={styles.overviewSubtext}>
-                        {selectedSubmission.examId?.duration ? `${selectedSubmission.examId.duration} phút` : '-'}
-                      </div>
+                      </span>
                     </div>
                   </div>
 
-                  {selectedSubmission.answers && selectedSubmission.answers.length > 0 && (
-                    <div className={styles.overviewGrid}>
-                      <div className={styles.overviewCard}>
-                        <div className={styles.overviewLabel}>ĐÚNG</div>
-                        <div className={styles.overviewValue} style={{ color: '#16a34a' }}>
-                          {selectedSubmission.answers.filter((a) => a.isCorrect).length}
-                        </div>
-                        <div className={styles.overviewSubtext}>câu</div>
+                  {/* Answer table (like teacher modal) */}
+                  <div className={styles.detailSection}>
+                    <h4 className={styles.detailSectionTitle}>
+                      <FileQuestion size={16} />
+                      Bảng đáp án
+                    </h4>
+                    {!selectedSubmission.answers || selectedSubmission.answers.length === 0 ? (
+                      <div className={styles.noAppeals}>Chưa có kết quả chi tiết từng câu hỏi.</div>
+                    ) : (
+                      <div className={styles.answerTable}>
+                        {selectedSubmission.answers.map((answer) => {
+                          const ResultIcon = answer.isCorrect ? CheckCircle : answer.selectedAnswer ? XCircle : MinusCircle;
+                          return (
+                            <div key={answer.questionId} className={styles.questionResultItem}>
+                              <div className={styles.questionResultHeader}>
+                                <div className={styles.questionResultInfo}>
+                                  <span className={styles.questionNumber}>
+                                    <FileQuestion size={14} className={styles.questionIcon} />
+                                    Câu {answer.position}
+                                  </span>
+                                  <span className={styles.questionScore}>
+                                    <span className={`${styles.scoreText} ${answer.isCorrect ? styles.correctText : answer.selectedAnswer ? styles.incorrectText : styles.unansweredText}`}>
+                                      {answer.score} đ
+                                    </span>
+                                    <span className={`${styles.resultBadge} ${answer.isCorrect ? styles.correctBadge : answer.selectedAnswer ? styles.incorrectBadge : styles.unansweredBadge}`}>
+                                      <ResultIcon size={12} />
+                                      {answer.isCorrect ? 'Đúng' : answer.selectedAnswer ? 'Sai' : 'Bỏ trống'}
+                                    </span>
+                                  </span>
+                                </div>
+                              </div>
+                              <div className={styles.questionResultBody}>
+                                <div className={styles.answerBox}>
+                                  <span className={styles.answerLabel}>Câu trả lời của bạn</span>
+                                  <span className={`${styles.answerValue} ${answer.isCorrect ? styles.answerCorrect : answer.selectedAnswer ? styles.answerWrong : ''}`}>
+                                    {answer.selectedAnswer || 'Không trả lời'}
+                                  </span>
+                                </div>
+                                <div className={styles.answerBox}>
+                                  <span className={styles.answerLabel}>Đáp án đúng</span>
+                                  <span className={`${styles.answerValue} ${styles.answerCorrect}`}>
+                                    {answer.correctAnswer}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className={styles.overviewCard}>
-                        <div className={styles.overviewLabel}>SAI</div>
-                        <div className={styles.overviewValue} style={{ color: '#dc2626' }}>
-                          {selectedSubmission.answers.filter((a) => !a.isCorrect && a.selectedAnswer).length}
-                        </div>
-                        <div className={styles.overviewSubtext}>câu</div>
-                      </div>
-                      <div className={styles.overviewCard}>
-                        <div className={styles.overviewLabel}>BỎ TRỐNG</div>
-                        <div className={styles.overviewValue} style={{ color: '#94a3b8' }}>
-                          {selectedSubmission.answers.filter((a) => !a.selectedAnswer).length}
-                        </div>
-                        <div className={styles.overviewSubtext}>câu</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
 
-              {activeTab === 'questions' && (
-                <div>
-                  {!selectedSubmission.answers || selectedSubmission.answers.length === 0 ? (
-                    <div className={styles.noAppeals}>Chưa có kết quả chi tiết từng câu hỏi.</div>
-                  ) : (
-                    selectedSubmission.answers.map((answer) => {
-                      const ResultIcon = answer.isCorrect ? CheckCircle : answer.selectedAnswer ? XCircle : MinusCircle;
-                      return (
-                        <div key={answer.questionId} className={styles.questionResultItem}>
-                          <div className={styles.questionResultHeader}>
-                            <div className={styles.questionResultInfo}>
-                              <span className={styles.questionNumber}>
-                                <FileQuestion size={14} className={styles.questionIcon} />
-                                Câu {answer.position}
-                              </span>
-                              <span className={styles.questionScore}>
-                                <span className={`${styles.scoreText} ${answer.isCorrect ? styles.correctText : answer.selectedAnswer ? styles.incorrectText : styles.unansweredText}`}>
-                                  {answer.score} đ
-                                </span>
-                                <span className={`${styles.resultBadge} ${answer.isCorrect ? styles.correctBadge : answer.selectedAnswer ? styles.incorrectBadge : styles.unansweredBadge}`}>
-                                  <ResultIcon size={12} />
-                                  {answer.isCorrect ? 'Đúng' : answer.selectedAnswer ? 'Sai' : 'Bỏ trống'}
-                                </span>
-                              </span>
-                            </div>
-                          </div>
-                          <div className={styles.questionResultBody}>
-                            <div className={styles.answerBox}>
-                              <span className={styles.answerLabel}>Câu trả lời của bạn</span>
-                              <span className={`${styles.answerValue} ${answer.isCorrect ? styles.answerCorrect : answer.selectedAnswer ? styles.answerWrong : ''}`}>
-                                {answer.selectedAnswer || 'Không trả lời'}
-                              </span>
-                            </div>
-                            <div className={styles.answerBox}>
-                              <span className={styles.answerLabel}>Đáp án đúng</span>
-                              <span className={`${styles.answerValue} ${styles.answerCorrect}`}>
-                                {answer.correctAnswer}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                  {/* Submission images (like teacher modal) */}
+                  <div className={styles.detailSection}>
+                    <h4 className={styles.detailSectionTitle}>
+                      <ImageIcon size={16} />
+                      Ảnh bài làm
+                    </h4>
+                    {isLoadingDetail ? (
+                      <div className={styles.noAppeals}>
+                        <Loader size={14} className={styles.spinIcon} /> Đang tải...
+                      </div>
+                    ) : submissionDetail?.images?.original?.url || submissionDetail?.images?.annotated?.url ? (
+                      <ImageGallery
+                        originalUrl={submissionDetail.images.original?.url}
+                        annotatedUrl={submissionDetail.images.annotated?.url}
+                      />
+                    ) : (
+                      <div className={styles.noAppeals}>Không có ảnh bài làm.</div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -631,30 +630,12 @@ export default function MyScoresPage() {
 
                       <div className={styles.formField}>
                         <label className={styles.formLabel}>
-                          Câu cần phúc khảo *
-                        </label>
-                        <select
-                          className={styles.formSelect}
-                          value={formQuestionPosition}
-                          onChange={(e) => setFormQuestionPosition(e.target.value ? Number(e.target.value) : '')}
-                        >
-                          <option value="">-- Chọn câu --</option>
-                          {selectedSubmission.answers?.map((a) => (
-                            <option key={a.questionId} value={a.position}>
-                              Câu {a.position} — {a.isCorrect ? 'Đúng ✓' : a.selectedAnswer ? 'Sai ✗' : 'Bỏ trống'}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className={styles.formField}>
-                        <label className={styles.formLabel}>
                           Lý do phúc khảo *
                           <span className={styles.charCount}>{formReason.length}/1000</span>
                         </label>
                         <textarea
                           className={styles.formTextarea}
-                          placeholder="Mô tả lý do bạn cho rằng đáp án bị chấm sai (ít nhất 10 ký tự)..."
+                          placeholder="Mô tả lý do bạn yêu cầu phúc khảo (ít nhất 10 ký tự)..."
                           value={formReason}
                           onChange={(e) => {
                             if (e.target.value.length <= 1000) setFormReason(e.target.value);
@@ -673,7 +654,6 @@ export default function MyScoresPage() {
                           onClick={() => {
                             setShowCreateForm(false);
                             setFormReason('');
-                            setFormQuestionPosition('');
                             setFormError(null);
                           }}
                           disabled={isSubmitting}
@@ -683,7 +663,7 @@ export default function MyScoresPage() {
                         <button
                           className={styles.submitBtn}
                           onClick={handleCreateAppeal}
-                          disabled={isSubmitting || formReason.length < 10 || formQuestionPosition === ''}
+                          disabled={isSubmitting || formReason.length < 10}
                         >
                           {isSubmitting ? 'Đang gửi...' : 'Gửi đơn'}
                         </button>
@@ -705,7 +685,9 @@ export default function MyScoresPage() {
                           <div className={styles.appealInfo}>
                             <div className={styles.appealHeader}>
                               <FileQuestion size={12} />
-                              <span className={styles.appealQuestion}>Câu {appeal.questionPosition}</span>
+                              <span className={styles.appealQuestion}>
+                                {appeal.questionPosition ? `Câu ${appeal.questionPosition}` : 'Phúc khảo tổng quan'}
+                              </span>
                               <span className={`${styles.statusBadge} ${statusDetails.class}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
                                 <StatusIcon size={10} />
                                 {statusDetails.text}

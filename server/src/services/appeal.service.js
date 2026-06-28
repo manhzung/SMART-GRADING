@@ -12,28 +12,37 @@ class AppealService {
       throw new ApiError(404, 'Submission not found');
     }
 
-    // Check if appeal already exists for this question
-    const existingAppeal = await Appeal.findOne({
-      submissionId: data.submissionId,
-      questionId: data.questionId,
-    });
-    if (existingAppeal) {
-      throw new ApiError(400, 'Appeal already exists for this question');
+    // Check if appeal already exists for this question (only when questionId provided)
+    if (data.questionId) {
+      const existingAppeal = await Appeal.findOne({
+        submissionId: data.submissionId,
+        questionId: data.questionId,
+      });
+      if (existingAppeal) {
+        throw new ApiError(400, 'Appeal already exists for this question');
+      }
     }
 
-    // Find the specific answer from the submission
-    const answer = submission.answers?.find(
-      (a) => a.questionId?.toString() === data.questionId.toString()
-    );
+    // Find the specific answer from the submission (if questionId provided)
+    let currentAnswer;
+    let expectedAnswer;
+    if (data.questionId) {
+      const answer = submission.answers?.find(
+        (a) => a.questionId?.toString() === data.questionId.toString()
+      );
+      // selectedAnswer is already 'A'/'B'/'C'/'D' or null in the model
+      currentAnswer = answer?.selectedAnswer != null ? String(answer.selectedAnswer) : undefined;
+      // correctAnswer is 'A'/'B'/'C'/'D' or null
+      expectedAnswer = answer?.correctAnswer != null ? String(answer.correctAnswer) : undefined;
+    }
 
-    // selectedAnswer is already 'A'/'B'/'C'/'D' or null in the model
-    const currentAnswer = answer?.selectedAnswer != null ? String(answer.selectedAnswer) : undefined;
-    // correctAnswer is 'A'/'B'/'C'/'D' or null
-    const expectedAnswer = answer?.correctAnswer != null ? String(answer.correctAnswer) : undefined;
+    // Drop fields not in schema when missing
+    const appealData = { ...data, status: 'pending' };
+    if (!data.questionId) delete appealData.questionId;
+    if (data.questionPosition === undefined || data.questionPosition === null) delete appealData.questionPosition;
 
     const appeal = new Appeal({
-      ...data,
-      status: 'pending',
+      ...appealData,
       currentAnswer,
       expectedAnswer,
     });

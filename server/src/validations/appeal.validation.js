@@ -12,10 +12,11 @@ const createAppeal = {
     examId: Joi.string()
       .regex(/^[0-9a-fA-F]{24}$/)
       .required(),
+    studentId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/),
     questionId: Joi.string()
-      .regex(/^[0-9a-fA-F]{24}$/)
-      .required(),
-    questionPosition: Joi.number().min(1).required(),
+      .regex(/^[0-9a-fA-F]{24}$/),
+    questionPosition: Joi.number().min(1),
     reason: Joi.string().min(10).max(1000).required(),
     evidenceImageUrl: Joi.string().uri().allow(null, ''),
   }),

@@ -20,11 +20,9 @@ const appealSchema = mongoose.Schema(
     questionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Question',
-      required: true,
     },
     questionPosition: {
       type: Number,
-      required: true,
     },
     reason: {
       type: String,
@@ -62,7 +60,7 @@ const appealSchema = mongoose.Schema(
   }
 );
 
-appealSchema.index({ submissionId: 1, questionId: 1 }, { unique: true });
+appealSchema.index({ submissionId: 1, questionId: 1 }, { unique: true, partialFilterExpression: { questionId: { $exists: true, $type: 'objectId' } } });
 appealSchema.index({ status: 1 });
 appealSchema.index({ studentId: 1, status: 1 });
 appealSchema.index({ createdAt: -1 });
