@@ -24,7 +24,10 @@ import {
   FileSpreadsheet,
   Crown,
   UserPlus,
-  Shield
+  Shield,
+  KeyRound,
+  Pencil,
+  Loader2
 } from 'lucide-react';
 import { useClassStore } from '../presentation/store/classStore';
 import type { TeacherItem } from '../presentation/store/classStore';
@@ -42,6 +45,17 @@ interface PopulateStudent {
   studentCode?: string;
   isActive?: boolean;
   dateOfBirth?: string;
+  password?: string;
+}
+
+// Interface for editing state
+interface EditingStudent {
+  _id: string;
+  name: string;
+  email: string;
+  studentCode: string;
+  dateOfBirth: string;
+  isActive: boolean;
 }
 
 export default function ClassDetailPage() {
@@ -66,12 +80,13 @@ export default function ClassDetailPage() {
 
   const homeroomTeacherId = currentClass?.homeroomTeacherId
     ? typeof currentClass.homeroomTeacherId === 'object'
-      ? (currentClass.homeroomTeacherId as any)._id
+      ? (currentClass.homeroomTeacherId as any).id || (currentClass.homeroomTeacherId as any)._id
       : currentClass.homeroomTeacherId
     : null;
-  const isHomeroomTeacher = homeroomTeacherId === userId;
+  const isHomeroomTeacher = homeroomTeacherId?.toString() === userId?.toString();
   const canManageSubjectTeachers = isHomeroomTeacher;
   const canTransferOwnership = isHomeroomTeacher && !isAdmin;
+  const canViewCredentials = isAdmin || isHomeroomTeacher;
 
   console.log('ClassDetailPage rendered with id:', id, 'currentClass:', currentClass);
 
@@ -115,6 +130,17 @@ export default function ClassDetailPage() {
   const [newHomeroomTeacherId, setNewHomeroomTeacherId] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Credentials & Inline Edit States
+  const [credentials, setCredentials] = useState<Record<string, string>>({});
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditingStudent | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Password reset states
+  const [resettingPasswordStudentId, setResettingPasswordStudentId] = useState<string | null>(null);
+  const [newPasswordValue, setNewPasswordValue] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   // Form States
   const [manualStudent, setManualStudent] = useState({
@@ -205,11 +231,123 @@ export default function ClassDetailPage() {
     }
   };
 
+  // Fetch student credentials (password hint, no actual passwords)
+  const fetchCredentials = async () => {
+    if (!id || !canViewCredentials) {
+      return;
+    }
+    try {
+      const data = await apiService.get<any[]>(`/classes/${id}/students/credentials`);
+      const credMap: Record<string, string> = {};
+      (data || []).forEach((student) => {
+        const studentId = String(student._id || student.id);
+        // passwordHint indicates the default password for imported students
+        credMap[studentId] = student.passwordHint || '';
+      });
+      setCredentials(credMap);
+    } catch (err) {
+      console.error('Failed to fetch credentials:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentClass && (isAdmin || isHomeroomTeacher)) {
+      fetchCredentials();
+    }
+  }, [currentClass, isAdmin, isHomeroomTeacher]);
+
+  // Reset password for a student
+  const openResetPassword = (studentId: string) => {
+    setResettingPasswordStudentId(studentId);
+    setNewPasswordValue('');
+  };
+
+  const cancelResetPassword = () => {
+    setResettingPasswordStudentId(null);
+    setNewPasswordValue('');
+  };
+
+  const handleResetPassword = async () => {
+    if (!resettingPasswordStudentId || !id) return;
+    if (newPasswordValue.length < 8) {
+      setActionError('Mật khẩu phải có ít nhất 8 ký tự');
+      return;
+    }
+    if (!/\d/.test(newPasswordValue) || (!/[a-zA-Z]/.test(newPasswordValue))) {
+      setActionError('Mật khẩu phải có ít nhất 1 chữ cái và 1 chữ số');
+      return;
+    }
+    setIsResettingPassword(true);
+    setActionError(null);
+    try {
+      await apiService.patch(
+        `/classes/${id}/students/${resettingPasswordStudentId}/password`,
+        { password: newPasswordValue }
+      );
+      setActionSuccess('Đã đổi mật khẩu thành công');
+      cancelResetPassword();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Lỗi khi đổi mật khẩu';
+      setActionError(msg);
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
+  // Start editing a student
+  const startEditing = (student: PopulateStudent) => {
+    setEditingStudentId(student._id);
+    setEditForm({
+      _id: student._id,
+      name: student.name,
+      email: student.email,
+      studentCode: student.studentCode || '',
+      dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : '',
+      isActive: student.isActive ?? true,
+    });
+    setIsEditing(true);
+  };
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setEditingStudentId(null);
+    setEditForm(null);
+    setIsEditing(false);
+  };
+
+  // Save edited student
+  const saveEditing = async () => {
+    if (!id || !editingStudentId || !editForm) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    setActionSuccess(null);
+
+    try {
+      await apiService.patch(`/classes/${id}/students/${editingStudentId}`, {
+        name: editForm.name,
+        email: editForm.email,
+        studentCode: editForm.studentCode,
+        dateOfBirth: editForm.dateOfBirth,
+        isActive: editForm.isActive,
+      });
+
+      setActionSuccess('Cập nhật học sinh thành công.');
+      setEditingStudentId(null);
+      setEditForm(null);
+      setIsEditing(false);
+      fetchClassById(id);
+    } catch (err) {
+      setActionError((err as Error).message || 'Không thể cập nhật học sinh.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Convert generic studentIds array to populated student items
   const students: PopulateStudent[] = (currentClass?.studentIds || []).map((s: any) => {
     if (typeof s === 'object' && s !== null) {
       return {
-        _id: s._id,
+        _id: s._id || s.id,
         name: s.name || '',
         email: s.email || '',
         studentCode: s.studentCode || '',
@@ -1031,21 +1169,22 @@ export default function ClassDetailPage() {
                 <th>FULL NAME</th>
                 <th>DOB</th>
                 <th>EMAIL</th>
+                <th style={{ width: '180px' }}>PASSWORD</th>
                 <th>STATUS</th>
-                <th style={{ width: '80px', textAlign: 'center' }}>ACTIONS</th>
+                <th style={{ width: '100px', textAlign: 'center' }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className={styles.emptyCell}>
+                  <td colSpan={8} className={styles.emptyCell}>
                     <div className={styles.spinner} />
                     <p>Tải thông tin học sinh...</p>
                   </td>
                 </tr>
               ) : currentStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className={styles.emptyCell}>
+                  <td colSpan={8} className={styles.emptyCell}>
                     <p>Không có học sinh nào khớp với bộ lọc.</p>
                   </td>
                 </tr>
@@ -1055,9 +1194,11 @@ export default function ClassDetailPage() {
                   const colors = getAvatarColors(student.name);
                   const code = student.studentCode || `STU-${10293 + idx + startIndex}`;
                   const isSelected = selectedStudentIds.has(student._id);
+                  const isEditingRow = editingStudentId === student._id;
+                  const passwordHint = credentials[student._id] || '';
 
                   return (
-                    <tr key={student._id} className={isSelected ? styles.rowSelected : ''}>
+                    <tr key={student._id} className={`${isSelected ? styles.rowSelected : ''} ${isEditingRow ? styles.rowEditing : ''}`}>
                       <td style={{ textAlign: 'center' }}>
                         <input
                           type="checkbox"
@@ -1068,42 +1209,159 @@ export default function ClassDetailPage() {
                       </td>
                       <td className={styles.studentIdCell}>{code}</td>
                       <td>
-                        <div className={styles.studentProfile}>
-                          <div
-                            className={styles.avatar}
-                            style={{ backgroundColor: colors.bg, color: colors.text }}
-                          >
-                            {initials}
-                          </div>
-                          <span className={styles.studentName}>{student.name}</span>
-                        </div>
-                      </td>
-                      <td>{formatDate(student.dateOfBirth)}</td>
-                      <td className={styles.emailCell}>{student.email}</td>
-                      <td>
-                        <span className={`${styles.badge} ${student.isActive ? styles.badgeActive : styles.badgeInactive}`}>
-                          {student.isActive ? 'ACTIVE' : 'INACTIVE'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center', position: 'relative' }}>
-                        <button
-                          className={styles.actionMenuBtn}
-                          onClick={() => setActiveMenuStudentId(activeMenuStudentId === student._id ? null : student._id)}
-                        >
-                          <MoreVertical size={16} />
-                        </button>
-                        {activeMenuStudentId === student._id && (
-                          <div className={styles.actionDropdown}>
-                            <button
-                              className={styles.actionDropdownItem}
-                              onClick={() => {
-                                handleRemoveStudent(student._id);
-                                setActiveMenuStudentId(null);
-                              }}
+                        {isEditingRow && editForm ? (
+                          <input
+                            type="text"
+                            value={editForm.name}
+                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                            className={styles.inlineInput}
+                            autoFocus
+                          />
+                        ) : (
+                          <div className={styles.studentProfile}>
+                            <div
+                              className={styles.avatar}
+                              style={{ backgroundColor: colors.bg, color: colors.text }}
                             >
-                              <Trash2 size={13} className={styles.deleteIcon} />
-                              <span className={styles.deleteText}>Xóa khỏi lớp</span>
+                              {initials}
+                            </div>
+                            <span className={styles.studentName}>{student.name}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        {isEditingRow && editForm ? (
+                          <input
+                            type="date"
+                            value={editForm.dateOfBirth}
+                            onChange={(e) => setEditForm({ ...editForm, dateOfBirth: e.target.value })}
+                            className={styles.inlineInput}
+                          />
+                        ) : (
+                          formatDate(student.dateOfBirth)
+                        )}
+                      </td>
+                      <td>
+                        {isEditingRow && editForm ? (
+                          <input
+                            type="email"
+                            value={editForm.email}
+                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                            className={styles.inlineInput}
+                          />
+                        ) : (
+                          <span className={styles.emailCell}>{student.email}</span>
+                        )}
+                      </td>
+                      <td>
+                        {canViewCredentials ? (
+                          resettingPasswordStudentId === student._id ? (
+                            <div className={styles.passwordResetRow}>
+                              <input
+                                type="text"
+                                value={newPasswordValue}
+                                onChange={(e) => setNewPasswordValue(e.target.value)}
+                                placeholder="Mật khẩu mới (≥8 ký tự)"
+                                className={styles.passwordResetInput}
+                                disabled={isResettingPassword}
+                                autoFocus
+                              />
+                              <button
+                                className={styles.passwordResetSaveBtn}
+                                onClick={handleResetPassword}
+                                disabled={isResettingPassword || newPasswordValue.length < 8}
+                                title="Lưu"
+                              >
+                                {isResettingPassword ? '...' : '✓'}
+                              </button>
+                              <button
+                                className={styles.passwordResetCancelBtn}
+                                onClick={cancelResetPassword}
+                                disabled={isResettingPassword}
+                                title="Hủy"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className={styles.resetPasswordBtn}
+                              onClick={() => openResetPassword(student._id)}
+                              title={passwordHint ? `Hiện tại: ${passwordHint}` : 'Đổi mật khẩu'}
+                            >
+                              <KeyRound size={14} />
+                              <span>Đổi mật khẩu</span>
                             </button>
+                          )
+                        ) : (
+                          <span className={styles.muted}>—</span>
+                        )}
+                      </td>
+                      <td>
+                        {isEditingRow && editForm ? (
+                          <select
+                            value={editForm.isActive ? 'true' : 'false'}
+                            onChange={(e) => setEditForm({ ...editForm, isActive: e.target.value === 'true' })}
+                            className={styles.inlineSelect}
+                          >
+                            <option value="true">ACTIVE</option>
+                            <option value="false">INACTIVE</option>
+                          </select>
+                        ) : (
+                          <span className={`${styles.badge} ${student.isActive ? styles.badgeActive : styles.badgeInactive}`}>
+                            {student.isActive ? 'ACTIVE' : 'INACTIVE'}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {isEditingRow ? (
+                          <div className={styles.inlineEditActions}>
+                            <button
+                              className={styles.inlineSaveBtn}
+                              onClick={saveEditing}
+                              disabled={isSubmitting}
+                              title="Lưu"
+                            >
+                              {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                            </button>
+                            <button
+                              className={styles.inlineCancelBtn}
+                              onClick={cancelEditing}
+                              disabled={isSubmitting}
+                              title="Hủy"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                            <button
+                              className={styles.editIconBtn}
+                              onClick={() => startEditing(student)}
+                              title="Chỉnh sửa"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              className={styles.actionMenuBtn}
+                              onClick={() => setActiveMenuStudentId(activeMenuStudentId === student._id ? null : student._id)}
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                            {activeMenuStudentId === student._id && (
+                              <div className={styles.actionDropdown}>
+                                <button
+                                  className={styles.actionDropdownItem}
+                                  onClick={() => {
+                                    handleRemoveStudent(student._id);
+                                    setActiveMenuStudentId(null);
+                                  }}
+                                >
+                                  <Trash2 size={13} className={styles.deleteIcon} />
+                                  <span className={styles.deleteText}>Xóa khỏi lớp</span>
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </td>

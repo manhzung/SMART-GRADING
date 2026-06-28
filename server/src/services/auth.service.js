@@ -18,7 +18,6 @@ const loginUserWithEmailAndPassword = async (email, password) => {
   }
   // Bypass email verification for development / seeded users
   if (process.env.NODE_ENV !== 'production' && !user.isEmailVerified) {
-    const { tokenService } = require('./token.service');
     await tokenService.generateAuthTokens(user);
     user.isEmailVerified = true;
     await user.save();

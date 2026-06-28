@@ -9,19 +9,33 @@ const getDashboardStats = catchAsync(async (req, res) => {
   const schoolId = req.user?.schoolId;
   const userRole = req.user?.role;
 
-  const baseFilter = schoolId ? { schoolId } : {};
+  // Class and User carry `schoolId` directly. Exam/Submission/Appeal do NOT —
+  // they relate to a school only through Class.classIds and Submission.examId,
+  // so we must derive the school's classIds/examIds and filter via those refs.
+  const schoolClassIds = schoolId
+    ? (await Class.find({ schoolId }).select('_id').lean()).map((c) => c._id)
+    : null;
+  const schoolExamIds =
+    schoolId && schoolClassIds
+      ? (await Exam.find({ classIds: { $in: schoolClassIds } }).select('_id').lean()).map((e) => e._id)
+      : null;
 
-  let classFilter = { isActive: true, ...baseFilter };
+  const examFilter = schoolId ? { classIds: { $in: schoolClassIds } } : {};
+  const submissionFilter = schoolId ? { examId: { $in: schoolExamIds } } : {};
+  const appealFilter = schoolId ? { examId: { $in: schoolExamIds } } : {};
+
+  let classFilter = { isActive: true };
+  if (schoolId) classFilter.schoolId = schoolId;
   if (userId && userRole === 'teacher') {
     classFilter = {
       isActive: true,
-      ...baseFilter,
+      ...(schoolId ? { schoolId } : {}),
       $or: [{ homeroomTeacherId: userId }, { 'subjectTeachers.teacherId': userId }],
     };
   } else if (userId && userRole === 'student') {
     classFilter = {
       isActive: true,
-      ...baseFilter,
+      ...(schoolId ? { schoolId } : {}),
       studentIds: userId,
     };
   }
@@ -35,28 +49,28 @@ const getDashboardStats = catchAsync(async (req, res) => {
     publishedExams,
   ] = await Promise.all([
     Class.countDocuments(classFilter),
-    Exam.countDocuments({ ...baseFilter }),
+    Exam.countDocuments(examFilter),
     User.countDocuments({ role: 'student', isActive: true, ...(schoolId ? { schoolId } : {}) }),
-    Submission.countDocuments({ ...baseFilter }),
-    Appeal.countDocuments({ status: 'pending', ...(schoolId ? { schoolId } : {}) }),
-    Exam.countDocuments({ status: 'published', ...baseFilter }),
+    Submission.countDocuments(submissionFilter),
+    Appeal.countDocuments({ status: 'pending', ...appealFilter }),
+    Exam.countDocuments({ status: 'published', ...examFilter }),
   ]);
 
-  const recentSubmissions = await Submission.find(baseFilter)
+  const recentSubmissions = await Submission.find(submissionFilter)
     .sort({ createdAt: -1 })
     .limit(10)
     .populate('studentId', 'name email')
     .populate('examId', 'title');
 
   const avgScoreResult = await Submission.aggregate([
-    { $match: { ...baseFilter, totalScore: { $exists: true } } },
+    { $match: { ...submissionFilter, totalScore: { $exists: true } } },
     { $group: { _id: null, avg: { $avg: '$totalScore' }, max: { $max: '$totalScore' } } },
   ]);
 
   const avgScore = avgScoreResult[0] ? Math.round((avgScoreResult[0].avg + Number.EPSILON) * 100) / 100 : 0;
 
   const passRateResult = await Submission.aggregate([
-    { $match: baseFilter },
+    { $match: submissionFilter },
     {
       $lookup: {
         from: 'exams',

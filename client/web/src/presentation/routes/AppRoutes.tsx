@@ -51,10 +51,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
+  const userRole = useAuthStore((state) => state.user?.role);
   if (isLoading) {
     return null;
   }
-  return isAuthenticated ? <Navigate to="/" replace /> : <>{children}</>;
+  if (!isAuthenticated) {
+    return <>{children}</>;
+  }
+  const target =
+    userRole === 'student'
+      ? '/my-scores'
+      : userRole === 'school-admin'
+        ? '/school'
+        : userRole === 'admin'
+          ? '/admin'
+          : '/';
+  return <Navigate to={target} replace />;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {

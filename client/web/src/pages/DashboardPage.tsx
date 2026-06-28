@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuthStore } from '../presentation/store/authStore';
 import { useAnalyticsStore } from '../services/analyticsStore';
 import {
+  analyticsService,
+  type ActivityItem,
+} from '../services/analytics.service';
+import {
   GraduationCap,
   FileText,
   Users,
@@ -11,19 +15,70 @@ import {
   BookOpen,
   AlertCircle,
   RefreshCw,
+  FilePlus2,
+  Send,
+  CheckCircle2,
+  BadgeCheck,
+  MessageSquareWarning,
+  ScrollText,
+  Circle,
+  type LucideIcon,
 } from 'lucide-react';
 import styles from './DashboardPage.module.css';
+
+const ACTIVITY_ICON_MAP: Record<string, LucideIcon> = {
+  assignment: FilePlus2,
+  publish: Send,
+  check_circle: CheckCircle2,
+  score: ScrollText,
+  school: GraduationCap,
+  verified: BadgeCheck,
+  feedback: MessageSquareWarning,
+};
+
+function activityIcon(name: string): LucideIcon {
+  return ACTIVITY_ICON_MAP[name] || Circle;
+}
+
+function formatRelativeTime(timestamp: string): string {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now.getTime() - then.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffDays > 0) return `${diffDays} ngày trước`;
+  if (diffHours > 0) return `${diffHours} giờ trước`;
+  if (diffMins > 0) return `${diffMins} phút trước`;
+  return 'Vừa xong';
+}
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const { dashboardStats, isLoading, error, fetchDashboardStats } = useAnalyticsStore();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'semester'>('month');
+  const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
 
   const greetingName = user?.name || 'Professor';
 
+  const refreshAll = async () => {
+    await fetchDashboardStats();
+    setActivitiesLoading(true);
+    try {
+      const res = await analyticsService.getRecentActivities(10);
+      setRecentActivities(res.results || []);
+    } catch {
+      setRecentActivities([]);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchDashboardStats();
-  }, [fetchDashboardStats]);
+    refreshAll();
+  }, []);
 
   const activities = useMemo(() => {
     if (!dashboardStats?.recentSubmissions?.length) return [];
@@ -145,8 +200,8 @@ export default function DashboardPage() {
             </div>
             {/* Refresh Button */}
             <button
-              onClick={() => fetchDashboardStats()}
-              disabled={isLoading}
+              onClick={() => refreshAll()}
+              disabled={isLoading || activitiesLoading}
               style={{
                 padding: '6px 12px',
                 border: '1px solid #e2e8f0',
@@ -215,22 +270,47 @@ export default function DashboardPage() {
 
           <div className={styles.timeline}>
             <div className={styles.timelineLine} />
-            {activities.length === 0 ? (
+            {activitiesLoading && recentActivities.length === 0 ? (
+              <p style={{ padding: '12px 0', color: '#9ca3af', fontSize: '13px' }}>
+                Đang tải hoạt động…
+              </p>
+            ) : recentActivities.length === 0 ? (
               <p style={{ padding: '12px 0', color: '#9ca3af', fontSize: '13px' }}>
                 Chưa có hoạt động nào.
               </p>
             ) : (
-              activities.map((activity) => (
-                <div key={activity.id} className={styles.timelineItem}>
+              recentActivities.map((activity) => {
+                const Icon = activityIcon(activity.icon);
+                return (
                   <div
-                    className={styles.timelineDot}
-                    style={{ borderColor: activity.dotColor }}
-                  />
-                  <span className={styles.timelineItemTitle}>{activity.title}</span>
-                  <span className={styles.timelineItemDesc}>{activity.description}</span>
-                  <span className={styles.timelineItemTime}>{activity.time}</span>
-                </div>
-              ))
+                    key={`${activity.type}-${activity.entityId}`}
+                    className={styles.timelineItem}
+                  >
+                    <div
+                      className={styles.timelineDot}
+                      style={{
+                        borderColor: activity.iconColor,
+                        backgroundColor: activity.iconBgColor,
+                      }}
+                    />
+                    <span className={styles.timelineItemTitle}>
+                      <Icon
+                        size={13}
+                        style={{
+                          color: activity.iconColor,
+                          marginRight: 6,
+                          verticalAlign: '-2px',
+                        }}
+                      />
+                      {activity.title}
+                    </span>
+                    <span className={styles.timelineItemDesc}>{activity.description}</span>
+                    <span className={styles.timelineItemTime}>
+                      {formatRelativeTime(activity.timestamp)}
+                    </span>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

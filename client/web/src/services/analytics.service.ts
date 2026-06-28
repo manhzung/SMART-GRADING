@@ -62,6 +62,24 @@ export interface Analytics {
   }>;
 }
 
+export interface ActivityItem {
+  type: string;
+  title: string;
+  description: string;
+  entityId: string;
+  entityType: 'exam' | 'submission' | 'class' | 'appeal';
+  icon: string;
+  iconColor: string;
+  iconBgColor: string;
+  timestamp: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface RecentActivities {
+  results: ActivityItem[];
+  count: number;
+}
+
 export const analyticsService = {
   getDashboardStats: () =>
     apiService.get<DashboardStats>('/analytics/dashboard-stats'),
@@ -69,5 +87,10 @@ export const analyticsService = {
   getAnalytics: (period?: 'week' | 'month' | 'semester') =>
     apiService.get<Analytics>('/analytics/analytics', {
       params: period ? { period } : undefined,
+    }),
+
+  getRecentActivities: (limit = 10) =>
+    apiService.get<RecentActivities>('/activities', {
+      params: { limit },
     }),
 };

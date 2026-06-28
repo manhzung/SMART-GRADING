@@ -87,6 +87,56 @@ void main() {
       expect(ProfileDisplay.phone(user), isNull);
     });
   });
+
+  group('ProfileDisplay.schoolName', () {
+    School school(String id, String name) => School(
+          id: id,
+          name: name,
+          createdAt: DateTime(2026, 1, 1),
+        );
+
+    test('returns school name when schoolId matches a known school', () {
+      final user = _user(schoolId: 'sch-1');
+      final schools = [school('sch-1', 'THPT Chu Van An'), school('sch-2', 'THPT Le Loi')];
+      expect(ProfileDisplay.schoolName(user, schools: schools), equals('THPT Chu Van An'));
+    });
+
+    test('returns "Not assigned" when user has no schoolId', () {
+      final user = _user(schoolId: null);
+      expect(ProfileDisplay.schoolName(user, schools: const []), equals('Not assigned'));
+    });
+
+    test('returns "Not assigned" when schoolId is empty string', () {
+      final user = _user(schoolId: '');
+      expect(ProfileDisplay.schoolName(user, schools: const []), equals('Not assigned'));
+    });
+
+    test('falls back to schoolId when schools list is null', () {
+      final user = _user(schoolId: 'sch-1');
+      expect(ProfileDisplay.schoolName(user), equals('sch-1'));
+    });
+
+    test('falls back to schoolId when schools list is empty', () {
+      final user = _user(schoolId: 'sch-1');
+      expect(ProfileDisplay.schoolName(user, schools: const []), equals('sch-1'));
+    });
+
+    test('falls back to schoolId when no school matches', () {
+      final user = _user(schoolId: 'sch-unknown');
+      final schools = [school('sch-1', 'THPT Chu Van An')];
+      expect(ProfileDisplay.schoolName(user, schools: schools), equals('sch-unknown'));
+    });
+
+    test('returns "Not assigned" when user is null', () {
+      expect(ProfileDisplay.schoolName(null, schools: const []), equals('Not assigned'));
+    });
+
+    test('trims whitespace from school name', () {
+      final user = _user(schoolId: 'sch-1');
+      final schools = [school('sch-1', '  THPT Chu Van An  ')];
+      expect(ProfileDisplay.schoolName(user, schools: schools), equals('THPT Chu Van An'));
+    });
+  });
 }
 
 User _user({

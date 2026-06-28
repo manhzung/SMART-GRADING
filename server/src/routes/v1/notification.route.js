@@ -16,6 +16,7 @@ router
 
 router
   .route('/read-all')
+  .patch(auth(), notificationController.markAllAsRead)
   .post(auth(), notificationController.markAllAsRead);
 
 router
@@ -24,6 +25,7 @@ router
 
 router
   .route('/:id')
+  .patch(auth(), validate(notificationValidation.markAsRead), notificationController.markAsRead)
   .delete(auth(), notificationController.remove);
 
 module.exports = router;

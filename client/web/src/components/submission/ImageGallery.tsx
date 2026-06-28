@@ -1,25 +1,24 @@
 import React from 'react';
 
-export type GalleryImageType = 'original' | 'preprocessed' | 'annotated';
+export type GalleryImageType = 'original' | 'annotated';
 
 interface ImageGalleryProps {
   originalUrl?: string;
-  preprocessedUrl?: string;
   annotatedUrl?: string;
-  onImageClick?: (type: GalleryImageType) => void;
 }
 
 export const ImageGallery: React.FC<ImageGalleryProps> = ({
   originalUrl,
-  preprocessedUrl,
   annotatedUrl,
-  onImageClick,
 }) => {
   const tiles: Array<{ type: GalleryImageType; url?: string }> = [
     { type: 'original', url: originalUrl },
-    { type: 'preprocessed', url: preprocessedUrl },
     { type: 'annotated', url: annotatedUrl },
   ];
+
+  const openInNewTab = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div
@@ -27,7 +26,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
       data-testid="image-gallery"
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(2, 1fr)',
         gap: 16,
       }}
     >
@@ -42,10 +41,10 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             <img
               src={url}
               alt={`${type} submission image`}
-              onClick={() => onImageClick?.(type)}
+              onClick={() => openInNewTab(url)}
               style={{
                 width: '100%',
-                cursor: onImageClick ? 'pointer' : 'default',
+                cursor: 'pointer',
               }}
             />
           ) : (

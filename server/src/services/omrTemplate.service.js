@@ -29,6 +29,8 @@ class OMRTemplateService {
       tags,
       sortBy = 'createdAt',
       order = 'desc',
+      page: _page,
+      limit: _limit,
       ...rest
     } = query;
     const { page, limit, skip } = parsePagination(query);

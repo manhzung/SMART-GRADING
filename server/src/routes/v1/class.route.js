@@ -57,4 +57,16 @@ router
   .route('/:id/available-students')
   .get(auth(), validate(classValidation.getAvailableStudents), classController.getAvailableStudents);
 
+router
+  .route('/:id/students/credentials')
+  .get(auth('manageClasses'), classController.getStudentCredentials);
+
+router
+  .route('/:id/students/:studentId')
+  .patch(auth('manageClasses'), classController.updateStudent);
+
+router
+  .route('/:id/students/:studentId/password')
+  .patch(auth('manageClasses'), classController.resetStudentPassword);
+
 module.exports = router;

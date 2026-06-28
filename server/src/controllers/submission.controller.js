@@ -62,6 +62,10 @@ const getByStudent = catchAsync(async (req, res) => {
 });
 
 const getMy = catchAsync(async (req, res) => {
+  console.log('[DEBUG getMy] req.user:', req.user);
+  console.log('[DEBUG getMy] req.user.id:', req.user.id);
+  console.log('[DEBUG getMy] req.user._id:', req.user._id);
+  console.log('[DEBUG getMy] typeof req.user.id:', typeof req.user.id);
   const result = await submissionService.getMy(req.user.id, req.query);
   res.send(result);
 });

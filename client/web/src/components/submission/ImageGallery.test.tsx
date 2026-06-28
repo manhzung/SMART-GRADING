@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ImageGallery } from './ImageGallery';
 
 describe('ImageGallery', () => {
-  it('renders 3 image tiles when all URLs provided', () => {
+  it('renders only original and annotated tiles (no preprocessed)', () => {
     render(
       <ImageGallery
         originalUrl="https://x/o.jpg"
@@ -13,16 +13,13 @@ describe('ImageGallery', () => {
     );
 
     expect(screen.getByTestId('tile-original')).toBeInTheDocument();
-    expect(screen.getByTestId('tile-preprocessed')).toBeInTheDocument();
     expect(screen.getByTestId('tile-annotated')).toBeInTheDocument();
+    expect(screen.queryByTestId('tile-preprocessed')).not.toBeInTheDocument();
+    expect(screen.queryByAltText(/preprocessed/i)).not.toBeInTheDocument();
 
     expect(screen.getByAltText(/original/i)).toHaveAttribute(
       'src',
       'https://x/o.jpg'
-    );
-    expect(screen.getByAltText(/preprocessed/i)).toHaveAttribute(
-      'src',
-      'https://x/p.jpg'
     );
     expect(screen.getByAltText(/annotated/i)).toHaveAttribute(
       'src',
@@ -30,21 +27,39 @@ describe('ImageGallery', () => {
     );
   });
 
-  it('shows fallback for missing image', () => {
+  it('shows fallback for missing annotated image', () => {
     render(<ImageGallery originalUrl="https://x/o.jpg" />);
-    expect(screen.getByTestId('fallback-preprocessed')).toBeInTheDocument();
     expect(screen.getByTestId('fallback-annotated')).toBeInTheDocument();
+    expect(screen.queryByTestId('fallback-preprocessed')).not.toBeInTheDocument();
   });
 
-  it('invokes onImageClick when image is clicked', () => {
-    const onClick = vi.fn();
-    render(
-      <ImageGallery
-        originalUrl="https://x/o.jpg"
-        onImageClick={onClick}
-      />
-    );
+  it('opens image in new tab when clicked', () => {
+    const openSpy = vi
+      .spyOn(window, 'open')
+      .mockImplementation(() => null);
+
+    render(<ImageGallery originalUrl="https://x/o.jpg" />);
     fireEvent.click(screen.getByAltText(/original/i));
-    expect(onClick).toHaveBeenCalledWith('original');
+
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy.mock.calls[0][0]).toBe('https://x/o.jpg');
+    expect(openSpy.mock.calls[0][1]).toBe('_blank');
+
+    openSpy.mockRestore();
+  });
+
+  it('opens annotated image in new tab when clicked', () => {
+    const openSpy = vi
+      .spyOn(window, 'open')
+      .mockImplementation(() => null);
+
+    render(<ImageGallery annotatedUrl="https://x/a.jpg" />);
+    fireEvent.click(screen.getByAltText(/annotated/i));
+
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy.mock.calls[0][0]).toBe('https://x/a.jpg');
+    expect(openSpy.mock.calls[0][1]).toBe('_blank');
+
+    openSpy.mockRestore();
   });
 });

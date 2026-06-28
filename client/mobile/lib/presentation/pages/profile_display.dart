@@ -61,4 +61,33 @@ class ProfileDisplay {
     if (value == null || value.isEmpty) return null;
     return value;
   }
+
+  /// Returns the school name to show in the profile's "School Information"
+  /// section.
+  ///
+  /// The backend only sends a `schoolId` on the user payload; resolving it
+  /// into a human-readable name requires looking it up in the list of schools
+  /// loaded by `SchoolBloc`. While the lookup is still in progress (or when
+  /// the id cannot be matched — for example because the school was deleted)
+  /// we fall back to the raw `schoolId` so the user always sees *something*
+  /// meaningful instead of a blank field. If the user has no school at all,
+  /// we surface the same "Not assigned" placeholder the old UI used.
+  static String schoolName(User? user, {List<School>? schools}) {
+    final schoolId = user?.schoolId?.trim();
+    if (schoolId == null || schoolId.isEmpty) {
+      return 'Not assigned';
+    }
+
+    if (schools != null && schools.isNotEmpty) {
+      for (final school in schools) {
+        if (school.id == schoolId) {
+          final name = school.name.trim();
+          if (name.isNotEmpty) return name;
+          break;
+        }
+      }
+    }
+
+    return schoolId;
+  }
 }

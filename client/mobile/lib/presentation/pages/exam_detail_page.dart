@@ -8,7 +8,6 @@ import '../../core/network/submission_service.dart';
 import '../../domain/entities/class_submission_summary.entity.dart';
 import '../../domain/entities/exam.entity.dart';
 import '../../presentation/widgets/submission_summary_widget.dart';
-import 'edit_exam_page.dart';
 import 'exam_questions_page.dart';
 import 'submissions_page.dart';
 
@@ -479,74 +478,40 @@ Diem: ${exam.totalScore}
               ),
             ),
             
-            // FLOATING ACTION BUTTONS STACK AT BOTTOM RIGHT
+            // FLOATING ACTION BUTTON (SUBMISSIONS)
             Positioned(
               bottom: 16,
               right: 16,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditExamPage(exam: displayExam),
-                        ),
-                      );
-                    },
-                    heroTag: 'edit_exam_btn',
-                    elevation: 4,
-                    backgroundColor: const Color(0xFFE2E8F0),
-                    icon: const Icon(
-                      Icons.edit_outlined,
-                      color: Color(0xFF0F172A),
-                      size: 16,
-                    ),
-                    label: const Text(
-                      'EDIT EXAM',
-                      style: TextStyle(
-                        color: Color(0xFF0F172A),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                        letterSpacing: 0.5,
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SubmissionsPage(
+                        exam: displayExam,
+                        examId: displayExam.id,
+                        service: _examSubmissionsService,
                       ),
                     ),
+                  );
+                },
+                heroTag: 'submissions_btn',
+                elevation: 4,
+                backgroundColor: const Color(0xFF0C213E),
+                icon: const Icon(
+                  Icons.visibility_outlined,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                label: const Text(
+                  'SUBMISSIONS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    letterSpacing: 0.5,
                   ),
-                  const SizedBox(height: 10),
-                  FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SubmissionsPage(
-                            exam: displayExam,
-                            examId: displayExam.id,
-                            service: _examSubmissionsService,
-                          ),
-                        ),
-                      );
-                    },
-                    heroTag: 'submissions_btn',
-                    elevation: 4,
-                    backgroundColor: const Color(0xFF0C213E),
-                    icon: const Icon(
-                      Icons.visibility_outlined,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    label: const Text(
-                      'SUBMISSIONS',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],

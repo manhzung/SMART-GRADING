@@ -83,6 +83,27 @@ const getStudentsByClass = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getStudentCredentials = catchAsync(async (req, res) => {
+  const result = await classService.getStudentCredentials(req.params.id, req.user);
+  res.send(result);
+});
+
+const updateStudent = catchAsync(async (req, res) => {
+  const result = await classService.updateStudent(req.params.id, req.params.studentId, req.body, req.user);
+  res.send(result);
+});
+
+const resetStudentPassword = catchAsync(async (req, res) => {
+  const { password } = req.body;
+  const result = await classService.resetStudentPassword(
+    req.params.id,
+    req.params.studentId,
+    password,
+    req.user
+  );
+  res.send(result);
+});
+
 const getClassStatistics = catchAsync(async (req, res) => {
   const stats = await classService.getClassStatistics(req.params.id, req.user);
   res.send(stats);
@@ -105,4 +126,7 @@ module.exports = {
   getClassStatistics,
   getAvailableStudents,
   getStudentsByClass,
+  getStudentCredentials,
+  updateStudent,
+  resetStudentPassword,
 };

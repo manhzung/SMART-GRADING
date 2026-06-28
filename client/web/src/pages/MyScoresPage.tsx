@@ -80,6 +80,8 @@ export default function MyScoresPage() {
     if (selectedId) {
       // Always refresh appeals when user opens the appeals tab so list is in sync
       if (activeTab === 'appeals') {
+        // eslint-disable-next-line no-console
+        console.log('[MyScores] Fetching appeals for submission:', selectedId);
         fetchSubmissionAppeals(selectedId);
       }
     }

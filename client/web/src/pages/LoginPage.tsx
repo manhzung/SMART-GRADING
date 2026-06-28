@@ -6,6 +6,14 @@ import { useAuthStore } from '../presentation/store/authStore';
 import AuthLayout from '../presentation/components/AuthLayout';
 import styles from './LoginPage.module.css';
 
+const HOME_ROUTE_BY_ROLE: Record<string, string> = {
+  student: '/my-scores',
+  'school-admin': '/school',
+  admin: '/admin',
+  teacher: '/',
+  parent: '/',
+};
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -28,7 +36,9 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success('Đăng nhập thành công!');
-      navigate('/');
+      const role = useAuthStore.getState().user?.role;
+      const target = (role && HOME_ROUTE_BY_ROLE[role]) || '/';
+      navigate(target, { replace: true });
     } catch (err: unknown) {
       const error = err as { message?: string };
       toast.error(error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');

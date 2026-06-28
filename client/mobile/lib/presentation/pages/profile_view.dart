@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_grading_mobile/core/network/user_service.dart';
 import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/auth/auth_bloc.dart';
+import 'package:smart_grading_mobile/presentation/blocs/school/school_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/profile_display.dart';
 
 class ProfileView extends StatefulWidget {
@@ -17,6 +18,25 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   bool _pushNotifications = true;
   String _appearance = 'Light';
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureSchoolsLoaded();
+  }
+
+  /// Triggers a schools fetch on first build so the profile screen can resolve
+  /// `schoolId` into a human-readable school name.
+  ///
+  /// The dispatch is a no-op if the bloc is already in a non-initial state
+  /// (loading, loaded, or error), so re-mounting the widget never causes a
+  /// duplicate network call.
+  void _ensureSchoolsLoaded() {
+    final schoolBloc = context.read<SchoolBloc>();
+    if (schoolBloc.state is SchoolInitial) {
+      schoolBloc.add(SchoolFetchRequested());
+    }
+  }
 
   void _showUpdateProfileSheet(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
@@ -48,6 +68,9 @@ class _ProfileViewState extends State<ProfileView> {
     final avatarUrl = ProfileDisplay.avatarUrl(user);
     final phone = ProfileDisplay.phone(user);
     final initials = _initialsFromName(name);
+    final schoolState = context.watch<SchoolBloc>().state;
+    final schools = schoolState is SchoolLoaded ? schoolState.schools : null;
+    final schoolDisplay = ProfileDisplay.schoolName(user, schools: schools);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -294,7 +317,7 @@ class _ProfileViewState extends State<ProfileView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'School ID',
+                  'School',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF64748B),
@@ -303,9 +326,7 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  (user?.schoolId != null && user!.schoolId!.isNotEmpty)
-                      ? user.schoolId!
-                      : 'Not assigned',
+                  schoolDisplay,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,

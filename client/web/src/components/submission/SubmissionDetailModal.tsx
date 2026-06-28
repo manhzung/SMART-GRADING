@@ -233,12 +233,11 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
                 />
               </div>
 
-              {(currentSubmission as { images?: { original?: { url?: string }; preprocessed?: { url?: string }; annotated?: { url?: string } } }).images && (
+              {(currentSubmission as { images?: { original?: { url?: string }; annotated?: { url?: string } } }).images && (
                 <div className={styles.section}>
                   <h4 className={styles.sectionTitle}>Ảnh bài làm</h4>
                   <ImageGallery
                     originalUrl={(currentSubmission as { images?: { original?: { url?: string } } }).images?.original?.url}
-                    preprocessedUrl={(currentSubmission as { images?: { preprocessed?: { url?: string } } }).images?.preprocessed?.url}
                     annotatedUrl={(currentSubmission as { images?: { annotated?: { url?: string } } }).images?.annotated?.url}
                   />
                 </div>

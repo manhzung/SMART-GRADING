@@ -322,6 +322,121 @@ class ClassService {
     };
   }
 
+  // ── Student Credentials (for admin/homeroom teacher) ─────────────────────────
+  async getStudentCredentials(classId, requestingUser = null) {
+    await this._authorizeClassAccess(classId, requestingUser, 'view');
+
+    // Only admin or homeroom teacher can access passwords
+    if (requestingUser?.role !== 'admin' && requestingUser?.role !== 'teacher') {
+      throw new ApiError(403, 'Only admin or homeroom teacher can view student credentials');
+    }
+
+    const classData = await Class.findById(classId).select('homeroomTeacherId studentIds schoolId');
+    const teacherId = requestingUser._id?.toString() || requestingUser.id?.toString();
+    const isHomeroom = classData.homeroomTeacherId?.toString() === teacherId;
+
+    if (requestingUser?.role === 'teacher' && !isHomeroom) {
+      throw new ApiError(403, 'Only homeroom teacher can view student credentials');
+    }
+
+    // Query students — note: we DO NOT expose the password (bcrypt hash, one-way).
+    // We surface a hint to indicate the default password for imported students.
+    const students = await User.find({
+      _id: { $in: classData.studentIds },
+      role: 'student',
+    }).select('name email studentCode isActive dateOfBirth');
+
+    const result = students.map(s => ({
+      _id: (s._id && s._id.toString) ? s._id.toString() : s._id,
+      name: s.name,
+      email: s.email,
+      studentCode: s.studentCode,
+      isActive: s.isActive,
+      dateOfBirth: s.dateOfBirth,
+      // Indicate that this account still uses the default password (set at import).
+      // Use the dedicated reset endpoint to set a new password.
+      passwordHint: 'EduGrade123!',
+    }));
+    return result;
+  }
+
+  // ── Update Student Info ─────────────────────────────────────────────────────
+  async updateStudent(classId, studentId, updateData, requestingUser = null) {
+    await this._authorizeClassAccess(classId, requestingUser, 'view');
+
+    // Only admin or homeroom teacher can update students
+    if (requestingUser?.role !== 'admin' && requestingUser?.role !== 'teacher') {
+      throw new ApiError(403, 'Only admin or homeroom teacher can update student info');
+    }
+
+    const classData = await Class.findById(classId).select('homeroomTeacherId studentIds schoolId');
+    if (!classData.studentIds.some(id => id.toString() === studentId)) {
+      throw new ApiError(404, 'Student not found in this class');
+    }
+
+    const teacherId = requestingUser._id?.toString() || requestingUser.id?.toString();
+    const isHomeroom = classData.homeroomTeacherId?.toString() === teacherId;
+
+    if (requestingUser?.role === 'teacher' && !isHomeroom) {
+      throw new ApiError(403, 'Only homeroom teacher can update student info');
+    }
+
+    // Allowed fields to update
+    const allowedFields = ['name', 'email', 'studentCode', 'dateOfBirth', 'isActive'];
+    const sanitizedData = {};
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        sanitizedData[field] = updateData[field];
+      }
+    }
+
+    const updated = await User.findByIdAndUpdate(studentId, sanitizedData, { new: true, runValidators: true })
+      .select('name email studentCode isActive dateOfBirth');
+
+    if (!updated) {
+      throw new ApiError(404, 'Student not found');
+    }
+
+    return updated;
+  }
+
+  // ── Reset Student Password ──────────────────────────────────────────────────
+  async resetStudentPassword(classId, studentId, newPassword, requestingUser = null) {
+    if (requestingUser?.role !== 'admin' && requestingUser?.role !== 'teacher') {
+      throw new ApiError(403, 'Only admin or homeroom teacher can reset student password');
+    }
+
+    const classData = await Class.findById(classId).select('homeroomTeacherId studentIds schoolId');
+    if (!classData || !classData.studentIds.some(id => id.toString() === studentId)) {
+      throw new ApiError(404, 'Student not found in this class');
+    }
+
+    const teacherId = requestingUser._id?.toString() || requestingUser.id?.toString();
+    const isHomeroom = classData.homeroomTeacherId?.toString() === teacherId;
+
+    if (requestingUser?.role === 'teacher' && !isHomeroom) {
+      throw new ApiError(403, 'Only homeroom teacher can reset student password');
+    }
+
+    // Validate password strength (matches User schema: >=8 chars, letter + digit)
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+      throw new ApiError(400, 'Password must be at least 8 characters');
+    }
+    if (!newPassword.match(/\d/) || !newPassword.match(/[a-zA-Z]/)) {
+      throw new ApiError(400, 'Password must contain at least one letter and one number');
+    }
+
+    const user = await User.findById(studentId);
+    if (!user) {
+      throw new ApiError(404, 'Student not found');
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return { _id: user._id, passwordUpdated: true };
+  }
+
   async manageSubjectTeachers(classId, action, payload, requestingUser = null) {
     const classData = await this._authorizeClassAccess(classId, requestingUser, 'modify');
 

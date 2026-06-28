@@ -65,7 +65,6 @@ export const SubmissionDetailPage: React.FC<SubmissionDetailPageProps> = ({
       </p>
       <ImageGallery
         originalUrl={submission.images?.original?.url}
-        preprocessedUrl={submission.images?.preprocessed?.url}
         annotatedUrl={submission.images?.annotated?.url}
       />
     </div>
