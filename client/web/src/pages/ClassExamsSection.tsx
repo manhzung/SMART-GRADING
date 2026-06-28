@@ -14,10 +14,12 @@ import {
   BookOpen,
   Clock,
   Hash,
+  Eye,
 } from 'lucide-react';
 import { useClassStore } from '../presentation/store/classStore';
 import { useExamStore } from '../presentation/store/examStore';
 import styles from './ClassExamsSection.module.css';
+import { ExamScoresModal } from '../presentation/components/shared/ExamScoresModal';
 
 interface ClassExamsSectionProps {
   classId: string;
@@ -55,7 +57,7 @@ function formatDuration(minutes?: number): string {
   return `${m}p`;
 }
 
-export default function ClassExamsSection({ classId }: ClassExamsSectionProps) {
+export default function ClassExamsSection({ classId, className }: ClassExamsSectionProps) {
   const navigate = useNavigate();
   const {
     classExams,
@@ -76,6 +78,7 @@ export default function ClassExamsSection({ classId }: ClassExamsSectionProps) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [viewingScoresForExamId, setViewingScoresForExamId] = useState<string | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -198,6 +201,10 @@ export default function ClassExamsSection({ classId }: ClassExamsSectionProps) {
     selectedExamIds.size !== originalExamIds.size ||
     [...selectedExamIds].some((id) => !originalExamIds.has(id));
 
+  const viewingExam = viewingScoresForExamId
+    ? classExams.find((e) => e._id === viewingScoresForExamId) ?? null
+    : null;
+
   return (
     <div className={styles.section}>
       {/* Header */}
@@ -242,7 +249,7 @@ export default function ClassExamsSection({ classId }: ClassExamsSectionProps) {
                 <th>Thời lượng</th>
                 <th>Số câu hỏi</th>
                 <th>Trạng thái</th>
-                <th style={{ width: '80px', textAlign: 'center' }}>Thao tác</th>
+                <th style={{ width: '120px', textAlign: 'center' }}>Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -318,19 +325,30 @@ export default function ClassExamsSection({ classId }: ClassExamsSectionProps) {
                           {STATUS_LABELS[exam.status] || exam.status}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <button
-                          className={styles.removeBtn}
-                          onClick={() => handleRemoveExam(exam._id, exam.title)}
-                          disabled={isInProgress}
-                          title={
-                            isInProgress
-                              ? 'Không thể xóa: bài thi đang trong quá trình thi'
-                              : 'Xóa khỏi lớp này'
-                          }
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      <td style={{ width: '120px', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', gap: '6px' }}>
+                          <button
+                            className={styles.viewScoresBtn}
+                            onClick={() => setViewingScoresForExamId(exam._id)}
+                            title="Xem điểm bài thi"
+                            aria-label="Xem điểm bài thi"
+                            data-testid={`view-scores-${exam._id}`}
+                          >
+                            <Eye size={14} />
+                          </button>
+                          <button
+                            className={styles.removeBtn}
+                            onClick={() => handleRemoveExam(exam._id, exam.title)}
+                            disabled={isInProgress}
+                            title={
+                              isInProgress
+                                ? 'Không thể xóa: bài thi đang trong quá trình thi'
+                                : 'Xóa khỏi lớp này'
+                            }
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -499,6 +517,19 @@ export default function ClassExamsSection({ classId }: ClassExamsSectionProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Exam Scores Modal */}
+      {viewingExam && (
+        <ExamScoresModal
+          open={true}
+          onClose={() => setViewingScoresForExamId(null)}
+          examId={viewingExam._id}
+          examTitle={viewingExam.title}
+          examDate={viewingExam.examDate}
+          classId={classId}
+          className={className}
+        />
       )}
     </div>
   );

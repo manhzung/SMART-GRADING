@@ -251,6 +251,24 @@
   cursor: not-allowed;
 }
 
+/* ── View Scores Button ────────────────────────────────────────────────────── */
+.viewScoresBtn {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.viewScoresBtn:hover {
+  background: #dbeafe;
+}
+
 /* ── Empty State ────────────────────────────────────────────────────────────── */
 .emptyCell {
   text-align: center;
