@@ -106,7 +106,51 @@ code {
   background: var(--code-bg);
 }
 
-/* Fix input white text on dark mode systems */
+/* Fix input background and text on dark mode systems */
 input, select, textarea {
   color: #1f2937;
+  background-color: #ffffff;
+  color-scheme: light;
+}
+
+/* Custom Checkbox Styling (White Background) */
+input[type="checkbox"] {
+  color-scheme: light !important;
+  accent-color: #ffffff !important;
+  background-color: #ffffff !important;
+  cursor: pointer;
+}
+
+/* Global Role Badges */
+.roleBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  width: fit-content;
+}
+
+.roleBadgeAdmin {
+  background: #0b2240 !important;
+  color: #ffffff !important;
+}
+
+.roleBadgeSchool {
+  background: #eff6ff !important;
+  color: #1e40af !important;
+}
+
+.roleBadgeTeacher {
+  background: #ecfdf5 !important;
+  color: #065f46 !important;
+}
+
+.roleBadgeStudent {
+  background: #faf5ff !important;
+  color: #6b21a8 !important;
 }

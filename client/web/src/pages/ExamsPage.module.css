@@ -43,6 +43,13 @@
   letter-spacing: -0.5px;
 }
 
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 4px 0 0;
+  font-weight: 500;
+}
+
 .createBtn {
   display: flex;
   align-items: center;
@@ -258,7 +265,7 @@
 .checkboxInput {
   width: 14px;
   height: 14px;
-  accent-color: #0b2240;
+  accent-color: #ffffff !important;
   cursor: pointer;
   border: 1px solid #cbd5e1;
   border-radius: 3px;

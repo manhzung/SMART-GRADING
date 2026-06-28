@@ -23,6 +23,7 @@ import {
 import { useAppealStore } from '../presentation/store/appealStore';
 import { useExamStore } from '../presentation/store/examStore';
 import type { AppealStatus } from '../types';
+import { useAuthStore } from '../presentation/store/authStore';
 import styles from './AppealsPage.module.css';
 
 // Extended Appeal interface with mock data fields
@@ -75,6 +76,10 @@ function mapBackendAppeal(a: import('../presentation/store/appealStore').Backend
 }
 
 export default function AppealsPage() {
+  const user = useAuthStore((s) => s.user);
+  const userRole = user?.role || 'teacher';
+  const roleLabel = userRole === 'admin' ? 'SUPER ADMIN' : userRole === 'school-admin' ? 'SCHOOL ADMIN' : userRole.toUpperCase();
+  const roleBadgeClass = userRole === 'admin' ? 'roleBadgeAdmin' : userRole === 'school-admin' ? 'roleBadgeSchool' : userRole === 'teacher' ? 'roleBadgeTeacher' : 'roleBadgeStudent';
   // Appeals state from store
   const {
     appeals: backendAppeals,
@@ -299,16 +304,13 @@ export default function AppealsPage() {
         </div>
       )}
 
-      {/* Breadcrumb */}
-      <nav className={styles.breadcrumb}>
-        <span>Workspace</span>
-        <span className={styles.breadcrumbSeparator}>&gt;</span>
-        <span className={styles.breadcrumbActive}>Quản lý phúc tra</span>
-      </nav>
-
       {/* Title */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Quản lý phúc tra</h1>
+        <div className={styles.headerInfo}>
+          <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
+          <h1 className={styles.title}>Quản lý phúc tra</h1>
+          <p className={styles.subtitle}>Xem và giải quyết các yêu cầu phúc khảo từ học sinh</p>
+        </div>
       </div>
 
       {/* Stats Cards */}

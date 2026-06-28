@@ -18,11 +18,14 @@ import {
 import { useExamStore } from '../presentation/store/examStore';
 import { useClassStore } from '../presentation/store/classStore';
 import { buildExamFilters, mapExamListItem } from './examPageAdapters';
+import { useAuthStore } from '../presentation/store/authStore';
 import styles from './ExamsPage.module.css';
 
 export default function ExamsPage() {
   const navigate = useNavigate();
   const { exams: apiExams, fetchExams } = useExamStore();
+  const user = useAuthStore((s) => s.user);
+  const userRole = user?.role || 'teacher';
   const { classes, fetchClasses } = useClassStore();
 
   const exams = useMemo(() => apiExams.map(mapExamListItem), [apiExams]);
@@ -132,18 +135,18 @@ export default function ExamsPage() {
     navigate('/exams/new');
   };
 
+  const roleLabel = userRole === 'admin' ? 'SUPER ADMIN' : userRole === 'school-admin' ? 'SCHOOL ADMIN' : userRole.toUpperCase();
+  const roleBadgeClass = userRole === 'admin' ? 'roleBadgeAdmin' : userRole === 'school-admin' ? 'roleBadgeSchool' : userRole === 'teacher' ? 'roleBadgeTeacher' : 'roleBadgeStudent';
+
   return (
     <div className={styles.container}>
-      {/* Breadcrumb */}
-      <nav className={styles.breadcrumb}>
-        <span>Workspace</span>
-        <span className={styles.breadcrumbSeparator}>&gt;</span>
-        <span className={styles.breadcrumbActive}>Quản lý bài thi</span>
-      </nav>
-
       {/* Title & CTA button */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Quản lý bài thi</h1>
+        <div className={styles.headerInfo}>
+          <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
+          <h1 className={styles.title}>Quản lý bài thi</h1>
+          <p className={styles.subtitle}>Tạo đề thi mới, cấu hình đáp án và theo dõi quá trình chấm thi</p>
+        </div>
         <button className={styles.createBtn} onClick={handleCreateBtnClick}>
           <Plus size={16} />
           <span>Tạo bài thi mới</span>

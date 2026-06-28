@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Search,
   ChevronDown,
@@ -24,6 +24,7 @@ import { useSubmissionStore, type BackendSubmission } from '../presentation/stor
 import { useExamStore } from '../presentation/store/examStore';
 import { useClassStore } from '../presentation/store/classStore';
 import { apiService } from '../core/api';
+import { useAuthStore } from '../presentation/store/authStore';
 import styles from './SubmissionsPage.module.css';
 
 // Status configuration
@@ -57,6 +58,8 @@ interface SubmissionAnswerDetail {
 
 export default function SubmissionsPage() {
   const { submissions, isLoading, error, fetchByExam, clearSubmissions, deleteSubmission } = useSubmissionStore();
+  const user = useAuthStore((s) => s.user);
+  const userRole = user?.role || 'teacher';
   const { exams, fetchExams } = useExamStore();
   const { classes, fetchClasses } = useClassStore();
 
@@ -314,18 +317,15 @@ export default function SubmissionsPage() {
     );
   };
 
+  const roleLabel = userRole === 'admin' ? 'SUPER ADMIN' : userRole === 'school-admin' ? 'SCHOOL ADMIN' : userRole.toUpperCase();
+  const roleBadgeClass = userRole === 'admin' ? 'roleBadgeAdmin' : userRole === 'school-admin' ? 'roleBadgeSchool' : userRole === 'teacher' ? 'roleBadgeTeacher' : 'roleBadgeStudent';
+
   return (
     <div className={styles.container}>
-      {/* Breadcrumb */}
-      <nav className={styles.breadcrumb}>
-        <span>Workspace</span>
-        <span className={styles.breadcrumbSeparator}>&gt;</span>
-        <span className={styles.breadcrumbActive}>Quản lý bài nộp</span>
-      </nav>
-
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerText}>
+          <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
           <h1 className={styles.title}>Quản lý bài nộp</h1>
           <p className={styles.subtitle}>Xem và quản lý các bài thi đã nộp</p>
         </div>

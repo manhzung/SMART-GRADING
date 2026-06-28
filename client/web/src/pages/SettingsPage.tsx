@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
   User, 
-  Bell, 
   Shield, 
   Settings as SettingsIcon,
   Camera,
@@ -20,18 +19,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../presentation/store/authStore';
-import { useNotificationStore } from '../presentation/store/notificationStore';
 import styles from './SettingsPage.module.css';
 
-type TabType = 'profile' | 'notifications' | 'security' | 'preferences';
+type TabType = 'profile' | 'security' | 'preferences';
 
-interface NotificationSettings {
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  submissionAlerts: boolean;
-  appealUpdates: boolean;
-  systemAnnouncements: boolean;
-}
 
 interface Session {
   id: string;
@@ -48,7 +39,11 @@ export default function SettingsPage() {
   const user = useAuthStore(s => s.user);
   const updateProfile = useAuthStore(s => s.updateProfile);
   const changePassword = useAuthStore(s => s.changePassword);
-  
+
+  const userRole = user?.role || 'teacher';
+  const roleLabel = userRole === 'admin' ? 'SUPER ADMIN' : userRole === 'school-admin' ? 'SCHOOL ADMIN' : userRole.toUpperCase();
+  const roleBadgeClass = userRole === 'admin' ? 'roleBadgeAdmin' : userRole === 'school-admin' ? 'roleBadgeSchool' : userRole === 'teacher' ? 'roleBadgeTeacher' : 'roleBadgeStudent';
+
   // Profile state - initialized from authStore
   const [fullName, setFullName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -71,16 +66,6 @@ export default function SettingsPage() {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   
-  // Notifications state
-  const { fetchNotifications } = useNotificationStore();
-  const [notifications, setNotifications] = useState<NotificationSettings>({
-    emailNotifications: true,
-    pushNotifications: true,
-    submissionAlerts: true,
-    appealUpdates: false,
-    systemAnnouncements: true,
-  });
-  
   // Preferences state
   const [language, setLanguage] = useState('vi');
   const [theme, setTheme] = useState('light');
@@ -93,10 +78,6 @@ export default function SettingsPage() {
     { id: '3', device: 'Firefox on macOS', location: 'TP. Hồ Chí Minh, Việt Nam', lastActive: '3 ngày trước', current: false },
   ]);
 
-  // Effects
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
 
   useEffect(() => {
     const saved = localStorage.getItem('user-preferences');
@@ -198,23 +179,19 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'profile' as TabType, label: 'Hồ sơ', icon: User },
-    { id: 'notifications' as TabType, label: 'Thông báo', icon: Bell },
     { id: 'security' as TabType, label: 'Bảo mật', icon: Shield },
     { id: 'preferences' as TabType, label: 'Tùy chọn', icon: SettingsIcon },
   ];
 
   return (
     <div className={styles.container}>
-      {/* Breadcrumb */}
-      <nav className={styles.breadcrumb}>
-        <span>Workspace</span>
-        <span className={styles.breadcrumbSeparator}>&gt;</span>
-        <span className={styles.breadcrumbActive}>Cài đặt</span>
-      </nav>
-
       {/* Title */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Cài đặt</h1>
+        <div className={styles.headerInfo}>
+          <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
+          <h1 className={styles.title}>Cài đặt</h1>
+          <p className={styles.subtitle}>Quản lý thông tin cá nhân, cấu hình bảo mật và thiết lập tùy chọn hệ thống</p>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -249,11 +226,11 @@ export default function SettingsPage() {
                       <img src={avatarPreview} alt="Avatar" className={styles.avatarImage} />
                     ) : (
                       <div className={styles.avatarPlaceholder}>
-                        <User size={48} />
+                        <User size={40} />
                       </div>
                     )}
                     <label className={styles.avatarUploadBtn}>
-                      <Camera size={18} />
+                      <Camera size={16} />
                       <input 
                         type="file" 
                         accept="image/*"
@@ -262,14 +239,17 @@ export default function SettingsPage() {
                       />
                     </label>
                   </div>
-                  <button 
-                    className={styles.removeAvatarBtn}
-                    onClick={() => setAvatarPreview(null)}
-                    style={{ display: avatarPreview ? 'flex' : 'none' }}
-                  >
-                    <X size={16} />
-                    <span>Xóa ảnh</span>
-                  </button>
+                  <div className={styles.avatarActions}>
+                    <p className={styles.avatarInstructions}>Tải lên hình ảnh chân dung của bạn. Định dạng PNG, JPG tối đa 5MB.</p>
+                    <button 
+                      className={styles.removeAvatarBtn}
+                      onClick={() => setAvatarPreview(null)}
+                      style={{ display: avatarPreview ? 'flex' : 'none' }}
+                    >
+                      <X size={14} />
+                      <span>Xóa ảnh chân dung</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Form Fields */}
@@ -332,90 +312,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Notifications Tab */}
-          {activeTab === 'notifications' && (
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Cài đặt thông báo</h2>
-              <p className={styles.sectionDesc}>Chọn cách bạn nhận thông báo từ hệ thống</p>
 
-              <div className={styles.notificationsList}>
-                <div className={styles.notificationItem}>
-                  <div className={styles.notificationInfo}>
-                    <div className={styles.notificationTitle}>Thông báo qua Email</div>
-                    <div className={styles.notificationDesc}>Nhận thông báo qua địa chỉ email đã đăng ký</div>
-                  </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifications.emailNotifications}
-                      onChange={() => handleNotificationToggle('emailNotifications')}
-                    />
-                    <span className={styles.toggleSlider}></span>
-                  </label>
-                </div>
-
-                <div className={styles.notificationItem}>
-                  <div className={styles.notificationInfo}>
-                    <div className={styles.notificationTitle}>Thông báo đẩy</div>
-                    <div className={styles.notificationDesc}>Nhận thông báo trực tiếp trên trình duyệt</div>
-                  </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifications.pushNotifications}
-                      onChange={() => handleNotificationToggle('pushNotifications')}
-                    />
-                    <span className={styles.toggleSlider}></span>
-                  </label>
-                </div>
-
-                <div className={styles.notificationItem}>
-                  <div className={styles.notificationInfo}>
-                    <div className={styles.notificationTitle}>Nhắc nhở nộp bài</div>
-                    <div className={styles.notificationDesc}>Thông báo khi có bài thi mới hoặc deadline đến</div>
-                  </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifications.submissionAlerts}
-                      onChange={() => handleNotificationToggle('submissionAlerts')}
-                    />
-                    <span className={styles.toggleSlider}></span>
-                  </label>
-                </div>
-
-                <div className={styles.notificationItem}>
-                  <div className={styles.notificationInfo}>
-                    <div className={styles.notificationTitle}>Cập nhật phúc khảo</div>
-                    <div className={styles.notificationDesc}>Thông báo về trạng thái phúc khảo của học sinh</div>
-                  </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifications.appealUpdates}
-                      onChange={() => handleNotificationToggle('appealUpdates')}
-                    />
-                    <span className={styles.toggleSlider}></span>
-                  </label>
-                </div>
-
-                <div className={styles.notificationItem}>
-                  <div className={styles.notificationInfo}>
-                    <div className={styles.notificationTitle}>Thông báo hệ thống</div>
-                    <div className={styles.notificationDesc}>Cập nhật về bảo trì, tính năng mới</div>
-                  </div>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifications.systemAnnouncements}
-                      onChange={() => handleNotificationToggle('systemAnnouncements')}
-                    />
-                    <span className={styles.toggleSlider}></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Security Tab */}
           {activeTab === 'security' && (

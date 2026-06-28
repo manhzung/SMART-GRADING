@@ -208,17 +208,23 @@ export default function ClassesPage() {
       }
     });
 
+  const roleLabel = userRole === 'admin' ? 'SUPER ADMIN' : userRole === 'school-admin' ? 'SCHOOL ADMIN' : userRole.toUpperCase();
+  const roleBadgeClass = userRole === 'admin' ? 'roleBadgeAdmin' : userRole === 'school-admin' ? 'roleBadgeSchool' : userRole === 'teacher' ? 'roleBadgeTeacher' : 'roleBadgeStudent';
+
   return (
     <div className={styles.container}>
       {/* Top Header */}
       <div className={styles.header}>
         <div className={styles.headerInfo}>
-          <h1>{isAdmin ? 'Class Management' : 'My Classes'}</h1>
-          <p>{isAdmin ? 'Manage all classes in your school' : 'Manage your classes and student groups'}</p>
+          <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
+          <h1 className={styles.title}>{isAdmin ? 'Quản lý lớp học' : 'Lớp học của tôi'}</h1>
+          <p className={styles.subtitle}>
+            {isAdmin ? 'Quản lý danh sách lớp học và phân công giảng dạy toàn trường' : 'Quản lý danh sách lớp học và nhóm học sinh của bạn'}
+          </p>
         </div>
         <button className={styles.createBtn} onClick={handleOpenCreateModal}>
           <Plus size={18} />
-          <span>Add New Class</span>
+          <span>Thêm lớp học</span>
         </button>
       </div>
 

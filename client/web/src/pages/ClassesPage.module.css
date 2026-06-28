@@ -14,19 +14,40 @@
   align-items: center;
 }
 
-.headerInfo h1 {
+/* Breadcrumb Styles */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.breadcrumbSeparator {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.breadcrumbActive {
+  color: #475569;
+  font-weight: 600;
+}
+
+.title {
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
   color: #0b2240;
-  margin: 0 0 6px 0;
+  margin: 0;
   letter-spacing: -0.5px;
 }
 
-.headerInfo p {
-  color: #6b7280;
+.subtitle {
   font-size: 14px;
-  margin: 0;
+  color: #6b7280;
+  margin: 4px 0 0;
 }
 
 .createBtn {
