@@ -74,7 +74,8 @@ export const useSchoolManagementStore = create<SchoolManagementState>((set, get)
     set({ isLoading: true, error: null });
     try {
       const data = await schoolManagementService.getAllSchools(params);
-      set({ schools: data.results, totalSchools: data.total, isLoading: false });
+      const results = (data.results || []).map((s: any) => ({ ...s, _id: s._id || s.id }));
+      set({ schools: results, totalSchools: data.total, isLoading: false });
     } catch (err: any) {
       set({ error: err?.message || 'Failed to fetch schools', isLoading: false });
     }
@@ -84,7 +85,8 @@ export const useSchoolManagementStore = create<SchoolManagementState>((set, get)
     set({ isLoading: true, error: null });
     try {
       const data = await schoolManagementService.getPendingSchools(params);
-      set({ pendingSchools: data.results, totalPending: data.total, isLoading: false });
+      const results = (data.results || []).map((s: any) => ({ ...s, _id: s._id || s.id }));
+      set({ pendingSchools: results, totalPending: data.total, isLoading: false });
     } catch (err: any) {
       set({ error: err?.message || 'Failed to fetch pending schools', isLoading: false });
     }
