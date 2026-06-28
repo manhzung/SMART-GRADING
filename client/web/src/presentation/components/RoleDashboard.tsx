@@ -68,7 +68,11 @@ export default function RoleDashboard() {
         <div>
           <span className={`${styles.roleBadge} ${roleBadgeClass}`}>{roleLabel}</span>
           <h1 style={{ margin: 0, color: '#0b2240' }}>
-            {isAdmin ? 'Tổng quan hệ thống' : 'Tổng quan trường'}
+            {isAdmin
+              ? 'Tổng quan hệ thống'
+              : isSchoolAdmin
+                ? 'Tổng quan trường'
+                : user.role.toUpperCase()}
           </h1>
         </div>
         <button className={styles.refreshBtn} onClick={load} disabled={isLoading}>
