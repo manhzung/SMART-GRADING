@@ -38,7 +38,15 @@
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
+  background-color: #ffffff;
+  color: #111827;
+  color-scheme: light;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #9ca3af;
 }
 
 .field input:focus,
