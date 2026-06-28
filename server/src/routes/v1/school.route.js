@@ -6,6 +6,14 @@ const auth = require('../../middlewares/auth');
 
 const router = express.Router();
 
+// ── Special routes (must be defined BEFORE /:id to avoid being matched as id) ──
+
+router
+  .route('/pending')
+  .get(auth('manageSchools'), schoolController.getPendingSchools);
+
+// ── Generic CRUD routes ────────────────────────────────────────────────────────
+
 router
   .route('/')
   .post(auth('manageSchools'), validate(schoolValidation.createSchool), schoolController.create)
@@ -25,11 +33,7 @@ router
   .route('/:schoolId/available-teachers')
   .get(auth('manageClasses'), validate(schoolValidation.getAvailableTeachers), schoolController.getAvailableTeachers);
 
-// ── School Approval Routes ───────────────────────────────────────────────────────
-
-router
-  .route('/pending')
-  .get(auth('manageSchools'), schoolController.getPendingSchools);
+// ── School Approval routes ─────────────────────────────────────────────────────
 
 router
   .route('/:id/approve')
