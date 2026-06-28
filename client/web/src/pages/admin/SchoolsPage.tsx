@@ -89,7 +89,14 @@ export default function SchoolsPage() {
     school.code?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderSchoolRow = (school: School) => (
+  const renderSchoolRow = (school: School) => {
+    const addr = school.address as { street?: string; ward?: string; district?: string; city?: string } | string | undefined;
+    const addrText = typeof addr === 'string'
+      ? addr
+      : addr
+        ? [addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')
+        : '-';
+    return (
     <tr key={school._id} className={styles.row}>
       <td className={styles.schoolCell}>
         <Building2 size={18} className={styles.icon} />
@@ -98,7 +105,7 @@ export default function SchoolsPage() {
           <span>{school.code || '-'}</span>
         </div>
       </td>
-      <td>{school.address || '-'}</td>
+      <td>{addrText || '-'}</td>
       <td>
         <div className={styles.contactCell}>
           {school.email && <span>{school.email}</span>}
@@ -125,7 +132,8 @@ export default function SchoolsPage() {
         </div>
       </td>
     </tr>
-  );
+    );
+  };
 
   const renderPendingSchoolRow = (school: any) => (
     <tr key={school.id || school._id} className={styles.row}>
