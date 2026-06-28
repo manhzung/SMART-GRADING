@@ -151,6 +151,20 @@ const schoolSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // ── Registration Status (for school approval workflow) ────────────────────
+    registrationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved',
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    rejectedReason: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

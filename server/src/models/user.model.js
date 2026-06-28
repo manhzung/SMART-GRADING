@@ -82,6 +82,21 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // ── Registration Status (for teacher approval workflow) ────────────────────
+    registrationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved',
+    },
+    rejectedReason: {
+      type: String,
+      default: null,
+    },
+    registeredSchoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'School',
+      default: null,
+    },
     lastLoginAt: {
       type: Date,
       default: null,
