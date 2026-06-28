@@ -1,0 +1,58 @@
+.wrap { display: flex; flex-direction: column; gap: 24px; }
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.kpiCard {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kpiLabel { font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.6px; }
+.kpiValue { font-size: 28px; font-weight: 700; color: #0b2240; }
+.kpiHint { font-size: 12px; color: #6b7280; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .row { grid-template-columns: 1fr; } }
+.listCard {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+}
+.listTitle { font-size: 14px; font-weight: 700; color: #0b2240; margin: 0 0 12px; }
+.listItem {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-top: 1px solid #f1f5f9;
+  font-size: 13px; color: #1f2937;
+}
+.listItem:first-of-type { border-top: none; }
+.empty { font-size: 13px; color: #9ca3af; padding: 8px 0; }
+.headerRow { display: flex; justify-content: space-between; align-items: center; }
+.refreshBtn {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #0b2240;
+  cursor: pointer;
+}
+.refreshBtn:hover { background: #f3f4f6; }
+.roleBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.roleBadgeAdmin { background: #0b2240; color: #fff; }
+.roleBadgeSchool { background: #dbeafe; color: #1e40af; }
+.roleBadgeTeacher { background: #d1fae5; color: #065f46; }
