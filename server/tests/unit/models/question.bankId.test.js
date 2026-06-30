@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 const setupTestDB = require('../../utils/setupTestDB');
-const Question = require('../../../src/models/question.model');
 
 setupTestDB();
 
 describe('Question Model - bankId', () => {
   it('should allow bankId on question', async () => {
+    const Question = require('../../../src/models/question.model');
     const bankId = new mongoose.Types.ObjectId();
     const q = await Question.create({
       content: 'Q1',
