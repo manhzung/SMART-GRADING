@@ -22,7 +22,7 @@ class QuestionBankService {
       throw new ApiError(400, 'User is already an active member');
     }
 
-    const member = await QuestionBankMember.create({
+    return QuestionBankMember.create({
       bankId,
       userId,
       role: 'viewer',
@@ -30,7 +30,6 @@ class QuestionBankService {
       invitedBy,
       invitedAt: new Date(),
     });
-    return member;
   }
 
   async approveMember(bankId, userId, approvedBy) {
@@ -44,6 +43,142 @@ class QuestionBankService {
     member.approvedAt = new Date();
     await member.save();
     return member;
+  }
+
+  async listMembers(bankId, { status } = {}) {
+    const filter = { bankId };
+    if (status) filter.status = status;
+    return QuestionBankMember.find(filter).populate('userId', 'name email role schoolId').lean();
+  }
+
+  async getMembership(bankId, userId) {
+    return QuestionBankMember.findOne({ bankId, userId }).lean();
+  }
+
+  async setMemberRole(bankId, userId, role) {
+    if (role === 'owner') {
+      throw new ApiError(400, 'Cannot promote via setMemberRole');
+    }
+    const member = await QuestionBankMember.findOne({ bankId, userId });
+    if (!member) {
+      throw new ApiError(404, 'Member not found');
+    }
+    member.role = role;
+    if (member.status === 'pending') member.status = 'active';
+    await member.save();
+    return member;
+  }
+
+  async removeMember(bankId, userId) {
+    const result = await QuestionBankMember.deleteOne({ bankId, userId });
+    if (result.deletedCount === 0) {
+      throw new ApiError(404, 'Member not found');
+    }
+    return true;
+  }
+
+  async leaveBank(bankId, userId) {
+    const member = await QuestionBankMember.findOne({ bankId, userId });
+    if (!member) {
+      throw new ApiError(404, 'Member not found');
+    }
+    if (member.role === 'owner') {
+      throw new ApiError(400, 'Owner must transfer ownership before leaving');
+    }
+    await QuestionBankMember.deleteOne({ _id: member._id });
+    return true;
+  }
+
+  async requestAccess(bankId, userId) {
+    const existing = await QuestionBankMember.findOne({ bankId, userId });
+    if (existing && existing.status === 'active') {
+      throw new ApiError(400, 'User is already an active member');
+    }
+
+    if (existing) {
+      return existing;
+    }
+
+    return QuestionBankMember.create({
+      bankId,
+      userId,
+      role: 'viewer',
+      status: 'pending',
+    });
+  }
+
+  async respondToRequest(bankId, userId, decision, approverId) {
+    const member = await QuestionBankMember.findOne({ bankId, userId, status: 'pending' });
+    if (!member) {
+      throw new ApiError(404, 'Pending request not found');
+    }
+
+    if (decision === 'approve') {
+      member.status = 'active';
+      member.approvedBy = approverId;
+      member.approvedAt = new Date();
+      await member.save();
+      return member;
+    }
+
+    if (decision === 'reject') {
+      await QuestionBankMember.deleteOne({ _id: member._id });
+      return { status: 'rejected' };
+    }
+
+    throw new ApiError(400, 'Invalid decision');
+  }
+
+  async transferOwnership(bankId, fromUserId, toUserId) {
+    const target = await QuestionBankMember.findOne({
+      bankId,
+      userId: toUserId,
+      status: 'active',
+    });
+    if (!target) {
+      throw new ApiError(400, 'Target must be an active member');
+    }
+
+    const currentOwner = await QuestionBankMember.findOne({
+      bankId,
+      userId: fromUserId,
+      role: 'owner',
+    });
+    if (!currentOwner) {
+      throw new ApiError(403, 'Only current owner can transfer ownership');
+    }
+
+    currentOwner.role = 'manager';
+    target.role = 'owner';
+    await Promise.all([currentOwner.save(), target.save()]);
+  }
+
+  async ensureSchoolBankHasAdmin(bankId, candidateOwners) {
+    const bank = await QuestionBank.findById(bankId);
+    if (!bank) {
+      throw new ApiError(404, 'Bank not found');
+    }
+    if (bank.type !== 'school') return;
+
+    const owners = await QuestionBankMember.find({ bankId, role: 'owner', status: 'active' });
+    const ownerIds = new Set(owners.map((o) => o.userId.toString()));
+    const hasAdmin = candidateOwners.some(
+      (c) => c.role === 'school-admin' && ownerIds.has(c.userId.toString())
+    );
+
+    if (!hasAdmin) {
+      throw new ApiError(400, 'School bank must have at least one school admin owner');
+    }
+  }
+
+  async listBanksForUser(userId) {
+    const memberships = await QuestionBankMember.find({
+      userId,
+      status: 'active',
+    }).lean();
+    const bankIds = memberships.map((m) => m.bankId);
+    if (bankIds.length === 0) return [];
+    return QuestionBank.find({ _id: { $in: bankIds } }).lean();
   }
 }
 
