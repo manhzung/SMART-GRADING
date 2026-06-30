@@ -238,6 +238,14 @@ const getByTags = catchAsync(async (req, res) => {
   });
 });
 
+const getByBank = catchAsync(async (req, res) => {
+  const result = await questionService.getAll(
+    { bankId: req.params.bankId },
+    req.user
+  );
+  res.send(result);
+});
+
 module.exports = {
   create,
   getAll,
@@ -251,4 +259,5 @@ module.exports = {
   getTags,
   getBankStats,
   getByTags,
+  getByBank,
 };
