@@ -71,6 +71,11 @@ const questionSchema = mongoose.Schema(
       required: false,
       default: null,
     },
+    bankId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'QuestionBank',
+      default: null,
+    },
     source: {
       type: String,
       enum: ['ai', 'manual', 'imported'],
@@ -124,6 +129,7 @@ questionSchema.index({ topicId: 1 });
 questionSchema.index({ tags: 1 });
 questionSchema.index({ content: 'text' });
 questionSchema.index({ createdBy: 1 });
+questionSchema.index({ bankId: 1 });
 
 questionSchema.pre('save', function (next) {
   if (this.type === 'single_choice') {
