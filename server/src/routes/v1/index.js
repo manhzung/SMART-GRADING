@@ -17,6 +17,7 @@ const uploadRoute = require('./upload.route');
 const aiChatRoute = require('./aiChat.route');
 const aiReportRoute = require('./aiReport.route');
 const activityRoute = require('./activity.route');
+const questionBankRoute = require('./questionBank.route');
 const config = require('../../config/config');
 
 const router = express.Router();
@@ -38,6 +39,7 @@ router.use('/upload', uploadRoute);
 router.use('/ai-chat', aiChatRoute);
 router.use('/ai-reports', aiReportRoute);
 router.use('/activities', activityRoute);
+router.use('/banks', questionBankRoute);
 
 if (config.env === 'development') {
   router.use('/docs', docsRoute);
