@@ -24,9 +24,9 @@ const checkBankAccess = async (req, res, next) => {
   next();
 };
 
-const requireBankRole = (roles) => (req, res, next) => {
+const requireBankRole = (roles) => async (req, res, next) => {
   if (!req.membership || !roles.includes(req.membership.role)) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Insufficient bank permissions');
+    return next(new ApiError(httpStatus.FORBIDDEN, 'Insufficient bank permissions'));
   }
   next();
 };

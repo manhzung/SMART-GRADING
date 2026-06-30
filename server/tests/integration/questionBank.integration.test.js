@@ -7,9 +7,13 @@ const {
   QuestionBank,
   QuestionBankMember,
   Question: QuestionModel,
+  User,
 } = require('../../src/models');
-const { teacherOne, insertUsers } = require('../fixtures/user.fixture');
-const { teacherOneAccessToken } = require('../fixtures/token.fixture');
+const { teacherOne, teacherTwo, insertUsers } = require('../fixtures/user.fixture');
+const {
+  teacherOneAccessToken,
+  teacherTwoAccessToken,
+} = require('../fixtures/token.fixture');
 
 setupTestDB();
 
@@ -17,19 +21,22 @@ describe('QuestionBank API', () => {
   let bankId;
 
   beforeEach(async () => {
-    await insertUsers([teacherOne]);
+    await insertUsers([teacherOne, teacherTwo]);
   });
+
+  async function createBank(token = teacherOneAccessToken, name = 'Personal') {
+    const res = await request(app)
+      .post('/api/v1/banks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name });
+    return res.body._id;
+  }
 
   it('creates a personal bank for the authenticated user', async () => {
     const res = await request(app)
       .post('/api/v1/banks')
       .set('Authorization', `Bearer ${teacherOneAccessToken}`)
       .send({ name: 'Personal' });
-
-    if (res.status !== httpStatus.CREATED) {
-      // eslint-disable-next-line no-console
-      console.log('CREATE BANK RESPONSE:', res.status, res.body);
-    }
 
     expect(res.status).toBe(httpStatus.CREATED);
     expect(res.body.type).toBe('personal');
@@ -38,11 +45,7 @@ describe('QuestionBank API', () => {
   });
 
   it('returns created bank by id', async () => {
-    const created = await request(app)
-      .post('/api/v1/banks')
-      .set('Authorization', `Bearer ${teacherOneAccessToken}`)
-      .send({ name: 'Personal2' });
-    bankId = created.body._id;
+    bankId = await createBank(teacherOneAccessToken, 'Personal2');
 
     const res = await request(app)
       .get(`/api/v1/banks/${bankId}`)
@@ -57,11 +60,7 @@ describe('QuestionBank API', () => {
   });
 
   it('lists questions in bank', async () => {
-    const created = await request(app)
-      .post('/api/v1/banks')
-      .set('Authorization', `Bearer ${teacherOneAccessToken}`)
-      .send({ name: 'BankWithQuestions' });
-    bankId = created.body._id;
+    bankId = await createBank(teacherOneAccessToken, 'BankWithQuestions');
 
     await QuestionModel.create({
       content: 'InBank',
@@ -77,5 +76,170 @@ describe('QuestionBank API', () => {
 
     expect(res.status).toBe(httpStatus.OK);
     expect(res.body.results).toHaveLength(1);
+  });
+
+  describe('member flows', () => {
+    it('invites a new member as pending viewer', async () => {
+      bankId = await createBank();
+      const res = await request(app)
+        .post(`/api/v1/banks/${bankId}/members`)
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ userId: teacherTwo._id.toString() });
+
+      expect(res.status).toBe(httpStatus.CREATED);
+      expect(res.body.status).toBe('pending');
+      expect(res.body.role).toBe('viewer');
+    });
+
+    it('updates a member role (owner only)', async () => {
+      bankId = await createBank();
+      await QuestionBankMember.create({
+        bankId,
+        userId: teacherTwo._id,
+        role: 'manager',
+        status: 'active',
+      });
+
+      const res = await request(app)
+        .patch(`/api/v1/banks/${bankId}/members/${teacherTwo._id.toString()}`)
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ role: 'viewer' });
+
+      expect(res.status).toBe(httpStatus.OK);
+      expect(res.body.role).toBe('viewer');
+    });
+
+    it('forbids member role update by viewer', async () => {
+      bankId = await createBank();
+      await QuestionBankMember.create({
+        bankId,
+        userId: teacherTwo._id,
+        role: 'viewer',
+        status: 'active',
+      });
+
+      const res = await request(app)
+        .patch(`/api/v1/banks/${bankId}/members/${teacherOne._id.toString()}`)
+        .set('Authorization', `Bearer ${teacherTwoAccessToken}`)
+        .send({ role: 'manager' });
+
+      expect(res.status).toBe(httpStatus.FORBIDDEN);
+    });
+
+    it('removes a member', async () => {
+      bankId = await createBank();
+      await QuestionBankMember.create({
+        bankId,
+        userId: teacherTwo._id,
+        role: 'viewer',
+        status: 'active',
+      });
+
+      const res = await request(app)
+        .delete(`/api/v1/banks/${bankId}/members/${teacherTwo._id.toString()}`)
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`);
+
+      expect(res.status).toBe(httpStatus.NO_CONTENT);
+      const exists = await QuestionBankMember.findOne({
+        bankId,
+        userId: teacherTwo._id,
+      });
+      expect(exists).toBeNull();
+    });
+
+    it('owner can leave after transfer', async () => {
+      bankId = await createBank();
+      await QuestionBankMember.create({
+        bankId,
+        userId: teacherTwo._id,
+        role: 'viewer',
+        status: 'active',
+      });
+
+      const transfer = await request(app)
+        .post(`/api/v1/banks/${bankId}/transfer`)
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ toUserId: teacherTwo._id.toString() });
+      expect(transfer.status).toBe(httpStatus.OK);
+
+      const leave = await request(app)
+        .post(`/api/v1/banks/${bankId}/leave`)
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`);
+      expect(leave.status).toBe(httpStatus.NO_CONTENT);
+    });
+
+    it('blocks owner leaving without transfer', async () => {
+      bankId = await createBank();
+      const res = await request(app)
+        .post(`/api/v1/banks/${bankId}/leave`)
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`);
+      expect(res.status).toBe(httpStatus.BAD_REQUEST);
+    });
+  });
+
+  describe('access request flow', () => {
+    it('non-member requests access → pending', async () => {
+      bankId = await createBank();
+      const res = await request(app)
+        .post(`/api/v1/banks/${bankId}/request-access`)
+        .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
+      expect(res.status).toBe(httpStatus.CREATED);
+      expect(res.body.status).toBe('pending');
+    });
+
+    it('owner approves pending request', async () => {
+      bankId = await createBank();
+      await request(app)
+        .post(`/api/v1/banks/${bankId}/request-access`)
+        .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
+
+      const res = await request(app)
+        .post(
+          `/api/v1/banks/${bankId}/requests/${teacherTwo._id.toString()}/respond`
+        )
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ decision: 'approve' });
+
+      expect(res.status).toBe(httpStatus.OK);
+      expect(res.body.status).toBe('active');
+    });
+
+    it('owner rejects pending request (removes)', async () => {
+      bankId = await createBank();
+      await QuestionBankMember.create({
+        bankId,
+        userId: teacherTwo._id,
+        role: 'viewer',
+        status: 'pending',
+      });
+
+      const res = await request(app)
+        .post(
+          `/api/v1/banks/${bankId}/requests/${teacherTwo._id.toString()}/respond`
+        )
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ decision: 'reject' });
+
+      expect(res.status).toBe(httpStatus.OK);
+      const exists = await QuestionBankMember.findOne({
+        bankId,
+        userId: teacherTwo._id,
+      });
+      expect(exists).toBeNull();
+    });
+  });
+
+  describe('list my banks', () => {
+    it('lists banks for the authenticated user', async () => {
+      await createBank(teacherOneAccessToken, 'Bank A');
+      await createBank(teacherOneAccessToken, 'Bank B');
+
+      const res = await request(app)
+        .get('/api/v1/banks')
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`);
+
+      expect(res.status).toBe(httpStatus.OK);
+      expect(res.body.length).toBeGreaterThanOrEqual(2);
+    });
   });
 });
