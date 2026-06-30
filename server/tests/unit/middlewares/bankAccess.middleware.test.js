@@ -1,57 +1,45 @@
 const httpStatus = require('http-status');
-const mockFindOne = jest.fn();
+const mongoose = require('mongoose');
+const setupTestDB = require('../../utils/setupTestDB');
+const bankAccessMod = require('../../../src/middlewares/bankAccess.middleware');
+const { QuestionBank, QuestionBankMember } = require('../../../src/models');
 
-jest.mock('../../../src/models', () => {
-  const actual = jest.requireActual('../../../src/models');
-  return {
-    ...actual,
-    QuestionBankMember: {
-      ...actual.QuestionBankMember,
-      findOne: mockFindOne,
-    },
-  };
-});
+setupTestDB();
 
-const mockReq = () => ({ params: {}, user: {} });
-const mockRes = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn() });
-const mockNext = jest.fn();
+const { checkBankAccess } = bankAccessMod;
 
-it('calls next for active member', async () => {
-  mockFindOne.mockResolvedValue({});
-  const { checkBankAccess } = require('../../../src/middlewares/bankAccess.middleware');
-  const { QuestionBankMember } = require('../../../src/models');
+describe('bankAccess middleware', () => {
+  const mockReq = () => ({ params: {}, user: {} });
+  const mockRes = () => ({ status: jest.fn().mockReturnThis(), send: jest.fn() });
+  const mockNext = jest.fn();
 
-  const bankId = 'bank-1';
-  const userId = 'user-1';
+  it('calls next for active member', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const bankId = new mongoose.Types.ObjectId();
+    await QuestionBank.create({ _id: bankId, name: 'Bank', createdBy: userId });
+    await QuestionBankMember.create({ bankId, userId, role: 'manager', status: 'active' });
 
-  const req = mockReq();
-  req.params = { bankId };
-  req.user = { id: userId };
-  const res = mockRes();
+    const req = mockReq();
+    req.params = { bankId: bankId.toString() };
+    req.user = { id: userId.toString() };
+    const res = mockRes();
 
-  await checkBankAccess(req, res, mockNext);
+    await checkBankAccess(req, res, mockNext);
+    expect(mockNext).toHaveBeenCalled();
+  });
 
-  expect(mockFindOne).toHaveBeenCalledTimes(1);
-  expect(mockNext).toHaveBeenCalled();
-  expect(res.status).not.toHaveBeenCalled();
-});
+  it('forbids non member', async () => {
+    const bankId = new mongoose.Types.ObjectId();
+    const otherUserId = new mongoose.Types.ObjectId();
+    await QuestionBank.create({ _id: bankId, name: 'Bank', createdBy: otherUserId });
 
-it('returns 403 for non member', async () => {
-  mockFindOne.mockResolvedValue(null);
-  const { checkBankAccess } = require('../../../src/middlewares/bankAccess.middleware');
-  const { QuestionBankMember } = require('../../../src/models');
+    const req = mockReq();
+    req.params = { bankId: bankId.toString() };
+    req.user = { id: new mongoose.Types.ObjectId().toString() };
+    const res = mockRes();
 
-  const bankId = 'bank-1';
-  const userId = 'user-1';
-
-  const req = mockReq();
-  req.params = { bankId };
-  req.user = { id: userId };
-  const res = mockRes();
-
-  await checkBankAccess(req, res, mockNext);
-
-  expect(mockFindOne).toHaveBeenCalledTimes(1);
-  expect(mockNext).not.toHaveBeenCalled();
-  expect(res.status).toHaveBeenCalledWith(httpStatus.FORBIDDEN);
+    await expect(checkBankAccess(req, res, mockNext)).rejects.toMatchObject({
+      statusCode: httpStatus.FORBIDDEN,
+    });
+  });
 });

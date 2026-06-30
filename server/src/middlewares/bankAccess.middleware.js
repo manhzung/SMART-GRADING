@@ -1,38 +1,34 @@
 const httpStatus = require('http-status');
-const mongoose = require('mongoose');
 const { QuestionBankMember } = require('../models');
+const ApiError = require('../utils/ApiError');
 
 const checkBankAccess = async (req, res, next) => {
-  const bankId = req.params?.bankId;
-  const userId = req.user?.id;
+  const { bankId } = req.params;
+  const userId = req.user && req.user.id;
 
-  if (!bankId || !mongoose.Types.ObjectId.isValid(bankId)) {
-    return res.status(httpStatus.BAD_REQUEST).json({
-      message: 'Valid bankId is required',
-    });
+  if (!userId) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Unauthorized');
   }
 
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    return res.status(httpStatus.UNAUTHORIZED).json({
-      message: 'Authentication required',
-    });
-  }
-
-  const member = await QuestionBankMember.findOne({
+  const membership = await QuestionBankMember.findOne({
     bankId,
     userId,
     status: 'active',
   });
 
-  if (!member) {
-    return res.status(httpStatus.FORBIDDEN).json({
-      message: 'You do not have access to this question bank',
-    });
+  if (!membership) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You do not have access to this bank');
   }
 
-  return next();
+  req.membership = membership;
+  next();
 };
 
-module.exports = {
-  checkBankAccess,
+const requireBankRole = (roles) => (req, res, next) => {
+  if (!req.membership || !roles.includes(req.membership.role)) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Insufficient bank permissions');
+  }
+  next();
 };
+
+module.exports = { checkBankAccess, requireBankRole };
