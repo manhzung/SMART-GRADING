@@ -120,14 +120,14 @@ export default function ExamsPage() {
   const getStatusDetails = (status: string) => {
     switch (status) {
       case 'draft':
-        return { text: 'Nháp', class: styles.draftBadge };
+        return { text: 'Draft', class: styles.draftBadge };
       case 'in_progress':
-        return { text: 'Đang thi', class: styles.inProgressBadge };
+        return { text: 'In Progress', class: styles.inProgressBadge };
       case 'completed':
-        return { text: 'Hoàn thành', class: styles.completedBadge };
+        return { text: 'Completed', class: styles.completedBadge };
       case 'published':
       default:
-        return { text: 'Đã xuất bản', class: styles.publishedBadge };
+        return { text: 'Published', class: styles.publishedBadge };
     }
   };
 
@@ -144,12 +144,12 @@ export default function ExamsPage() {
       <div className={styles.header}>
         <div className={styles.headerInfo}>
           <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
-          <h1 className={styles.title}>Quản lý bài thi</h1>
-          <p className={styles.subtitle}>Tạo đề thi mới, cấu hình đáp án và theo dõi quá trình chấm thi</p>
+          <h1 className={styles.title}>Exam Management</h1>
+          <p className={styles.subtitle}>Create new exams, configure answer keys and track grading progress</p>
         </div>
         <button className={styles.createBtn} onClick={handleCreateBtnClick}>
           <Plus size={16} />
-          <span>Tạo bài thi mới</span>
+          <span>Create New Exam</span>
         </button>
       </div>
 
@@ -163,7 +163,7 @@ export default function ExamsPage() {
               onClick={() => setShowClassDropdown(!showClassDropdown)}
             >
               <GraduationCap size={16} className={styles.btnIconLeft} />
-              <span>{selectedClass === 'all' ? 'Tất cả lớp' : `Lớp: ${selectedClass}`}</span>
+              <span>{selectedClass === 'all' ? 'All Classes' : `Class: ${selectedClass}`}</span>
               <ChevronDown size={14} className={styles.btnChevron} />
             </button>
             {showClassDropdown && (
@@ -172,7 +172,7 @@ export default function ExamsPage() {
                   className={`${styles.dropdownItem} ${selectedClass === 'all' ? styles.dropdownItemActive : ''}`}
                   onClick={() => { setSelectedClass('all'); setShowClassDropdown(false); setCurrentPage(1); }}
                 >
-                  Tất cả lớp
+                  All Classes
                 </button>
                 {classes.map((classItem) => (
                   <button 
@@ -180,7 +180,7 @@ export default function ExamsPage() {
                     className={`${styles.dropdownItem} ${selectedClass === classItem.name ? styles.dropdownItemActive : ''}`}
                     onClick={() => { setSelectedClass(classItem.name); setShowClassDropdown(false); setCurrentPage(1); }}
                   >
-                    Lớp {classItem.name}
+                    Class {classItem.name}
                   </button>
                 ))}
               </div>
@@ -196,14 +196,14 @@ export default function ExamsPage() {
               <SlidersHorizontal size={14} className={styles.btnIconLeft} />
               <span>
                 {selectedStatus === 'all' 
-                  ? 'Trạng thái' 
+                  ? 'Status' 
                   : selectedStatus === 'draft' 
-                    ? 'Nháp' 
+                    ? 'Draft' 
                     : selectedStatus === 'in_progress' 
-                      ? 'Đang thi' 
+                      ? 'In Progress' 
                       : selectedStatus === 'completed' 
-                        ? 'Hoàn thành' 
-                        : 'Đã xuất bản'}
+                        ? 'Completed' 
+                        : 'Published'}
               </span>
               <ChevronDown size={14} className={styles.btnChevron} />
             </button>
@@ -213,31 +213,31 @@ export default function ExamsPage() {
                   className={`${styles.dropdownItem} ${selectedStatus === 'all' ? styles.dropdownItemActive : ''}`}
                   onClick={() => { setSelectedStatus('all'); setShowStatusDropdown(false); setCurrentPage(1); }}
                 >
-                  Tất cả trạng thái
+                  All Statuses
                 </button>
                 <button 
                   className={`${styles.dropdownItem} ${selectedStatus === 'draft' ? styles.dropdownItemActive : ''}`}
                   onClick={() => { setSelectedStatus('draft'); setShowStatusDropdown(false); setCurrentPage(1); }}
                 >
-                  Nháp
+                  Draft
                 </button>
                 <button 
                   className={`${styles.dropdownItem} ${selectedStatus === 'in_progress' ? styles.dropdownItemActive : ''}`}
                   onClick={() => { setSelectedStatus('in_progress'); setShowStatusDropdown(false); setCurrentPage(1); }}
                 >
-                  Đang thi
+                  In Progress
                 </button>
                 <button 
                   className={`${styles.dropdownItem} ${selectedStatus === 'completed' ? styles.dropdownItemActive : ''}`}
                   onClick={() => { setSelectedStatus('completed'); setShowStatusDropdown(false); setCurrentPage(1); }}
                 >
-                  Hoàn thành
+                  Completed
                 </button>
                 <button 
                   className={`${styles.dropdownItem} ${selectedStatus === 'published' ? styles.dropdownItemActive : ''}`}
                   onClick={() => { setSelectedStatus('published'); setShowStatusDropdown(false); setCurrentPage(1); }}
                 >
-                  Đã xuất bản
+                  Published
                 </button>
               </div>
             )}
@@ -265,7 +265,7 @@ export default function ExamsPage() {
         {/* Reset filters button */}
         <button className={styles.resetBtn} onClick={handleResetFilters}>
           <RotateCcw size={14} />
-          <span>Đặt lại</span>
+          <span>Reset</span>
         </button>
       </div>
 
@@ -282,22 +282,22 @@ export default function ExamsPage() {
                   onChange={(e) => handleSelectAll(e.target.checked)}
                 />
               </th>
-              <th>TÊN BÀI KIỂM TRA</th>
-              <th>LỚP</th>
-              <th>NGÀY THI</th>
-              <th>THỜI GIAN</th>
-              <th>SỐ CÂU</th>
-              <th>TRẠNG THÁI</th>
-              <th>PHIÊN BẢN</th>
-              <th>NỘP BÀI</th>
-              <th style={{ textAlign: 'center' }}>THAO TÁC</th>
+              <th>EXAM NAME</th>
+              <th>CLASS</th>
+              <th>DATE</th>
+              <th>DURATION</th>
+              <th>QUESTIONS</th>
+              <th>STATUS</th>
+              <th>VARIANTS</th>
+              <th>SUBMISSIONS</th>
+              <th style={{ textAlign: 'center' }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
             {currentItems.length === 0 ? (
               <tr>
                 <td colSpan={10} className={styles.emptyRow}>
-                  Chưa tìm thấy bài kiểm tra nào phù hợp
+                  No matching exams found
                 </td>
               </tr>
             ) : (
@@ -361,7 +361,7 @@ export default function ExamsPage() {
 
                     {/* Variants Count */}
                     <td>
-                      <span className={styles.textMedium}>{exam.variantsCount} đề</span>
+                      <span className={styles.textMedium}>{exam.variantsCount} variants</span>
                     </td>
 
                     {/* Submissions (progress bar or text) */}
@@ -379,12 +379,12 @@ export default function ExamsPage() {
                     {/* Direct Actions (Eye & Pencil) */}
                     <td>
                       <div className={styles.directActionsWrapper}>
-                        <Link to={`/exams/${exam._id}`} className={styles.directActionBtn} title="Xem chi tiết">
+                        <Link to={`/exams/${exam._id}`} className={styles.directActionBtn} title="View details">
                           <Eye size={16} />
                         </Link>
                         <button 
                           className={styles.directActionBtn} 
-                          title="Chỉnh sửa"
+                          title="Edit"
                           onClick={() => navigate(`/exams/${exam._id}/edit`)}
                         >
                           <Edit size={15} />
@@ -403,12 +403,12 @@ export default function ExamsPage() {
       <div className={styles.paginationRow}>
         <div className={styles.paginationLeft}>
           {totalItems === 0
-            ? 'Không có bản ghi nào'
-            : `Hiển thị ${indexOfFirstItem + 1} - ${Math.min(indexOfLastItem, totalItems)} trong tổng số ${totalItems} bản ghi`}
+            ? 'No records'
+            : `Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, totalItems)} of {totalItems} records`}
         </div>
         <div className={styles.paginationRight}>
           <div className={styles.pageSizeSelector}>
-            <span>Số dòng mỗi trang:</span>
+            <span>Rows per page:</span>
             <select 
               value={pageSize}
               onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
@@ -474,12 +474,12 @@ export default function ExamsPage() {
                   <div className={`${styles.dashboardIconWrapper} ${styles.blueIconBg}`}>
                     <ClipboardList size={18} />
                   </div>
-                  <span className={styles.dashboardTimeText}>Hôm nay</span>
+                  <span className={styles.dashboardTimeText}>Today</span>
                 </div>
                 <div className={styles.dashboardCardContent}>
                   <span className={styles.dashboardLabel}>ĐANG DIỄN RA</span>
                   <h2 className={styles.dashboardLargeValue}>{inProgressCount}</h2>
-                  <p className={styles.dashboardSubtext}>Bài thi đang diễn ra</p>
+                  <p className={styles.dashboardSubtext}>Exam ongoing</p>
                 </div>
               </div>
 
@@ -489,12 +489,12 @@ export default function ExamsPage() {
                   <div className={`${styles.dashboardIconWrapper} ${styles.greenIconBg}`}>
                     <CheckCircle size={18} />
                   </div>
-                  <span className={styles.dashboardTimeText}>Tháng này</span>
+                  <span className={styles.dashboardTimeText}>This Month</span>
                 </div>
                 <div className={styles.dashboardCardContent}>
                   <span className={styles.dashboardLabel}>HOÀN THÀNH</span>
                   <h2 className={styles.dashboardLargeValue}>{completedCount}</h2>
-                  <p className={styles.dashboardSubtext}>Tổng bài thi đã hoàn thành</p>
+                  <p className={styles.dashboardSubtext}>Total completed exams</p>
                 </div>
               </div>
 
@@ -504,12 +504,12 @@ export default function ExamsPage() {
                   <div className={`${styles.dashboardIconWrapper} ${styles.navyIconBg}`}>
                     <FileText size={18} />
                   </div>
-                  <span className={styles.dashboardTimeText}>Kho lưu trữ</span>
+                  <span className={styles.dashboardTimeText}>Archives</span>
                 </div>
                 <div className={styles.dashboardCardContent}>
                   <span className={styles.dashboardLabel}>BẢN NHÁP</span>
                   <h2 className={styles.dashboardLargeValue}>{draftCount}</h2>
-                  <p className={styles.dashboardSubtext}>Đang chờ hoàn thiện</p>
+                  <p className={styles.dashboardSubtext}>Awaiting completion</p>
                 </div>
               </div>
             </>

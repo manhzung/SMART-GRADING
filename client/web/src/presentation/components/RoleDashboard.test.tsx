@@ -40,7 +40,7 @@ describe('RoleDashboard', () => {
         <RoleDashboard />
       </MemoryRouter>,
     );
-    expect(await screen.findByText(/Tổng quan hệ thống/i)).toBeInTheDocument();
+    expect(await screen.findByText(/System Overview/i)).toBeInTheDocument();
     expect(await screen.findByText('12')).toBeInTheDocument();
     expect(await screen.findByText('200')).toBeInTheDocument();
   });

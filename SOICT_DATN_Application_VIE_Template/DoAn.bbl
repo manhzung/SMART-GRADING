@@ -17,27 +17,6 @@
 \endgroup
 
 \datalist[entry]{none/global//global/global/global}
-  \entry{adams2003omr}{article}{}{}
-    \name{author}{1}{}{%
-      {{hash=AJL}{%
-         family={Adams},
-         familyi={A\bibinitperiod},
-         given={James\bibnamedelima L.},
-         giveni={J\bibinitperiod\bibinitdelim L\bibinitperiod},
-      }}%
-    }
-    \strng{namehash}{AJL1}
-    \strng{fullhash}{AJL1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{number}{3}
-    \field{pages}{261\bibrangedash 276}
-    \field{title}{An Introduction to Optical Mark Recognition (OMR) Technology}
-    \field{volume}{31}
-    \field{journaltitle}{Journal of Educational Technology Systems}
-    \field{year}{2003}
-  \endentry
-
   \entry{bradski2000opencv}{article}{}{}
     \name{author}{1}{}{%
       {{hash=BG}{%
@@ -107,42 +86,14 @@
          familyi={A\bibinitperiod},
       }}%
     }
-    \strng{namehash}{A2}
-    \strng{fullhash}{A2}
+    \strng{namehash}{A1}
+    \strng{fullhash}{A1}
     \field{labelnamesource}{author}
     \field{labeltitlesource}{title}
     \field{howpublished}{\url{https://www.auto-multiple-choice.net/}}
     \field{note}{Truy cập: 28-06-2026}
     \field{title}{Auto Multiple Choice Documentation}
     \field{year}{2024}
-  \endentry
-
-  \entry{kopka2004latex}{book}{}{}
-    \name{author}{2}{}{%
-      {{hash=KH}{%
-         family={Kopka},
-         familyi={K\bibinitperiod},
-         given={Helmut},
-         giveni={H\bibinitperiod},
-      }}%
-      {{hash=DPW}{%
-         family={Daly},
-         familyi={D\bibinitperiod},
-         given={Patrick\bibnamedelima W.},
-         giveni={P\bibinitperiod\bibinitdelim W\bibinitperiod},
-      }}%
-    }
-    \list{publisher}{1}{%
-      {Pearson Addison-Wesley}%
-    }
-    \strng{namehash}{KHDPW1}
-    \strng{fullhash}{KHDPW1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{edition}{4}
-    \field{title}{A Guide to {\LaTeX}: Document Preparation for Beginners and
-  Advanced Users}
-    \field{year}{2004}
   \endentry
 
   \entry{nodejs}{misc}{}{}
@@ -178,25 +129,6 @@
     \field{title}{Express - Fast, unopinionated, minimalist web framework for
   Node.js}
     \field{year}{2024}
-  \endentry
-
-  \entry{rfc2616}{book}{}{}
-    \name{author}{1}{}{%
-      {{hash=I}{%
-         family={{IETF}},
-         familyi={I\bibinitperiod},
-      }}%
-    }
-    \list{publisher}{1}{%
-      {Internet Engineering Task Force}%
-    }
-    \strng{namehash}{I1}
-    \strng{fullhash}{I1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{note}{RFC 2616}
-    \field{title}{Hypertext Transfer Protocol -- HTTP/1.1}
-    \field{year}{1999}
   \endentry
 
   \entry{mvc}{misc}{}{}
@@ -436,199 +368,6 @@
     \field{note}{Truy cập: 28-06-2026}
     \field{title}{Cloudinary Documentation}
     \field{year}{2024}
-  \endentry
-
-  \entry{hovy1993automated}{article}{}{}
-    \name{author}{1}{}{%
-      {{hash=HEH}{%
-         family={Hovy},
-         familyi={H\bibinitperiod},
-         given={Eduard\bibnamedelima H},
-         giveni={E\bibinitperiod\bibinitdelim H\bibinitperiod},
-      }}%
-    }
-    \list{publisher}{1}{%
-      {Elsevier Science Publishers}%
-    }
-    \strng{namehash}{HEH1}
-    \strng{fullhash}{HEH1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{number}{1-2}
-    \field{pages}{341\bibrangedash 385}
-    \field{title}{Automated discourse generation using discourse structure
-  relations}
-    \field{volume}{63}
-    \field{journaltitle}{Artificial intelligence}
-    \field{year}{1993}
-  \endentry
-
-  \entry{peterson2007computer}{book}{}{}
-    \name{author}{2}{}{%
-      {{hash=PLL}{%
-         family={Peterson},
-         familyi={P\bibinitperiod},
-         given={Larry\bibnamedelima L},
-         giveni={L\bibinitperiod\bibinitdelim L\bibinitperiod},
-      }}%
-      {{hash=DBS}{%
-         family={Davie},
-         familyi={D\bibinitperiod},
-         given={Bruce\bibnamedelima S},
-         giveni={B\bibinitperiod\bibinitdelim S\bibinitperiod},
-      }}%
-    }
-    \list{publisher}{1}{%
-      {Elsevier}%
-    }
-    \strng{namehash}{PLLDBS1}
-    \strng{fullhash}{PLLDBS1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{title}{Computer networks: a systems approach}
-    \field{year}{2007}
-  \endentry
-
-  \entry{NguyenThucHai}{book}{}{}
-    \name{author}{1}{}{%
-      {{hash=HNT}{%
-         family={Hải},
-         familyi={H\bibinitperiod},
-         given={Nguyễn\bibnamedelima Thúc},
-         giveni={N\bibinitperiod\bibinitdelim T\bibinitperiod},
-      }}%
-    }
-    \list{publisher}{1}{%
-      {Nhà xuất bản giáo dục}%
-    }
-    \strng{namehash}{HNT1}
-    \strng{fullhash}{HNT1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{title}{Mạng máy tính và các hệ thống mở}
-    \field{year}{1999}
-  \endentry
-
-  \entry{poesio2001discourse}{inproceedings}{}{}
-    \name{author}{2}{}{%
-      {{hash=PM}{%
-         family={Poesio},
-         familyi={P\bibinitperiod},
-         given={Massimo},
-         giveni={M\bibinitperiod},
-      }}%
-      {{hash=DEB}{%
-         family={Di\bibnamedelima Eugenio},
-         familyi={D\bibinitperiod\bibinitdelim E\bibinitperiod},
-         given={Barbara},
-         giveni={B\bibinitperiod},
-      }}%
-    }
-    \strng{namehash}{PMDEB1}
-    \strng{fullhash}{PMDEB1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{booktitle}{{ESSLLI} workshop on information structure, discourse
-  structure and discourse semantics, Copenhagen, Denmark}
-    \field{pages}{129\bibrangedash 143}
-    \field{title}{Discourse structure and anaphoric accessibility}
-    \field{year}{2001}
-  \endentry
-
-  \entry{knott1996data}{thesis}{}{}
-    \name{author}{1}{}{%
-      {{hash=KA}{%
-         family={Knott},
-         familyi={K\bibinitperiod},
-         given={Alistair},
-         giveni={A\bibinitperiod},
-      }}%
-    }
-    \strng{namehash}{KA1}
-    \strng{fullhash}{KA1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{title}{A data-driven methodology for motivating a set of coherence
-  relations}
-    \list{institution}{1}{%
-      {The University of Edinburgh, {UK}}%
-    }
-    \field{type}{phdthesis}
-    \field{year}{1996}
-  \endentry
-
-  \entry{BernersTim}{misc}{}{}
-    \name{author}{1}{}{%
-      {{hash=BLT}{%
-         family={Berners-Lee},
-         familyi={B\bibinithyphendelim L\bibinitperiod},
-         given={Tim},
-         giveni={T\bibinitperiod},
-      }}%
-    }
-    \strng{namehash}{BLT1}
-    \strng{fullhash}{BLT1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{title}{Hypertext Transfer Protocol ({HTTP})}
-    \verb{url}
-    \verb ftp:/info.cern.ch/pub/www/doc/http-spec.txt.Z
-    \endverb
-    \field{urlday}{30}
-    \field{urlmonth}{09}
-    \field{urlyear}{2010}
-  \endentry
-
-  \entry{LectureA}{misc}{}{}
-    \name{author}{1}{}{%
-      {{hash=P}{%
-         family={{Princeton University}},
-         familyi={P\bibinitperiod},
-      }}%
-    }
-    \strng{namehash}{P3}
-    \strng{fullhash}{P3}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{title}{WordNet}
-    \verb{url}
-    \verb http://www.cogsci.princeton.edu/~wn/index.shtml
-    \endverb
-    \field{urlday}{30}
-    \field{urlmonth}{09}
-    \field{urlyear}{2010}
-  \endentry
-
-  \entry{scott2013sdn}{misc}{}{}
-    \name{author}{1}{}{%
-      {{hash=S}{%
-         family={{Scott, James}},
-         familyi={S\bibinitperiod},
-      }}%
-    }
-    \strng{namehash}{S1}
-    \strng{fullhash}{S1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{howpublished}{\url{https://www.example.com/sdn}}
-    \field{title}{Software-Defined Networking}
-    \field{year}{2013}
-  \endentry
-
-  \entry{ashton2009internet}{misc}{}{}
-    \name{author}{1}{}{%
-      {{hash=A}{%
-         family={{Ashton, Kevin}},
-         familyi={A\bibinitperiod},
-      }}%
-    }
-    \strng{namehash}{A1}
-    \strng{fullhash}{A1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{howpublished}{\url{https://www.example.com/iot}}
-    \field{title}{That 'Internet of Things' Thing}
-    \field{year}{2009}
   \endentry
 \enddatalist
 \endinput

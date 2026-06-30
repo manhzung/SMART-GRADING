@@ -1,4 +1,4 @@
-\documentclass[../DoAn.tex]{subfiles}
+﻿\documentclass[../DoAn.tex]{subfiles}
 \pagenumbering{gobble}
 \begin{document}
 
@@ -7,26 +7,17 @@
 \end{center}
 \vspace{1cm}
 
-Trong bối cảnh các kỳ thi trắc nghiệm quy mô lớn ngày càng phổ biến tại các trường phổ thông và đại học, việc chấm thi thủ công trên phiếu điền tay vẫn tồn tại nhiều hạn chế như tốn thời gian, dễ sai sót, thiếu tính minh bạch và khó khăn trong việc thống kê, phân tích kết quả. Một số giải pháp chấm thi tự động hiện có thường phụ thuộc vào phần cứng máy quét chuyên dụng đắt tiền, hoặc chỉ giải quyết được một phần quy trình như tạo đề hay nhận dạng phiếu trả lời mà chưa cung cấp một hệ thống tích hợp đầy đủ từ quản lý ngân hàng câu hỏi, trộn đề, chấm thi bằng nhận dạng OMR trên thiết bị di động, đến xử lý phúc khảo và báo cáo thống kê.
+Trong bối cảnh các kỳ thi trắc nghiệm quy mô lớn ngày càng phổ biến tại các trường phổ thông và đại học, việc chấm thi thủ công trên phiếu điền tay vẫn tồn tại nhiều hạn chế như tốn thời gian, dễ sai sót, thiếu tính minh bạch và khó khăn trong việc thống kê, phân tích kết quả. Một số giải pháp chấm thi tự động hiện có thường phụ thuộc vào phần cứng máy quét chuyên dụng đắt tiền, hoặc chỉ giải quyết được một phần quy trình như tạo đề hay nhận dạng phiếu trả lời mà chưa cung cấp một hệ thống tích hợp đầy đủ từ quản lý ngân hàng câu hỏi, trộn đề, chấm thi bằng nhận dạng OMR trên thiết bị di động, đến xử lý phúc tra và báo cáo thống kê.
 
-Đồ án lựa chọn hướng tiếp cận xây dựng một hệ thống chấm thi trắc nghiệm thông minh đa nền tảng, tích hợp nhận dạng OMR trên thiết bị di động, tự động tạo nhiều phiên bản đề thi từ ngân hàng câu hỏi, hỗ trợ quy trình phúc khảo minh bạch và cung cấp các báo cáo thống kê chi tiết cho giáo viên và quản trị viên. Hệ thống sử dụng kiến trúc ba tầng gồm backend Node.js/Express với cơ sở dữ liệu MongoDB, ứng dụng di động Flutter cho thầy cô sử dụng máy ảnh thiết bị để quét và chấm bài, giao diện web React cho quản lý và thống kê, kết hợp gói LaTeX AMC (Auto-Multiple-Choice) để tự động sinh đề thi và phiếu trả lời.
+Đồ án lựa chọn hướng tiếp cận xây dựng một hệ thống chấm thi trắc nghiệm thông minh đa nền tảng, tích hợp nhận dạng OMR trên thiết bị di động, tự động tạo nhiều phiên bản đề thi từ ngân hàng câu hỏi, hỗ trợ quy trình phúc tra minh bạch và cung cấp các báo cáo thống kê chi tiết cho giáo viên và quản trị viên. Hệ thống sử dụng kiến trúc ba tầng gồm backend Node.js/Express với cơ sở dữ liệu MongoDB, ứng dụng di động Flutter cho thầy cô sử dụng máy ảnh thiết bị để quét và chấm bài, giao diện web React cho quản lý và thống kê, kết hợp gói LaTeX AMC (Auto-Multiple-Choice) để tự động sinh đề thi và phiếu trả lời. Đồng thời, hệ thống tích hợp các mô hình trí tuệ nhân tạo sinh câu hỏi từ Gemini, OpenAI và Claude nhằm hỗ trợ giáo viên trong khâu xây dựng ngân hàng câu hỏi.
 
-Kết quả chính của đồ án là hệ thống Smart Grading đã được xây dựng hoàn chỉnh với các chức năng:
-\begin{itemize}
-    \item quản lý trường học, lớp học, giáo viên và học sinh;
-    \item quản lý ngân hàng câu hỏi và đề thi có hỗ trợ tạo câu hỏi bằng trí tuệ nhân tạo (Gemini, OpenAI, Claude);
-    \item tự động trộn đề thi thành nhiều phiên bản khác nhau thông qua AMC và tạo phiếu OMR tương ứng;
-    \item chấm thi tự động bằng nhận dạng OMR trên thiết bị di động với độ chính xác cao, có khả năng phát hiện lỗi tô nhầm, tô nhẹ và hỗ trợ chỉnh sửa thủ công;
-    \item quy trình tạo đơn phúc khảo và phản hồi phúc khảo minh bạch với thông báo thời gian thực;
-    \item hệ thống báo cáo và thống kê chi tiết cho từng bài kiểm tra.
-\end{itemize}
-Hệ thống đã được triển khai thử nghiệm tại hai lớp học với khoảng 60 học sinh trong bốn tuần, xử lý thành công 5 bài kiểm tra và khoảng 300 bài làm, đạt độ chính xác OMR trung bình 96,2\% và thời gian phản hồi API trung bình 180ms.
+Kết quả chính của đồ án là hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR đã được xây dựng hoàn chỉnh với các chức năng quản lý trường học, lớp học, giáo viên và học sinh; quản lý ngân hàng câu hỏi và đề thi có hỗ trợ tạo câu hỏi bằng trí tuệ nhân tạo; tự động trộn đề thi thành nhiều phiên bản khác nhau thông qua AMC kèm tọa độ nhận dạng chính xác; chấm thi tự động bằng nhận dạng OMR trên thiết bị di động với độ chính xác cao, có khả năng phát hiện lỗi tô nhầm, tô nhẹ và hỗ trợ chỉnh sửa thủ công; quy trình tạo đơn phúc tra và phản hồi phúc tra minh bạch với thông báo thời gian thực; cùng với hệ thống báo cáo và thống kê chi tiết cho từng bài kiểm tra. Hệ thống đã được triển khai thử nghiệm tại hai lớp học với khoảng 60 học sinh trong bốn tuần, xử lý thành công 5 bài kiểm tra và khoảng 300 bài làm, đạt độ chính xác OMR trung bình 96,2\% và thời gian phản hồi API trung bình 180ms.
 
 \begin{flushright}
 Sinh viên thực hiện\\
 \begin{tabular}{@{}c@{}}
 \textit{(Ký và ghi rõ họ tên)}\\
-NGUYỄN VĂN ABC
+ĐINH MẠNH DŨNG
 \end{tabular}
 \end{flushright}
 

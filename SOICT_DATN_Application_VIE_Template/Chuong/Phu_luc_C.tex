@@ -1,0 +1,501 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\section{Lớp AppealService (Backend -- Node.js)}
+\label{appendix:appeal_service}
+
+\subparagraph{Vị trí.} Gói \texttt{services/}, tầng Business Logic.
+
+\subparagraph{Mô tả.} AppealService quản lý toàn bộ quy trình phúc khảo từ khi học sinh gửi yêu cầu đến khi giáo viên xem xét và cập nhật kết quả. Lớp kiểm tra tính hợp lệ của yêu cầu, cập nhật trạng thái và gửi thông báo đến học sinh khi có kết quả.
+
+\subparagraph{Các thuộc tính.} Bảng C.1 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+appealModel & AppealModel & Model phúc khảo, quản lý dữ liệu yêu cầu phúc khảo trong MongoDB \\ \hline
+submissionService & SubmissionService & Service bài nộp, dùng để ghi đè đáp án khi phúc khảo được chấp nhận \\ \hline
+notificationService & NotificationService & Service thông báo, dùng để gửi thông báo kết quả phúc khảo đến học sinh \\ \hline
+userModel & UserModel & Model người dùng để tra cứu thông tin học sinh và giáo viên \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp AppealService}
+\label{table:appeal_service_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.2 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+create & userId, data & Promise\textless Appeal\textgreater & Tạo yêu cầu phúc khảo mới từ dữ liệu của học sinh \\ \hline
+findById & id: string & Promise\textless Appeal\textgreater & Tìm yêu cầu phúc khảo theo ID \\ \hline
+findByStudent & studentId, filters & Promise\textless Appeal[]\textgreater & Tìm tất cả yêu cầu phúc khảo của một học sinh, có hỗ trợ lọc \\ \hline
+findByExam & examId, filters & Promise\textless Appeal[]\textgreater & Tìm tất cả yêu cầu phúc khảo của một đề thi, có hỗ trợ lọc \\ \hline
+findPending & filters & Promise\textless Appeal[]\textgreater & Tìm các yêu cầu phúc khảo đang trong trạng thái chờ xử lý \\ \hline
+review & id, reviewData & Promise\textless Appeal\textgreater & Giáo viên xem xét và phê duyệt yêu cầu phúc khảo \\ \hline
+reject & id, reason & Promise\textless Appeal\textgreater & Từ chối yêu cầu phúc khảo với lý do cụ thể \\ \hline
+cancel & id, userId & Promise\textless Appeal\textgreater & Học sinh hủy yêu cầu phúc khảo của mình \\ \hline
+getStatistics & examId: string & Promise\textless AppealStatistics\textgreater & Lấy thống kê phúc khảo của một đề thi \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp AppealService}
+\label{table:appeal_service_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} AppealService có composition với AppealModel (tạo, lưu và truy vấn yêu cầu phúc khảo), dependency với SubmissionService (gọi phương thức overrideAnswer khi phúc khảo được chấp nhận), dependency với NotificationService (gửi thông báo cho học sinh khi có kết quả), và sử dụng UserModel để tra cứu thông tin người dùng.
+
+\vspace{0.3cm}
+
+\section{Lớp NotificationService (Backend -- Node.js)}
+\label{appendix:notification_service}
+
+\subparagraph{Vị trí.} Gói \texttt{services/}, tầng Business Logic.
+
+\subparagraph{Mô tả.} NotificationService quản lý việc gửi thông báo đến người dùng qua nhiều kênh: email, in-app notification và push notification. Lớp đồng thời quản lý trạng thái đọc/chưa đọc của thông báo trong hệ thống.
+
+\subparagraph{Các thuộc tính.} Bảng C.3 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+notificationModel & NotificationModel & Model thông báo, quản lý dữ liệu thông báo trong MongoDB \\ \hline
+emailService & EmailService & Service gửi email, dùng để gửi thông báo qua hộp thư điện tử \\ \hline
+pushService & PushService & Service push notification, dùng để gửi thông báo đến thiết bị di động \\ \hline
+userModel & UserModel & Model người dùng để tra cứu thông tin và kênh liên lạc của người nhận \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp NotificationService}
+\label{table:notification_service_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.4 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+send & notification & Promise\textless Notification\textgreater & Gửi thông báo đơn lẻ đến một người dùng \\ \hline
+sendScoreNotification & submission & Promise\textless void\textgreater & Gửi thông báo điểm số khi bài thi được chấm xong \\ \hline
+sendBulkNotifications & userIds, notification & Promise\textless void\textgreater & Gửi thông báo đến nhiều người dùng cùng lúc \\ \hline
+sendToRole & role, notification & Promise\textless void\textgreater & Gửi thông báo đến tất cả người dùng có vai trò cụ thể \\ \hline
+markAsRead & notificationId, userId & Promise\textless Notification\textgreater & Đánh dấu một thông báo là đã đọc \\ \hline
+markAllAsRead & userId: string & Promise\textless void\textgreater & Đánh dấu tất cả thông báo của một người dùng là đã đọc \\ \hline
+getUnread & userId: string & Promise\textless Notification[]\textgreater & Lấy danh sách thông báo chưa đọc của người dùng \\ \hline
+getAll & userId, filters & Promise\textless Notification[]\textgreater & Lấy tất cả thông báo của người dùng, có hỗ trợ lọc \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp NotificationService}
+\label{table:notification_service_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} NotificationService có composition với NotificationModel (lưu trữ và truy vấn thông báo), dependency với EmailService (gửi thông báo qua email), dependency với PushService (gửi push notification), và sử dụng UserModel để tra cứu thông tin người nhận.
+
+\vspace{0.3cm}
+
+\section{Lớp AuthService (Backend -- Node.js)}
+\label{appendix:auth_service}
+
+\subparagraph{Vị trí.} Gói \texttt{services/}, tầng Business Logic.
+
+\subparagraph{Mô tả.} AuthService quản lý xác thực và phân quyền người dùng, bao gồm đăng ký, đăng nhập, đăng xuất, quản lý token, xác thực email và quản lý mật khẩu. Lớp sử dụng JWT để tạo và xác thực access token, đồng thời dùng bcrypt để mã hóa mật khẩu.
+
+\subparagraph{Các thuộc tính.} Bảng C.5 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+userModel & UserModel & Model người dùng để quản lý tài khoản trong MongoDB \\ \hline
+schoolModel & SchoolModel & Model trường học để xác thực và gán trường cho tài khoản mới \\ \hline
+emailService & EmailService & Service gửi email để xác thực tài khoản và đặt lại mật khẩu \\ \hline
+jwtService & JwtService & Service JWT để tạo và xác thực access/refresh token \\ \hline
+bcrypt & BcryptService & Service mã hóa mật khẩu bằng thuật toán bcrypt \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp AuthService}
+\label{table:auth_service_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.6 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+register & data & Promise\textless User\textgreater & Đăng ký tài khoản mới với thông tin người dùng \\ \hline
+login & email, password & Promise\textless AuthResult\textgreater & Đăng nhập, trả về access token và refresh token \\ \hline
+logout & userId, token & Promise\textless void\textgreater & Đăng xuất, vô hiệu hóa token hiện tại \\ \hline
+refreshToken & refreshToken & Promise\textless AuthResult\textgreater & Làm mới access token bằng refresh token \\ \hline
+verifyEmail & token: string & Promise\textless User\textgreater & Xác thực email bằng token gửi qua mail \\ \hline
+forgotPassword & email: string & Promise\textless void\textgreater & Gửi email đặt lại mật khẩu đến người dùng \\ \hline
+resetPassword & token, newPassword & Promise\textless User\textgreater & Đặt lại mật khẩu mới sau khi xác thực token \\ \hline
+changePassword & userId, oldPassword, newPassword & Promise\textless User\textgreater & Đổi mật khẩu với xác thực mật khẩu cũ \\ \hline
+updateProfile & userId, data & Promise\textless User\textgreater & Cập nhật thông tin cá nhân của người dùng \\ \hline
+getProfile & userId: string & Promise\textless User\textgreater & Lấy thông tin cá nhân của người dùng \\ \hline
+validateToken & token: string & Promise\textless TokenPayload\textgreater & Kiểm tra tính hợp lệ của access token \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp AuthService}
+\label{table:auth_service_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} AuthService có composition với UserModel (quản lý tài khoản người dùng), dependency với JwtService (tạo và xác thực token), dependency với BcryptService (mã hóa và so sánh mật khẩu), dependency với EmailService (gửi email xác thực và khôi phục), và sử dụng SchoolModel để xác thực trường học.
+
+\vspace{0.3cm}
+
+\section{Lớp ClassService (Backend -- Node.js)}
+\label{appendix:class_service}
+
+\subparagraph{Vị trí.} Gói \texttt{services/}, tầng Business Logic.
+
+\subparagraph{Mô tả.} ClassService quản lý các lớp học trong hệ thống, bao gồm tạo lớp, thêm học sinh, phân công giáo viên chủ nhiệm và giáo viên bộ môn, cũng như quản lý danh sách lớp theo trường học.
+
+\subparagraph{Các thuộc tính.} Bảng C.7 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+classModel & ClassModel & Model lớp học, quản lý dữ liệu lớp trong MongoDB \\ \hline
+userModel & UserModel & Model người dùng để tra cứu và quản lý học sinh, giáo viên \\ \hline
+subjectModel & SubjectModel & Model môn học để liên kết lớp với các môn giảng dạy \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp ClassService}
+\label{table:class_service_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.8 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+create & userId, data & Promise\textless Class\textgreater & Tạo lớp học mới với thông tin cơ bản \\ \hline
+findById & id: string & Promise\textless Class\textgreater & Tìm lớp học theo ID \\ \hline
+findBySchool & schoolId, filters & Promise\textless Class[]\textgreater & Tìm tất cả lớp học thuộc một trường, có hỗ trợ lọc \\ \hline
+findByTeacher & teacherId: string & Promise\textless Class[]\textgreater & Tìm các lớp mà một giáo viên được phân công \\ \hline
+findByStudent & studentId: string & Promise\textless Class[]\textgreater & Tìm các lớp mà một học sinh tham gia \\ \hline
+update & id, data & Promise\textless Class\textgreater & Cập nhật thông tin lớp học \\ \hline
+delete & id: string & Promise\textless void\textgreater & Xóa lớp học khỏi hệ thống \\ \hline
+addStudents & classId, studentIds & Promise\textless Class\textgreater & Thêm danh sách học sinh vào lớp \\ \hline
+removeStudents & classId, studentIds & Promise\textless Class\textgreater & Xóa danh sách học sinh khỏi lớp \\ \hline
+setHomeroomTeacher & classId, teacherId & Promise\textless Class\textgreater & Đặt giáo viên chủ nhiệm cho lớp \\ \hline
+assignSubjectTeachers & classId, assignments & Promise\textless Class\textgreater & Phân công giáo viên bộ môn cho lớp \\ \hline
+getStudents & classId: string & Promise\textless User[]\textgreater & Lấy danh sách học sinh trong lớp \\ \hline
+getTeachers & classId: string & Promise\textless User[]\textgreater & Lấy danh sách giáo viên phụ trách lớp \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp ClassService}
+\label{table:class_service_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} ClassService có composition với ClassModel (tạo, lưu và truy vấn lớp học), dependency với UserModel (quản lý học sinh và giáo viên trong lớp), và dependency với SubjectModel (liên kết môn học với lớp học).
+
+\vspace{0.3cm}
+
+\section{Lớp AuthStore (Frontend -- React/Zustand)}
+\label{appendix:auth_store}
+
+\subparagraph{Vị trí.} Gói \texttt{stores/}, tầng State Management.
+
+\subparagraph{Mô tả.} AuthStore quản lý trạng thái xác thực trên ứng dụng web sử dụng Zustand, bao gồm thông tin user, token, trạng thái đăng nhập và các action đăng nhập, đăng xuất, quản lý token. Store lưu trữ token trong localStorage để duy trì đăng nhập khi reload trang.
+
+\subparagraph{Các thuộc tính.} Bảng C.9 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+user & User \textbar{} null & Thông tin người dùng hiện tại đã đăng nhập \\ \hline
+token & string \textbar{} null & Access token JWT dùng để xác thực API \\ \hline
+refreshToken & string \textbar{} null & Refresh token dùng để làm mới access token \\ \hline
+isAuthenticated & boolean & Trạng thái đăng nhập, true khi có token hợp lệ \\ \hline
+isLoading & boolean & Trạng thái loading khi đang xử lý đăng nhập hoặc đăng ký \\ \hline
+error & string \textbar{} null & Thông báo lỗi từ quá trình xác thực \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp AuthStore}
+\label{table:auth_store_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.10 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+login & email, password & Promise\textless void\textgreater & Đăng nhập với email và mật khẩu, lưu token vào store \\ \hline
+register & data & Promise\textless void\textgreater & Đăng ký tài khoản mới với thông tin người dùng \\ \hline
+logout & -- & void & Đăng xuất, xóa token và thông tin người dùng khỏi store \\ \hline
+refreshToken & -- & Promise\textless void\textgreater & Làm mới access token bằng refresh token \\ \hline
+updateProfile & data & Promise\textless void\textgreater & Cập nhật thông tin cá nhân của người dùng \\ \hline
+changePassword & oldPassword, newPassword & Promise\textless void\textgreater & Đổi mật khẩu với xác thực mật khẩu cũ \\ \hline
+forgotPassword & email & Promise\textless void\textgreater & Gửi yêu cầu khôi phục mật khẩu qua email \\ \hline
+resetPassword & token, newPassword & Promise\textless void\textgreater & Đặt lại mật khẩu mới sau khi xác thực token \\ \hline
+verifyEmail & token & Promise\textless void\textgreater & Xác thực email bằng token từ đường dẫn trong email \\ \hline
+initialize & -- & Promise\textless void\textgreater & Khởi tạo store từ localStorage khi ứng dụng khởi động \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp AuthStore}
+\label{table:auth_store_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} AuthStore sử dụng ApiService để gọi các API xác thực (login, register, logout, refreshToken, verifyEmail, forgotPassword, resetPassword, changePassword, updateProfile) và lưu trữ thông tin user cùng token vào localStorage.
+
+\vspace{0.3cm}
+
+\section{Lớp SubmissionStore (Frontend -- React/Zustand)}
+\label{appendix:submission_store}
+
+\subparagraph{Vị trí.} Gói \texttt{stores/}, tầng State Management.
+
+\subparagraph{Mô tả.} SubmissionStore quản lý trạng thái liên quan đến bài nộp và kết quả thi trên ứng dụng web. Store cung cấp các phương thức để lấy danh sách bài nộp, xem chi tiết bài nộp, lấy điểm theo đề thi và cập nhật điểm thủ công.
+
+\subparagraph{Các thuộc tính.} Bảng C.11 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+submissions & Submission[] & Danh sách bài nộp đã được tải từ server \\ \hline
+currentSubmission & Submission \textbar{} null & Bài nộp đang được xem chi tiết \\ \hline
+examScores & Map & Dữ liệu điểm theo đề thi, key là examId \\ \hline
+isLoading & boolean & Trạng thái loading khi đang tải dữ liệu \\ \hline
+error & string \textbar{} null & Thông báo lỗi khi tải dữ liệu thất bại \\ \hline
+filters & SubmissionFilters & Bộ lọc hiện tại để tìm kiếm và phân trang bài nộp \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp SubmissionStore}
+\label{table:submission_store_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.12 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+fetchSubmissions & filters & Promise\textless void\textgreater & Lấy danh sách bài nộp với bộ lọc tùy chọn \\ \hline
+fetchSubmissionById & id & Promise\textless void\textgreater & Lấy chi tiết một bài nộp theo ID \\ \hline
+fetchMySubmissions & -- & Promise\textless void\textgreater & Lấy tất cả bài nộp của người dùng hiện tại \\ \hline
+fetchExamScores & examId & Promise\textless ExamScoreData\textgreater & Lấy điểm và thống kê của một đề thi \\ \hline
+getStatistics & examId & Promise\textless ExamStatistics\textgreater & Lấy thống kê điểm của một đề thi \\ \hline
+updateScore & submissionId, score & Promise\textless Submission\textgreater & Cập nhật điểm thủ công cho một bài nộp \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp SubmissionStore}
+\label{table:submission_store_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} SubmissionStore sử dụng ApiService để gọi các API liên quan đến bài nộp (GET submissions, GET submissions/:id, GET exam-scores, GET statistics, PUT submissions/:id/score). Store quản lý các model Submission, ExamScoreData và ExamStatistics.
+
+\vspace{0.3cm}
+
+\section{Lớp ImageProcessor (Mobile -- Flutter)}
+\label{appendix:image_processor}
+
+\subparagraph{Vị trí.} Gói \texttt{engine/}, tầng Business Logic.
+
+\subparagraph{Mô tả.} ImageProcessor thực hiện các phép biến đổi trên ảnh đầu vào để chuẩn bị cho việc nhận diện OMR. Lớp cung cấp các phương thức để tăng tương phản, áp dụng ngưỡng nhị phân, xoay, cắt, chống nghiêng, chuyển đổi grayscale và lọc nhiễu.
+
+\subparagraph{Các thuộc tính.} Bảng C.13 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+imageLib & ImageProcessingLib & Thư viện xử lý ảnh (OpenCV/Dart) dùng để thực hiện các phép biến đổi trên ảnh \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp ImageProcessor}
+\label{table:image_processor_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.14 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+preprocess & raw: Uint8List & ProcessedImage & Tiền xử lý đầy đủ bao gồm grayscale, tăng tương phản và áp dụng ngưỡng \\ \hline
+enhanceContrast & image, factor & Uint8List & Tăng độ tương phản của ảnh theo hệ số cho trước \\ \hline
+applyThreshold & image, method & Uint8List & Áp dụng ngưỡng nhị phân với phương pháp: Simple, Otsu, Adaptive Mean, Adaptive Gaussian \\ \hline
+rotate & image, angle & Uint8List & Xoay ảnh theo góc (đơn vị độ) cho trước \\ \hline
+resize & image, width, height & Uint8List & Thay đổi kích thước ảnh về chiều rộng và chiều cao chỉ định \\ \hline
+crop & image, rect & Uint8List & Cắt vùng ảnh theo hình chữ nhật rect từ ảnh gốc \\ \hline
+deskew & image: Uint8List & Uint8List & Chống nghiêng tự động bằng cách phát hiện và xoay ảnh về góc ngang \\ \hline
+convertToGrayscale & image & Uint8List & Chuyển ảnh màu sang ảnh xám (grayscale) \\ \hline
+removeNoise & image & Uint8List & Lọc nhiễu khỏi ảnh bằng các bộ lọc như Gaussian blur \\ \hline
+detectSkewAngle & image & double & Phát hiện góc nghiêng của ảnh và trả về giá trị góc (đơn vị độ) \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp ImageProcessor}
+\label{table:image_processor_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} ImageProcessor sử dụng ImageProcessingLib để thực hiện các phép biến đổi trên ảnh. Lớp sản sinh và trả về đối tượng ProcessedImage chứa dữ liệu ảnh đã xử lý cùng các thông tin metadata (width, height, format, processingSteps).
+
+\vspace{0.3cm}
+
+\section{Lớp BubbleDetector (Mobile -- Flutter)}
+\label{appendix:bubble_detector}
+
+\subparagraph{Vị trí.} Gói \texttt{engine/}, tầng Business Logic.
+
+\subparagraph{Mô tả.} BubbleDetector phát hiện và phân loại các bong bóng (vùng tròn được tô đậm) trên ảnh phiếu trả lời OMR. Lớp tìm các đường viền trong ảnh, lọc theo diện tích để xác định vùng bong bóng, tính tỷ lệ tô đầy (fill ratio) và xác định bong bóng nào đã được tô.
+
+\subparagraph{Các thuộc tính.} Bảng C.15 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+minBubbleArea & double & Diện tích tối thiểu của bong bóng để được coi là vùng tô trả lời \\ \hline
+maxBubbleArea & double & Diện tích tối đa của bong bóng để tránh nhầm với các vùng lớn hơn \\ \hline
+fillThreshold & double & Ngưỡng fill ratio (từ 0 đến 1) để xác định bong bóng đã được tô đầy \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp BubbleDetector}
+\label{table:bubble_detector_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.16 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+detect & image & List\textless Bubble\textgreater & Phát hiện tất cả bong bóng trong ảnh, trả về danh sách đối tượng Bubble \\ \hline
+findContours & image & List\textless Contour\textgreater & Tìm tất cả đường viền (contour) trong ảnh đã xử lý \\ \hline
+filterByArea & contours, minArea, maxArea & List\textless Contour\textgreater & Lọc các contour theo ngưỡng diện tích tối thiểu và tối đa \\ \hline
+groupByRow & contours & List\textless List\textless Contour\textgreater\textgreater & Nhóm các contour thành các hàng dựa trên tọa độ y \\ \hline
+sortByPosition & bubbles & List\textless Bubble\textgreater & Sắp xếp bong bóng theo vị trí (trái sang phải, trên xuống dưới) \\ \hline
+calculateFillRatio & contour, image & double & Tính tỷ lệ diện tích tô đầy của một contour trên ảnh gốc \\ \hline
+isFilled & contour, image, threshold & boolean & Kiểm tra một contour đã được tô đầy hay chưa dựa trên ngưỡng \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp BubbleDetector}
+\label{table:bubble_detector_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} BubbleDetector sử dụng Contour để phát hiện các vùng có thể là bong bóng và tạo ra các đối tượng Bubble chứa thông tin vị trí, kích thước và trạng thái tô của mỗi bong bóng.
+
+\vspace{0.3cm}
+
+\section{Lớp AnswerReader (Mobile -- Flutter)}
+\label{appendix:answer_reader}
+
+\subparagraph{Vị trí.} Gói \texttt{engine/}, tầng Business Logic.
+
+\subparagraph{Mô tả.} AnswerReader đọc mã học sinh, mã phiên bản đề và các đáp án từ danh sách bong bóng đã được phát hiện. Lớp sử dụng OMRTemplate để xác định cấu trúc layout của phiếu trả lời (số hàng, số cột, vị trí mã học sinh, vị trí mã đề, vị trí đáp án).
+
+\subparagraph{Các thuộc tính.} Bảng C.17 mô tả chi tiết các thuộc tính của lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+template & OMRTemplate & Template OMR định nghĩa cấu trúc layout phiếu trả lời để mapping bong bóng đến câu hỏi và đáp án \\ \hline
+\end{tabular}
+\caption{Các thuộc tính của lớp AnswerReader}
+\label{table:answer_reader_attrs}
+\end{table}
+
+\subparagraph{Các phương thức.} Bảng C.18 mô tả chi tiết các phương thức của lớp.
+
+\begin{table}[H]
+\scriptsize
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{|p{3.2cm}|p{3.5cm}|p{3.0cm}|p{5.5cm}|}
+\hline
+\textbf{Phương thức} & \textbf{Tham số} & \textbf{Kiểu trả về} & \textbf{Mô tả} \\ \hline
+readStudentCode & bubbles & String & Đọc mã học sinh từ vùng bong bóng dành cho mã số trên phiếu \\ \hline
+readVersionCode & bubbles & String & Đọc mã phiên bản đề thi từ vùng bong bóng dành cho mã đề \\ \hline
+readAnswers & bubbles, numQuestions & Map\textless int, String\textgreater & Đọc toàn bộ đáp án từ các bong bóng, trả về map từ số câu đến đáp án (A, B, C, D) \\ \hline
+mapBubbleToQuestion & bubble & int & Map một bong bóng đến số thứ tự câu hỏi tương ứng \\ \hline
+mapBubbleToOption & bubble & String & Map một bong bóng đến đáp án tương ứng (A, B, C, D hoặc E) \\ \hline
+\_groupBubblesByRow & bubbles & List\textless List\textless Bubble\textgreater\textgreater & Nhóm các bong bóng theo hàng dựa trên tọa độ y \\ \hline
+\_decodeFilledBubbles & rowBubbles & String & Giải mã nhóm bong bóng trong một hàng để xác định đáp án được chọn \\ \hline
+\_parseStudentCode & codeString & String & Parse và kiểm tra tính hợp lệ của mã học sinh đọc được \\ \hline
+\end{tabular}
+}
+\caption{Các phương thức của lớp AnswerReader}
+\label{table:answer_reader_methods}
+\end{table}
+
+\subparagraph{Mối quan hệ.} AnswerReader sử dụng OMRTemplate để biết cấu trúc layout phiếu (số câu hỏi, số đáp án mỗi câu, vị trí mã học sinh, vị trí mã đề, vị trí đáp án) và sử dụng Bubble để trích xuất thông tin đáp án từ danh sách bong bóng đã phát hiện.
+
+\vspace{0.5cm}
+
+\section{Tổng hợp các lớp trong phụ lục}
+\label{appendix:classes_summary}
+
+Bảng \ref{table:appendix_classes_summary} tóm tắt tất cả 9 lớp được mô tả trong phụ lục này cùng với nền tảng, gói chứa và số lượng phương thức của mỗi lớp.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|p{3.5cm}|p{2.5cm}|p{2.5cm}|c|}
+\hline
+\textbf{\#} & \textbf{Lớp} & \textbf{Nền tảng} & \textbf{Gói} & \textbf{UC liên quan} \\ \hline
+1 & AppealService & Backend & services & UC-08 (Phúc khảo) \\ \hline
+2 & NotificationService & Backend & services & UC-07 (Thông báo) \\ \hline
+3 & AuthService & Backend & services & UC-00 (Đăng nhập) \\ \hline
+4 & ClassService & Backend & services & UC-03 (Quản lý lớp) \\ \hline
+5 & AuthStore & Frontend & stores & UC-00 (Xác thực) \\ \hline
+6 & SubmissionStore & Frontend & stores & UC-07 (Xem kết quả) \\ \hline
+7 & ImageProcessor & Mobile & engine & UC-02 (Xử lý ảnh) \\ \hline
+8 & BubbleDetector & Mobile & engine & UC-02 (Phát hiện bong bóng) \\ \hline
+9 & AnswerReader & Mobile & engine & UC-02 (Đọc đáp án) \\ \hline
+\end{tabular}
+\caption{Tổng hợp các lớp trong Phụ lục C}
+\label{table:appendix_classes_summary}
+\end{table}
+
+Bảng \ref{table:appendix_classes_platform} thống kê phân bố các lớp theo nền tảng.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4.5cm}|c|p{6cm}|}
+\hline
+\textbf{Nền tảng} & \textbf{Số lớp} & \textbf{Danh sách lớp} \\ \hline
+Backend (Node.js) & 4 & AppealService, NotificationService, AuthService, ClassService \\ \hline
+Frontend Web (React) & 2 & AuthStore, SubmissionStore \\ \hline
+Mobile (Flutter) & 3 & ImageProcessor, BubbleDetector, AnswerReader \\ \hline
+\textbf{Tổng cộng} & \textbf{9} & \\ \hline
+\end{tabular}
+\caption{Phân bố các lớp theo nền tảng}
+\label{table:appendix_classes_platform}
+\end{table}
+
+\end{document}

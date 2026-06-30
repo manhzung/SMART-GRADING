@@ -106,20 +106,20 @@ export default function MyAppealsPage() {
 
   const getStatusDetails = (status: string) => {
     switch (status) {
-      case 'pending': return { text: 'Chờ duyệt', class: styles.pendingBadge, icon: Clock };
-      case 'under_review': return { text: 'Đang xem xét', class: styles.reviewingBadge, icon: Eye };
-      case 'approved': return { text: 'Đã duyệt', class: styles.approvedBadge, icon: CheckCircle };
-      case 'rejected': return { text: 'Đã từ chối', class: styles.rejectedBadge, icon: XCircle };
-      default: return { text: 'Không xác định', class: styles.pendingBadge, icon: Clock };
+      case 'pending': return { text: 'Pending', class: styles.pendingBadge, icon: Clock };
+      case 'under_review': return { text: 'Under review', class: styles.reviewingBadge, icon: Eye };
+      case 'approved': return { text: 'Approved', class: styles.approvedBadge, icon: CheckCircle };
+      case 'rejected': return { text: 'Rejected', class: styles.rejectedBadge, icon: XCircle };
+      default: return { text: 'Unknown', class: styles.pendingBadge, icon: Clock };
     }
   };
 
   const statusOptions = [
-    { value: 'all', label: 'Tất cả trạng thái' },
-    { value: 'pending', label: 'Chờ duyệt' },
-    { value: 'under_review', label: 'Đang xem xét' },
-    { value: 'approved', label: 'Đã duyệt' },
-    { value: 'rejected', label: 'Đã từ chối' },
+    { value: 'all', label: 'All statuses' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'under_review', label: 'Under review' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'rejected', label: 'Rejected' },
   ];
 
   const filteredAppeals = useMemo(() => {

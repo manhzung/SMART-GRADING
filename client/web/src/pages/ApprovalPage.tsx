@@ -91,14 +91,14 @@ export default function ApprovalPage() {
 
   const renderQuestionsTab = () => {
     if (isLoadingQuestions) {
-      return <div className={styles.loading}>Đang tải...</div>;
+      return <div className={styles.loading}>Loading...</div>;
     }
 
     if (pendingQuestions.length === 0) {
       return (
         <div className={styles.empty}>
           <Clock size={48} />
-          <p>Không có câu hỏi nào đang chờ duyệt</p>
+          <p>No questions pending approval</p>
         </div>
       );
     }
@@ -109,10 +109,10 @@ export default function ApprovalPage() {
           <div key={question.id || question._id} className={styles.card}>
             <div className={styles.cardHeader}>
               <span className={`${styles.badge} ${styles[question.difficulty]}`}>
-                {question.difficulty === 'easy' ? 'Dễ' : question.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
+                {question.difficulty === 'easy' ? 'Easy' : question.difficulty === 'medium' ? 'Medium' : 'Hard'}
               </span>
               <span className={styles.type}>
-                {question.type === 'single_choice' ? 'Một đáp án' : 'Nhiều đáp án'}
+                {question.type === 'single_choice' ? 'Single Choice' : 'Multiple Choice'}
               </span>
             </div>
             <div className={styles.cardContent}>
@@ -120,7 +120,7 @@ export default function ApprovalPage() {
             </div>
             <div className={styles.cardFooter}>
               <span className={styles.author}>
-                Người tạo: {question.createdBy?.name || 'N/A'}
+                Created by: {question.createdBy?.name || 'N/A'}
               </span>
               <div className={styles.actions}>
                 <button
@@ -129,7 +129,7 @@ export default function ApprovalPage() {
                   disabled={processing}
                 >
                   <Check size={16} />
-                  Duyệt
+                  Approve
                 </button>
                 <button
                   className={styles.btnReject}
@@ -137,7 +137,7 @@ export default function ApprovalPage() {
                   disabled={processing}
                 >
                   <X size={16} />
-                  Từ chối
+                  Reject
                 </button>
               </div>
             </div>
@@ -149,14 +149,14 @@ export default function ApprovalPage() {
 
   const renderTeachersTab = () => {
     if (isLoadingTeachers) {
-      return <div className={styles.loading}>Đang tải...</div>;
+      return <div className={styles.loading}>Loading...</div>;
     }
 
     if (pendingTeachers.length === 0) {
       return (
         <div className={styles.empty}>
           <Clock size={48} />
-          <p>Không có giáo viên nào đang chờ duyệt</p>
+          <p>No teachers pending approval</p>
         </div>
       );
     }
@@ -181,7 +181,7 @@ export default function ApprovalPage() {
                 disabled={processing}
               >
                 <Check size={16} />
-                Duyệt
+                Approve
               </button>
               <button
                 className={styles.btnReject}
@@ -189,7 +189,7 @@ export default function ApprovalPage() {
                 disabled={processing}
               >
                 <X size={16} />
-                Từ chối
+                Reject
               </button>
             </div>
           </div>
@@ -201,9 +201,9 @@ export default function ApprovalPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1>Phê duyệt</h1>
+        <h1>Approval</h1>
         {totalPending > 0 && (
-          <span className={styles.badge}>{totalPending} chờ xử lý</span>
+          <span className={styles.badge}>{totalPending} pending</span>
         )}
       </div>
 
@@ -212,7 +212,7 @@ export default function ApprovalPage() {
           className={`${styles.tab} ${activeTab === 'questions' ? styles.active : ''}`}
           onClick={() => setActiveTab('questions')}
         >
-          Câu hỏi
+          Questions
           {pendingQuestionsCount > 0 && (
             <span className={styles.tabBadge}>{pendingQuestionsCount}</span>
           )}
@@ -221,7 +221,7 @@ export default function ApprovalPage() {
           className={`${styles.tab} ${activeTab === 'teachers' ? styles.active : ''}`}
           onClick={() => setActiveTab('teachers')}
         >
-          Giáo viên
+          Teachers
           {pendingTeachersCount > 0 && (
             <span className={styles.tabBadge}>{pendingTeachersCount}</span>
           )}
@@ -234,14 +234,14 @@ export default function ApprovalPage() {
 
       <ConfirmDialog
         open={rejectDialogOpen}
-        title={rejectType === 'question' ? 'Từ chối câu hỏi' : 'Từ chối giáo viên'}
+        title={rejectType === 'question' ? 'Reject Question' : 'Reject Teacher'}
         message={
           rejectType === 'question'
-            ? 'Bạn có chắc chắn muốn từ chối câu hỏi này?'
-            : 'Bạn có chắc chắn muốn từ chối giáo viên này?'
+            ? 'Are you sure you want to reject this question?'
+            : 'Are you sure you want to reject this teacher?'
         }
-        confirmLabel="Từ chối"
-        cancelLabel="Hủy"
+        confirmLabel="Reject"
+        cancelLabel="Cancel"
         danger
         submitting={processing}
         onConfirm={handleRejectConfirm}
@@ -252,11 +252,11 @@ export default function ApprovalPage() {
         }}
       >
         <div className={styles.rejectForm}>
-          <label>Lý do từ chối (tùy chọn):</label>
+          <label>Reason for rejection (optional):</label>
           <textarea
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="Nhập lý do từ chối..."
+            placeholder="Enter reason for rejection..."
             rows={3}
           />
         </div>

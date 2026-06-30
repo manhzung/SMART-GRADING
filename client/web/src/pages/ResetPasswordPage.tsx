@@ -29,29 +29,29 @@ export default function ResetPasswordPage() {
     setLocalError(null);
 
     if (!token) {
-      setLocalError('Liên kết đặt lại mật khẩu không hợp lệ (thiếu token).');
+      setLocalError('Invalid password reset link (missing token).');
       return;
     }
 
     if (password.length < 8) {
-      setLocalError('Mật khẩu mới phải dài ít nhất 8 ký tự.');
+      setLocalError('New password must be at least 8 characters long.');
       return;
     }
 
     if (!/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
-      setLocalError('Mật khẩu phải chứa ít nhất một chữ cái và một chữ số.');
+      setLocalError('Password must contain at least one letter and one number.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setLocalError('Mật khẩu xác nhận không khớp.');
+      setLocalError('Passwords do not match.');
       return;
     }
 
     try {
       await resetPassword(token, password);
       setIsSuccess(true);
-      toast.success('Đặt lại mật khẩu thành công!');
+      toast.success('Password reset successfully!');
       
       // Auto redirect to login
       setTimeout(() => {
@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
       }, 3500);
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error.message || 'Đặt lại mật khẩu thất bại.');
+      toast.error(error.message || 'Failed to reset password.');
     }
   };
 
@@ -71,12 +71,12 @@ export default function ResetPasswordPage() {
             <div className={styles.iconWrapper} style={{ backgroundColor: '#ecfdf5', color: '#059669' }}>
               <CheckCircle size={32} />
             </div>
-            <h2 className={styles.successTitle}>Mật khẩu đã đặt lại</h2>
+            <h2 className={styles.successTitle}>Password Reset</h2>
             <p className={styles.successText}>
-              Mật khẩu của bạn đã được thay đổi thành công. Hệ thống đang chuyển hướng bạn về trang đăng nhập...
+              Your password has been changed successfully. Redirecting you to the login page...
             </p>
             <Link to="/login" className={styles.submitBtn} style={{ textDecoration: 'none', width: '100%' }}>
-              Đăng nhập ngay
+              Login Now
             </Link>
           </div>
         ) : (
@@ -92,7 +92,7 @@ export default function ResetPasswordPage() {
 
             {!token && (
               <div className={styles.errorAlert}>
-                ⚠️ <strong>Lỗi:</strong> Không tìm thấy mã thông báo (token) trong liên kết. Vui lòng kiểm tra lại liên kết trong email đặt lại mật khẩu của bạn.
+                ⚠️ <strong>Error:</strong> Token not found in the link. Please double check the link in your password reset email.
               </div>
             )}
 

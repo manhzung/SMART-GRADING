@@ -74,44 +74,44 @@ export default function RegisterPage() {
     clearError();
 
     if (!formData.fullName.trim()) {
-      setLocalError('Vui lòng nhập họ và tên.');
+      setLocalError('Please enter your full name.');
       return;
     }
     if (!formData.email.trim()) {
-      setLocalError('Vui lòng nhập email học thuật.');
+      setLocalError('Please enter your academic email.');
       return;
     }
     if (!formData.schoolId) {
-      setLocalError('Vui lòng chọn trường học.');
+      setLocalError('Please select a school.');
       return;
     }
     if (formData.password.length < 8) {
-      setLocalError('Mật khẩu phải dài ít nhất 8 ký tự.');
+      setLocalError('Password must be at least 8 characters long.');
       return;
     }
     if (!/\d/.test(formData.password) || !/[a-zA-Z]/.test(formData.password)) {
-      setLocalError('Mật khẩu phải chứa ít nhất một chữ cái và một chữ số.');
+      setLocalError('Password must contain at least one letter and one number.');
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      setLocalError('Mật khẩu xác nhận không khớp.');
+      setLocalError('Passwords do not match.');
       return;
     }
     if (!formData.agreeTerms) {
-      setLocalError('Bạn phải đồng ý với Điều khoản & Điều kiện và Chính sách bảo mật.');
+      setLocalError('You must agree to the Terms & Conditions and Privacy Policy.');
       return;
     }
 
     try {
       await register(formData.email, formData.password, formData.fullName, formData.schoolId);
       toast.success(
-        'Đăng ký thành công! Vui lòng xác minh email và chờ School Admin duyệt tài khoản.'
+        'Registration successful! Please verify your email and wait for School Admin to approve your account.'
       );
 
       navigate('/email-verification-pending', { state: { email: formData.email } });
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error.message || 'Đăng ký tài khoản thất bại.');
+      toast.error(error.message || 'Account registration failed.');
     }
   };
 

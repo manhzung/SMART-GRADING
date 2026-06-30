@@ -34,7 +34,7 @@ describe('examPageAdapters.mapExamDetailData', () => {
     expect(mapped!.versions[0].answerSheetPdfUrl).toBe(
       'https://res.cloudinary.com/demo/raw/upload/v1/exams/exam1/answer-sheet.pdf',
     );
-    expect(mapped!.versions[0].status).toBe('Đã sinh PDF');
+    expect(mapped!.versions[0].status).toBe('PDF Generated');
   });
 
   it('returns null answerSheetPdfUrl when missing', () => {

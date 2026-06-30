@@ -1,96 +1,35 @@
-\documentclass[../DoAn.tex]{subfiles}
+﻿\documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-\section{Tổng quan chương}
-Chương 5 đã trình bày chi tiết các giải pháp kỹ thuật và đóng góp nổi bật của đồ án. Chương 6 - chương cuối cùng của đồ án - tổng kết toàn bộ quá trình thực hiện, so sánh kết quả đạt được với các sản phẩm tương tự, phân tích những việc đã làm được và chưa làm được, đúc rút bài học kinh nghiệm và đề xuất hướng phát triển trong tương lai.
+Chương này tổng kết toàn bộ quá trình thực hiện, so sánh kết quả với các sản phẩm tương tự, phân tích hạn chế và đóng góp, rút ra bài học kinh nghiệm và đề xuất hướng phát triển.
 
 \section{Kết luận}
 \label{section:6.1}
 
-\subsection{So sánh với các sản phẩm tương tự}
+So với Remark Office OMR, Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR có ưu điểm tích hợp đầy đủ (quản lý đào tạo, phúc khảo, ứng dụng di động, miễn phí). So với Gradescope, có ưu điểm hỗ trợ tiếng Việt, tạo nhiều mã đề tự động, tích hợp AI. So với OMRChecker, có ưu điểm giao diện quản lý hoàn chỉnh, phúc khảo, báo cáo thống kê.
 
-Hệ thống Smart Grading hoàn thành đồ án đã đáp ứng được đa số các tính năng quan trọng đã nêu trong bảng so sánh ở mục \ref{section:2.1} và có một số điểm vượt trội so với các sản phẩm hiện có. So với phần mềm thương mại Remark Office OMR, hệ thống có ưu điểm là tích hợp đầy đủ quy trình quản lý đào tạo (lớp, học sinh, giáo viên) với quy trình chấm thi, hỗ trợ phúc khảo trực tuyến, có ứng dụng di động giúp giáo viên chấm bài mà không cần máy quét chuyên dụng và hoàn toàn miễn phí. So với Gradescope, hệ thống có ưu điểm là hỗ trợ tiếng Việt đầy đủ, có khả năng tạo nhiều mã đề tự động và tích hợp AI hỗ trợ sinh câu hỏi. So với công cụ mã nguồn mở OMRChecker, hệ thống có ưu điểm là có giao diện quản lý hoàn chỉnh, hỗ trợ phúc khảo và báo cáo thống kê.
+Hạn chế: chưa hỗ trợ phiếu multi-column phức tạp, chưa hỗ trợ dạng câu hỏi khác ngoài trắc nghiệm, độ chính xác OMR thấp hơn máy quét chuyên dụng khoảng 2-3\%.
 
-Bên cạnh những ưu điểm, hệ thống cũng còn một số hạn chế so với các sản phẩm thương mại lâu năm như:
-\begin{itemize}
-    \item chưa hỗ trợ phiếu trả lời có nhiều cột (multi-column) phức tạp như các kỳ thi chuẩn hóa quốc tế;
-    \item chưa hỗ trợ chấm các dạng câu hỏi khác ngoài trắc nghiệm (ví dụ: điền vào chỗ trống, ghép đôi);
-    \item độ chính xác của thuật toán OMR trên di động vẫn thấp hơn máy quét chuyên dụng khoảng 2-3\%.
-\end{itemize}
+Đã hoàn thành: khảo sát và phân tích yêu cầu; thiết kế kiến trúc phân lớp; backend Node.js (17 model, 16 service, 17 nhóm API); web React (phân quyền, dashboard, đầy đủ chức năng); ứng dụng Flutter (OMR 96,2\%); pipeline AMC sinh đề-phiếu OMR; tích hợp AI đa nhà cung cấp; thử nghiệm 5 bài kiểm tra, khoảng 300 bài làm.
 
-\subsection{Những việc đã làm được}
+Đóng góp nổi bật: pipeline tự động sinh đề nhiều phiên bản và phiếu OMR kèm tọa độ; thuật toán chấm OMR trên di động với phát hiện lỗi tô nhầm, tô nhẹ; tích hợp AI trong sinh câu hỏi và trợ lý ảo cho học sinh.
 
-Trong suốt quá trình thực hiện đồ án, sinh viên đã hoàn thành các công việc chính sau:
-\begin{itemize}
-    \item khảo sát hiện trạng và phân tích yêu cầu chi tiết cho hệ thống chấm thi trắc nghiệm thông minh;
-    \item thiết kế kiến trúc phần mềm theo mô hình phân lớp với ba tầng rõ ràng;
-    \item xây dựng backend Node.js/Express với 17 model dữ liệu, 16 service nghiệp vụ và 17 nhóm API REST;
-    \item xây dựng giao diện web React với hệ thống phân quyền theo vai trò, dashboard trực quan và đầy đủ các chức năng quản lý;
-    \item xây dựng ứng dụng di động Flutter với module chấm OMR tích hợp OpenCV có độ chính xác 96,2\%;
-    \item xây dựng pipeline tự động sinh đề thi nhiều phiên bản kèm phiếu OMR thông qua gói AMC;
-    \item tích hợp trợ lý AI đa nhà cung cấp (Gemini, OpenAI, Claude) để hỗ trợ sinh câu hỏi và phân tích báo cáo;
-    \item triển khai thử nghiệm trong môi trường thực tế với 5 bài kiểm tra và khoảng 300 bài làm.
-\end{itemize}
+Chưa hoàn thành: hỗ trợ dạng câu hỏi khác ngoài trắc nghiệm; chế độ ngoại tuyến hoàn chỉnh trên di động; hỗ trợ phiếu nhiều hơn 4 đáp án; thanh toán trực tuyến; bản dịch tiếng Anh.
 
-Các đóng góp nổi bật của đồ án gồm:
-\begin{itemize}
-    \item xây dựng pipeline tự động sinh đề nhiều phiên bản và phiếu OMR kèm tọa độ nhận dạng - đây là điểm khác biệt quan trọng so với các giải pháp hiện có;
-    \item triển khai thuật toán chấm OMR trên thiết bị di động với khả năng phát hiện lỗi tô nhầm, tô nhẹ và xử lý ảnh trong điều kiện thực tế;
-    \item tích hợp AI trong cả hai chiều: hỗ trợ giáo viên tạo câu hỏi và hỗ trợ học sinh ôn tập thông qua trợ lý ảo.
-\end{itemize}
-
-\subsection{Những việc chưa làm được}
-
-Bên cạnh những kết quả đạt được, đồ án vẫn còn một số hạn chế cần được khắc phục trong tương lai:
-\begin{itemize}
-    \item hệ thống hiện chỉ hỗ trợ câu hỏi trắc nghiệm một đáp án và nhiều đáp án; chưa hỗ trợ các dạng câu hỏi khác như điền số, điền từ, ghép đôi;
-    \item ứng dụng di động chưa hỗ trợ chế độ ngoại tuyến hoàn chỉnh; khi mất kết nối mạng trong thời gian dài, giáo viên vẫn cần đồng bộ thủ công khi có kết nối trở lại;
-    \item hệ thống chưa hỗ trợ phiếu trả lời có hơn 4 đáp án cho mỗi câu hoặc các dạng phiếu phức tạp;
-    \item chưa tích hợp thanh toán trực tuyến cho trường hợp hệ thống được triển khai thương mại;
-    \item chưa có bản dịch sang tiếng Anh hoàn chỉnh cho giao diện, hạn chế khả năng mở rộng ra thị trường quốc tế.
-\end{itemize}
-
-\subsection{Bài học kinh nghiệm}
-
-Qua quá trình thực hiện đồ án, sinh viên đã rút ra một số bài học kinh nghiệm quý báu. Thứ nhất, việc lựa chọn công nghệ phù hợp ngay từ đầu có ý nghĩa quyết định đến tiến độ và chất lượng đồ án; sinh viên đã mất khá nhiều thời gian để đánh giá các framework backend và frontend khác nhau trước khi quyết định. Thứ hai, việc thiết kế cơ sở dữ liệu cần được thực hiện cẩn thận ngay từ đầu vì việc thay đổi schema sau này rất tốn kém, đặc biệt là khi đã có dữ liệu thực tế. Thứ ba, quy trình kiểm thử cần được xây dựng song song với quá trình phát triển thay vì thực hiện ở cuối dự án; nếu kiểm thử sớm hơn, sinh viên có thể phát hiện và sửa lỗi nhanh hơn. Thứ tư, làm việc nhóm (dù chỉ một mình sinh viên thực hiện) cần có kế hoạch rõ ràng, sử dụng công cụ quản lý dự án và quản lý mã nguồn hiệu quả (Git, Jira) để tránh mất kiểm soát tiến độ.
+Bài học kinh nghiệm: lựa chọn công nghệ phù hợp ngay từ đầu có ý nghĩa quyết định; thiết kế cơ sở dữ liệu cần cẩn thận vì thay đổi schema rất tốn kém; kiểm thử cần xây dựng song song phát triển; cần kế hoạch rõ ràng và công cụ quản lý dự án (Git) để tránh mất kiểm soát.
 
 \section{Hướng phát triển}
 \label{section:6.2}
 
 \subsection{Hoàn thiện các chức năng hiện có}
-
-Trong thời gian tới, đồ án sẽ tập trung hoàn thiện các chức năng đã có để nâng cao chất lượng và trải nghiệm người dùng. Cụ thể,
-\begin{itemize}
-    \item cải thiện độ chính xác của thuật toán OMR trên di động lên trên 98\% bằng cách áp dụng các kỹ thuật học sâu (deep learning) để phát hiện ô tô, đặc biệt trong các trường hợp ảnh chụp ở điều kiện ánh sáng phức tạp;
-    \item bổ sung chế độ ngoại tuyến hoàn chỉnh cho ứng dụng di động, cho phép giáo viên chấm bài ngay cả khi không có kết nối mạng và tự động đồng bộ khi có kết nối;
-    \item bổ sung chức năng xuất báo cáo đa dạng hơn, cho phép tùy chỉnh nội dung và định dạng;
-    \item tối ưu hóa hiệu năng của backend để đáp ứng được khối lượng truy cập lớn hơn trong các kỳ thi có hàng nghìn thí sinh.
-\end{itemize}
+Cải thiện độ chính xác OMR lên trên 98\% bằng học sâu (deep learning) để phát hiện ô tô; bổ sung chế độ ngoại tuyến cho di động với đồng bộ tự động; tối ưu backend cho khối lượng lớn trong các kỳ thi hàng nghìn thí sinh.
 
 \subsection{Mở rộng tính năng mới}
-
-Bên cạnh hoàn thiện các tính năng hiện có, hệ thống có thể được mở rộng với các tính năng mới sau:
-\begin{itemize}
-    \item hỗ trợ thêm các dạng câu hỏi khác ngoài trắc nghiệm như điền số, điền từ, ghép đôi và câu hỏi tự luận ngắn có chấm tự động bằng AI;
-    \item hỗ trợ chấm bài thi trực tuyến kết hợp với bài thi trên giấy, cho phép giáo viên linh hoạt trong tổ chức thi;
-    \item bổ sung chức năng tạo đề thi thông minh dựa trên phân tích ma trận kiến thức và ngân hàng câu hỏi, đảm bảo đề thi có độ phủ và độ khó phù hợp;
-    \item phát triển tính năng phân tích học tập cá nhân hóa cho học sinh dựa trên lịch sử làm bài, giúp học sinh nhận biết điểm mạnh - điểm yếu và có lộ trình ôn tập phù hợp;
-    \item tích hợp thanh toán trực tuyến và quản lý gói dịch vụ để có thể triển khai hệ thống dưới dạng SaaS (Software as a Service);
-    \item bổ sung bản dịch tiếng Anh cho toàn bộ giao diện để mở rộng thị trường;
-    \item tích hợp với các hệ thống quản lý học tập (LMS) phổ biến như Moodle, Canvas thông qua chuẩn LTI (Learning Tools Interoperability).
-\end{itemize}
+Hỗ trợ thêm dạng câu hỏi khác (điền số, điền từ, ghép đôi, tự luận ngắn chấm bằng AI); hỗ trợ chấm thi kết hợp online/offline; tạo đề thông minh theo ma trận kiến thức; phân tích học tập cá nhân hóa cho học sinh; tích hợp thanh toán trực tuyến (SaaS); dịch giao diện tiếng Anh; tích hợp LMS qua chuẩn LTI (Moodle, Canvas).
 
 \subsection{Nâng cấp công nghệ}
+Chuyển đổi backend sang microservices (sinh đề, chấm thi, phân tích) khi quy mô tăng; áp dụng học sâu nâng cao nhận dạng OMR; tích hợp mô hình AI tiên tiến cho báo cáo và trợ lý; xây dựng hệ thống giám sát và cảnh báo sớm.
 
-Về mặt công nghệ, một số hướng nâng cấp đáng chú ý gồm:
-\begin{itemize}
-    \item chuyển đổi kiến trúc backend sang microservices khi quy mô hệ thống tăng lên, tách riêng các dịch vụ như sinh đề, chấm thi và phân tích để dễ dàng mở rộng độc lập;
-    \item áp dụng công nghệ học sâu để nâng cao độ chính xác của thuật toán nhận dạng OMR và tự động phát hiện các trường hợp bất thường trong phiếu thi;
-    \item tích hợp thêm các mô hình AI tiên tiến để nâng cao chất lượng phân tích báo cáo và trợ lý ảo cho học sinh;
-    \item xây dựng hệ thống giám sát và cảnh báo sớm các vấn đề vận hành, giúp đội ngũ vận hành phản ứng nhanh với sự cố.
-\end{itemize}
-
-\section{Kết chương}
-Chương 6 - chương cuối cùng của đồ án - đã tổng kết toàn bộ quá trình thực hiện và kết quả đạt được của hệ thống Smart Grading. Qua so sánh với các sản phẩm tương tự như Remark Office OMR, Gradescope và OMRChecker, hệ thống đã chứng minh được những điểm vượt trội về tính tích hợp, hỗ trợ tiếng Việt, khả năng tạo nhiều mã đề và chi phí triển khai thấp. Tám nhóm công việc chính đã hoàn thành từ khảo sát yêu cầu đến triển khai thử nghiệm đã được tổng kết, cùng với ba đóng góp nổi bật. Các hạn chế còn tồn tại được nhìn nhận thẳng thắn và bốn bài học kinh nghiệm quý báu đã được rút ra. Hướng phát triển được chia thành ba nhóm: hoàn thiện chức năng hiện có, mở rộng tính năng mới và nâng cấp công nghệ. Đồ án đã đạt được các mục tiêu đề ra và tạo nền tảng vững chắc cho các phiên bản tiếp theo của hệ thống, đồng thời cung cấp một giải pháp thực tiễn cho bài toán chấm thi trắc nghiệm tại các cơ sở giáo dục Việt Nam.
+Chương 6 đã tổng kết toàn bộ quá trình thực hiện Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR, so sánh với các sản phẩm tương tự, phân tích hạn chế và đóng góp, rút ra bài học kinh nghiệm và đề xuất hướng phát triển. Đồ án đạt mục tiêu đề ra và tạo nền tảng cho các phiên bản tiếp theo.
 
 \end{document}

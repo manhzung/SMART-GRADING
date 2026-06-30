@@ -50,10 +50,10 @@ export default function EmailVerificationPendingPage() {
       <AuthLayout>
         <div className={styles.container}>
           <div className={styles.card}>
-            <h1 className={styles.title}>Lỗi</h1>
-            <p className={styles.subtitle}>Không tìm thấy thông tin email. Vui lòng đăng ký lại.</p>
+            <h1 className={styles.title}>Error</h1>
+            <p className={styles.subtitle}>No email information found. Please register again.</p>
             <Link to="/register" className={styles.loginBtn}>
-              Quay lại Đăng ký
+              Back to Registration
             </Link>
           </div>
         </div>
@@ -69,11 +69,11 @@ export default function EmailVerificationPendingPage() {
             <div className={styles.iconContainer} style={{ backgroundColor: '#ecfdf5' }}>
               <CheckCircle size={48} color="#059669" />
             </div>
-            <h1 className={styles.title}>Xác minh thành công!</h1>
-            <p className={styles.subtitle}>Email của bạn đã được xác minh.</p>
+            <h1 className={styles.title}>Verification Successful!</h1>
+            <p className={styles.subtitle}>Your email has been verified.</p>
             <p className={styles.emailHighlight}>{email}</p>
             <button onClick={handleGoToLogin} className={styles.loginBtn}>
-              Đăng nhập ngay
+              Login Now
               <ArrowRight size={18} />
             </button>
           </div>
@@ -90,35 +90,35 @@ export default function EmailVerificationPendingPage() {
             <Mail size={48} />
           </div>
 
-          <h1 className={styles.title}>Xác minh Email</h1>
+          <h1 className={styles.title}>Email Verification</h1>
           <p className={styles.subtitle}>
-            Chúng tôi đã gửi email xác minh đến
+            We've sent a verification email to
           </p>
           <p className={styles.emailHighlight}>{email}</p>
 
           <div className={styles.checkingStatus}>
             <Loader2 size={20} className={styles.spinner} />
-            <span>Đang kiểm tra trạng thái xác minh...</span>
+            <span>Checking verification status...</span>
           </div>
 
           <div className={styles.instructions}>
             <div className={styles.step}>
               <span className={styles.stepNumber}>1</span>
-              <span>Mở email và tìm thư từ Smart Grading</span>
+              <span>Open your email inbox and find the email from Smart Grading</span>
             </div>
             <div className={styles.step}>
               <span className={styles.stepNumber}>2</span>
-              <span>Nhấp vào liên kết "Xác nhận Email"</span>
+              <span>Click on the "Confirm Email" link</span>
             </div>
             <div className={styles.step}>
               <span className={styles.stepNumber}>3</span>
-              <span>Trang này sẽ tự động chuyển sang đăng nhập</span>
+              <span>This page will automatically redirect you to login</span>
             </div>
           </div>
 
           <div className={styles.autoUpdate}>
             <RefreshCw size={16} />
-            <span>Trang sẽ tự động cập nhật khi bạn xác minh email</span>
+            <span>The page will automatically update once you verify your email</span>
           </div>
         </div>
       </div>

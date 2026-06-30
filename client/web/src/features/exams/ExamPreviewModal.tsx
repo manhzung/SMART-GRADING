@@ -55,12 +55,12 @@ export default function ExamPreviewModal({
             <div className={styles.headerIcon}>
               <FileText size={20} />
             </div>
-            <h2 id="preview-modal-title">Xem trước: {exam.title}</h2>
+            <h2 id="preview-modal-title">Preview: {exam.title}</h2>
           </div>
           <button 
             className={styles.closeButton} 
             onClick={onClose}
-            aria-label="Đóng"
+            aria-label="Close"
           >
             <X size={18} />
           </button>
@@ -72,15 +72,15 @@ export default function ExamPreviewModal({
           <div className={styles.examInfo}>
             <div className={styles.infoItem}>
               <Clock size={16} />
-              <span>Thời gian: <strong>{exam.duration || 45} phút</strong></span>
+              <span>Duration: <strong>{exam.duration || 45} minutes</strong></span>
             </div>
             <div className={styles.infoItem}>
               <FileText size={16} />
-              <span>Tổng điểm: <strong>{exam.totalScore || 10}</strong></span>
+              <span>Total Score: <strong>{exam.totalScore || 10}</strong></span>
             </div>
             <div className={styles.infoItem}>
               <CheckCircle size={16} />
-              <span>Điểm đạt: <strong>{exam.passingScore || 5}</strong></span>
+              <span>Passing Score: <strong>{exam.passingScore || 5}</strong></span>
             </div>
           </div>
 
@@ -90,14 +90,14 @@ export default function ExamPreviewModal({
               <span className={styles.subjectBadge}>{exam.subjectName}</span>
             )}
             <span className={styles.statusBadge}>
-              {exam.status === 'draft' ? 'Bản nháp' : 
-               exam.status === 'published' ? 'Đã xuất bản' :
-               exam.status === 'in_progress' ? 'Đang diễn ra' :
-               exam.status === 'completed' ? 'Hoàn thành' : exam.status}
+              {exam.status === 'draft' ? 'Draft' : 
+               exam.status === 'published' ? 'Published' :
+               exam.status === 'in_progress' ? 'In Progress' :
+               exam.status === 'completed' ? 'Completed' : exam.status}
             </span>
             {exam.numberOfVersions && (
               <span className={styles.versionsBadge}>
-                {exam.numberOfVersions} mã đề
+                {exam.numberOfVersions} versions
               </span>
             )}
           </div>
@@ -105,7 +105,7 @@ export default function ExamPreviewModal({
           {/* Questions List */}
           <div className={styles.questionsSection}>
             <h3 className={styles.questionsTitle}>
-              Danh sách câu hỏi ({exam.numberOfQuestions || displayQuestions.length || 0} câu)
+              Questions ({exam.numberOfQuestions || displayQuestions.length || 0})
             </h3>
 
             {displayQuestions.length > 0 ? (
@@ -113,10 +113,10 @@ export default function ExamPreviewModal({
                 {displayQuestions.slice(0, 20).map((q, idx) => (
                   <div key={q.questionId || idx} className={styles.questionItem}>
                     <div className={styles.questionHeader}>
-                      <span className={styles.questionNumber}>Câu {idx + 1}</span>
+                      <span className={styles.questionNumber}>Question {idx + 1}</span>
                       {q.options && (
                         <span className={styles.optionCount}>
-                          {q.options.length} đáp án
+                          {q.options.length} options
                         </span>
                       )}
                     </div>
@@ -147,13 +147,13 @@ export default function ExamPreviewModal({
                 ))}
                 {displayQuestions.length > 20 && (
                   <div className={styles.moreQuestions}>
-                    <span>... và {displayQuestions.length - 20} câu hỏi khác</span>
+                    <span>... and {displayQuestions.length - 20} more questions</span>
                   </div>
                 )}
               </div>
             ) : (
               <div className={styles.emptyQuestions}>
-                <p>Chưa có câu hỏi nào được thêm vào đề thi.</p>
+                <p>No questions have been added to this exam yet.</p>
               </div>
             )}
           </div>
@@ -161,13 +161,13 @@ export default function ExamPreviewModal({
           {/* Versions Info */}
           {examVersions && examVersions.length > 0 && (
             <div className={styles.versionsSection}>
-              <h3 className={styles.versionsTitle}>Các mã đề đã tạo</h3>
+              <h3 className={styles.versionsTitle}>Created Versions</h3>
               <div className={styles.versionsList}>
                 {examVersions.map((v) => (
                   <div key={v._id} className={styles.versionItem}>
                     <span className={styles.versionCode}>{v.versionCode}</span>
                     <span className={styles.versionMeta}>
-                      {v.numberOfQuestions} câu • {v.submissionCount || 0} bài nộp
+                      {v.numberOfQuestions} questions • {v.submissionCount || 0} submissions
                     </span>
                   </div>
                 ))}
@@ -183,7 +183,7 @@ export default function ExamPreviewModal({
             onClick={onClose}
             type="button"
           >
-            Đóng
+            Close
           </button>
         </div>
       </div>

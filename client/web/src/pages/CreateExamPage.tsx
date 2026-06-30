@@ -189,16 +189,16 @@ export default function CreateExamPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setErrorMessage('Vui lòng nhập tên bài kiểm tra.');
+      setErrorMessage('Please enter the exam name.');
       return;
     }
     if (selectedClassIds.length === 0) {
-      setErrorMessage('Vui lòng chọn ít nhất một lớp thi.');
+      setErrorMessage('Please select at least one class.');
       return;
     }
 
     if (assignedQuestionIds.length === 0) {
-      setErrorMessage('Vui lòng chọn ít nhất một câu hỏi từ ngân hàng câu hỏi.');
+      setErrorMessage('Please select at least one question from the question bank.');
       return;
     }
 
@@ -240,11 +240,11 @@ export default function CreateExamPage() {
 
         navigate('/exams');
       } else {
-        setErrorMessage('Có lỗi xảy ra khi tạo đề thi.');
+        setErrorMessage('An error occurred while creating the exam.');
       }
     } catch (err: any) {
       console.error(err);
-      setErrorMessage(err.message || 'Có lỗi xảy ra khi tạo đề thi.');
+      setErrorMessage(err.message || 'An error occurred while creating the exam.');
     } finally {
       setIsSubmitLoading(false);
     }
@@ -254,18 +254,18 @@ export default function CreateExamPage() {
     <div className={styles.container}>
       {/* ─── Breadcrumb Navigation ─────────────────────────────────────────── */}
       <nav className={styles.breadcrumb}>
-        <Link to="/exams" className={styles.breadcrumbLink}>Quản lý bài thi</Link>
+        <Link to="/exams" className={styles.breadcrumbLink}>Exam Management</Link>
         <span className={styles.breadcrumbSeparator}>&gt;</span>
-        <span className={styles.breadcrumbActive}>Tạo bài kiểm tra mới</span>
+        <span className={styles.breadcrumbActive}>Create New Exam</span>
       </nav>
 
       {/* ─── Page Title / Back Link ────────────────────────────────────────── */}
       <div className={styles.header}>
         <Link to="/exams" className={styles.backBtn}>
           <ArrowLeft size={16} />
-          <span>Quay lại</span>
+          <span>Go Back</span>
         </Link>
-        <h1 className={styles.title}>Tạo bài kiểm tra mới</h1>
+        <h1 className={styles.title}>Create New Exam</h1>
       </div>
 
       {errorMessage && (
@@ -280,7 +280,7 @@ export default function CreateExamPage() {
       {/* ─── Main Form Layout ─── */}
       <form onSubmit={handleSubmit} className={styles.formGrid}>
         
-        {/* Card 1: Thông tin cơ bản */}
+        {/* Card 1: Basic Information */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardHeaderTitle}>
@@ -292,12 +292,12 @@ export default function CreateExamPage() {
           <div className={styles.cardContent}>
             {/* Exam Title */}
             <div className={styles.formGroup}>
-              <label htmlFor="exam-title" className={styles.fieldLabel}>Tên bài kiểm tra <span className={styles.required}>*</span></label>
+              <label htmlFor="exam-title" className={styles.fieldLabel}>Exam name <span className={styles.required}>*</span></label>
               <input 
                 id="exam-title"
                 type="text" 
                 required 
-                placeholder="VD: Kiểm tra Giữa kỳ I - Toán 12"
+                placeholder="e.g. Midterm Exam I - Math 12"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className={styles.inputField}
@@ -306,10 +306,10 @@ export default function CreateExamPage() {
 
             {/* Description */}
             <div className={styles.formGroup}>
-              <label htmlFor="exam-desc" className={styles.fieldLabel}>Mô tả</label>
+              <label htmlFor="exam-desc" className={styles.fieldLabel}>Description</label>
               <textarea 
                 id="exam-desc"
-                placeholder="Nhập mô tả hoặc hướng dẫn cho học sinh..."
+                placeholder="Enter description or instructions for students..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className={styles.textareaField}
@@ -319,10 +319,10 @@ export default function CreateExamPage() {
 
             {/* Class Selection */}
             <div className={styles.formGroup}>
-              <label className={styles.fieldLabel}>Lớp tham gia thi <span className={styles.required}>*</span></label>
+              <label className={styles.fieldLabel}>Participating classes <span className={styles.required}>*</span></label>
               <div className={styles.classListContainer}>
                 {classes.length === 0 ? (
-                  <div className={styles.noClassesMsg}>Đang tải danh sách lớp...</div>
+                  <div className={styles.noClassesMsg}>Loading class list...</div>
                 ) : (
                   classes.map((cls) => {
                     const isChecked = selectedClassIds.includes(cls._id);
@@ -341,28 +341,28 @@ export default function CreateExamPage() {
                 )}
               </div>
               <div className={styles.selectedCountBadge}>
-                Đã chọn: {selectedClassIds.length} lớp
+                Selected: {selectedClassIds.length} classes
               </div>
             </div>
           </div>
         </section>
 
-        {/* Card 2: Cấu hình bài thi */}
+        {/* Card 2: Exam Configuration */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardHeaderTitle}>
               <span className={styles.stepNumber}>02</span>
-              <h2>Cấu hình bài thi</h2>
+              <h2>Exam Configuration</h2>
             </div>
           </div>
           
           <div className={styles.cardContent}>
             {/* Time & Date Grid */}
-            <div className={styles.sectionSubtitle}>Thời gian & Địa điểm</div>
+            <div className={styles.sectionSubtitle}>Time & Location</div>
             <div className={styles.grid3Col}>
               {/* Exam Date */}
               <div className={styles.formGroup}>
-                <label htmlFor="exam-date-picker" className={styles.fieldLabel}>Ngày thi <span className={styles.required}>*</span></label>
+                <label htmlFor="exam-date-picker" className={styles.fieldLabel}>Exam date <span className={styles.required}>*</span></label>
                 <div className={styles.iconInputWrapper}>
                   <CalendarIcon size={16} className={styles.inputIcon} />
                   <input 
@@ -378,7 +378,7 @@ export default function CreateExamPage() {
 
               {/* Start Time */}
               <div className={styles.formGroup}>
-                <label htmlFor="start-time-picker" className={styles.fieldLabel}>Giờ bắt đầu <span className={styles.required}>*</span></label>
+                <label htmlFor="start-time-picker" className={styles.fieldLabel}>Start time <span className={styles.required}>*</span></label>
                 <div className={styles.iconInputWrapper}>
                   <Clock size={16} className={styles.inputIcon} />
                   <input 
@@ -394,7 +394,7 @@ export default function CreateExamPage() {
 
               {/* Duration */}
               <div className={styles.formGroup}>
-                <label htmlFor="duration-input" className={styles.fieldLabel}>Thời gian làm bài (phút) <span className={styles.required}>*</span></label>
+                <label htmlFor="duration-input" className={styles.fieldLabel}>Exam duration (minutes) <span className={styles.required}>*</span></label>
                 <div className={styles.iconInputWrapper}>
                   <Clock size={16} className={styles.inputIcon} />
                   <input 
@@ -411,11 +411,11 @@ export default function CreateExamPage() {
             </div>
 
             {/* Score & Questions Grid */}
-            <div className={styles.sectionSubtitle}>Điểm số</div>
+            <div className={styles.sectionSubtitle}>Scores</div>
             <div className={styles.grid4Col}>
               {/* Total Score */}
               <div className={styles.formGroup}>
-                <label htmlFor="total-score-input" className={styles.fieldLabel}>Điểm tổng <span className={styles.required}>*</span></label>
+                <label htmlFor="total-score-input" className={styles.fieldLabel}>Total score <span className={styles.required}>*</span></label>
                 <input 
                   id="total-score-input"
                   type="number" 
@@ -429,7 +429,7 @@ export default function CreateExamPage() {
 
               {/* Passing Score */}
               <div className={styles.formGroup}>
-                <label htmlFor="passing-score-input" className={styles.fieldLabel}>Điểm đạt <span className={styles.required}>*</span></label>
+                <label htmlFor="passing-score-input" className={styles.fieldLabel}>Passing score <span className={styles.required}>*</span></label>
                 <input 
                   id="passing-score-input"
                   type="number" 
@@ -443,7 +443,7 @@ export default function CreateExamPage() {
 
               {/* Number of Questions */}
               <div className={styles.formGroup}>
-                <label htmlFor="questions-count-input" className={styles.fieldLabel}>Số câu hỏi <span className={styles.required}>*</span></label>
+                <label htmlFor="questions-count-input" className={styles.fieldLabel}>Number of questions <span className={styles.required}>*</span></label>
                 <input 
                   id="questions-count-input"
                   type="number" 
@@ -457,7 +457,7 @@ export default function CreateExamPage() {
 
               {/* Number of Versions */}
               <div className={styles.formGroup}>
-                <label htmlFor="versions-count-input" className={styles.fieldLabel}>Số mã đề <span className={styles.required}>*</span></label>
+                <label htmlFor="versions-count-input" className={styles.fieldLabel}>Number of variants <span className={styles.required}>*</span></label>
                 <input 
                   id="versions-count-input"
                   type="number" 
@@ -471,9 +471,9 @@ export default function CreateExamPage() {
               </div>
             </div>
 
-            {/* Shuffle Options - gộp vào cùng card */}
+            {/* Shuffle Options */}
             <div className={styles.sectionDivider} />
-            <div className={styles.sectionSubtitle}>Tùy chọn xáo trộn</div>
+            <div className={styles.sectionSubtitle}>Shuffle options</div>
             <div className={styles.grid2Col}>
               <label className={styles.shuffleOptionCard}>
                 <input 
@@ -483,8 +483,8 @@ export default function CreateExamPage() {
                   className={styles.checkboxSquare}
                 />
                 <div className={styles.optionDetails}>
-                  <span className={styles.optionTitle}>Đảo câu hỏi</span>
-                  <span className={styles.optionDesc}>Xáo trộn thứ tự các câu hỏi trong mỗi mã đề.</span>
+                  <span className={styles.optionTitle}>Shuffle questions</span>
+                  <span className={styles.optionDesc}>Randomize the order of questions in each exam variant.</span>
                 </div>
               </label>
 
@@ -496,24 +496,24 @@ export default function CreateExamPage() {
                   className={styles.checkboxSquare}
                 />
                 <div className={styles.optionDetails}>
-                  <span className={styles.optionTitle}>Đảo đáp án</span>
-                  <span className={styles.optionDesc}>Xáo trộn thứ tự A, B, C, D cho từng câu hỏi.</span>
+                  <span className={styles.optionTitle}>Shuffle answer choices</span>
+                  <span className={styles.optionDesc}>Randomize the order of A, B, C, D options for each question.</span>
                 </div>
               </label>
             </div>
           </div>
         </section>
 
-        {/* Card 3: Gán câu hỏi */}
+        {/* Card 3: Assign Questions */}
         <section className={styles.card}>
           <div className={styles.cardHeaderFlex}>
             <div className={styles.cardHeaderTitle}>
               <span className={styles.stepNumber}>03</span>
-              <h2>Gán câu hỏi</h2>
+              <h2>Assign Questions</h2>
             </div>
             
             <span className={styles.questionSelectedBadge}>
-              Đã chọn: {assignedQuestionIds.length}/{numberOfQuestions} câu
+              Selected: {assignedQuestionIds.length}/{numberOfQuestions} questions
             </span>
           </div>
 
@@ -524,7 +524,7 @@ export default function CreateExamPage() {
                 <Search size={16} className={styles.searchIcon} />
                 <input 
                   type="text" 
-                  placeholder="Tìm kiếm câu hỏi theo nội dung" 
+                  placeholder="Search questions by content" 
                   value={assignedQuestionsLocalSearch}
                   onChange={(e) => setAssignedQuestionsLocalSearch(e.target.value)}
                   className={styles.searchField}
@@ -535,19 +535,19 @@ export default function CreateExamPage() {
             {/* Questions list selection */}
             <div className={styles.questionsContainer}>
               {mainCardQuestions.length === 0 ? (
-                <div className={styles.emptyQuestions}>Không tìm thấy câu hỏi phù hợp.</div>
+                <div className={styles.emptyQuestions}>No matching questions found.</div>
               ) : (
                 mainCardQuestions.map((q) => {
                   const isChecked = assignedQuestionIds.includes(q._id);
                   
                   let diffColor = styles.diffMedium;
-                  let diffText = 'Trung bình';
+                  let diffText = 'Medium';
                   if (q.difficulty === 'Easy') {
                     diffColor = styles.diffEasy;
-                    diffText = 'Dễ';
+                    diffText = 'Easy';
                   } else if (q.difficulty === 'Hard') {
                     diffColor = styles.diffHard;
-                    diffText = 'Khó';
+                    diffText = 'Hard';
                   }
 
                   return (
@@ -562,7 +562,7 @@ export default function CreateExamPage() {
                       <div className={styles.questionBody}>
                         <div className={styles.questionTagsRow}>
                           <span className={styles.typeBadge}>
-                            {q.options.length === 2 ? 'ĐÚNG/SAI' : 'TRẮC NGHIỆM ĐƠN'}
+                            {q.options.length === 2 ? 'TRUE/FALSE' : 'SINGLE CHOICE'}
                           </span>
                           <span className={`${styles.diffBadge} ${diffColor}`}>
                             {diffText}
@@ -586,7 +586,7 @@ export default function CreateExamPage() {
               className={styles.exploreBankBtn}
             >
               <FileText size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-              <span>Chọn câu hỏi từ Ngân hàng câu hỏi</span>
+              <span>Select questions from Question Bank</span>
             </button>
           </div>
         </section>
@@ -607,7 +607,7 @@ export default function CreateExamPage() {
                 onClick={() => navigate('/exams')}
                 className={styles.cancelBtn}
               >
-                Hủy bỏ
+                Cancel
               </button>
 
               <button 
@@ -620,7 +620,7 @@ export default function CreateExamPage() {
                 ) : (
                   <>
                     <Rocket size={16} />
-                    <span>Tạo bài kiểm tra</span>
+                    <span>Create exam</span>
                   </>
                 )}
               </button>
@@ -636,7 +636,7 @@ export default function CreateExamPage() {
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             
             <div className={styles.modalHeader}>
-              <h2>Ngân hàng câu hỏi của trường</h2>
+              <h2>School Question Bank</h2>
               <button type="button" className={styles.closeBtn} onClick={() => setIsBankModalOpen(false)}>
                 <X size={20} />
               </button>
@@ -645,7 +645,7 @@ export default function CreateExamPage() {
             <div className={styles.modalFilterBar}>
               {/* Tag selection chips */}
               <div className={styles.tagFilterSection}>
-                <label className={styles.tagFilterLabel}>Lọc theo Tags:</label>
+                <label className={styles.tagFilterLabel}>Filter by Tags:</label>
                 <div className={styles.tagChipsContainer}>
                   {availableTags.slice(0, 15).map((tag) => (
                     <button
@@ -664,7 +664,7 @@ export default function CreateExamPage() {
                 </div>
                 {selectedTags.length > 0 && (
                   <div className={styles.selectedTagsInfo}>
-                    <span>Đã chọn: {selectedTags.length} tags</span>
+                    <span>Selected: {selectedTags.length} tags</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -673,7 +673,7 @@ export default function CreateExamPage() {
                       }}
                       className={styles.clearTagsBtn}
                     >
-                      Xóa
+                      Clear
                     </button>
                     <button
                       type="button"
@@ -682,7 +682,7 @@ export default function CreateExamPage() {
                       }}
                       className={styles.applyTagsBtn}
                     >
-                      Áp dụng
+                      Apply
                     </button>
                   </div>
                 )}
@@ -694,17 +694,17 @@ export default function CreateExamPage() {
                 onChange={(e) => setTagDifficultyFilter(e.target.value)}
                 className={styles.modalSelectField}
               >
-                <option value="">-- Mọi độ khó --</option>
-                <option value="easy">Dễ</option>
-                <option value="medium">Trung bình</option>
-                <option value="hard">Khó</option>
+                <option value="">-- All difficulties --</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
               </select>
 
               <div className={styles.modalSearchBox}>
                 <Search size={16} className={styles.searchIcon} />
                 <input
                   type="text"
-                  placeholder="Tìm câu hỏi..."
+                  placeholder="Search questions..."
                   value={bankSearchText}
                   onChange={(e) => setBankSearchText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleBankSearch()}
@@ -713,14 +713,14 @@ export default function CreateExamPage() {
               </div>
 
               <button type="button" onClick={handleBankSearch} className={styles.modalSearchBtn}>
-                Tìm kiếm
+                Search
               </button>
             </div>
 
             {/* List in modal */}
             <div className={styles.modalQuestionsList}>
               {isLoadingTagQuestions ? (
-                <div className={styles.modalLoading}>Đang tải câu hỏi...</div>
+                <div className={styles.modalLoading}>Loading questions...</div>
               ) : selectedTags.length > 0 && tagQuestions.length > 0 ? (
                 // Show questions fetched by tags
                 tagQuestions
@@ -738,13 +738,13 @@ export default function CreateExamPage() {
                     const isChecked = assignedQuestionIds.includes(q._id);
 
                     let diffColor = styles.diffMedium;
-                    let diffText = 'Trung bình';
+                    let diffText = 'Medium';
                     if (q.difficulty === 'Easy') {
                       diffColor = styles.diffEasy;
-                      diffText = 'Dễ';
+                      diffText = 'Easy';
                     } else if (q.difficulty === 'Hard') {
                       diffColor = styles.diffHard;
-                      diffText = 'Khó';
+                      diffText = 'Hard';
                     }
 
                     return (
@@ -758,7 +758,7 @@ export default function CreateExamPage() {
                         <div className={styles.modalQuestionContent}>
                           <div className={styles.questionTagsRow}>
                             <span className={styles.typeBadge}>
-                              {q.options.length === 2 ? 'ĐÚNG/SAI' : 'TRẮC NGHIỆM ĐƠN'}
+                              {q.options.length === 2 ? 'TRUE/FALSE' : 'SINGLE CHOICE'}
                             </span>
                             <span className={`${styles.diffBadge} ${diffColor}`}>
                               {diffText}
@@ -784,7 +784,7 @@ export default function CreateExamPage() {
                     );
                   })
               ) : allAvailableQuestions.length === 0 ? (
-                <div className={styles.modalLoading}>Không tìm thấy câu hỏi nào.</div>
+                <div className={styles.modalLoading}>No questions found.</div>
               ) : (
                 // Show default questions from store
                 allAvailableQuestions
@@ -803,13 +803,13 @@ export default function CreateExamPage() {
                     const isChecked = assignedQuestionIds.includes(q._id);
                     
                     let diffColor = styles.diffMedium;
-                    let diffText = 'Trung bình';
+                    let diffText = 'Medium';
                     if (q.difficulty === 'Easy') {
                       diffColor = styles.diffEasy;
-                      diffText = 'Dễ';
+                      diffText = 'Easy';
                     } else if (q.difficulty === 'Hard') {
                       diffColor = styles.diffHard;
-                      diffText = 'Khó';
+                      diffText = 'Hard';
                     }
 
                     return (
@@ -823,7 +823,7 @@ export default function CreateExamPage() {
                         <div className={styles.modalQuestionContent}>
                           <div className={styles.questionTagsRow}>
                             <span className={styles.typeBadge}>
-                              {q.options.length === 2 ? 'ĐÚNG/SAI' : 'TRẮC NGHIỆM ĐƠN'}
+                              {q.options.length === 2 ? 'TRUE/FALSE' : 'SINGLE CHOICE'}
                             </span>
                             <span className={`${styles.diffBadge} ${diffColor}`}>
                               {diffText}
@@ -852,7 +852,7 @@ export default function CreateExamPage() {
             {/* Footer with pagination */}
             <div className={styles.modalFooter}>
               <span className={styles.modalSelectionCount}>
-                Đã chọn {assignedQuestionIds.length} câu hỏi
+                Selected {assignedQuestionIds.length} questions
               </span>
 
               <div className={styles.modalPagination}>
@@ -865,7 +865,7 @@ export default function CreateExamPage() {
                   <ChevronLeft size={16} />
                 </button>
                 <span className={styles.modalPageIndicator}>
-                  Trang {bankPage} / {questionPagination.pages || 1}
+                  Page {bankPage} / {questionPagination.pages || 1}
                 </span>
                 <button 
                   type="button" 
@@ -882,7 +882,7 @@ export default function CreateExamPage() {
                 onClick={() => setIsBankModalOpen(false)}
                 className={styles.modalDoneBtn}
               >
-                Hoàn tất
+                Done
               </button>
             </div>
 

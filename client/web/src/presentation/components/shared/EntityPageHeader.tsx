@@ -22,7 +22,7 @@ export default function EntityPageHeader({
   mode,
   title,
   subtitle,
-  createLabel = 'Thêm mới',
+  createLabel = 'Add New',
   onCreate,
   extraActions,
 }: EntityPageHeaderProps) {

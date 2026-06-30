@@ -137,11 +137,11 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
   const versionCode = typeof version === 'object' ? version?.versionCode : '—';
 
   const statusLabel: Record<string, string> = {
-    pending: 'Chờ quét',
-    scanned: 'Đã quét',
-    completed: 'Hoàn thành',
-    manual_review: 'Chờ duyệt',
-    appealed: 'Phúc tra',
+    pending: 'Pending Scan',
+    scanned: 'Scanned',
+    completed: 'Completed',
+    manual_review: 'Pending Review',
+    appealed: 'Under Appeal',
   };
 
   return (
@@ -159,12 +159,12 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
       >
         <div className={styles.modalHeader}>
           <h3 id="submission-modal-title" className={styles.modalTitle}>
-            {mode === 'edit' ? 'Sửa bài nộp' : 'Chi tiết bài nộp'}
+            {mode === 'edit' ? 'Edit Submission' : 'Submission Details'}
           </h3>
           <button
             className={styles.modalClose}
             onClick={onClose}
-            aria-label="Đóng"
+            aria-label="Close"
             disabled={isSubmitting}
           >
             <X size={18} />
@@ -173,7 +173,7 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
 
         <div className={styles.modalBody}>
           {isLoadingDetail && (
-            <div className={styles.loading}>Đang tải dữ liệu...</div>
+            <div className={styles.loading}>Loading data...</div>
           )}
 
           {error && (
@@ -188,33 +188,33 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
               <div className={styles.infoSection}>
                 <div className={styles.infoGrid}>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Học sinh:</span>
+                    <span className={styles.infoLabel}>Student:</span>
                     <span className={styles.infoValue}>{studentName}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Mã HS:</span>
+                    <span className={styles.infoLabel}>Student ID:</span>
                     <span className={styles.infoValue}>{studentCode}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Lớp:</span>
+                    <span className={styles.infoLabel}>Class:</span>
                     <span className={styles.infoValue}>{className}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Bài thi:</span>
+                    <span className={styles.infoLabel}>Exam:</span>
                     <span className={styles.infoValue}>{examTitle}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Mã đề:</span>
+                    <span className={styles.infoLabel}>Version:</span>
                     <span className={styles.infoValue}>{versionCode}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Trạng thái:</span>
+                    <span className={styles.infoLabel}>Status:</span>
                     <span className={styles.statusBadge}>
                       {statusLabel[currentSubmission.status] || currentSubmission.status}
                     </span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Điểm:</span>
+                    <span className={styles.infoLabel}>Score:</span>
                     <span className={styles.scoreHighlight}>
                       {currentSubmission.totalScore} / {currentSubmission.maxScore}
                     </span>
@@ -223,7 +223,7 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
               </div>
 
               <div className={styles.section}>
-                <h4 className={styles.sectionTitle}>Bảng đáp án</h4>
+                <h4 className={styles.sectionTitle}>Answer Table</h4>
                 <AnswerEditTable
                   answers={answersAsRows}
                   editable={mode === 'edit'}
@@ -235,7 +235,7 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
 
               {(currentSubmission as { images?: { original?: { url?: string }; annotated?: { url?: string } } }).images && (
                 <div className={styles.section}>
-                  <h4 className={styles.sectionTitle}>Ảnh bài làm</h4>
+                  <h4 className={styles.sectionTitle}>Submission Images</h4>
                   <ImageGallery
                     originalUrl={(currentSubmission as { images?: { original?: { url?: string } } }).images?.original?.url}
                     annotatedUrl={(currentSubmission as { images?: { annotated?: { url?: string } } }).images?.annotated?.url}
@@ -254,17 +254,17 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isSubmitting}
               >
-                <Trash2 size={14} /> Xóa
+                <Trash2 size={14} /> Delete
               </button>
               <button
                 className={styles.btnSecondary}
                 onClick={() => setMode('edit')}
                 disabled={isSubmitting}
               >
-                <Edit3 size={14} /> Sửa
+                <Edit3 size={14} /> Edit
               </button>
               <button className={styles.btnPrimary} onClick={onClose} disabled={isSubmitting}>
-                Đóng
+                Close
               </button>
             </>
           )}
@@ -279,14 +279,14 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
                 }}
                 disabled={isSubmitting}
               >
-                Hủy
+                Cancel
               </button>
               <button
                 className={styles.btnPrimary}
                 onClick={handleSave}
                 disabled={isSubmitting || !hasChanges}
               >
-                {isSubmitting ? 'Đang lưu...' : (<><Save size={14} /> Lưu</>)}
+                {isSubmitting ? 'Saving...' : (<><Save size={14} /> Save</>)}
               </button>
             </>
           )}
@@ -295,21 +295,21 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
         {showDeleteConfirm && (
           <div className={styles.confirmOverlay} onClick={() => setShowDeleteConfirm(false)}>
             <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
-              <h4>Xác nhận xóa</h4>
-              <p>Bạn có chắc muốn xóa bài nộp của <strong>{studentName}</strong>? Hành động này không thể hoàn tác.</p>
+              <h4>Confirm Delete</h4>
+              <p>Are you sure you want to delete the submission from <strong>{studentName}</strong>? This action cannot be undone.</p>
               <div className={styles.confirmActions}>
                 <button
                   className={styles.btnSecondary}
                   onClick={() => setShowDeleteConfirm(false)}
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button
                   className={styles.btnDelete}
                   onClick={handleDelete}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Đang xóa...' : 'Xác nhận xóa'}
+                  {isSubmitting ? 'Deleting...' : 'Confirm Delete'}
                 </button>
               </div>
             </div>

@@ -38,13 +38,13 @@ export default function VerifyEmailPage() {
         try {
           await verifyEmail(token);
           setVerificationStatus('success');
-          setStatusMessage('Xác thực email thành công! Tài khoản của bạn đã hoạt động.');
-          toast.success('Xác thực email thành công!');
+          setStatusMessage('Email verified successfully! Your account is now active.');
+          toast.success('Email verified successfully!');
         } catch (err: unknown) {
           const error = err as { message?: string };
           setVerificationStatus('error');
-          setStatusMessage(error.message || 'Xác thực email thất bại hoặc liên kết đã hết hạn.');
-          toast.error('Xác thực email thất bại.');
+          setStatusMessage(error.message || 'Email verification failed or link has expired.');
+          toast.error('Email verification failed.');
         }
       };
       runVerification();
@@ -107,15 +107,15 @@ export default function VerifyEmailPage() {
     const code = otp.join('');
     
     if (code.length < 6) {
-      toast.error('Vui lòng nhập đầy đủ mã xác thực gồm 6 chữ số.');
+      toast.error('Please enter the full 6-digit verification code.');
       return;
     }
 
     // Since backend expects verification via a URL token link:
     // We simulate the OTP success as a mockup behavior for UX, and explain to the user.
     setVerificationStatus('success');
-    setStatusMessage('Xác thực mã OTP thành công (Giả lập)! Vui lòng kiểm tra email thực tế và bấm vào liên kết kích hoạt để đồng bộ dữ liệu nếu có.');
-    toast.success('Mã OTP hợp lệ!');
+    setStatusMessage('OTP code verified successfully (Simulation)! Please check your actual email inbox and click the verification link to synchronize data.');
+    toast.success('Valid OTP code!');
     
     setTimeout(() => {
       navigate('/login');
@@ -127,11 +127,11 @@ export default function VerifyEmailPage() {
     if (resendCooldown > 0) return;
     try {
       await sendVerificationEmail();
-      toast.success('Đã gửi lại email xác thực. Vui lòng kiểm tra hòm thư của bạn.');
+      toast.success('Verification email resent. Please check your inbox.');
       setResendCooldown(60); // Start 60s cooldown
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error.message || 'Gửi lại email xác thực thất bại.');
+      toast.error(error.message || 'Failed to resend verification email.');
     }
   };
 
@@ -143,8 +143,8 @@ export default function VerifyEmailPage() {
           {verificationStatus === 'loading' && (
             <>
               <div className={styles.loadingSpinner} />
-              <h1 className={styles.title}>Đang xác thực email</h1>
-              <p className={styles.subtitle}>Vui lòng chờ trong giây lát khi chúng tôi xác minh tài khoản của bạn...</p>
+              <h1 className={styles.title}>Verifying email</h1>
+              <p className={styles.subtitle}>Please wait a moment while we verify your account...</p>
             </>
           )}
 
@@ -153,10 +153,10 @@ export default function VerifyEmailPage() {
               <div className={styles.iconWrapper} style={{ backgroundColor: '#ecfdf5', color: '#059669' }}>
                 <CheckCircle size={32} />
               </div>
-              <h1 className={styles.title}>Xác thực thành công</h1>
+              <h1 className={styles.title}>Verification Successful</h1>
               <p className={styles.subtitle}>{statusMessage}</p>
               <Link to="/login" className={styles.submitBtn} style={{ textDecoration: 'none', marginTop: '20px' }}>
-                Đi đến Đăng nhập
+                Go to Login
               </Link>
             </>
           )}
@@ -166,17 +166,17 @@ export default function VerifyEmailPage() {
               <div className={styles.iconWrapper} style={{ backgroundColor: '#fef2f2', color: '#b91c1c' }}>
                 <XCircle size={32} />
               </div>
-              <h1 className={styles.title}>Xác thực thất bại</h1>
+              <h1 className={styles.title}>Verification Failed</h1>
               <p className={styles.subtitle}>{statusMessage}</p>
               <div className={styles.errorAlert} style={{ marginTop: '12px' }}>
-                {error || 'Mã token xác thực không đúng hoặc đã hết hạn.'}
+                {error || 'Verification token is invalid or has expired.'}
               </div>
               <div style={{ display: 'flex', gap: '16px', width: '100%', marginTop: '12px' }}>
                 <button onClick={() => window.location.reload()} className={styles.submitBtn} style={{ flex: 1 }}>
-                  Thử lại
+                  Try again
                 </button>
                 <Link to="/login" className={styles.submitBtn} style={{ flex: 1, textDecoration: 'none', backgroundColor: '#f3f4f6', color: '#1f2937', border: '1px solid #d1d5db' }}>
-                  Quay lại đăng nhập
+                  Back to Login
                 </Link>
               </div>
             </>
@@ -195,10 +195,10 @@ export default function VerifyEmailPage() {
             <div className={styles.iconWrapper} style={{ backgroundColor: '#ecfdf5', color: '#059669' }}>
               <CheckCircle size={32} />
             </div>
-            <h1 className={styles.title}>Xác thực thành công</h1>
+            <h1 className={styles.title}>Verification Successful</h1>
             <p className={styles.subtitle}>{statusMessage}</p>
             <Link to="/login" className={styles.submitBtn} style={{ textDecoration: 'none', marginTop: '20px' }}>
-              Đi đến Đăng nhập
+              Go to Login
             </Link>
           </div>
         ) : (
@@ -214,8 +214,8 @@ export default function VerifyEmailPage() {
             </p>
 
             <div className={styles.infoMessage}>
-              💡 <strong>Lưu ý:</strong> Bản thử nghiệm hỗ trợ nhập 6 chữ số bất kỳ để xác thực nhanh giao diện. 
-              Bạn cũng có thể nhấp trực tiếp vào đường link trong email để kiểm tra luồng xác thực thực tế.
+              💡 <strong>Note:</strong> The demo supports entering any 6 digits for quick UI verification. 
+              You can also click the link in the email to test the actual verification flow.
             </div>
 
             <form onSubmit={handleSubmit} className={styles.form}>

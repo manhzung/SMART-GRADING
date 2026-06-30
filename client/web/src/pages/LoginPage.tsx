@@ -29,24 +29,24 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      toast.error('Vui lòng nhập địa chỉ email.');
+      toast.error('Please enter your email address.');
       return;
     }
 
     try {
       await login(email, password);
-      toast.success('Đăng nhập thành công!');
+      toast.success('Login successful!');
       const role = useAuthStore.getState().user?.role;
       const target = (role && HOME_ROUTE_BY_ROLE[role]) || '/';
       navigate(target, { replace: true });
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      toast.error(error.message || 'Login failed. Please check your credentials.');
     }
   };
 
   const handleSocialLogin = (provider: string) => {
-    toast.info(`Tính năng đăng nhập bằng ${provider} đang được phát triển.`);
+    toast.info(`Sign in with ${provider} is under development.`);
   };
 
   return (

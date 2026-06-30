@@ -53,11 +53,11 @@ const renderModal = (props: Partial<React.ComponentProps<typeof ExamScoresModal>
         open={true}
         onClose={vi.fn()}
         examId="exam1"
-        examTitle="Kiểm tra 45 phút Toán"
-        examSubject="Toán"
+        examTitle="Math 45-Minute Quiz"
+        examSubject="Mathematics"
         examDate="2026-06-28"
         classId="class1"
-        className="Lớp 10A1"
+        className="Grade 10A1"
         {...props}
       />
     </QueryClientProvider>,
@@ -78,20 +78,20 @@ describe('ExamScoresModal — skeleton', () => {
     renderModal();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     // Title has prefix per spec §6.3 — use a regex to match the substring
-    expect(screen.getByText(/Kiểm tra 45 phút Toán/)).toBeInTheDocument();
+    expect(screen.getByText(/Math 45-Minute Quiz/)).toBeInTheDocument();
   });
 
   it('shows subject and date in subline when provided', () => {
     renderModal();
     // Subline shows subject + date; target the subline paragraph specifically
-    expect(screen.getByText(/Toán · Ngày thi: 2026-06-28/)).toBeInTheDocument();
+    expect(screen.getByText(/Mathematics · Date: 2026-06-28/)).toBeInTheDocument();
   });
 
   it('calls onClose when close button clicked', () => {
     const onClose = vi.fn();
     renderModal({ onClose });
-    // Footer "Đóng" button has accessible name exactly "Đóng"
-    fireEvent.click(screen.getByRole('button', { name: 'Đóng' }));
+    // Footer "Close" button has accessible name exactly "Close"
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -106,7 +106,7 @@ describe('ExamScoresModal — skeleton', () => {
 const mockSubmission = {
   _id: 'sub1',
   examId: 'exam1',
-  studentId: { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+  studentId: { _id: 's1', name: 'John Doe', studentCode: 'ST001', email: 'a@s' },
   totalScore: 8,
   maxScore: 10,
   status: 'completed' as const,
@@ -124,7 +124,7 @@ describe('ExamScoresModal — export', () => {
         return { results: [mockSubmission] };
       }
       if (String(url).includes('/classes/')) {
-        return { _id: 'class1', name: 'Lớp 10A1', studentIds: ['s1'] };
+        return { _id: 'class1', name: 'Grade 10A1', studentIds: ['s1'] };
       }
       return null;
     });
@@ -135,9 +135,9 @@ describe('ExamScoresModal — export', () => {
           open={true}
           onClose={vi.fn()}
           examId="exam1"
-          examTitle="KT 45p"
+          examTitle="Quiz 45min"
           classId="class1"
-          className="Lớp 10A1"
+          className="Grade 10A1"
         />
       </QueryClientProvider>,
     );
@@ -151,7 +151,7 @@ describe('ExamScoresModal — export', () => {
         return { results: [mockSubmission] };
       }
       if (String(url).includes('/classes/')) {
-        return { _id: 'class1', name: 'Lớp 10A1', studentIds: ['s1'] };
+        return { _id: 'class1', name: 'Grade 10A1', studentIds: ['s1'] };
       }
       return null;
     });
@@ -162,9 +162,9 @@ describe('ExamScoresModal — export', () => {
           open={true}
           onClose={vi.fn()}
           examId="exam1"
-          examTitle="KT 45p"
+          examTitle="Quiz 45min"
           classId="class1"
-          className="Lớp 10A1"
+          className="Grade 10A1"
         />
       </QueryClientProvider>,
     );
@@ -172,17 +172,17 @@ describe('ExamScoresModal — export', () => {
     fireEvent.click(screen.getByTestId('export-btn'));
     expect(mockWriteFile).toHaveBeenCalledTimes(1);
     const args = mockWriteFile.mock.calls[0];
-    // Filename pattern: Diem_KT_45p_Lop_10A1_<date>.xlsx
-    expect(String(args[1])).toMatch(/^Diem_.+_.+_\d{8}\.xlsx$/);
+    // Filename pattern: Scores_Quiz_45min_Grade_10A1_<date>.xlsx
+    expect(String(args[1])).toMatch(/^Scores_.+_.+_\d{8}\.xlsx$/);
   });
 });
 
-describe('ExamScoresModal — Chưa nộp roster merge', () => {
+describe('ExamScoresModal — Not submitted roster merge', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('shows "Chưa nộp" rows for students in class but not in submissions', async () => {
+  it('shows "Not submitted" rows for students in class but not in submissions', async () => {
     (apiService.get as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
       if (String(url).includes('/submissions/exam/')) {
         // only s1 submitted
@@ -191,7 +191,7 @@ describe('ExamScoresModal — Chưa nộp roster merge', () => {
             {
               _id: 'sub1',
               examId: 'exam1',
-              studentId: { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+              studentId: { _id: 's1', name: 'John Doe', studentCode: 'ST001', email: 'a@s' },
               totalScore: 8,
               maxScore: 10,
               status: 'completed',
@@ -203,11 +203,11 @@ describe('ExamScoresModal — Chưa nộp roster merge', () => {
       if (String(url).includes('/classes/')) {
         return {
           _id: 'class1',
-          name: 'Lớp 10A1',
+          name: 'Grade 10A1',
           // s1 (submitted) and s2 (not submitted)
           studentIds: [
-            { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
-            { _id: 's2', name: 'Tran Thi B', studentCode: 'HS002', email: 'b@s' },
+            { _id: 's1', name: 'John Doe', studentCode: 'ST001', email: 'a@s' },
+            { _id: 's2', name: 'Jane Smith', studentCode: 'ST002', email: 'b@s' },
           ],
         };
       }
@@ -220,17 +220,17 @@ describe('ExamScoresModal — Chưa nộp roster merge', () => {
           open={true}
           onClose={vi.fn()}
           examId="exam1"
-          examTitle="KT 45p"
+          examTitle="Quiz 45min"
           classId="class1"
-          className="Lớp 10A1"
+          className="Grade 10A1"
         />
       </QueryClientProvider>,
     );
     await screen.findByTestId('scores-table');
-    // s2 should appear as a "Chưa nộp" row
-    expect(screen.getByText('Tran Thi B')).toBeInTheDocument();
-    // At least one "Chưa nộp" badge should be present
-    expect(screen.getAllByText('Chưa nộp').length).toBeGreaterThanOrEqual(1);
+    // s2 should appear as a "Not submitted" row
+    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+    // At least one "Not submitted" badge should be present
+    expect(screen.getAllByText('Not submitted').length).toBeGreaterThanOrEqual(1);
   });
 
   it('does not duplicate a student who is both in roster and in submissions', async () => {
@@ -241,7 +241,7 @@ describe('ExamScoresModal — Chưa nộp roster merge', () => {
             {
               _id: 'sub1',
               examId: 'exam1',
-              studentId: { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+              studentId: { _id: 's1', name: 'John Doe', studentCode: 'ST001', email: 'a@s' },
               totalScore: 8,
               maxScore: 10,
               status: 'completed',
@@ -253,9 +253,9 @@ describe('ExamScoresModal — Chưa nộp roster merge', () => {
       if (String(url).includes('/classes/')) {
         return {
           _id: 'class1',
-          name: 'Lớp 10A1',
+          name: 'Grade 10A1',
           studentIds: [
-            { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@s' },
+            { _id: 's1', name: 'John Doe', studentCode: 'ST001', email: 'a@s' },
           ],
         };
       }
@@ -268,14 +268,14 @@ describe('ExamScoresModal — Chưa nộp roster merge', () => {
           open={true}
           onClose={vi.fn()}
           examId="exam1"
-          examTitle="KT 45p"
+          examTitle="Quiz 45min"
           classId="class1"
-          className="Lớp 10A1"
+          className="Grade 10A1"
         />
       </QueryClientProvider>,
     );
     await screen.findByTestId('scores-table');
     // s1 should appear only once
-    expect(screen.getAllByText('Nguyen Van A').length).toBe(1);
+    expect(screen.getAllByText('John Doe').length).toBe(1);
   });
 });

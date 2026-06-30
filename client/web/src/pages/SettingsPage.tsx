@@ -23,7 +23,6 @@ import styles from './SettingsPage.module.css';
 
 type TabType = 'profile' | 'security' | 'preferences';
 
-
 interface Session {
   id: string;
   device: string;
@@ -48,11 +47,11 @@ export default function SettingsPage() {
   const [fullName, setFullName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState((user as any)?.phone || '');
-  const [role] = useState(user?.role === 'admin' ? 'Quản trị viên'
-    : user?.role === 'teacher' ? 'Giáo viên'
-    : user?.role === 'student' ? 'Học sinh'
-    : user?.role === 'parent' ? 'Phụ huynh'
-    : 'Không xác định');
+  const [role] = useState(user?.role === 'admin' ? 'Administrator'
+    : user?.role === 'teacher' ? 'Teacher'
+    : user?.role === 'student' ? 'Student'
+    : user?.role === 'parent' ? 'Parent'
+    : 'Unknown');
   const [avatarPreview, setAvatarPreview] = useState<string | null>((user as any)?.avatarUrl || null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   
@@ -73,11 +72,10 @@ export default function SettingsPage() {
   
   // Sessions state (mock data)
   const [sessions] = useState<Session[]>([
-    { id: '1', device: 'Chrome on Windows', location: 'Hà Nội, Việt Nam', lastActive: 'Đang hoạt động', current: true },
-    { id: '2', device: 'Safari on iPhone', location: 'Hà Nội, Việt Nam', lastActive: '2 giờ trước', current: false },
-    { id: '3', device: 'Firefox on macOS', location: 'TP. Hồ Chí Minh, Việt Nam', lastActive: '3 ngày trước', current: false },
+    { id: '1', device: 'Chrome on Windows', location: 'Hanoi, Vietnam', lastActive: 'Active', current: true },
+    { id: '2', device: 'Safari on iPhone', location: 'Hanoi, Vietnam', lastActive: '2 hours ago', current: false },
+    { id: '3', device: 'Firefox on macOS', location: 'Ho Chi Minh City, Vietnam', lastActive: '3 days ago', current: false },
   ]);
-
 
   useEffect(() => {
     const saved = localStorage.getItem('user-preferences');
@@ -104,7 +102,7 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Kích thước ảnh không được vượt quá 5MB');
+        toast.error('Image size must not exceed 5MB');
         return;
       }
       const reader = new FileReader();
@@ -117,70 +115,59 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     if (!fullName.trim()) {
-      toast.error('Vui lòng nhập họ tên');
+      toast.error('Please enter your name');
       return;
     }
     if (!email.trim()) {
-      toast.error('Vui lòng nhập email');
+      toast.error('Please enter your email');
       return;
     }
     setIsSavingProfile(true);
     try {
       await updateProfile({ name: fullName, phone });
-      toast.success('Cập nhật thông tin cá nhân thành công!');
+      toast.success('Profile updated successfully!');
     } catch (error) {
-      toast.error((error as Error).message || 'Cập nhật thất bại');
+      toast.error((error as Error).message || 'Update failed');
     } finally {
       setIsSavingProfile(false);
     }
   };
 
-  const handleNotificationToggle = async (key: keyof NotificationSettings) => {
-    const newValue = !notifications[key];
-    setNotifications(prev => ({ ...prev, [key]: newValue }));
-    localStorage.setItem('notification-prefs', JSON.stringify({
-      ...notifications,
-      [key]: newValue,
-    }));
-    toast.success('Đã lưu cài đặt thông báo');
-  };
-
   const handleChangePassword = async () => {
     if (!currentPassword) {
-      toast.error('Vui lòng nhập mật khẩu hiện tại');
+      toast.error('Please enter your current password');
       return;
     }
     if (newPassword.length < 8) {
-      toast.error('Mật khẩu mới phải có ít nhất 8 ký tự');
+      toast.error('New password must be at least 8 characters long');
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error('Mật khẩu xác nhận không khớp');
+      toast.error('Confirm password does not match');
       return;
     }
     setIsChangingPassword(true);
     try {
       await changePassword(currentPassword, newPassword);
-      toast.success('Đổi mật khẩu thành công!');
+      toast.success('Password changed successfully!');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      toast.error((error as Error).message || 'Đổi mật khẩu thất bại');
+      toast.error((error as Error).message || 'Failed to change password');
     } finally {
       setIsChangingPassword(false);
     }
   };
 
   const handleTerminateSession = (_sessionId: string) => {
-    // API call would go here
-    toast.success('Đã đăng xuất phiên làm việc');
+    toast.success('Logged out session successfully');
   };
 
   const tabs = [
-    { id: 'profile' as TabType, label: 'Hồ sơ', icon: User },
-    { id: 'security' as TabType, label: 'Bảo mật', icon: Shield },
-    { id: 'preferences' as TabType, label: 'Tùy chọn', icon: SettingsIcon },
+    { id: 'profile' as TabType, label: 'Profile', icon: User },
+    { id: 'security' as TabType, label: 'Security', icon: Shield },
+    { id: 'preferences' as TabType, label: 'Preferences', icon: SettingsIcon },
   ];
 
   return (
@@ -189,8 +176,8 @@ export default function SettingsPage() {
       <div className={styles.header}>
         <div className={styles.headerInfo}>
           <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
-          <h1 className={styles.title}>Cài đặt</h1>
-          <p className={styles.subtitle}>Quản lý thông tin cá nhân, cấu hình bảo mật và thiết lập tùy chọn hệ thống</p>
+          <h1 className={styles.title}>Settings</h1>
+          <p className={styles.subtitle}>Manage personal details, security credentials, and system settings</p>
         </div>
       </div>
 
@@ -215,8 +202,8 @@ export default function SettingsPage() {
           {/* Profile Tab */}
           {activeTab === 'profile' && (
             <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Thông tin cá nhân</h2>
-              <p className={styles.sectionDesc}>Quản lý thông tin hồ sơ của bạn</p>
+              <h2 className={styles.sectionTitle}>Personal Details</h2>
+              <p className={styles.sectionDesc}>Manage your profile information</p>
               
               <div className={styles.profileCard}>
                 {/* Avatar */}
@@ -240,14 +227,14 @@ export default function SettingsPage() {
                     </label>
                   </div>
                   <div className={styles.avatarActions}>
-                    <p className={styles.avatarInstructions}>Tải lên hình ảnh chân dung của bạn. Định dạng PNG, JPG tối đa 5MB.</p>
+                    <p className={styles.avatarInstructions}>Upload your profile photo. PNG, JPG formats up to 5MB.</p>
                     <button 
                       className={styles.removeAvatarBtn}
                       onClick={() => setAvatarPreview(null)}
                       style={{ display: avatarPreview ? 'flex' : 'none' }}
                     >
                       <X size={14} />
-                      <span>Xóa ảnh chân dung</span>
+                      <span>Remove photo</span>
                     </button>
                   </div>
                 </div>
@@ -255,13 +242,13 @@ export default function SettingsPage() {
                 {/* Form Fields */}
                 <div className={styles.formGrid}>
                   <div className={styles.field}>
-                    <label className={styles.label}>Họ và tên</label>
+                    <label className={styles.label}>Full Name</label>
                     <input
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className={styles.input}
-                      placeholder="Nhập họ và tên"
+                      placeholder="Enter full name"
                     />
                   </div>
 
@@ -272,26 +259,26 @@ export default function SettingsPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={styles.input}
-                      placeholder="Nhập địa chỉ email"
+                      placeholder="Enter email address"
                     />
                   </div>
 
                   <div className={styles.field}>
-                    <label className={styles.label}>Số điện thoại</label>
+                    <label className={styles.label}>Phone Number</label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className={styles.input}
-                      placeholder="Nhập số điện thoại"
+                      placeholder="Enter phone number"
                     />
                   </div>
 
                   <div className={styles.field}>
-                    <label className={styles.label}>Vai trò</label>
+                    <label className={styles.label}>Role</label>
                     <div className={styles.roleBadge}>
                       <span className={styles.roleIcon}>
-                        {role === 'Quản trị viên' ? <Shield size={14} /> : <User size={14} />}
+                        {role === 'Administrator' ? <Shield size={14} /> : <User size={14} />}
                       </span>
                       <span>{role}</span>
                     </div>
@@ -305,34 +292,32 @@ export default function SettingsPage() {
                     disabled={isSavingProfile}
                   >
                     {isSavingProfile ? <Loader2 size={16} className={styles.spinner} /> : <Save size={16} />}
-                    <span>{isSavingProfile ? 'Đang lưu...' : 'Lưu thay đổi'}</span>
+                    <span>{isSavingProfile ? 'Saving...' : 'Save Changes'}</span>
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-
-
           {/* Security Tab */}
           {activeTab === 'security' && (
             <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Bảo mật</h2>
-              <p className={styles.sectionDesc}>Quản lý mật khẩu và bảo mật tài khoản</p>
+              <h2 className={styles.sectionTitle}>Security</h2>
+              <p className={styles.sectionDesc}>Manage your passwords and account security</p>
 
               {/* Change Password */}
               <div className={styles.securityCard}>
-                <h3 className={styles.cardTitle}>Đổi mật khẩu</h3>
+                <h3 className={styles.cardTitle}>Change Password</h3>
                 <div className={styles.passwordForm}>
                   <div className={styles.field}>
-                    <label className={styles.label}>Mật khẩu hiện tại</label>
+                    <label className={styles.label}>Current Password</label>
                     <div className={styles.passwordInputWrapper}>
                       <input
                         type={showCurrentPassword ? 'text' : 'password'}
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         className={styles.input}
-                        placeholder="Nhập mật khẩu hiện tại"
+                        placeholder="Enter current password"
                       />
                       <button
                         type="button"
@@ -345,14 +330,14 @@ export default function SettingsPage() {
                   </div>
 
                   <div className={styles.field}>
-                    <label className={styles.label}>Mật khẩu mới</label>
+                    <label className={styles.label}>New Password</label>
                     <div className={styles.passwordInputWrapper}>
                       <input
                         type={showNewPassword ? 'text' : 'password'}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         className={styles.input}
-                        placeholder="Nhập mật khẩu mới (ít nhất 8 ký tự)"
+                        placeholder="Enter new password (min. 8 characters)"
                       />
                       <button
                         type="button"
@@ -365,14 +350,14 @@ export default function SettingsPage() {
                   </div>
 
                   <div className={styles.field}>
-                    <label className={styles.label}>Xác nhận mật khẩu mới</label>
+                    <label className={styles.label}>Confirm New Password</label>
                     <div className={styles.passwordInputWrapper}>
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         className={styles.input}
-                        placeholder="Nhập lại mật khẩu mới"
+                        placeholder="Repeat new password"
                       />
                       <button
                         type="button"
@@ -390,36 +375,36 @@ export default function SettingsPage() {
                     disabled={isChangingPassword}
                   >
                     {isChangingPassword ? <Loader2 size={16} className={styles.spinner} /> : <Shield size={16} />}
-                    <span>{isChangingPassword ? 'Đang đổi...' : 'Đổi mật khẩu'}</span>
+                    <span>{isChangingPassword ? 'Changing...' : 'Change Password'}</span>
                   </button>
                 </div>
               </div>
 
               {/* Two Factor Authentication */}
               <div className={styles.securityCard}>
-                <h3 className={styles.cardTitle}>Xác thực hai yếu tố</h3>
-                <p className={styles.cardDesc}>Thêm một lớp bảo mật bổ sung cho tài khoản của bạn</p>
+                <h3 className={styles.cardTitle}>Two-Factor Authentication</h3>
+                <p className={styles.cardDesc}>Add an extra layer of security to your account</p>
                 <div className={styles.twoFactorRow}>
                   <div className={styles.twoFactorStatus}>
                     <span className={`${styles.statusDot} ${twoFactorEnabled ? styles.statusActive : ''}`}></span>
-                    <span>{twoFactorEnabled ? 'Đã bật' : 'Chưa bật'}</span>
+                    <span>{twoFactorEnabled ? 'Enabled' : 'Disabled'}</span>
                   </div>
                   <button 
                     className={`${styles.twoFactorBtn} ${twoFactorEnabled ? styles.twoFactorBtnDisable : ''}`}
                     onClick={() => {
                       setTwoFactorEnabled(!twoFactorEnabled);
-                      toast.success(twoFactorEnabled ? 'Đã tắt xác thực hai yếu tố' : 'Vui lòng xác thực để bật 2FA');
+                      toast.success(twoFactorEnabled ? 'Disabled two-factor authentication' : 'Please authenticate to enable 2FA');
                     }}
                   >
-                    {twoFactorEnabled ? 'Tắt 2FA' : 'Bật 2FA'}
+                    {twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
                   </button>
                 </div>
               </div>
 
               {/* Active Sessions */}
               <div className={styles.securityCard}>
-                <h3 className={styles.cardTitle}>Phiên làm việc đang hoạt động</h3>
-                <p className={styles.cardDesc}>Danh sách các thiết bị đang đăng nhập vào tài khoản của bạn</p>
+                <h3 className={styles.cardTitle}>Active Sessions</h3>
+                <p className={styles.cardDesc}>List of devices currently logged into your account</p>
                 <div className={styles.sessionsList}>
                   {sessions.map(session => (
                     <div key={session.id} className={styles.sessionItem}>
@@ -433,7 +418,7 @@ export default function SettingsPage() {
                       <div className={styles.sessionInfo}>
                         <div className={styles.sessionDevice}>
                           {session.device}
-                          {session.current && <span className={styles.currentBadge}>Hiện tại</span>}
+                          {session.current && <span className={styles.currentBadge}>Current</span>}
                         </div>
                         <div className={styles.sessionMeta}>
                           <span>{session.location}</span>
@@ -445,7 +430,7 @@ export default function SettingsPage() {
                         <button 
                           className={styles.terminateBtn}
                           onClick={() => handleTerminateSession(session.id)}
-                          title="Đăng xuất phiên này"
+                          title="Log out this session"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -460,8 +445,8 @@ export default function SettingsPage() {
           {/* Preferences Tab */}
           {activeTab === 'preferences' && (
             <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Tùy chọn</h2>
-              <p className={styles.sectionDesc}>Tùy chỉnh giao diện và ngôn ngữ hiển thị</p>
+              <h2 className={styles.sectionTitle}>Preferences</h2>
+              <p className={styles.sectionDesc}>Customize display language and theme preferences</p>
 
               <div className={styles.preferencesList}>
                 {/* Language */}
@@ -469,19 +454,19 @@ export default function SettingsPage() {
                   <div className={styles.preferenceInfo}>
                     <Globe size={20} className={styles.preferenceIcon} />
                     <div>
-                      <div className={styles.preferenceTitle}>Ngôn ngữ</div>
-                      <div className={styles.preferenceDesc}>Chọn ngôn ngữ giao diện</div>
+                      <div className={styles.preferenceTitle}>Language</div>
+                      <div className={styles.preferenceDesc}>Choose display language</div>
                     </div>
                   </div>
                   <select 
                     value={language} 
                     onChange={(e) => {
                       setLanguage(e.target.value);
-                      toast.success('Đã cập nhật ngôn ngữ');
+                      toast.success('Language updated');
                     }}
                     className={styles.select}
                   >
-                    <option value="vi">Tiếng Việt</option>
+                    <option value="vi">Vietnamese</option>
                     <option value="en">English</option>
                   </select>
                 </div>
@@ -491,8 +476,8 @@ export default function SettingsPage() {
                   <div className={styles.preferenceInfo}>
                     <Monitor size={20} className={styles.preferenceIcon} />
                     <div>
-                      <div className={styles.preferenceTitle}>Giao diện</div>
-                      <div className={styles.preferenceDesc}>Chọn chế độ hiển thị</div>
+                      <div className={styles.preferenceTitle}>Theme</div>
+                      <div className={styles.preferenceDesc}>Choose display theme</div>
                     </div>
                   </div>
                   <div className={styles.themeSelector}>
@@ -500,31 +485,31 @@ export default function SettingsPage() {
                       className={`${styles.themeBtn} ${theme === 'light' ? styles.themeBtnActive : ''}`}
                       onClick={() => {
                         setTheme('light');
-                        toast.success('Đã chuyển sang giao diện sáng');
+                        toast.success('Switched to light theme');
                       }}
                     >
                       <Monitor size={14} />
-                      <span>Sáng</span>
+                      <span>Light</span>
                     </button>
                     <button 
                       className={`${styles.themeBtn} ${theme === 'dark' ? styles.themeBtnActive : ''}`}
                       onClick={() => {
                         setTheme('dark');
-                        toast.success('Đã chuyển sang giao diện tối');
+                        toast.success('Switched to dark theme');
                       }}
                     >
                       <EyeOff size={14} />
-                      <span>Tối</span>
+                      <span>Dark</span>
                     </button>
                     <button 
                       className={`${styles.themeBtn} ${theme === 'system' ? styles.themeBtnActive : ''}`}
                       onClick={() => {
                         setTheme('system');
-                        toast.success('Đã chuyển sang giao diện theo hệ thống');
+                        toast.success('Switched to system theme');
                       }}
                     >
                       <SettingsIcon size={14} />
-                      <span>Tự động</span>
+                      <span>Auto</span>
                     </button>
                   </div>
                 </div>
@@ -534,15 +519,15 @@ export default function SettingsPage() {
                   <div className={styles.preferenceInfo}>
                     <Calendar size={20} className={styles.preferenceIcon} />
                     <div>
-                      <div className={styles.preferenceTitle}>Định dạng ngày tháng</div>
-                      <div className={styles.preferenceDesc}>Chọn cách hiển thị ngày</div>
+                      <div className={styles.preferenceTitle}>Date Format</div>
+                      <div className={styles.preferenceDesc}>Choose date display format</div>
                     </div>
                   </div>
                   <select 
                     value={dateFormat} 
                     onChange={(e) => {
                       setDateFormat(e.target.value);
-                      toast.success('Đã cập nhật định dạng ngày');
+                      toast.success('Date format updated');
                     }}
                     className={styles.select}
                   >
@@ -557,8 +542,8 @@ export default function SettingsPage() {
                   <div className={styles.preferenceInfo}>
                     <Clock size={20} className={styles.preferenceIcon} />
                     <div>
-                      <div className={styles.preferenceTitle}>Múi giờ</div>
-                      <div className={styles.preferenceDesc}>Múi giờ hiện tại của bạn</div>
+                      <div className={styles.preferenceTitle}>Timezone</div>
+                      <div className={styles.preferenceDesc}>Your current timezone</div>
                     </div>
                   </div>
                   <div className={styles.timezoneDisplay}>

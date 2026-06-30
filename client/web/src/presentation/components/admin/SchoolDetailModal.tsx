@@ -55,31 +55,31 @@ export default function SchoolDetailModal({ open, school, onClose }: SchoolDetai
 
   return (
     <>
-      <Modal open={open} title="Chi tiết trường học" size="lg" onClose={onClose}>
+      <Modal open={open} title="School Details" size="lg" onClose={onClose}>
         <div className={styles.content}>
           <section className={styles.section}>
             <header className={styles.sectionHeader}>
-              <h3><Building2 size={18} /> Thông tin chung</h3>
+              <h3><Building2 size={18} /> General Information</h3>
             </header>
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
-                <span className={styles.label}>Tên trường</span>
+                <span className={styles.label}>School Name</span>
                 <span className={styles.value}><strong>{school.name}</strong></span>
               </div>
               <div className={styles.infoItem}>
-                <span className={styles.label}>Mã trường</span>
+                <span className={styles.label}>School Code</span>
                 <span className={styles.value}>{school.code || '—'}</span>
               </div>
               <div className={styles.infoItem}>
-                <span className={styles.label}><User size={14} /> Hiệu trưởng</span>
+                <span className={styles.label}><User size={14} /> Principal</span>
                 <span className={styles.value}>{school.principalName || '—'}</span>
               </div>
               <div className={styles.infoItem}>
-                <span className={styles.label}><MapPin size={14} /> Địa chỉ</span>
+                <span className={styles.label}><MapPin size={14} /> Address</span>
                 <span className={styles.value}>{addrText || '—'}</span>
               </div>
               <div className={styles.infoItem}>
-                <span className={styles.label}><Phone size={14} /> Số điện thoại</span>
+                <span className={styles.label}><Phone size={14} /> Phone</span>
                 <span className={styles.value}>{school.phone || '—'}</span>
               </div>
               <div className={styles.infoItem}>
@@ -97,20 +97,20 @@ export default function SchoolDetailModal({ open, school, onClose }: SchoolDetai
                 className={styles.btnAddAdmin}
                 onClick={() => setShowAddAdmin(true)}
               >
-                <Plus size={16} /> Thêm Admin
+                <Plus size={16} /> Add Admin
               </button>
             </header>
 
             {schoolAdmins.length === 0 ? (
               <div className={styles.empty}>
                 <Users size={32} />
-                <p>Chưa có School Admin nào cho trường này</p>
+                <p>No School Admins for this school yet</p>
                 <button
                   type="button"
                   className={styles.btnAddAdmin}
                   onClick={() => setShowAddAdmin(true)}
                 >
-                  <Plus size={16} /> Thêm School Admin đầu tiên
+                  <Plus size={16} /> Add First School Admin
                 </button>
               </div>
             ) : (
@@ -118,9 +118,9 @@ export default function SchoolDetailModal({ open, school, onClose }: SchoolDetai
                 <table>
                   <thead>
                     <tr>
-                      <th>Họ tên</th>
+                      <th>Full Name</th>
                       <th>Email</th>
-                      <th>Trạng thái</th>
+                      <th>Status</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -133,14 +133,14 @@ export default function SchoolDetailModal({ open, school, onClose }: SchoolDetai
                           <span
                             className={`${styles.statusPill} ${admin.isActive ? styles.active : styles.inactive}`}
                           >
-                            {admin.isActive ? 'Hoạt động' : 'Khóa'}
+                            {admin.isActive ? 'Active' : 'Locked'}
                           </span>
                         </td>
                         <td>
                           <button
                             type="button"
                             className={styles.btnRemove}
-                            title="Xóa khỏi trường"
+                            title="Remove from school"
                             onClick={() =>
                               setConfirmRemove({ id: admin._id || admin.id, name: admin.name })
                             }
@@ -167,10 +167,10 @@ export default function SchoolDetailModal({ open, school, onClose }: SchoolDetai
 
       <ConfirmDialog
         open={!!confirmRemove}
-        title="Xóa School Admin"
-        message={`Bạn có chắc chắn muốn xóa "${confirmRemove?.name}" khỏi trường này?`}
-        confirmLabel="Xóa"
-        cancelLabel="Hủy"
+        title="Remove School Admin"
+        message={`Are you sure you want to remove "${confirmRemove?.name}" from this school?`}
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
         danger
         submitting={removing}
         onConfirm={handleRemoveAdmin}

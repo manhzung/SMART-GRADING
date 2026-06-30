@@ -1,0 +1,303 @@
+erDiagram
+    SCHOOL ||--o{ CLASS : "has_many"
+    SCHOOL ||--o{ USER : "belongs_to"
+    SCHOOL ||--o{ SUBJECT : "has_many"
+    SCHOOL ||--o{ OMRTEMPLATE : "has_many"
+    SCHOOL ||--o{ QUESTION : "stores"
+    SCHOOL ||--o{ STUDENTPROGRESS : "tracks"
+
+    CLASS }o--o{ USER : "students"
+    CLASS }o--|| USER : "homeroom_teacher"
+    CLASS }o--o{ SUBJECT : "subject_teachers"
+    CLASS ||--o{ EXAM : "classIds"
+    CLASS ||--o{ SUBMISSION : "classId"
+
+    SUBJECT ||--o{ QUESTION : "topicId"
+    SUBJECT ||--o{ EXAM : "subjectId"
+
+    USER ||--o{ EXAM : "createdBy"
+    USER ||--o{ SUBMISSION : "studentId"
+    USER ||--o{ APPEAL : "studentId"
+    USER ||--o{ NOTIFICATION : "userId"
+    USER ||--o{ QUESTION : "createdBy"
+    USER ||--o{ AIREPORT : "studentId"
+    USER ||--o{ AICHAT : "studentId"
+    USER ||--o{ UPLOADAUDITLOG : "userId"
+
+    OMRTEMPLATE ||--o{ EXAM : "omrTemplateId"
+
+    EXAM ||--o{ EXAMVERSION : "versions"
+    EXAM ||--o{ SUBMISSION : "examId"
+    EXAM ||--o{ APPEAL : "examId"
+    EXAM }o--o{ QUESTION : "questionIds"
+
+    EXAMVERSION ||--o{ SUBMISSION : "versionId"
+
+    SUBMISSION ||--o{ APPEAL : "submissionId"
+    SUBMISSION ||--o| AIREPORT : "submissionId"
+    SUBMISSION ||--o| EXAMREPORT : "examId"
+
+    QUESTION ||--o{ APPEAL : "questionId"
+
+    SCHOOL {
+        ObjectId _id PK
+        string name
+        string code UK
+        string address
+        string phone
+        string email
+        string logoUrl
+        string schoolType
+        array gradeLevels
+        boolean isActive
+        string registrationStatus
+    }
+
+    CLASS {
+        ObjectId _id PK
+        string name
+        string code UK
+        number gradeLevel
+        string academicYear
+        ObjectId homeroomTeacherId FK
+        array studentIds
+        array subjectTeachers
+        ObjectId schoolId FK
+        string enrollmentCode
+        boolean isActive
+    }
+
+    SUBJECT {
+        ObjectId _id PK
+        string name
+        string code UK
+        string color
+        ObjectId schoolId FK
+        boolean isActive
+    }
+
+    USER {
+        ObjectId _id PK
+        string name
+        string email UK
+        string password
+        enum role "admin, school-admin, teacher, student, parent"
+        boolean isEmailVerified
+        string avatarUrl
+        string phone
+        ObjectId schoolId FK
+        array classIds
+        string studentCode UK
+        string parentEmail
+        boolean isActive
+        string registrationStatus
+        date lastLoginAt
+    }
+
+    OMRTEMPLATE {
+        ObjectId _id PK
+        string name
+        string code UK
+        string description
+        object pageConfig
+        object zones
+        object scannerConfig
+        enum level "school|system"
+        ObjectId schoolId FK
+        boolean isDefault
+        number usageCount
+        object templateJson
+    }
+
+    QUESTION {
+        ObjectId _id PK
+        string content
+        enum type "single, multiple, true-false"
+        array options
+        string correctAnswer
+        number score
+        enum difficulty "easy|medium|hard"
+        ObjectId topicId FK
+        string topicName
+        ObjectId createdBy FK
+        ObjectId schoolId FK
+        enum source "manual|ai"
+        string aiPrompt
+        array tags
+        boolean isApproved
+        number usageCount
+        number correctRate
+        boolean isActive
+    }
+
+    EXAM {
+        ObjectId _id PK
+        string title
+        string description
+        array classIds FK
+        ObjectId primaryClassId FK
+        ObjectId createdBy FK
+        ObjectId omrTemplateId FK
+        date examDate
+        string startTime
+        number duration
+        number totalScore
+        ObjectId subjectId FK
+        string subjectName
+        number passingScore
+        number numberOfQuestions
+        enum status "draft|scheduled|published|completed"
+        number numberOfVersions
+        array questionIds FK
+        array versions
+        object shuffleConfig
+        enum paperEngine "amc|pdfkit"
+        date publishedAt
+        date completedAt
+    }
+
+    EXAMVERSION {
+        ObjectId _id PK
+        ObjectId examId FK
+        string versionCode
+        number numberOfQuestions
+        array questions
+        map answerKey
+        string pdfUrl
+        string answerSheetPdfUrl
+        string corrigePdfUrl
+        number submissionCount
+        string paperEngine
+        string amcProjectPath
+        boolean isActive
+    }
+
+    SUBMISSION {
+        ObjectId _id PK
+        ObjectId examId FK
+        ObjectId versionId FK
+        ObjectId studentId FK
+        string studentCode
+        ObjectId classId FK
+        array answers
+        number totalScore
+        number maxScore
+        number finalScore
+        object images
+        object scanMetadata
+        enum status "scanned|reviewed|published"
+        object omrSummary
+        array manualOverrides
+        ObjectId scannedBy FK
+        date scannedAt
+        ObjectId reviewedBy FK
+        date reviewedAt
+    }
+
+    APPEAL {
+        ObjectId _id PK
+        ObjectId submissionId FK
+        ObjectId examId FK
+        ObjectId studentId FK
+        ObjectId questionId FK
+        number questionPosition
+        string reason
+        string evidenceImageUrl
+        string currentAnswer
+        string expectedAnswer
+        enum status "pending|approved|rejected"
+        object teacherResponse
+        boolean studentNotified
+        date studentNotifiedAt
+    }
+
+    NOTIFICATION {
+        ObjectId _id PK
+        ObjectId userId FK
+        enum type
+        string title
+        string body
+        object data
+        boolean isRead
+        date readAt
+        array channels
+        enum priority "low|normal|high"
+        date expiresAt
+    }
+
+    AIREPORT {
+        ObjectId _id PK
+        ObjectId studentId FK
+        ObjectId examId FK
+        ObjectId submissionId FK
+        array mistakes
+        object suggestions
+        object statistics
+        string modelUsed
+        number promptTokens
+        number responseTokens
+        number processingTimeMs
+        boolean isRead
+    }
+
+    AICHAT {
+        ObjectId _id PK
+        ObjectId studentId FK
+        ObjectId examId FK
+        object context
+        array messages
+        boolean isActive
+        date lastMessageAt
+        string modelUsed
+    }
+
+    STUDENTPROGRESS {
+        ObjectId _id PK
+        ObjectId studentId FK
+        ObjectId schoolId FK
+        array scoreHistory
+        number overallAverageScore
+        number overallPercentage
+        number totalExams
+        number totalCorrect
+        number totalIncorrect
+        array topicPerformance
+        array rankings
+        date lastUpdated
+    }
+
+    EXAMREPORT {
+        ObjectId _id PK
+        ObjectId examId FK
+        object statistics
+        array scoreDistribution
+        object gradeDistribution
+        array questionAnalysis
+        array hardestQuestions
+        array easiestQuestions
+        array classSummary
+        array topStudents
+        array bottomStudents
+        array warnings
+        array insights
+        ObjectId createdBy FK
+        enum status "generating|ready|failed"
+        date generatedAt
+        string pdfUrl
+        string excelUrl
+    }
+
+    UPLOADAUDITLOG {
+        ObjectId _id PK
+        ObjectId userId FK
+        string action
+        ObjectId submissionId FK
+        string imageType
+        string publicId
+        string cloudinaryUrl
+        number bytes
+        string ipAddress
+        string userAgent
+        string error
+        number durationMs
+    }

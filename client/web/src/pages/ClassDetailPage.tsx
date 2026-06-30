@@ -123,8 +123,6 @@ export default function ClassDetailPage() {
   // Subject Teachers Modal State
   const [isSubjectTeacherModalOpen, setIsSubjectTeacherModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('');
-
   // Transfer Ownership Modal State
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [newHomeroomTeacherId, setNewHomeroomTeacherId] = useState('');
@@ -270,11 +268,11 @@ export default function ClassDetailPage() {
   const handleResetPassword = async () => {
     if (!resettingPasswordStudentId || !id) return;
     if (newPasswordValue.length < 8) {
-      setActionError('Mật khẩu phải có ít nhất 8 ký tự');
+      setActionError('Password must be at least 8 characters');
       return;
     }
     if (!/\d/.test(newPasswordValue) || (!/[a-zA-Z]/.test(newPasswordValue))) {
-      setActionError('Mật khẩu phải có ít nhất 1 chữ cái và 1 chữ số');
+      setActionError('Password must contain at least 1 letter and 1 number');
       return;
     }
     setIsResettingPassword(true);
@@ -284,10 +282,10 @@ export default function ClassDetailPage() {
         `/classes/${id}/students/${resettingPasswordStudentId}/password`,
         { password: newPasswordValue }
       );
-      setActionSuccess('Đã đổi mật khẩu thành công');
+      setActionSuccess('Password changed successfully');
       cancelResetPassword();
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Lỗi khi đổi mật khẩu';
+      const msg = err?.response?.data?.message || err?.message || 'Error changing password';
       setActionError(msg);
     } finally {
       setIsResettingPassword(false);
@@ -331,13 +329,13 @@ export default function ClassDetailPage() {
         isActive: editForm.isActive,
       });
 
-      setActionSuccess('Cập nhật học sinh thành công.');
+      setActionSuccess('Student updated successfully.');
       setEditingStudentId(null);
       setEditForm(null);
       setIsEditing(false);
       fetchClassById(id);
     } catch (err) {
-      setActionError((err as Error).message || 'Không thể cập nhật học sinh.');
+      setActionError((err as Error).message || 'Unable to update student.');
     } finally {
       setIsSubmitting(false);
     }
@@ -436,7 +434,7 @@ export default function ClassDetailPage() {
   // Remove Student handler
   const handleRemoveStudent = async (studentId: string) => {
     if (!id) return;
-    if (window.confirm('Bạn có chắc chắn muốn xóa học sinh này khỏi lớp không?')) {
+    if (window.confirm('Are you sure you want to remove this student from the class?')) {
       try {
         setActionError(null);
         setActionSuccess(null);
@@ -455,10 +453,10 @@ export default function ClassDetailPage() {
           throw new Error(resJson.message || 'Failed to remove student');
         }
 
-        setActionSuccess('Đã xóa học sinh khỏi lớp thành công.');
+        setActionSuccess('Student removed from class successfully.');
         fetchClassById(id);
       } catch (err) {
-        setActionError((err as Error).message || 'Không thể xóa học sinh.');
+        setActionError((err as Error).message || 'Unable to remove student.');
       }
     }
   };
@@ -490,7 +488,7 @@ export default function ClassDetailPage() {
         throw new Error(res.failed[0].error || 'Failed to add student');
       }
 
-      setActionSuccess('Đã thêm học sinh thành công.');
+      setActionSuccess('Student added successfully.');
       setIsAddModalOpen(false);
       setManualStudent({
         name: '',
@@ -501,7 +499,7 @@ export default function ClassDetailPage() {
       });
       fetchClassById(id);
     } catch (err) {
-      setActionError((err as Error).message || 'Không thể thêm học sinh.');
+      setActionError((err as Error).message || 'Unable to add student.');
     } finally {
       setIsSubmitting(false);
     }
@@ -512,7 +510,7 @@ export default function ClassDetailPage() {
   // Export CSV Report
   const handleExportReport = () => {
     if (students.length === 0) {
-      alert('Không có học sinh để xuất báo cáo.');
+      alert('No students to export.');
       return;
     }
     
@@ -594,7 +592,7 @@ export default function ClassDetailPage() {
     try {
       const lines = text.split('\n');
       if (lines.length === 0) {
-        setImportError('Tệp CSV rỗng.');
+        setImportError('Empty CSV file.');
         return;
       }
       
@@ -619,13 +617,13 @@ export default function ClassDetailPage() {
       }
 
       if (parsed.length === 0) {
-        setImportError('Không tìm thấy dữ liệu hợp lệ trong file CSV.');
+        setImportError('No valid data found in CSV file.');
       } else {
         setParsedStudents(parsed);
         setImportStep('preview');
       }
     } catch (err) {
-      setImportError('Lỗi đọc tệp CSV: ' + (err as Error).message);
+      setImportError('Error reading CSV file: ' + (err as Error).message);
     }
   };
 
@@ -650,7 +648,7 @@ export default function ClassDetailPage() {
           const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
           
           if (rows.length === 0) {
-            setImportError('Tệp Excel rỗng.');
+            setImportError('Empty Excel file.');
             return;
           }
 
@@ -688,18 +686,18 @@ export default function ClassDetailPage() {
           }
 
           if (parsed.length === 0) {
-            setImportError('Không tìm thấy dữ liệu học sinh hợp lệ.');
+            setImportError('No valid student data found.');
           } else {
             setParsedStudents(parsed);
             setImportStep('preview');
           }
         } catch (err) {
-          setImportError('Lỗi đọc tệp Excel: ' + (err as Error).message);
+          setImportError('Error reading Excel file: ' + (err as Error).message);
         }
       };
       reader.readAsArrayBuffer(file);
     } else {
-      setImportError('Định dạng tệp không được hỗ trợ. Vui lòng chọn .xlsx, .xls hoặc .csv');
+      setImportError('Unsupported file format. Please select .xlsx, .xls or .csv');
     }
   };
 
@@ -722,13 +720,13 @@ export default function ClassDetailPage() {
       const successCount = res.success?.length || 0;
       const failedCount = res.failed?.length || 0;
 
-      setActionSuccess(`Đã nhập thành công ${successCount} học sinh. ${failedCount > 0 ? `Thất bại: ${failedCount}` : ''}`);
+      setActionSuccess(`Successfully imported ${successCount} students.${failedCount > 0 ? ` Failed: ${failedCount}` : ''}`);
       setIsImportModalOpen(false);
       setParsedStudents([]);
       setImportFile(null);
       fetchClassById(id);
     } catch (err) {
-      setActionError((err as Error).message || 'Không thể nhập danh sách.');
+      setActionError((err as Error).message || 'Unable to import the list.');
     } finally {
       setIsSubmitting(false);
     }
@@ -753,13 +751,12 @@ export default function ClassDetailPage() {
     setActionError(null);
     setActionSuccess(null);
     try {
-      await manageSubjectTeachers(id, 'add', selectedTeacher, selectedSubject || undefined);
-      setActionSuccess('Đã thêm giáo viên bộ môn thành công.');
+      await manageSubjectTeachers(id, 'add', selectedTeacher);
+      setActionSuccess('Subject teacher added successfully.');
       setIsSubjectTeacherModalOpen(false);
       setSelectedTeacher('');
-      setSelectedSubject('');
     } catch (err) {
-      setActionError((err as Error).message || 'Không thể thêm giáo viên bộ môn.');
+      setActionError((err as Error).message || 'Unable to add subject teacher.');
     } finally {
       setIsSubmitting(false);
     }
@@ -767,31 +764,31 @@ export default function ClassDetailPage() {
 
   const handleRemoveSubjectTeacher = async (teacherId: string, subjectId?: string) => {
     if (!id) return;
-    if (!window.confirm('Bạn có chắc muốn xóa giáo viên bộ môn này khỏi lớp?')) return;
+    if (!window.confirm('Are you sure you want to remove this subject teacher from the class?')) return;
     setActionError(null);
     setActionSuccess(null);
     try {
       await manageSubjectTeachers(id, 'remove', teacherId, subjectId);
-      setActionSuccess('Đã xóa giáo viên bộ môn.');
+      setActionSuccess('Subject teacher removed.');
     } catch (err) {
-      setActionError((err as Error).message || 'Không thể xóa giáo viên.');
+      setActionError((err as Error).message || 'Unable to remove teacher.');
     }
   };
 
   const handleTransferOwnership = async () => {
     if (!id || !homeroomTeacherId) return;
     if (newHomeroomTeacherId === homeroomTeacherId) return;
-    if (!window.confirm('Bạn có chắc muốn chuyển quyền GVCN? Bạn sẽ không còn là GVCN của lớp này.')) return;
+    if (!window.confirm('Are you sure you want to transfer homeroom teacher role? You will no longer be the homeroom teacher of this class.')) return;
     setIsSubmitting(true);
     setActionError(null);
     setActionSuccess(null);
     try {
       await transferHomeroomTeacher(id, homeroomTeacherId, newHomeroomTeacherId);
-      setActionSuccess('Đã chuyển quyền GVCN thành công.');
+      setActionSuccess('Homeroom teacher role transferred successfully.');
       setIsTransferModalOpen(false);
       setNewHomeroomTeacherId('');
     } catch (err) {
-      setActionError((err as Error).message || 'Không thể chuyển quyền GVCN.');
+      setActionError((err as Error).message || 'Unable to transfer homeroom teacher role.');
     } finally {
       setIsSubmitting(false);
     }
@@ -948,9 +945,9 @@ export default function ClassDetailPage() {
         <div className={styles.teachersCard}>
           <div className={styles.cardHeader}>
             <div>
-              <h3 className={styles.cardTitle}>Giáo viên bộ môn</h3>
+              <h3 className={styles.cardTitle}>Subject Teacher</h3>
               <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0 0 0' }}>
-                Quản lý giáo viên dạy các môn trong lớp
+                Manage subject teachers for this class
               </p>
             </div>
             <button
@@ -958,7 +955,7 @@ export default function ClassDetailPage() {
               onClick={() => setIsSubjectTeacherModalOpen(true)}
             >
               <UserPlus size={15} />
-              <span>Thêm GV bộ môn</span>
+              <span>Add Subject Teacher</span>
             </button>
           </div>
 
@@ -1003,7 +1000,7 @@ export default function ClassDetailPage() {
             </div>
           ) : (
             <p style={{ fontSize: '13px', color: '#9ca3af', padding: '12px 0', textAlign: 'center' }}>
-              Chưa có giáo viên bộ môn nào.
+              No subject teachers assigned yet.
             </p>
           )}
 
@@ -1012,14 +1009,14 @@ export default function ClassDetailPage() {
             <div className={styles.transferSection}>
               <div className={styles.transferInfo}>
                 <Shield size={16} style={{ color: '#92400e' }} />
-                <span>Chuyển quyền GVCN cho người khác</span>
+                <span>Transfer homeroom teacher role to another teacher</span>
               </div>
               <button
                 className={styles.transferBtn}
                 onClick={() => setIsTransferModalOpen(true)}
               >
                 <Crown size={14} />
-                <span>Chuyển GVCN</span>
+                <span>Transfer Role</span>
               </button>
             </div>
           )}
@@ -1179,13 +1176,13 @@ export default function ClassDetailPage() {
                 <tr>
                   <td colSpan={8} className={styles.emptyCell}>
                     <div className={styles.spinner} />
-                    <p>Tải thông tin học sinh...</p>
+                    <p>Loading student information...</p>
                   </td>
                 </tr>
               ) : currentStudents.length === 0 ? (
                 <tr>
                   <td colSpan={8} className={styles.emptyCell}>
-                    <p>Không có học sinh nào khớp với bộ lọc.</p>
+                    <p>No students match the current filters.</p>
                   </td>
                 </tr>
               ) : (
@@ -1261,7 +1258,7 @@ export default function ClassDetailPage() {
                                 type="text"
                                 value={newPasswordValue}
                                 onChange={(e) => setNewPasswordValue(e.target.value)}
-                                placeholder="Mật khẩu mới (≥8 ký tự)"
+                                placeholder="New password (min 8 characters)"
                                 className={styles.passwordResetInput}
                                 disabled={isResettingPassword}
                                 autoFocus
@@ -1270,7 +1267,7 @@ export default function ClassDetailPage() {
                                 className={styles.passwordResetSaveBtn}
                                 onClick={handleResetPassword}
                                 disabled={isResettingPassword || newPasswordValue.length < 8}
-                                title="Lưu"
+                                title="Save"
                               >
                                 {isResettingPassword ? '...' : '✓'}
                               </button>
@@ -1278,7 +1275,7 @@ export default function ClassDetailPage() {
                                 className={styles.passwordResetCancelBtn}
                                 onClick={cancelResetPassword}
                                 disabled={isResettingPassword}
-                                title="Hủy"
+                                title="Cancel"
                               >
                                 ✕
                               </button>
@@ -1287,10 +1284,10 @@ export default function ClassDetailPage() {
                             <button
                               className={styles.resetPasswordBtn}
                               onClick={() => openResetPassword(student._id)}
-                              title={passwordHint ? `Hiện tại: ${passwordHint}` : 'Đổi mật khẩu'}
+                              title={passwordHint ? `Current: ${passwordHint}` : 'Change password'}
                             >
                               <KeyRound size={14} />
-                              <span>Đổi mật khẩu</span>
+                              <span>Change password</span>
                             </button>
                           )
                         ) : (
@@ -1320,7 +1317,7 @@ export default function ClassDetailPage() {
                               className={styles.inlineSaveBtn}
                               onClick={saveEditing}
                               disabled={isSubmitting}
-                              title="Lưu"
+                              title="Save"
                             >
                               {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                             </button>
@@ -1328,7 +1325,7 @@ export default function ClassDetailPage() {
                               className={styles.inlineCancelBtn}
                               onClick={cancelEditing}
                               disabled={isSubmitting}
-                              title="Hủy"
+                              title="Cancel"
                             >
                               <X size={14} />
                             </button>
@@ -1338,7 +1335,7 @@ export default function ClassDetailPage() {
                             <button
                               className={styles.editIconBtn}
                               onClick={() => startEditing(student)}
-                              title="Chỉnh sửa"
+                              title="Edit"
                             >
                               <Pencil size={14} />
                             </button>
@@ -1358,7 +1355,7 @@ export default function ClassDetailPage() {
                                   }}
                                 >
                                   <Trash2 size={13} className={styles.deleteIcon} />
-                                  <span className={styles.deleteText}>Xóa khỏi lớp</span>
+                                  <span className={styles.deleteText}>Remove from class</span>
                                 </button>
                               </div>
                             )}
@@ -1413,7 +1410,7 @@ export default function ClassDetailPage() {
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h2>Thêm học sinh mới</h2>
+              <h2>Add New Student</h2>
               <button className={styles.closeBtn} onClick={() => setIsAddModalOpen(false)}>
                 <X size={20} />
               </button>
@@ -1421,7 +1418,7 @@ export default function ClassDetailPage() {
             
             <form onSubmit={handleAddManualSubmit} className={styles.modalForm}>
               <div className={styles.formGroup}>
-                <label>Họ và Tên *</label>
+                <label>Full Name *</label>
                 <input
                   type="text"
                   required
@@ -1456,7 +1453,7 @@ export default function ClassDetailPage() {
               </div>
 
               <div className={styles.formGroup}>
-                <label>Ngày sinh</label>
+                <label>Date of Birth</label>
                 <input
                   type="date"
                   className={styles.formInput}
@@ -1483,7 +1480,7 @@ export default function ClassDetailPage() {
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h2>Thêm giáo viên bộ môn</h2>
+              <h2>Add Subject Teacher</h2>
               <button className={styles.closeBtn} onClick={() => setIsSubjectTeacherModalOpen(false)}>
                 <X size={20} />
               </button>
@@ -1500,7 +1497,7 @@ export default function ClassDetailPage() {
               )}
 
               <div className={styles.formGroup}>
-                <label>Chọn giáo viên *</label>
+                <label>Select Teacher *</label>
                 <select
                   className={styles.formInput}
                   value={selectedTeacher}
@@ -1516,23 +1513,12 @@ export default function ClassDetailPage() {
                 </select>
               </div>
 
-              <div className={styles.formGroup}>
-                <label>Môn học (tùy chọn)</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  placeholder="VD: Toán, Ngữ Văn, Tiếng Anh..."
-                  value={selectedSubject}
-                  onChange={(e) => setSelectedSubject(e.target.value)}
-                />
-              </div>
-
               <div className={styles.modalActions}>
                 <button type="button" className={styles.cancelBtn} onClick={() => setIsSubjectTeacherModalOpen(false)}>
-                  Hủy
+                  Cancel
                 </button>
                 <button type="submit" className={styles.submitBtn} disabled={isSubmitting || !selectedTeacher}>
-                  {isSubmitting ? 'Đang thêm...' : 'Thêm vào lớp'}
+                  {isSubmitting ? 'Adding...' : 'Add to class'}
                 </button>
               </div>
             </form>
@@ -1545,7 +1531,7 @@ export default function ClassDetailPage() {
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h2>Chuyển quyền GVCN</h2>
+              <h2>Transfer Homeroom Teacher</h2>
               <button className={styles.closeBtn} onClick={() => setIsTransferModalOpen(false)}>
                 <X size={20} />
               </button>
@@ -1562,11 +1548,11 @@ export default function ClassDetailPage() {
               )}
 
               <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px', padding: '12px', fontSize: '13px', color: '#92400e' }}>
-                Sau khi chuyển, bạn sẽ mất quyền GVCN và không thể tự lấy lại. Giáo viên mới phải xác nhận.
+                After transferring, you will lose homeroom teacher privileges and cannot reclaim them. The new teacher must confirm.
               </div>
 
               <div className={styles.formGroup}>
-                <label>Chọn giáo viên mới làm GVCN *</label>
+                <label>Select New Homeroom Teacher *</label>
                 <select
                   className={styles.formInput}
                   value={newHomeroomTeacherId}
@@ -1589,10 +1575,10 @@ export default function ClassDetailPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className={styles.cancelBtn} onClick={() => setIsTransferModalOpen(false)}>
-                  Hủy
+                  Cancel
                 </button>
                 <button type="submit" className={styles.submitBtn} disabled={isSubmitting || !newHomeroomTeacherId}>
-                  {isSubmitting ? 'Đang chuyển...' : 'Xác nhận chuyển'}
+                  {isSubmitting ? 'Transferring...' : 'Confirm transfer'}
                 </button>
               </div>
             </form>

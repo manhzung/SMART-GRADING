@@ -15,8 +15,8 @@ const classSchema = mongoose.Schema(
     gradeLevel: {
       type: Number,
       required: true,
-      min: 1,
-      max: 12,
+      min: 0,
+      max: 20,
     },
     academicYear: {
       type: String,

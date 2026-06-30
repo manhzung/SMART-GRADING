@@ -38,22 +38,22 @@ interface OptionConfig {
 const OPTIONS_CONFIG: OptionConfig[] = [
   {
     id: 'includeStatistics',
-    label: 'Thống kê tổng quan',
-    description: 'Bao gồm điểm TB, cao nhất, thấp nhất',
+    label: 'Overview Statistics',
+    description: 'Include average, highest, and lowest scores',
     icon: <BarChart3 size={20} />,
     defaultChecked: true,
   },
   {
     id: 'includeGradeDistribution',
-    label: 'Phân bổ điểm',
-    description: 'Bảng xếp loại và tỷ lệ học sinh',
+    label: 'Score Distribution',
+    description: 'Grading table and student ratio',
     icon: <PieChart size={20} />,
     defaultChecked: true,
   },
   {
     id: 'includeAnswerKey',
-    label: 'Đáp án',
-    description: 'Bao gồm đáp án đúng',
+    label: 'Answer Key',
+    description: 'Include correct answers',
     icon: <Key size={20} />,
     defaultChecked: false,
   },
@@ -151,9 +151,9 @@ export function ReportExportModal({
   ];
 
   const reportTypeOptions = [
-    { value: 'exam' as const, label: 'Báo cáo thi', icon: <FileBarChart size={16} /> },
-    { value: 'class' as const, label: 'Báo cáo lớp', icon: <Users size={16} /> },
-    { value: 'student' as const, label: 'Báo cáo HS', icon: <GraduationCap size={16} /> },
+    { value: 'exam' as const, label: 'Exam Report', icon: <FileBarChart size={16} /> },
+    { value: 'class' as const, label: 'Class Report', icon: <Users size={16} /> },
+    { value: 'student' as const, label: 'Student Report', icon: <GraduationCap size={16} /> },
   ];
 
   return (
@@ -166,13 +166,13 @@ export function ReportExportModal({
             <div className={styles.headerIcon}>
               <Download size={24} />
             </div>
-            <h2 id="modal-title">Xuất báo cáo</h2>
+            <h2 id="modal-title">Export Report</h2>
           </div>
           <button 
             className={styles.closeButton} 
             onClick={onClose}
             disabled={isExporting}
-            aria-label="Đóng"
+            aria-label="Close"
           >
             <X size={18} />
           </button>
@@ -183,7 +183,7 @@ export function ReportExportModal({
           <div className={styles.loadingOverlay}>
             <div className={styles.spinner} />
             <span className={styles.loadingText}>
-              Đang xuất báo cáo...
+              Exporting report...
             </span>
             <div className={styles.progressBar}>
               <div 
@@ -205,7 +205,7 @@ export function ReportExportModal({
               <div className={styles.examDetails}>
                 <p className={styles.examTitle}>{exam.title}</p>
                 <p className={styles.examMeta}>
-                  {exam.subjectName || 'Chưa xác định'} • {exam.totalScore || 10} điểm • {exam.numberOfQuestions || 0} câu
+                  {exam.subjectName || 'Unassigned'} • {exam.totalScore || 10} points • {exam.numberOfQuestions || 0} questions
                 </p>
               </div>
             </div>
@@ -213,7 +213,7 @@ export function ReportExportModal({
 
           {/* Export Type Selector */}
           <div className={styles.section}>
-            <label className={styles.sectionLabel}>Định dạng file</label>
+            <label className={styles.sectionLabel}>File Format</label>
             <div className={styles.exportTypeGrid}>
               {exportTypeOptions.map((option) => (
                 <button
@@ -231,7 +231,7 @@ export function ReportExportModal({
 
           {/* Report Type Selector */}
           <div className={styles.section}>
-            <label className={styles.sectionLabel}>Loại báo cáo</label>
+            <label className={styles.sectionLabel}>Report Type</label>
             <div className={styles.reportTypeGrid}>
               {reportTypeOptions.map((option) => (
                 <button
@@ -249,7 +249,7 @@ export function ReportExportModal({
 
           {/* Options */}
           <div className={styles.section}>
-            <label className={styles.sectionLabel}>Tùy chọn báo cáo</label>
+            <label className={styles.sectionLabel}>Report Options</label>
             <div className={styles.optionsList}>
               {OPTIONS_CONFIG.map((config) => (
                 <div
@@ -298,7 +298,7 @@ export function ReportExportModal({
             disabled={isExporting}
             type="button"
           >
-            Hủy bỏ
+            Cancel
           </button>
           <button
             className={styles.exportButton}
@@ -309,12 +309,12 @@ export function ReportExportModal({
             {isExporting ? (
               <>
                 <span className={styles.spinnerSmall} />
-                Đang xuất...
+                Exporting...
               </>
             ) : (
               <>
                 <Download size={18} />
-                Xuất báo cáo
+                Export Report
               </>
             )}
           </button>

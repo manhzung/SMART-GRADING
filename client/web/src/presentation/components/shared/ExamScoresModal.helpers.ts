@@ -1,11 +1,11 @@
 export function getGradeLabel(score: number, maxScore: number): string {
   if (!maxScore || maxScore <= 0) return '—';
   const ratio = score / maxScore;
-  if (ratio >= 0.9) return 'Xuất sắc';
-  if (ratio >= 0.8) return 'Giỏi';
-  if (ratio >= 0.65) return 'Khá';
-  if (ratio >= 0.5) return 'Trung bình';
-  return 'Yếu';
+  if (ratio >= 0.9) return 'Excellent';
+  if (ratio >= 0.8) return 'Good';
+  if (ratio >= 0.65) return 'Fair';
+  if (ratio >= 0.5) return 'Average';
+  return 'Poor';
 }
 
 function trimTrailing(num: number): string {

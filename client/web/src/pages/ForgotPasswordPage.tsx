@@ -18,21 +18,21 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      toast.error('Vui lòng nhập địa chỉ email.');
+      toast.error('Please enter your email address.');
       return;
     }
 
     try {
       await forgotPassword(email);
       setIsSent(true);
-      toast.success('Đã gửi email hướng dẫn đặt lại mật khẩu.');
+      toast.success('Password reset instructions sent to your email.');
     } catch (err: unknown) {
       const error = err as { statusCode?: number; message?: string };
       if (error.statusCode === 404) {
         setIsSent(true);
-        toast.success('Đã gửi email hướng dẫn đặt lại mật khẩu.');
+        toast.success('Password reset instructions sent to your email.');
       } else {
-        toast.error(error.message || 'Gửi yêu cầu đặt lại mật khẩu thất bại.');
+        toast.error(error.message || 'Failed to send password reset request.');
       }
     }
   };

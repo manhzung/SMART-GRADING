@@ -47,8 +47,8 @@ interface EntityListPageProps<T> {
 export default function EntityListPage<T>({
   mode, title, subtitle, createLabel, rows, columns, rowKey,
   loading = false, error = null, pagination,
-  searchPlaceholder = 'Tìm kiếm...', extraFilters,
-  selectedIds = [], emptyText = 'Chưa có dữ liệu',
+  searchPlaceholder = 'Search...', extraFilters,
+  selectedIds = [], emptyText = 'No data available',
   onSearch, onFilterChange, onPageChange, onCreate, onEdit, onDelete, onBulkDelete,
   onSelectionChange, headerExtra,
 }: EntityListPageProps<T>) {
@@ -110,8 +110,8 @@ export default function EntityListPage<T>({
 
       {showBulk && selectedIds.length > 0 && (
         <div className={styles.bulkBar}>
-          <span>Đã chọn {selectedIds.length} mục</span>
-          <button className={styles.bulkDeleteBtn} onClick={() => setConfirmBulk(true)}>Xóa hàng loạt</button>
+          <span>Selected {selectedIds.length} item(s)</span>
+          <button className={styles.bulkDeleteBtn} onClick={() => setConfirmBulk(true)}>Bulk delete</button>
         </div>
       )}
 
@@ -126,8 +126,8 @@ export default function EntityListPage<T>({
         onSelectionChange={onSelectionChange}
         actionRenderer={onEdit || onDelete ? (row) => (
           <div className={styles.rowActions}>
-            {onEdit && <button className={styles.iconBtn} onClick={() => onEdit(row)} title="Sửa">Sửa</button>}
-            {onDelete && <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => setConfirmDelete(row)} title="Xóa">Xóa</button>}
+            {onEdit && <button className={styles.iconBtn} onClick={() => onEdit(row)} title="Edit">Edit</button>}
+            {onDelete && <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => setConfirmDelete(row)} title="Delete">Delete</button>}
           </div>
         ) : undefined}
       />
@@ -144,8 +144,8 @@ export default function EntityListPage<T>({
 
       <ConfirmDialog
         open={!!confirmDelete}
-        title="Xóa mục này?"
-        message="Hành động này không thể hoàn tác."
+        title="Delete this item?"
+        message="This action cannot be undone."
         danger
         submitting={submittingDelete}
         onConfirm={handleDelete}
@@ -154,8 +154,8 @@ export default function EntityListPage<T>({
 
       <ConfirmDialog
         open={confirmBulk}
-        title={`Xóa ${selectedIds.length} mục đã chọn?`}
-        message="Hành động này không thể hoàn tác."
+        title={`Delete ${selectedIds.length} selected item(s)?`}
+        message="This action cannot be undone."
         danger
         submitting={submittingDelete}
         onConfirm={handleBulkDelete}

@@ -48,11 +48,11 @@ export interface ExamScoresModalProps {
 }
 
 const STATUS_BADGE: Record<string, { label: string; bg: string; color: string; border: string }> = {
-  completed: { label: 'Hoàn thành', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
-  scanned: { label: 'Đã quét', bg: '#f3f4f6', color: '#6b7280', border: '#d1d5db' },
-  manual_review: { label: 'Chờ chấm thủ công', bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
-  appealed: { label: 'Đang phúc khảo', bg: '#fff7ed', color: '#c2410c', border: '#fed7aa' },
-  pending: { label: 'Đang xử lý', bg: '#fefce8', color: '#a16207', border: '#fde047' },
+  completed: { label: 'Completed', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+  scanned: { label: 'Scanned', bg: '#f3f4f6', color: '#6b7280', border: '#d1d5db' },
+  manual_review: { label: 'Pending Manual Review', bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
+  appealed: { label: 'Under Appeal', bg: '#fff7ed', color: '#c2410c', border: '#fed7aa' },
+  pending: { label: 'Processing', bg: '#fefce8', color: '#a16207', border: '#fde047' },
 };
 
 function sanitizeFilenamePart(s: string): string {
@@ -143,7 +143,7 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
 
   const handleExport = () => {
     if (!submissions.length) return;
-    const header = ['STT', 'Họ tên', 'Mã học sinh', 'Điểm', 'Xếp loại', 'Trạng thái', 'Ngày nộp'];
+    const header = ['No.', 'Name', 'Student ID', 'Score', 'Grade', 'Status', 'Submitted At'];
     const exportRows: (string | number)[][] = submissions.map((s, idx) => {
       const student = typeof s.studentId === 'string' ? null : s.studentId;
       const badge = STATUS_BADGE[s.status] ?? STATUS_BADGE.pending;
@@ -159,12 +159,12 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
     });
     const ws = XLSX.utils.aoa_to_sheet([header, ...exportRows]);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Điểm');
+    XLSX.utils.book_append_sheet(wb, ws, 'Scores');
     const today = new Date();
     const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-    const filename = `Diem_${sanitizeFilenamePart(examTitle)}_${sanitizeFilenamePart(className ?? '')}_${ymd}.xlsx`;
+    const filename = `Scores_${sanitizeFilenamePart(examTitle)}_${sanitizeFilenamePart(className ?? '')}_${ymd}.xlsx`;
     XLSX.writeFile(wb, filename);
-    toast.success('Đã xuất danh sách điểm');
+    toast.success('Scores list exported successfully');
   };
 
   return (
@@ -181,10 +181,10 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
         <div className={styles.header}>
           <div>
             <h2 id="exam-scores-title" className={styles.title}>
-              Điểm bài thi: {examTitle}
+              Exam Scores: {examTitle}
             </h2>
             <p className={styles.subline}>
-              {[examSubject, examDate ? `Ngày thi: ${examDate}` : null]
+              {[examSubject, examDate ? `Date: ${examDate}` : null]
                 .filter(Boolean)
                 .join(' · ')}
             </p>
@@ -192,7 +192,7 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
           <button
             className={styles.closeBtn}
             onClick={onClose}
-            aria-label="Đóng cửa sổ"
+            aria-label="Close window"
             data-testid="close-btn"
           >
             <X size={20} />
@@ -202,8 +202,8 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
         <div className={styles.toolbar}>
           <span className={styles.submittedCount}>
             {isLoading
-              ? 'Đang tải...'
-              : `${submissions.length}${rosterIds.length ? ` / ${rosterIds.length}` : ''} học sinh đã nộp`}
+              ? 'Loading...'
+              : `${submissions.length}${rosterIds.length ? ` / ${rosterIds.length}` : ''} students submitted`}
           </span>
           <button
             className={styles.exportBtn}
@@ -211,7 +211,7 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
             disabled={isLoading || submissions.length === 0}
             data-testid="export-btn"
           >
-            Xuất Excel
+            Export Excel
           </button>
         </div>
 
@@ -219,23 +219,23 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
           {isLoading ? (
             <div className={styles.loading} data-testid="loading">
               <div className={styles.spinner} />
-              <p>Đang tải điểm...</p>
+              <p>Loading scores...</p>
             </div>
           ) : submissions.length === 0 ? (
             <div className={styles.empty} data-testid="empty">
-              <p>Chưa có học sinh nào nộp bài.</p>
+              <p>No students have submitted yet.</p>
             </div>
           ) : (
             <table className={styles.table} data-testid="scores-table">
               <thead>
                 <tr>
-                  <th>STT</th>
-                  <th>Học sinh</th>
-                  <th>Mã HS</th>
-                  <th>Điểm</th>
-                  <th>Trạng thái</th>
-                  <th>Xếp loại</th>
-                  <th>Ngày nộp</th>
+                  <th>No.</th>
+                  <th>Student</th>
+                  <th>Student ID</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                  <th>Grade</th>
+                  <th>Submitted At</th>
                 </tr>
               </thead>
               <tbody>
@@ -253,7 +253,7 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
                             className={styles.badge}
                             style={{ backgroundColor: '#f9fafb', color: '#6b7280', borderColor: '#e5e7eb' }}
                           >
-                            Chưa nộp
+                            Not submitted
                           </span>
                         </td>
                         <td>—</td>
@@ -293,7 +293,7 @@ export function ExamScoresModal(props: ExamScoresModalProps) {
 
         <div className={styles.footer}>
           <button className={styles.cancelBtn} onClick={onClose} data-testid="close-btn-footer">
-            Đóng
+            Close
           </button>
         </div>
       </div>

@@ -36,7 +36,7 @@ const notificationColors = {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('vi-VN', {
+  return date.toLocaleDateString('en-US', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -53,10 +53,10 @@ function formatRelativeTime(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Vừa xong';
-  if (diffMins < 60) return `${diffMins} phút trước`;
-  if (diffHours < 24) return `${diffHours} giờ trước`;
-  if (diffDays < 7) return `${diffDays} ngày trước`;
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
   return formatDate(dateString);
 }
 
@@ -192,21 +192,21 @@ export default function NotificationsPage() {
             const IconComponent = notificationIcons[notificationType];
 
             // Contextual categorizing tagging
-            let categoryLabel = 'Hệ thống';
+            let categoryLabel = 'System';
             let categoryClass = styles.badgeSystem;
             const msgLower = (notification.message || '').toLowerCase();
             const titleLower = (notification.title || '').toLowerCase();
             if (msgLower.includes('phúc khảo') || titleLower.includes('phúc khảo') || msgLower.includes('appeal') || titleLower.includes('appeal')) {
-              categoryLabel = 'Phúc khảo';
+              categoryLabel = 'Appeals';
               categoryClass = styles.badgeAppeal;
             } else if (msgLower.includes('đề thi') || titleLower.includes('đề thi') || msgLower.includes('exam') || titleLower.includes('exam')) {
-              categoryLabel = 'Đề thi';
+              categoryLabel = 'Exams';
               categoryClass = styles.badgeExam;
             } else if (msgLower.includes('bài nộp') || titleLower.includes('bài nộp') || msgLower.includes('chấm thi') || titleLower.includes('chấm thi') || msgLower.includes('grade') || titleLower.includes('grade') || msgLower.includes('submission') || titleLower.includes('submission')) {
-              categoryLabel = 'Chấm thi';
+              categoryLabel = 'Grading';
               categoryClass = styles.badgeGrading;
             } else if (msgLower.includes('lớp') || titleLower.includes('lớp') || msgLower.includes('class') || titleLower.includes('class')) {
-              categoryLabel = 'Lớp học';
+              categoryLabel = 'Classes';
               categoryClass = styles.badgeClass;
             }
 
@@ -228,7 +228,7 @@ export default function NotificationsPage() {
                       <span className={`${styles.categoryBadge} ${categoryClass}`}>{categoryLabel}</span>
                     </div>
                     {!notification.isRead && (
-                      <span className={styles.unreadBadge}>Mới</span>
+                      <span className={styles.unreadBadge}>New</span>
                     )}
                   </div>
                   <p className={styles.cardMessage}>{notification.message}</p>
@@ -251,7 +251,7 @@ export default function NotificationsPage() {
                         e.stopPropagation();
                         handleMarkAsRead(notification._id);
                       }}
-                      title="Đánh dấu đã đọc"
+                      title="Mark as read"
                     >
                       <Check size={16} />
                     </button>
@@ -259,7 +259,7 @@ export default function NotificationsPage() {
                   <button
                     className={`${styles.actionBtn} ${styles.deleteBtn}`}
                     onClick={(e) => handleDelete(notification._id, e)}
-                    title="Xóa thông báo"
+                    title="Delete notification"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -282,11 +282,11 @@ export default function NotificationsPage() {
           <div className={styles.headerTitle}>
             <div>
               <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
-              <h1 className={styles.title}>Thông báo</h1>
+              <h1 className={styles.title}>Notifications</h1>
               <p className={styles.subtitle}>
                 {unreadCount > 0
-                  ? `Bạn có ${unreadCount} thông báo chưa đọc`
-                  : 'Tất cả thông báo đã được đọc'}
+                  ? `You have ${unreadCount} unread notifications`
+                  : 'All notifications have been read'}
               </p>
             </div>
           </div>
@@ -297,12 +297,12 @@ export default function NotificationsPage() {
               disabled={isLoading}
             >
               <RefreshCw size={16} className={isRefreshing ? styles.spinning : ''} />
-              <span>Làm mới</span>
+              <span>Refresh</span>
             </button>
             {unreadCount > 0 && (
               <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
                 <Check size={16} />
-                <span>Đánh dấu tất cả đã đọc</span>
+                <span>Mark all as read</span>
               </button>
             )}
           </div>
@@ -317,7 +317,7 @@ export default function NotificationsPage() {
               onClick={() => setFilterType('all')}
             >
               <Bell size={16} />
-              <span>Tất cả</span>
+              <span>All</span>
               <span className={styles.count}>{pagination.total}</span>
             </button>
             <button
@@ -325,7 +325,7 @@ export default function NotificationsPage() {
               onClick={() => setFilterType('unread')}
             >
               <BellRing size={16} />
-              <span>Chưa đọc</span>
+              <span>Unread</span>
               {unreadCount > 0 && <span className={styles.countBadge}>{unreadCount}</span>}
             </button>
           </div>
@@ -333,7 +333,7 @@ export default function NotificationsPage() {
             <Search size={16} className={styles.searchIcon} />
             <input
               type="text"
-              placeholder="Tìm kiếm thông báo..."
+              placeholder="Search notifications..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={styles.searchInput}
@@ -359,20 +359,20 @@ export default function NotificationsPage() {
               <Bell size={64} className={styles.emptyIcon} />
               <h3>
                 {filterType === 'unread'
-                  ? 'Không có thông báo chưa đọc'
-                  : 'Không có thông báo nào'}
+                  ? 'No unread notifications'
+                  : 'No notifications'}
               </h3>
               <p>
                 {filterType === 'unread'
-                  ? 'Tất cả thông báo của bạn đã được đọc'
-                  : 'Bạn sẽ nhận được thông báo khi có cập nhật mới'}
+                  ? 'All your notifications have been read'
+                  : 'You will receive notifications when there are new updates'}
               </p>
             </div>
           ) : (
             <>
-              {renderNotificationGroup('Hôm nay', today)}
-              {renderNotificationGroup('Hôm qua', yesterday)}
-              {renderNotificationGroup('Cũ hơn', earlier)}
+              {renderNotificationGroup('Today', today)}
+              {renderNotificationGroup('Yesterday', yesterday)}
+              {renderNotificationGroup('Earlier', earlier)}
             </>
           )}
         </div>
@@ -388,9 +388,9 @@ export default function NotificationsPage() {
             </button>
             <div className={styles.pageInfo}>
               <span>
-                Trang {pagination.page} của {pagination.pages}
+                Page {pagination.page} of {pagination.pages}
               </span>
-              <span className={styles.totalCount}>({pagination.total} thông báo)</span>
+              <span className={styles.totalCount}>({pagination.total} notifications)</span>
             </div>
             <button
               className={styles.pageBtn}

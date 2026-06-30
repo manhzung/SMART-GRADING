@@ -28,16 +28,16 @@ import styles from './ClassesPage.module.css';
 // Helper to determine the best icon for each subject
 function getSubjectIcon(subjectName: string = '') {
   const name = subjectName.toLowerCase();
-  if (name.includes('toán') || name.includes('math') || name.includes('văn') || name.includes('lit')) {
+  if (name.includes('math') || name.includes('literature') || name.includes('lit')) {
     return BookOpen;
   }
-  if (name.includes('sinh') || name.includes('bio') || name.includes('hóa') || name.includes('chem') || name.includes('vật lý') || name.includes('phy')) {
+  if (name.includes('biology') || name.includes('bio') || name.includes('chemistry') || name.includes('chem') || name.includes('physics') || name.includes('phy')) {
     return Microscope;
   }
-  if (name.includes('anh') || name.includes('eng') || name.includes('lịch sử') || name.includes('his') || name.includes('địa lý') || name.includes('geo')) {
+  if (name.includes('english') || name.includes('eng') || name.includes('history') || name.includes('his') || name.includes('geography') || name.includes('geo')) {
     return Globe;
   }
-  if (name.includes('công nghệ') || name.includes('tech') || name.includes('tin') || name.includes('art') || name.includes('vẽ')) {
+  if (name.includes('technology') || name.includes('tech') || name.includes('computer') || name.includes('art') || name.includes('drawing')) {
     return Palette;
   }
   return GraduationCap;
@@ -154,7 +154,7 @@ export default function ClassesPage() {
   };
 
   const handleDeleteClass = async (id: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa lớp học này không?')) {
+    if (window.confirm('Are you sure you want to delete this class?')) {
       try {
         await deleteClass(id);
       } catch (err) {
@@ -166,6 +166,7 @@ export default function ClassesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      let created;
       if (editingClass) {
         const { homeroomTeacherId, ...rest } = formData;
         await updateClass(editingClass._id, { ...rest, homeroomTeacherId: homeroomTeacherId || undefined });
@@ -174,9 +175,21 @@ export default function ClassesPage() {
           ...formData,
           homeroomTeacherId: formData.homeroomTeacherId || user?.id || undefined,
         };
-        await createClass(payload);
+        created = await createClass(payload);
       }
+
       setIsModalOpen(false);
+
+      if (created) {
+        const { classes, fetchClasses, pagination } = useClassStore.getState();
+        const exists = classes.some((item) => item._id === created._id);
+        if (!exists) {
+          useClassStore.setState((state) => ({
+            classes: [...state.classes, created],
+          }));
+        }
+        await fetchClasses({ page: pagination.page, limit: pagination.limit });
+      }
     } catch (err) {
       console.error('Form submission failed:', err);
     }
@@ -217,14 +230,14 @@ export default function ClassesPage() {
       <div className={styles.header}>
         <div className={styles.headerInfo}>
           <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
-          <h1 className={styles.title}>{isAdmin ? 'Quản lý lớp học' : 'Lớp học của tôi'}</h1>
+          <h1 className={styles.title}>{isAdmin ? 'Manage Classes' : 'My Classes'}</h1>
           <p className={styles.subtitle}>
-            {isAdmin ? 'Quản lý danh sách lớp học và phân công giảng dạy toàn trường' : 'Quản lý danh sách lớp học và nhóm học sinh của bạn'}
+            {isAdmin ? 'Manage class list and whole-school teaching assignments' : 'Manage your classes and student groups'}
           </p>
         </div>
         <button className={styles.createBtn} onClick={handleOpenCreateModal}>
           <Plus size={18} />
-          <span>Thêm lớp học</span>
+          <span>Add Class</span>
         </button>
       </div>
 
@@ -303,7 +316,7 @@ export default function ClassesPage() {
       {isLoading && classes.length === 0 ? (
         <div className={styles.loadingState}>
           <div className={styles.loadingSpinner} />
-          <p>Tải danh sách lớp học...</p>
+          <p>Loading class list...</p>
         </div>
       ) : (
         <>
@@ -386,13 +399,13 @@ export default function ClassesPage() {
                         {classRole === 'homeroom' && (
                           <span className={styles.roleBadge} style={{ backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }}>
                             <Crown size={10} />
-                            GVCN
+                            Homeroom
                           </span>
                         )}
                         {classRole === 'subject' && (
                           <span className={styles.roleBadge} style={{ backgroundColor: '#ede9fe', color: '#5b21b6', border: '1px solid #c4b5fd' }}>
                             <BookMarked size={10} />
-                            GVBM
+                            Subject
                           </span>
                         )}
                       </div>
@@ -432,7 +445,7 @@ export default function ClassesPage() {
                 <p className={styles.bannerText}>
                   EduGrade Pro now supports biometric and mobile check-ins for all your registered classes. Reduce manual entry time by 80%.
                 </p>
-                <button className={styles.upgradeBtn} onClick={() => alert('Chức năng nâng cấp gói tài khoản đang phát triển.')}>
+                <button className={styles.upgradeBtn} onClick={() => alert('Upgrade subscription functionality is under development.')}>
                   Upgrade Plan
                 </button>
               </div>
@@ -527,25 +540,13 @@ export default function ClassesPage() {
 
               {/* Homeroom Teacher */}
               <div className={styles.formGroup}>
-                <label htmlFor="teacher">Giáo viên chủ nhiệm</label>
-                <select
+                <label htmlFor="teacher">Homeroom Teacher</label>
+                <input
                   id="teacher"
                   className={styles.formInput}
-                  value={formData.homeroomTeacherId}
-                  onChange={(e) => setFormData({ ...formData, homeroomTeacherId: e.target.value })}
-                >
-                  <option value="">-- Chọn giáo viên --</option>
-                  {teachers
-                    .filter((teach) => teach.id !== user?.id)
-                    .map((teach) => (
-                      <option key={teach.id} value={teach.id}>
-                        {teach.name} ({teach.email})
-                      </option>
-                    ))}
-                </select>
-                <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
-                  {user?.name} đã được chọn làm mặc định. Chọn giáo viên khác để thay đổi.
-                </p>
+                  value={user?.name || ''}
+                  readOnly
+                />
               </div>
 
               <div className={styles.modalActions}>

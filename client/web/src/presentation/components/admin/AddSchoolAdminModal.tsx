@@ -44,7 +44,7 @@ export default function AddSchoolAdminModal({
         params: { role: 'teacher', schoolId, limit: 100 },
       })
       .then((data) => setTeachers(data.results || []))
-      .catch((err) => setError(err?.message || 'Không thể tải danh sách giáo viên'))
+      .catch((err) => setError(err?.message || 'Unable to load teachers list'))
       .finally(() => setLoading(false));
   }, [open, schoolId]);
 
@@ -61,7 +61,7 @@ export default function AddSchoolAdminModal({
       await addSchoolAdmin(schoolId, selectedId);
       onClose();
     } catch (err: any) {
-      setError(err?.message || 'Thêm admin thất bại');
+      setError(err?.message || 'Failed to add admin');
     } finally {
       setSubmitting(false);
     }
@@ -70,13 +70,13 @@ export default function AddSchoolAdminModal({
   return (
     <Modal
       open={open}
-      title="Thêm School Admin"
+      title="Add School Admin"
       size="md"
       onClose={onClose}
       footer={
         <>
           <button type="button" className={styles.btnCancel} onClick={onClose} disabled={submitting}>
-            Hủy
+            Cancel
           </button>
           <button
             type="button"
@@ -84,7 +84,7 @@ export default function AddSchoolAdminModal({
             onClick={handleSubmit}
             disabled={!selectedId || submitting}
           >
-            {submitting ? 'Đang thêm...' : 'Thêm Admin'}
+            {submitting ? 'Adding...' : 'Add Admin'}
           </button>
         </>
       }
@@ -96,7 +96,7 @@ export default function AddSchoolAdminModal({
           <Search size={16} />
           <input
             type="text"
-            placeholder="Tìm kiếm giáo viên theo tên hoặc email..."
+            placeholder="Search teachers by name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -105,17 +105,17 @@ export default function AddSchoolAdminModal({
         {loading ? (
           <div className={styles.loading}>
             <Loader2 size={24} className={styles.spinner} />
-            <span>Đang tải danh sách giáo viên...</span>
+            <span>Loading teachers list...</span>
           </div>
         ) : filtered.length === 0 ? (
           <div className={styles.empty}>
             {teachers.length === 0 ? (
               <>
-                <p>Trường này chưa có giáo viên nào.</p>
-                <span>Hãy thêm giáo viên vào trường trước khi gán quyền School Admin.</span>
+                <p>This school has no teachers yet.</p>
+                <span>Please add teachers to the school first before assigning School Admin.</span>
               </>
             ) : (
-              <p>Không tìm thấy giáo viên phù hợp.</p>
+              <p>No matching teachers found.</p>
             )}
           </div>
         ) : (
@@ -144,7 +144,7 @@ export default function AddSchoolAdminModal({
 
         {available.length === 0 && !loading && teachers.length > 0 && (
           <div className={styles.hint}>
-            Tất cả giáo viên của trường đã là School Admin.
+            All teachers at this school are already School Admins.
           </div>
         )}
       </div>

@@ -1,15 +1,87 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {2.1}{\ignorespaces So sánh tính năng giữa các giải pháp chấm thi hiện có}}{6}{table.caption.7}%
+\contentsline {table}{\numberline {2.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces So sánh tính năng giữa các giải pháp chấm thi hiện có}}{4}{table.caption.8}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Quản lý giáo viên}}{15}{table.caption.20}%
+\contentsline {table}{\numberline {2.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Quản lý giáo viên}}{16}{table.caption.21}%
+\contentsline {table}{\numberline {2.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Quản lý giáo viên}}{16}{table.caption.22}%
+\contentsline {table}{\numberline {2.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Quản lý giáo viên}}{16}{table.caption.23}%
+\contentsline {table}{\numberline {2.6}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Quản lý câu hỏi}}{17}{table.caption.24}%
+\contentsline {table}{\numberline {2.7}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Quản lý câu hỏi}}{17}{table.caption.25}%
+\contentsline {table}{\numberline {2.8}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Quản lý câu hỏi}}{18}{table.caption.26}%
+\contentsline {table}{\numberline {2.9}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Quản lý câu hỏi}}{18}{table.caption.27}%
+\contentsline {table}{\numberline {2.10}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Quản lý bài kiểm tra}}{18}{table.caption.28}%
+\contentsline {table}{\numberline {2.11}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Quản lý bài kiểm tra}}{19}{table.caption.29}%
+\contentsline {table}{\numberline {2.12}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Quản lý bài kiểm tra}}{20}{table.caption.30}%
+\contentsline {table}{\numberline {2.13}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Quản lý bài kiểm tra}}{20}{table.caption.31}%
+\contentsline {table}{\numberline {2.14}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Chấm thi bằng ứng dụng}}{20}{table.caption.32}%
+\contentsline {table}{\numberline {2.15}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Chấm thi bằng ứng dụng}}{21}{table.caption.33}%
+\contentsline {table}{\numberline {2.16}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Chấm thi bằng ứng dụng}}{21}{table.caption.34}%
+\contentsline {table}{\numberline {2.17}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Chấm thi bằng ứng dụng}}{22}{table.caption.35}%
+\contentsline {table}{\numberline {2.18}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Phúc khảo bài thi}}{22}{table.caption.36}%
+\contentsline {table}{\numberline {2.19}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Phúc khảo bài thi}}{23}{table.caption.37}%
+\contentsline {table}{\numberline {2.20}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Phúc khảo bài thi}}{24}{table.caption.38}%
+\contentsline {table}{\numberline {2.21}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Phúc khảo bài thi}}{24}{table.caption.39}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces Danh sách thư viện và công cụ sử dụng trong đồ án}}{35}{table.caption.13}%
-\contentsline {table}{\numberline {4.2}{\ignorespaces Thống kê mã nguồn của hệ thống Smart Grading}}{36}{table.caption.14}%
-\contentsline {table}{\numberline {4.3}{\ignorespaces Tổng hợp kết quả kiểm thử các chức năng chính}}{37}{table.caption.15}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp SubmissionService}}{43}{table.caption.59}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp SubmissionService}}{43}{table.caption.61}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp ExamService}}{44}{table.caption.66}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp ExamService}}{44}{table.caption.68}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp OMREngine}}{45}{table.caption.73}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp OMREngine}}{45}{table.caption.75}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Tổng hợp các lớp chủ đạo của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{46}{table.caption.81}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Danh sách thư viện và công cụ sử dụng trong đồ án}}{57}{table.caption.86}%
+\contentsline {table}{\numberline {4.9}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thống kê mã nguồn của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{58}{table.caption.87}%
+\contentsline {table}{\numberline {4.10}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Tổng hợp kết quả kiểm thử các chức năng chính}}{59}{table.caption.88}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {A.1}{\ignorespaces Table to test captions and labels.}}{58}{table.caption.20}%
+\contentsline {table}{\numberline {A.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Quản lý trường học}}{81}{table.caption.92}%
+\contentsline {table}{\numberline {A.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Quản lý trường học}}{81}{table.caption.93}%
+\contentsline {table}{\numberline {A.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Quản lý trường học}}{82}{table.caption.94}%
+\contentsline {table}{\numberline {A.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Quản lý trường học}}{82}{table.caption.95}%
+\contentsline {table}{\numberline {A.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Quản lý học sinh}}{82}{table.caption.96}%
+\contentsline {table}{\numberline {A.6}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Quản lý học sinh}}{82}{table.caption.97}%
+\contentsline {table}{\numberline {A.7}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Quản lý học sinh}}{83}{table.caption.98}%
+\contentsline {table}{\numberline {A.8}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Quản lý học sinh}}{83}{table.caption.99}%
+\contentsline {table}{\numberline {A.9}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Quản lý các bài thi của học sinh}}{83}{table.caption.100}%
+\contentsline {table}{\numberline {A.10}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Quản lý các bài thi của học sinh}}{83}{table.caption.101}%
+\contentsline {table}{\numberline {A.11}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Quản lý các bài thi của học sinh}}{84}{table.caption.102}%
+\contentsline {table}{\numberline {A.12}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Quản lý các bài thi của học sinh}}{84}{table.caption.103}%
+\contentsline {table}{\numberline {A.13}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Xem bài thi và điểm số}}{84}{table.caption.104}%
+\contentsline {table}{\numberline {A.14}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Xem bài thi và điểm số}}{84}{table.caption.105}%
+\contentsline {table}{\numberline {A.15}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Xem bài thi và điểm số}}{85}{table.caption.106}%
+\contentsline {table}{\numberline {A.16}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Xem bài thi và điểm số}}{85}{table.caption.107}%
+\contentsline {table}{\numberline {A.17}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Thông tin chung use case Đăng ký/Đăng nhập}}{85}{table.caption.108}%
+\contentsline {table}{\numberline {A.18}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi chính của use case Đăng ký/Đăng nhập}}{86}{table.caption.109}%
+\contentsline {table}{\numberline {A.19}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Luồng thực thi mở rộng của use case Đăng ký/Đăng nhập}}{86}{table.caption.110}%
+\contentsline {table}{\numberline {A.20}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Điều kiện kết thúc use case Đăng ký/Đăng nhập}}{86}{table.caption.111}%
 \addvspace {10\p@ }
+\contentsline {table}{\numberline {B.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp AppealService}}{87}{table.caption.115}%
+\contentsline {table}{\numberline {B.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp AppealService}}{87}{table.caption.117}%
+\contentsline {table}{\numberline {B.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp NotificationService}}{88}{table.caption.122}%
+\contentsline {table}{\numberline {B.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp NotificationService}}{88}{table.caption.124}%
+\contentsline {table}{\numberline {B.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp AuthService}}{89}{table.caption.129}%
+\contentsline {table}{\numberline {B.6}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp AuthService}}{89}{table.caption.131}%
+\contentsline {table}{\numberline {B.7}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp ClassService}}{90}{table.caption.136}%
+\contentsline {table}{\numberline {B.8}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp ClassService}}{90}{table.caption.138}%
+\contentsline {table}{\numberline {B.9}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp AuthStore}}{91}{table.caption.143}%
+\contentsline {table}{\numberline {B.10}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp AuthStore}}{91}{table.caption.145}%
+\contentsline {table}{\numberline {B.11}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp SubmissionStore}}{92}{table.caption.150}%
+\contentsline {table}{\numberline {B.12}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp SubmissionStore}}{92}{table.caption.152}%
+\contentsline {table}{\numberline {B.13}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp ImageProcessor}}{93}{table.caption.157}%
+\contentsline {table}{\numberline {B.14}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp ImageProcessor}}{93}{table.caption.159}%
+\contentsline {table}{\numberline {B.15}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp BubbleDetector}}{94}{table.caption.164}%
+\contentsline {table}{\numberline {B.16}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp BubbleDetector}}{94}{table.caption.166}%
+\contentsline {table}{\numberline {B.17}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các thuộc tính của lớp AnswerReader}}{95}{table.caption.171}%
+\contentsline {table}{\numberline {B.18}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các phương thức của lớp AnswerReader}}{95}{table.caption.173}%
+\contentsline {table}{\numberline {B.19}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Tổng hợp các lớp trong Phụ lục C}}{95}{table.caption.175}%
+\contentsline {table}{\numberline {B.20}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Phân bố các lớp theo nền tảng}}{96}{table.caption.176}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {C.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Cấu trúc prompt cho chức năng sinh câu hỏi mới}}{98}{table.caption.177}%
+\contentsline {table}{\numberline {C.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Cấu trúc câu hỏi sinh ra bởi AI}}{98}{table.caption.178}%
+\contentsline {table}{\numberline {C.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các kiểu thay đổi khi sinh câu hỏi tương tự}}{100}{table.caption.179}%
+\contentsline {table}{\numberline {C.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Cấu trúc prompt cho chức năng sinh câu hỏi tương tự}}{100}{table.caption.180}%
+\contentsline {table}{\numberline {C.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Các lỗi thường gặp và cách xử lý}}{100}{table.caption.181}%
 \contentsfinish 
 \contentsfinish 

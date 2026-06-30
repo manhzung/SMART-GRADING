@@ -155,28 +155,28 @@ export default function SchoolsPage() {
       </td>
       <td>
         <span className={`${styles.status} ${school.isActive ? styles.active : styles.inactive}`}>
-          {school.isActive ? 'Hoạt động' : 'Không hoạt động'}
+          {school.isActive ? 'Active' : 'Inactive'}
         </span>
       </td>
       <td>
         <div className={styles.actions}>
           <button
             className={styles.btnView}
-            title="Xem chi tiết / School Admins"
+            title="View Details / School Admins"
             onClick={() => handleOpenDetail(school)}
           >
             <Eye size={16} />
           </button>
           <button
             className={styles.btnEdit}
-            title="Sửa"
+            title="Edit"
             onClick={() => handleOpenEdit(school)}
           >
             <Edit size={16} />
           </button>
           <button
             className={styles.btnDelete}
-            title="Xóa"
+            title="Delete"
             onClick={() => handleDeleteClick(school._id)}
           >
             <Trash2 size={16} />
@@ -210,7 +210,7 @@ export default function SchoolsPage() {
       <td>
         <span className={styles.pendingBadge}>
           <Clock size={14} />
-          Chờ duyệt
+          Pending Approval
         </span>
       </td>
       <td>
@@ -221,7 +221,7 @@ export default function SchoolsPage() {
             disabled={processing}
           >
             <Check size={16} />
-            Duyệt
+            Approve
           </button>
           <button
             className={styles.btnReject}
@@ -229,7 +229,7 @@ export default function SchoolsPage() {
             disabled={processing}
           >
             <X size={16} />
-            Từ chối
+            Reject
           </button>
         </div>
       </td>
@@ -241,11 +241,11 @@ export default function SchoolsPage() {
       <div className={styles.header}>
         <h1>
           <Building2 size={28} />
-          Quản lý Trường học
+          School Management
         </h1>
         <button className={styles.btnPrimary} onClick={handleOpenCreate}>
           <Plus size={18} />
-          Thêm trường
+          Add School
         </button>
       </div>
 
@@ -255,21 +255,21 @@ export default function SchoolsPage() {
           onClick={() => setActiveTab('all')}
         >
           <Building2 size={16} />
-          Tất cả trường ({totalSchools})
+          All Schools ({totalSchools})
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'pending' ? styles.active : ''}`}
           onClick={() => setActiveTab('pending')}
         >
           <Clock size={16} />
-          Chờ duyệt
+          Pending Approval
           {totalPending > 0 && <span className={styles.tabBadge}>{totalPending}</span>}
         </button>
       </div>
 
       <div className={styles.content}>
         {isLoading ? (
-          <div className={styles.loading}>Đang tải...</div>
+          <div className={styles.loading}>Loading...</div>
         ) : activeTab === 'all' ? (
           <>
             <div className={styles.toolbar}>
@@ -277,7 +277,7 @@ export default function SchoolsPage() {
                 <Search size={18} />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm trường..."
+                  placeholder="Search schools..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -287,18 +287,18 @@ export default function SchoolsPage() {
             {filteredSchools.length === 0 ? (
               <div className={styles.empty}>
                 <Building2 size={48} />
-                <p>Không có trường học nào</p>
+                <p>No schools found</p>
               </div>
             ) : (
               <div className={styles.tableWrapper}>
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th>Tên trường</th>
-                      <th>Địa chỉ</th>
-                      <th>Liên hệ</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
+                      <th>School Name</th>
+                      <th>Address</th>
+                      <th>Contact</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>{filteredSchools.map(renderSchoolRow)}</tbody>
@@ -311,17 +311,17 @@ export default function SchoolsPage() {
             {pendingSchools.length === 0 ? (
               <div className={styles.empty}>
                 <Clock size={48} />
-                <p>Không có trường nào đang chờ duyệt</p>
+                <p>No pending schools</p>
               </div>
             ) : (
               <div className={styles.tableWrapper}>
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th>Tên trường</th>
-                      <th>Thông tin</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
+                      <th>School Name</th>
+                      <th>Information</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>{pendingSchools.map(renderPendingSchoolRow)}</tbody>
@@ -334,10 +334,10 @@ export default function SchoolsPage() {
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="Xóa trường học"
-        message="Bạn có chắc chắn muốn xóa trường học này? Hành động này không thể hoàn tác."
-        confirmLabel="Xóa"
-        cancelLabel="Hủy"
+        title="Delete School"
+        message="Are you sure you want to delete this school? This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
         danger
         submitting={processing}
         onConfirm={handleDeleteConfirm}
@@ -349,10 +349,10 @@ export default function SchoolsPage() {
 
       <ConfirmDialog
         open={rejectDialogOpen}
-        title="Từ chối trường học"
-        message="Bạn có chắc chắn muốn từ chối trường học này?"
-        confirmLabel="Từ chối"
-        cancelLabel="Hủy"
+        title="Reject School"
+        message="Are you sure you want to reject this school?"
+        confirmLabel="Reject"
+        cancelLabel="Cancel"
         danger
         submitting={processing}
         onConfirm={handleRejectConfirm}
@@ -363,11 +363,11 @@ export default function SchoolsPage() {
         }}
       >
         <div className={styles.rejectForm}>
-          <label>Lý do từ chối (tùy chọn):</label>
+          <label>Rejection reason (optional):</label>
           <textarea
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="Nhập lý do từ chối..."
+            placeholder="Enter rejection reason..."
             rows={3}
           />
         </div>

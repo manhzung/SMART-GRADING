@@ -117,7 +117,7 @@ export default function RoleDashboard() {
       const data = await analyticsService.getDashboardStats();
       setStats(data);
     } catch (e: any) {
-      setError(e?.message ?? 'Không thể tải dữ liệu dashboard');
+      setError(e?.message ?? 'Unable to load dashboard data');
     } finally {
       setIsLoading(false);
     }
@@ -150,17 +150,17 @@ export default function RoleDashboard() {
           <span className={`${styles.roleBadge} ${roleBadgeClass}`}>{roleLabel}</span>
           <h1 className={styles.welcomeTitle}>
             {isAdmin
-              ? 'Tổng quan hệ thống'
+              ? 'System Overview'
               : isSchoolAdmin
-                ? 'Tổng quan trường'
+                ? 'School Overview'
                 : user.role.toUpperCase()}
           </h1>
           <p className={styles.welcomeSubtitle}>
             {isAdmin
-              ? 'Xem tổng quan chỉ số và hoạt động của toàn bộ hệ thống'
+              ? 'View metrics and activities across the entire system'
               : isSchoolAdmin
-                ? 'Quản lý toàn bộ thông tin chỉ số, giáo viên và lớp học trong trường'
-                : 'Xem và quản lý hoạt động giảng dạy, lớp học của bạn'}
+                ? 'Manage all metrics, teachers, and classes in your school'
+                : 'View and manage your classes and teaching activities'}
           </p>
         </div>
         <button className={styles.refreshBtn} onClick={load} disabled={isLoading}>
@@ -168,7 +168,7 @@ export default function RoleDashboard() {
             size={14}
             className={isLoading ? styles.refreshIconSpin : undefined}
           />
-          {isLoading ? 'Đang tải...' : 'Làm mới'}
+          {isLoading ? 'Loading...' : 'Refresh'}
         </button>
       </div>
 
@@ -181,39 +181,39 @@ export default function RoleDashboard() {
 
       <div className={styles.kpiGrid}>
         <Kpi
-          label="Lớp học"
+          label="Classes"
           value={stats?.totalClasses ?? 0}
           icon={<GraduationCap size={22} />}
           colorClass={styles.blueIcon}
         />
         <Kpi
-          label="Học sinh"
+          label="Students"
           value={stats?.totalStudents ?? 0}
           icon={<Users size={22} />}
           colorClass={styles.greenIcon}
         />
         <Kpi
-          label="Đề thi"
+          label="Exams"
           value={stats?.totalExams ?? 0}
-          hint={stats ? `${stats.publishedExams} đã phát hành` : undefined}
+          hint={stats ? `${stats.publishedExams} published` : undefined}
           icon={<FileText size={22} />}
           colorClass={styles.purpleIcon}
         />
         <Kpi
-          label="Bài nộp"
+          label="Submissions"
           value={stats?.totalSubmissions ?? 0}
           icon={<Send size={22} />}
           colorClass={styles.orangeIcon}
         />
         <Kpi
-          label="ĐTB điểm"
+          label="Avg Score"
           value={stats?.avgScore?.toFixed?.(2) ?? '0.00'}
           hint="/10"
           icon={<Award size={22} />}
           colorClass={styles.amberIcon}
         />
         <Kpi
-          label="Tỉ lệ đạt"
+          label="Pass Rate"
           value={stats ? `${stats.passRate}%` : '0%'}
           icon={<Percent size={22} />}
           colorClass={styles.tealIcon}
@@ -222,9 +222,9 @@ export default function RoleDashboard() {
 
       <div className={styles.row}>
         <div className={styles.listCard}>
-          <h3 className={styles.listTitle}>Bài nộp gần đây</h3>
+          <h3 className={styles.listTitle}>Recent Submissions</h3>
           {(stats?.recentSubmissions ?? []).length === 0 && (
-            <div className={styles.empty}>Chưa có dữ liệu</div>
+            <div className={styles.empty}>No data available</div>
           )}
           {(stats?.recentSubmissions ?? []).map((s) => {
             const studentName = s.student?.name ?? '—';
@@ -256,17 +256,17 @@ export default function RoleDashboard() {
         </div>
 
         <div className={styles.listCard}>
-          <h3 className={styles.listTitle}>Phúc khảo đang chờ</h3>
+          <h3 className={styles.listTitle}>Pending Appeals</h3>
           <div className={styles.appealsContainer}>
             <div className={styles.appealCountBox}>
               <span className={styles.appealCount}>{stats?.pendingAppeals ?? 0}</span>
-              <span className={styles.appealLabel}>Yêu cầu</span>
+              <span className={styles.appealLabel}>Request(s)</span>
             </div>
             <p className={styles.appealDescription}>
-              Truy cập <strong>Phúc khảo</strong> trong menu để xử lý các yêu cầu phúc khảo bài thi từ học sinh.
+              Go to <strong>Appeals</strong> in the menu to process exam appeals requested by students.
             </p>
             <Link to="/appeals" className={styles.appealBtn}>
-              Đi đến trang Phúc khảo
+              Go to Appeals
             </Link>
           </div>
         </div>

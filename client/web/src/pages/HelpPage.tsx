@@ -33,119 +33,119 @@ interface FAQCategory {
 const faqCategories: FAQCategory[] = [
   {
     id: 'getting-started',
-    title: 'Bắt đầu',
+    title: 'Getting Started',
     icon: Book,
     items: [
       {
         id: 'gs-1',
-        question: 'Làm sao để đăng nhập vào hệ thống Smart Grading?',
-        answer: 'Để đăng nhập, bạn cần truy cập trang đăng nhập và nhập email cùng mật khẩu đã được quản trị viên cấp. Nếu chưa có tài khoản, vui lòng liên hệ quản trị viên của trường để được tạo tài khoản.'
+        question: 'How do I log in to the Smart Grading system?',
+        answer: 'To log in, visit the login page and enter the email and password provided by your administrator. If you do not have an account yet, please contact your school administrator to request one.'
       },
       {
         id: 'gs-2',
-        question: 'Tôi quên mật khẩu, phải làm sao?',
-        answer: 'Nhấn vào link "Quên mật khẩu" trên trang đăng nhập, nhập email đã đăng ký. Hệ thống sẽ gửi email hướng dẫn đặt lại mật khẩu. Kiểm tra hòm thư spam nếu không nhận được email.'
+        question: 'I forgot my password, what should I do?',
+        answer: 'Click the "Forgot Password?" link on the login page and enter your registered email. The system will send password reset instructions to your inbox. Check your spam folder if you do not receive it.'
       },
       {
         id: 'gs-3',
-        question: 'Các vai trò người dùng trong hệ thống là gì?',
-        answer: 'Hệ thống có 4 vai trò chính: (1) Quản trị viên - quản lý toàn bộ hệ thống, (2) Giáo viên - tạo và quản lý bài thi, (3) Học sinh - tham gia thi và xem kết quả, (4) Phụ huynh - theo dõi kết quả học tập của con em.'
+        question: 'What are the user roles in the system?',
+        answer: 'The system has 4 main roles: (1) Admin - manages the entire system, (2) Teacher - creates and manages exams, (3) Student - takes exams and views results, and (4) Parent - monitors their children\'s learning progress.'
       },
       {
         id: 'gs-4',
-        question: 'Làm sao để cập nhật thông tin cá nhân?',
-        answer: 'Truy cập trang "Cài đặt" (Settings), chọn tab "Hồ sơ" (Profile). Tại đây bạn có thể thay đổi họ tên, email, số điện thoại và upload ảnh đại diện. Nhấn "Lưu thay đổi" để cập nhật.'
+        question: 'How do I update my personal information?',
+        answer: 'Go to the "Settings" page and select the "Profile" tab. Here you can edit your full name, email, phone number, and upload a profile photo. Click "Save Changes" to update.'
       },
       {
         id: 'gs-5',
-        question: 'Hệ thống hỗ trợ những ngôn ngữ nào?',
-        answer: 'Hiện tại hệ thống hỗ trợ Tiếng Việt và Tiếng Anh. Bạn có thể thay đổi ngôn ngữ tại trang "Cài đặt" > tab "Tùy chọn" > chọn ngôn ngữ mong muốn.'
+        question: 'Which languages are supported by the system?',
+        answer: 'Currently, the system supports Vietnamese and English. You can change your language preference on the "Settings" page under the "Preferences" tab.'
       }
     ]
   },
   {
     id: 'exams-grading',
-    title: 'Bài thi & Chấm điểm',
+    title: 'Exams & Grading',
     icon: FileText,
     items: [
       {
         id: 'eg-1',
-        question: 'Làm sao để tạo một bài thi mới?',
-        answer: 'Từ trang "Quản lý bài thi", nhấn nút "Tạo bài thi mới". Điền thông tin cơ bản (tên bài thi, môn học, lớp, ngày thi, thời gian), sau đó thêm câu hỏi từ ngân hàng câu hỏi hoặc tạo mới. Cuối cùng, nhấn "Lưu nháp" hoặc "Xuất bản" để hoàn tất.'
+        question: 'How do I create a new exam?',
+        answer: 'From the "Exams" page, click the "Create Exam" button. Fill in the basic details (title, subject, class, date, duration), and then add questions from the question bank or create new ones. Finally, click "Save Draft" or "Publish" to finish.'
       },
       {
         id: 'eg-2',
-        question: 'Tôi có thể tạo nhiều phiên bản đề thi không?',
-        answer: 'Có, khi tạo bài thi, bạn có thể chọn số lượng phiên bản đề (1-10 phiên bản). Hệ thống sẽ tự động xáo trộn câu hỏi và đáp án để tạo các phiên bản khác nhau, giúp ngăn chặn gian lận thi cử.'
+        question: 'Can I create multiple versions of an exam?',
+        answer: 'Yes, when creating an exam, you can specify the number of versions (1-10 versions). The system will automatically shuffle the questions and answers to generate different versions, helping prevent exam cheating.'
       },
       {
         id: 'eg-3',
-        question: 'Làm sao xem lại kết quả chấm điểm?',
-        answer: 'Sau khi bài thi hoàn thành, vào trang "Bài thi" > chọn bài thi > tab "Kết quả". Tại đây bạn có thể xem danh sách học sinh, điểm số, tỷ lệ nộp bài và thống kê chi tiết. Có thể xuất báo cáo dưới dạng Excel hoặc PDF.'
+        question: 'How do I view exam results?',
+        answer: 'Once an exam is completed, navigate to the "Exams" page > select your exam > go to the "Results" tab. Here you can view the list of students, scores, submission rates, and detailed statistics. You can also export reports to Excel or PDF.'
       },
       {
         id: 'eg-4',
-        question: 'Hệ thống chấm điểm tự động như thế nào?',
-        answer: 'Với các câu hỏi trắc nghiệm, hệ thống sử dụng công nghệ OMR (Optical Mark Recognition) để đọc phiếu trả lời và chấm điểm tự động với độ chính xác cao. Kết quả được cập nhật ngay sau khi quét và xử lý xong.'
+        question: 'How does the automatic grading system work?',
+        answer: 'For multiple-choice questions, the system uses OMR (Optical Mark Recognition) technology to read answer sheets and grade them automatically with high accuracy. Results are updated immediately after scanning and processing.'
       },
       {
         id: 'eg-5',
-        question: 'Phúc khảo điểm được thực hiện như thế nào?',
-        answer: 'Học sinh có thể gửi yêu cầu phúc khảo trong vòng 7 ngày kể từ khi có kết quả. Giáo viên sẽ nhận được thông báo, xem xét và phản hồi. Trạng thái phúc khảo có thể là: Đang chờ, Đang xem xét, Đồng ý, hoặc Từ chối.'
+        question: 'How is the score appeal process handled?',
+        answer: 'Students can submit an appeal request within 7 days of results release. Teachers will receive a notification to review and respond. Appeal statuses include: Pending, Reviewing, Approved, or Rejected.'
       }
     ]
   },
   {
     id: 'omr-scanning',
-    title: 'Quét OMR',
+    title: 'OMR Scanning',
     icon: Scan,
     items: [
       {
         id: 'omr-1',
-        question: 'Làm sao để quét phiếu trả lời OMR?',
-        answer: 'Vào trang "Quét" (Scan), chọn bài thi cần xử lý. Bạn có thể tải lên file ảnh của phiếu trả lời hoặc sử dụng camera trực tiếp. Hệ thống sẽ tự động nhận diện và chấm điểm. Đảm bảo ảnh rõ nét, đúng định dạng template.'
+        question: 'How do I scan OMR answer sheets?',
+        answer: 'Go to the "Scan" page and select the exam to process. You can upload image files of the answer sheets or use your camera directly. The system will automatically recognize answers and calculate scores. Ensure the photos are clear and match the template.'
       },
       {
         id: 'omr-2',
-        question: 'Tôi cần chuẩn bị gì để quét OMR?',
-        answer: 'Bạn cần: (1) Máy in để in phiếu trả lời theo đúng template, (2) Máy quét hoặc điện thoại có camera, (3) File ảnh phải rõ nét, định dạng JPG/PNG, dung lượng dưới 10MB. Khuyến nghị sử dụng máy quét chuyên dụng để đạt kết quả tốt nhất.'
+        question: 'What do I need to prepare for OMR scanning?',
+        answer: 'You will need: (1) A printer to print answer sheets according to the template, (2) A scanner or phone camera, and (3) Clear image files in JPG/PNG format (under 10MB). A dedicated scanner is recommended for best results.'
       },
       {
         id: 'omr-3',
-        question: 'Phiếu bị quét sai, tôi phải làm gì?',
-        answer: 'Nếu phiếu bị nhận diện sai, bạn có thể vào trang "Chi tiết bài nộp", chọn phiếu cần sửa và nhấn "Điều chỉnh thủ công" để chỉnh sửa kết quả. Hệ thống sẽ ghi nhận đây là điều chỉnh tay và cập nhật lại điểm.'
+        question: 'What should I do if an answer sheet is scanned incorrectly?',
+        answer: 'If an answer sheet is misidentified, you can go to the "Submission Details" page, select the specific sheet, and click "Manual Override" to edit the answers. The system will log this as a manual adjustment and update the score.'
       },
       {
         id: 'omr-4',
-        question: 'Có thể quét nhiều phiếu cùng lúc không?',
-        answer: 'Có, bạn có thể tải lên file ZIP chứa nhiều ảnh phiếu trả lời hoặc quét hàng loạt từng phiếu. Hệ thống sẽ xử lý tuần tự và hiển thị kết quả cho từng phiếu. Đảm bảo mỗi ảnh chỉ chứa một phiếu trả lời.'
+        question: 'Can I scan multiple sheets at once?',
+        answer: 'Yes, you can upload a ZIP file containing multiple answer sheet images or scan them in batches. The system will process them sequentially and display the results for each sheet. Ensure each image contains only one answer sheet.'
       }
     ]
   },
   {
     id: 'account-settings',
-    title: 'Tài khoản & Cài đặt',
+    title: 'Account & Settings',
     icon: Users,
     items: [
       {
         id: 'as-1',
-        question: 'Làm sao đổi mật khẩu?',
-        answer: 'Truy cập "Cài đặt" > tab "Bảo mật". Trong phần "Đổi mật khẩu", nhập mật khẩu hiện tại và mật khẩu mới (ít nhất 8 ký tự). Nhấn "Đổi mật khẩu" để hoàn tất. Khuyến nghị sử dụng mật khẩu mạnh bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.'
+        question: 'How do I change my password?',
+        answer: 'Go to "Settings" > "Security" tab. In the "Change Password" section, enter your current password and your new password (at least 8 characters). Click "Change Password" to complete. We recommend using a strong password with uppercase, lowercase, numbers, and special characters.'
       },
       {
         id: 'as-2',
-        question: 'Xác thực hai yếu tố (2FA) là gì và có bắt buộc không?',
-        answer: '2FA là lớp bảo mật bổ sung yêu cầu nhập mã từ điện thoại mỗi khi đăng nhập. Tính năng này không bắt buộc nhưng khuyến nghị bật để tăng cường bảo mật tài khoản, đặc biệt với tài khoản quản trị.'
+        question: 'What is Two-Factor Authentication (2FA) and is it mandatory?',
+        answer: '2FA is an extra layer of security that requires entering a verification code from your phone when logging in. It is not mandatory but highly recommended to secure your account, especially for administrators.'
       },
       {
         id: 'as-3',
-        question: 'Làm sao xem và quản lý các phiên đăng nhập?',
-        answer: 'Vào "Cài đặt" > tab "Bảo mật" > phần "Phiên làm việc đang hoạt động". Tại đây bạn có thể xem danh sách các thiết bị đang đăng nhập, bao gồm trình duyệt, vị trí và thời gian hoạt động. Nhấn biểu tượng thùng rác để đăng xuất từng phiên.'
+        question: 'How do I view and manage active sessions?',
+        answer: 'Navigate to "Settings" > "Security" tab > "Active Sessions" section. Here you can see a list of devices currently logged in, including browser details, location, and activity times. Click the trash icon to log out of any session.'
       },
       {
         id: 'as-4',
-        question: 'Tôi có thể thay đổi giao diện (theme) không?',
-        answer: 'Có, vào "Cài đặt" > tab "Tùy chọn". Bạn có thể chọn giữa 3 chế độ: Sáng (nền sáng), Tối (nền tối), hoặc Tự động (theo cài đặt hệ thống). Thay đổi sẽ được áp dụng ngay lập tức.'
+        question: 'Can I change the display theme?',
+        answer: 'Yes, go to "Settings" > "Preferences" tab. You can select from 3 modes: Light (light background), Dark (dark background), or Auto (matches your system settings). The changes are applied instantly.'
       }
     ]
   }
@@ -154,40 +154,40 @@ const faqCategories: FAQCategory[] = [
 const quickGuides = [
   {
     id: 'qg-1',
-    title: 'Cách tạo bài thi',
-    description: 'Hướng dẫn từng bước tạo bài thi mới',
+    title: 'Creating Exams',
+    description: 'Step-by-step guide to creating a new exam',
     icon: FileText,
     link: '/guides/create-exam'
   },
   {
     id: 'qg-2',
-    title: 'Quét phiếu OMR',
-    description: 'Cách sử dụng tính năng quét tự động',
+    title: 'Scanning OMR Sheets',
+    description: 'How to use the automatic scanning feature',
     icon: Scan,
     link: '/guides/omr-scan'
   },
   {
     id: 'qg-3',
-    title: 'Xem kết quả nộp bài',
-    description: 'Quản lý và xuất báo cáo điểm thi',
+    title: 'Viewing Submissions',
+    description: 'Manage results and export exam reports',
     icon: Users,
     link: '/guides/view-results'
   },
   {
     id: 'qg-4',
-    title: 'Xử lý phúc khảo',
-    description: 'Cách duyệt và quản lý yêu cầu phúc khảo',
+    title: 'Handling Appeals',
+    description: 'How to review and manage student appeal requests',
     icon: MessageCircle,
     link: '/guides/appeals'
   }
 ];
 
 const keyboardShortcuts = [
-  { keys: ['Ctrl', 'N'], action: 'Tạo bài thi mới' },
-  { keys: ['Ctrl', 'S'], action: 'Lưu thay đổi' },
-  { keys: ['Ctrl', 'F'], action: 'Tìm kiếm' },
-  { keys: ['Escape'], action: 'Đóng hộp thoại' },
-  { keys: ['Ctrl', 'P'], action: 'In/Xuất báo cáo' }
+  { keys: ['Ctrl', 'N'], action: 'Create new exam' },
+  { keys: ['Ctrl', 'S'], action: 'Save changes' },
+  { keys: ['Ctrl', 'F'], action: 'Search' },
+  { keys: ['Escape'], action: 'Close dialog' },
+  { keys: ['Ctrl', 'P'], action: 'Print/Export report' }
 ];
 
 export default function HelpPage() {
@@ -222,13 +222,13 @@ export default function HelpPage() {
       <nav className={styles.breadcrumb}>
         <span>Workspace</span>
         <span className={styles.breadcrumbSeparator}>&gt;</span>
-        <span className={styles.breadcrumbActive}>Trợ giúp</span>
+        <span className={styles.breadcrumbActive}>Help</span>
       </nav>
 
       {/* Title */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Trung tâm trợ giúp</h1>
-        <p className={styles.subtitle}>Tìm câu trả lời cho các câu hỏi thường gặp</p>
+        <h1 className={styles.title}>Help Center</h1>
+        <p className={styles.subtitle}>Find answers to frequently asked questions</p>
       </div>
 
       {/* Search Section */}
@@ -237,7 +237,7 @@ export default function HelpPage() {
           <Search size={20} className={styles.searchIcon} />
           <input
             type="text"
-            placeholder="Tìm kiếm câu hỏi..."
+            placeholder="Search questions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.searchInput}
@@ -247,7 +247,7 @@ export default function HelpPage() {
 
       {/* Quick Guides */}
       <div className={styles.quickGuidesSection}>
-        <h2 className={styles.sectionTitle}>Hướng dẫn nhanh</h2>
+        <h2 className={styles.sectionTitle}>Quick Guides</h2>
         <div className={styles.quickGuidesGrid}>
           {quickGuides.map(guide => (
             <a key={guide.id} href={guide.link} className={styles.quickGuideCard}>
@@ -266,13 +266,13 @@ export default function HelpPage() {
 
       {/* FAQ Section */}
       <div className={styles.faqSection}>
-        <h2 className={styles.sectionTitle}>Câu hỏi thường gặp</h2>
+        <h2 className={styles.sectionTitle}>Frequently Asked Questions</h2>
         
         {filteredCategories.length === 0 ? (
           <div className={styles.noResults}>
             <HelpCircle size={48} />
-            <p>Không tìm thấy câu hỏi phù hợp</p>
-            <span>Thử thay đổi từ khóa tìm kiếm</span>
+            <p>No matching questions found</p>
+            <span>Try searching with different keywords</span>
           </div>
         ) : (
           filteredCategories.map(category => (
@@ -280,7 +280,7 @@ export default function HelpPage() {
               <div className={styles.categoryHeader}>
                 <category.icon size={20} />
                 <h3 className={styles.categoryTitle}>{category.title}</h3>
-                <span className={styles.categoryCount}>{category.items.length} câu hỏi</span>
+                <span className={styles.categoryCount}>{category.items.length} questions</span>
               </div>
               
               <div className={styles.faqList}>
@@ -318,8 +318,8 @@ export default function HelpPage() {
 
       {/* Contact Support */}
       <div className={styles.contactSection}>
-        <h2 className={styles.sectionTitle}>Liên hệ hỗ trợ</h2>
-        <p className={styles.contactDesc}>Nếu bạn cần thêm hỗ trợ, vui lòng liên hệ với chúng tôi qua các kênh sau:</p>
+        <h2 className={styles.sectionTitle}>Contact Support</h2>
+        <p className={styles.contactDesc}>If you need further assistance, please contact us through the following channels:</p>
         
         <div className={styles.contactCards}>
           <div className={styles.contactCard}>
@@ -339,7 +339,7 @@ export default function HelpPage() {
               <Phone size={22} />
             </div>
             <div className={styles.contactInfo}>
-              <h4>Điện thoại</h4>
+              <h4>Phone</h4>
               <a href="tel:19001234" className={styles.contactLink}>
                 1900 1234
               </a>
@@ -351,23 +351,23 @@ export default function HelpPage() {
               <Clock size={22} />
             </div>
             <div className={styles.contactInfo}>
-              <h4>Giờ làm việc</h4>
+              <h4>Working Hours</h4>
               <span className={styles.contactText}>
-                Thứ 2 - Thứ 6: 8:00 - 17:00
+                Mon - Fri: 8:00 - 17:00
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Keyboard Shortcuts (Optional) */}
+      {/* Keyboard Shortcuts */}
       <div className={styles.shortcutsSection}>
         <button 
           className={styles.shortcutsToggle}
           onClick={() => setShowShortcuts(!showShortcuts)}
         >
           <Keyboard size={18} />
-          <span>Phím tắt</span>
+          <span>Keyboard Shortcuts</span>
           {showShortcuts ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
         

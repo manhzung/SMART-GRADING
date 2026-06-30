@@ -193,9 +193,9 @@ export default function AnalyticsPage() {
   }, [analytics]);
 
   const periodLabels: Record<TimePeriod, string> = {
-    week: '7 ngày qua',
-    month: '30 ngày qua',
-    semester: 'Học kỳ',
+    week: 'Last 7 days',
+    month: 'Last 30 days',
+    semester: 'Semester',
   };
 
   // Loading state
@@ -205,11 +205,11 @@ export default function AnalyticsPage() {
         <nav className={styles.breadcrumb}>
           <span>Workspace</span>
           <span className={styles.breadcrumbSeparator}>&gt;</span>
-          <span className={styles.breadcrumbActive}>Phân tích dữ liệu</span>
+          <span className={styles.breadcrumbActive}>Data Analytics</span>
         </nav>
         <div className={styles.loadingContainer}>
           <div className={styles.spinner} />
-          <p>Đang tải dữ liệu phân tích...</p>
+          <p>Loading analytics data...</p>
         </div>
       </div>
     );
@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
         <nav className={styles.breadcrumb}>
           <span>Workspace</span>
           <span className={styles.breadcrumbSeparator}>&gt;</span>
-          <span className={styles.breadcrumbActive}>Phân tích dữ liệu</span>
+          <span className={styles.breadcrumbActive}>Data Analytics</span>
         </nav>
         <div className={styles.errorContainer}>
           <p className={styles.errorTitle}>Something went wrong</p>
@@ -241,15 +241,15 @@ export default function AnalyticsPage() {
       <nav className={styles.breadcrumb}>
         <span>Workspace</span>
         <span className={styles.breadcrumbSeparator}>&gt;</span>
-        <span className={styles.breadcrumbActive}>Phân tích dữ liệu</span>
+        <span className={styles.breadcrumbActive}>Data Analytics</span>
       </nav>
 
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.title}>Phân tích dữ liệu</h1>
+          <h1 className={styles.title}>Data Analytics</h1>
           <p className={styles.subtitle}>
-            Tổng quan hiệu suất học tập và kết quả thi
+            Overview of academic performance and exam results
           </p>
         </div>
         <div className={styles.periodSelector}>
@@ -286,36 +286,36 @@ export default function AnalyticsPage() {
       <div className={styles.statsGrid}>
         <StatCard
           icon={<Users size={22} />}
-          label="Tổng học sinh"
+          label="Total Students"
           value={summaryStats.totalStudents}
-          subtext="Đang theo học"
+          subtext="Enrolled"
           trend="up"
           trendValue="+12"
           iconBgClass={styles.blueIcon}
         />
         <StatCard
           icon={<FileText size={22} />}
-          label="Tổng bài thi"
+          label="Total Exams"
           value={summaryStats.totalExams}
-          subtext={`${filteredReports.length} bài thi trong kỳ`}
+          subtext={`${filteredReports.length} exams in period`}
           trend="stable"
           trendValue="0"
           iconBgClass={styles.greenIcon}
         />
         <StatCard
           icon={<TrendingUp size={22} />}
-          label="Điểm trung bình"
+          label="Average Score"
           value={summaryStats.avgScore.toFixed(1)}
-          subtext="/10 điểm"
+          subtext="/10 points"
           trend="up"
           trendValue="+0.3"
           iconBgClass={styles.purpleIcon}
         />
         <StatCard
           icon={<Award size={22} />}
-          label="Tỷ lệ đạt"
+          label="Pass Rate"
           value={`${avgPassRate}%`}
-          subtext="Qua bài thi"
+          subtext="Exam pass rate"
           trend="down"
           trendValue="-2%"
           iconBgClass={styles.orangeIcon}
@@ -327,9 +327,9 @@ export default function AnalyticsPage() {
         {/* Overall Performance Line Chart */}
         <div className={styles.chartCard}>
           <div className={styles.chartHeader}>
-            <h3 className={styles.chartTitle}>Xu hướng điểm số</h3>
+            <h3 className={styles.chartTitle}>Score Trends</h3>
             <span className={styles.chartSubtitle}>
-              Điểm trung bình theo thời gian
+              Average scores over time
             </span>
           </div>
           <div className={styles.chartBody}>
@@ -357,7 +357,7 @@ export default function AnalyticsPage() {
                 <Line
                   type="monotone"
                   dataKey="score"
-                  name="Điểm TB"
+                  name="Avg Score"
                   stroke="#3B82F6"
                   strokeWidth={3}
                   dot={{ r: 4, fill: '#3B82F6', strokeWidth: 2, stroke: '#fff' }}
@@ -371,9 +371,9 @@ export default function AnalyticsPage() {
         {/* Subject Performance Bar Chart */}
         <div className={styles.chartCard}>
           <div className={styles.chartHeader}>
-            <h3 className={styles.chartTitle}>Điểm theo môn học</h3>
+            <h3 className={styles.chartTitle}>Scores by Subject</h3>
             <span className={styles.chartSubtitle}>
-              Điểm trung bình từng môn
+              Average scores per subject
             </span>
           </div>
           <div className={styles.chartBody}>
@@ -397,7 +397,7 @@ export default function AnalyticsPage() {
                 <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" />
                 <Bar
                   dataKey="score"
-                  name="Điểm TB"
+                  name="Avg Score"
                   radius={[4, 4, 0, 0]}
                 >
                   {subjectData.map((entry, index) => (
@@ -415,9 +415,9 @@ export default function AnalyticsPage() {
         {/* Grade Distribution Pie Chart */}
         <div className={styles.chartCard}>
           <div className={styles.chartHeader}>
-            <h3 className={styles.chartTitle}>Phân bố điểm</h3>
+            <h3 className={styles.chartTitle}>Score Distribution</h3>
             <span className={styles.chartSubtitle}>
-              Tỷ lệ học sinh theo xếp loại
+              Student distribution by grade
             </span>
           </div>
           <div className={styles.chartBodyPie}>
@@ -451,7 +451,7 @@ export default function AnalyticsPage() {
                   </Pie>
                   <Tooltip
                     formatter={(value, name) => [
-                      `${Number(value ?? 0)} học sinh`,
+                      `${Number(value ?? 0)} students`,
                       String(name ?? ''),
                     ] as [string, string]}
                     contentStyle={{
@@ -487,9 +487,9 @@ export default function AnalyticsPage() {
         {/* Top Students Table */}
         <div className={styles.chartCard}>
           <div className={styles.chartHeader}>
-            <h3 className={styles.chartTitle}>Xếp hạng học sinh</h3>
+            <h3 className={styles.chartTitle}>Student Rankings</h3>
             <span className={styles.chartSubtitle}>
-              Top {topStudents.length} học sinh xuất sắc
+              Top {topStudents.length} outstanding students
             </span>
           </div>
           <div className={styles.tableWrapper}>

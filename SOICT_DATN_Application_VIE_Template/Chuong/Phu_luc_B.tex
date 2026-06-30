@@ -1,195 +1,295 @@
-\documentclass[../DoAn.tex]{subfiles}
+﻿\documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-Phần này trình bày đặc tả chi tiết cho các use case phụ của hệ thống Smart Grading không được đặc tả trong mục 2.3 của Chương 2 do hạn chế về dung lượng. Mỗi đặc tả gồm tên use case, luồng sự kiện chính, luồng sự kiện phát sinh, tiền điều kiện và hậu điều kiện, theo đúng mẫu đặc tả đã sử dụng trong Chương 2.
+Phần này trình bày đặc tả chi tiết cho các use case phụ của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR không được đặc tả trong mục 2.3 của Chương 2 do hạn chế về dung lượng. Mỗi đặc tả gồm mã use case, tên use case, tác nhân, điều kiện trước, luồng thực thi chính, luồng thực thi mở rộng và điều kiện kết thúc, theo đúng mẫu đặc tả đã sử dụng trong Chương 2.
 
-\section{Đặc tả use case Quản lý trường học}
-\subsection*{Tên use case}
-Quản lý trường học.
+\subsection{Đặc tả use case Quản lý trường học}
+\label{subsection:appendix:B.1}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC001 \\ \hline
+\textbf{Tên use case} & Quản lý trường học \\ \hline
+\textbf{Tác nhân} & Quản trị viên hệ thống (admin) \\ \hline
+\textbf{Điều kiện trước} & Quản trị viên hệ thống đã đăng nhập vào hệ thống với vai trò admin. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý trường học}
+\label{table:appendix:B.1_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Quản trị viên & Truy cập chức năng "Quản lý trường học" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách các trường hiện có kèm các thông tin: tên trường, mã trường, địa chỉ, số lượng giáo viên, số lượng học sinh. \\ \hline
+3 & Quản trị viên & Chọn chức năng "Tạo trường mới". \\ \hline
+4 & Hệ thống & Hiển thị form tạo trường với các trường: tên trường, mã trường, địa chỉ, số điện thoại, email, cấu hình thang điểm. \\ \hline
+5 & Quản trị viên & Nhập thông tin và nhấn nút "Lưu". \\ \hline
+6 & Hệ thống & Kiểm tra tính hợp lệ của thông tin, kiểm tra mã trường trùng lặp, lưu trường mới vào cơ sở dữ liệu và hiển thị thông báo thành công. \\ \hline
+7 & Quản trị viên & Chọn một trường trong danh sách để xem chi tiết, cập nhật thông tin hoặc xóa trường. \\ \hline
+8 & Hệ thống & Cập nhật thông tin trường và ghi nhận nhật ký thao tác vào cơ sở dữ liệu. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Quản lý trường học}
+\label{table:appendix:B.1_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+6a & Hệ thống & Thông báo lỗi: Mã trường đã tồn tại. Vui lòng nhập mã trường khác. \\ \hline
+6b & Hệ thống & Thông báo lỗi: Vui lòng nhập đầy đủ các trường bắt buộc (tên trường, mã trường, địa chỉ). \\ \hline
+7a & Hệ thống & Thông báo cảnh báo: Trường đang có giáo viên hoặc học sinh hoạt động. Bạn có chắc chắn muốn xóa? \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Quản lý trường học}
+\label{table:appendix:B.1_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, trường mới được tạo và có thể được gán cho quản trị viên trường. Nếu thất bại, trạng thái danh sách trường không thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý trường học}
+\label{table:appendix:B.1_post}
+\end{table}
 
-\subsection*{Tiền điều kiện}
-Quản trị viên hệ thống đã đăng nhập với vai trò admin.
+\subsection{Đặc tả use case Quản lý học sinh}
+\label{subsection:appendix:B.2}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC004 \\ \hline
+\textbf{Tên use case} & Quản lý học sinh \\ \hline
+\textbf{Tác nhân} & Quản trị viên trường (school-admin), Giáo viên (teacher) \\ \hline
+\textbf{Điều kiện trước} & Quản trị viên trường hoặc giáo viên đã đăng nhập vào hệ thống. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý học sinh}
+\label{table:appendix:B.2_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Người dùng & Truy cập chức năng "Quản lý học sinh" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách học sinh theo lớp hoặc theo trường kèm các điều khiển tìm kiếm, lọc. \\ \hline
+3 & Người dùng & Chọn "Thêm học sinh vào lớp". \\ \hline
+4 & Hệ thống & Hiển thị form cho phép thêm một học sinh mới (tạo tài khoản) hoặc thêm học sinh đã có tài khoản vào lớp. \\ \hline
+5 & Người dùng & Nhập thông tin cần thiết gồm: họ tên, mã học sinh, ngày sinh, lớp và nhấn nút "Lưu". \\ \hline
+6 & Hệ thống & Kiểm tra tính hợp lệ, kiểm tra mã học sinh trùng lặp, lưu thông tin và gửi thông báo cho học sinh. \\ \hline
+7 & Người dùng & Chọn một học sinh để xem chi tiết, cập nhật thông tin, chuyển lớp hoặc xóa khỏi lớp. \\ \hline
+8 & Hệ thống & Cập nhật thông tin học sinh tương ứng và ghi nhận nhật ký thao tác vào cơ sở dữ liệu. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Quản lý học sinh}
+\label{table:appendix:B.2_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+5a & Hệ thống & Thông báo lỗi: Mã học sinh đã tồn tại. Vui lòng nhập mã khác hoặc chọn học sinh đã có tài khoản. \\ \hline
+5b & Hệ thống & Thông báo lỗi: Vui lòng nhập đầy đủ các trường bắt buộc (họ tên, mã học sinh, lớp). \\ \hline
+7a & Hệ thống & Thông báo cảnh báo: Học sinh đang có bài thi chưa hoàn thành. Bạn có chắc chắn muốn xóa? \\ \hline
+7b & Hệ thống & Hiển thị form yêu cầu chọn lớp đích khi chuyển lớp. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Quản lý học sinh}
+\label{table:appendix:B.2_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, học sinh được thêm vào lớp và có thể tham gia các bài kiểm tra của lớp. Nếu thất bại, trạng thái danh sách học sinh không thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý học sinh}
+\label{table:appendix:B.2_post}
+\end{table}
 
-\subsection*{Luồng sự kiện chính}
-\begin{enumerate}
-    \item Quản trị viên truy cập chức năng "Quản lý trường học".
-    \item Hệ thống hiển thị danh sách các trường hiện có cùng các thông tin: tên trường, mã trường, địa chỉ, số lượng giáo viên, số lượng học sinh.
-    \item Quản trị viên chọn chức năng "Tạo trường mới".
-    \item Hệ thống hiển thị form tạo trường với các trường: tên trường, mã trường, địa chỉ, số điện thoại, email, cấu hình thang điểm.
-    \item Quản trị viên nhập thông tin và nhấn "Lưu".
-    \item Hệ thống kiểm tra tính hợp lệ của thông tin, lưu trường mới vào cơ sở dữ liệu và hiển thị thông báo thành công.
-    \item Quản trị viên có thể chọn một trường để xem chi tiết, cập nhật thông tin hoặc xóa trường.
-\end{enumerate}
+\subsection{Đặc tả use case Quản lý các bài thi của học sinh}
+\label{subsection:appendix:B.3}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC007 \\ \hline
+\textbf{Tên use case} & Quản lý các bài thi của học sinh \\ \hline
+\textbf{Tác nhân} & Giáo viên (teacher) \\ \hline
+\textbf{Điều kiện trước} & Giáo viên đã đăng nhập vào hệ thống, có bài làm đã được chấm tự động trên ứng dụng. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý các bài thi của học sinh}
+\label{table:appendix:B.3_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Giáo viên & Truy cập chức năng "Bài nộp" trên giao diện web và chọn bài kiểm tra tương ứng. \\ \hline
+2 & Hệ thống & Hiển thị danh sách bài làm của học sinh với các thông tin: tên học sinh, mã số, điểm, trạng thái. \\ \hline
+3 & Giáo viên & Chọn một bài làm để xem chi tiết. \\ \hline
+4 & Hệ thống & Hiển thị thông tin chi tiết gồm: ảnh phiếu đã chấm, đáp án của học sinh, đáp án đúng, điểm từng câu, cảnh báo (nếu có). \\ \hline
+5 & Giáo viên & Chỉnh sửa thủ công các câu bị nhận dạng sai bằng cách chọn lại đáp án đúng trong giao diện. \\ \hline
+6 & Giáo viên & Nhấn nút "Lưu chỉnh sửa" để cập nhật điểm. \\ \hline
+7 & Hệ thống & Ghi nhận lịch sử chỉnh sửa, cập nhật điểm tự động và lưu vào cơ sở dữ liệu. \\ \hline
+8 & Giáo viên & Nhấn nút "Phê duyệt kết quả" để chuyển bài làm sang trạng thái sẵn sàng công bố. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Quản lý các bài thi của học sinh}
+\label{table:appendix:B.3_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+5a & Hệ thống & Thông báo cảnh báo: Phát hiện câu bị tô nhầm hoặc tô nhẹ. Yêu cầu giáo viên xác nhận lại đáp án. \\ \hline
+7a & Hệ thống & Ghi nhận lịch sử chỉnh sửa gồm: người chỉnh sửa, thời gian, câu được chỉnh sửa, điểm cũ và điểm mới. \\ \hline
+8a & Hệ thống & Thông báo: Bài làm chưa được phê duyệt. Học sinh chưa thể xem điểm. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Quản lý các bài thi của học sinh}
+\label{table:appendix:B.3_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, bài làm được cập nhật và sẵn sàng công bố cho học sinh khi giáo viên phát hành kết quả. Nếu thất bại, trạng thái bài làm không thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý các bài thi của học sinh}
+\label{table:appendix:B.3_post}
+\end{table}
 
-\subsection*{Luồng sự kiện phát sinh}
-\begin{itemize}
-    \item Tại bước 6, nếu mã trường đã tồn tại: hệ thống thông báo và yêu cầu nhập mã khác.
-    \item Tại bước 7, nếu trường đang có giáo viên hoặc học sinh hoạt động: hệ thống cảnh báo và yêu cầu xác nhận trước khi xóa.
-\end{itemize}
+\subsection{Đặc tả use case Xem bài thi và điểm số}
+\label{subsection:appendix:B.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC010 \\ \hline
+\textbf{Tên use case} & Xem bài thi và điểm số \\ \hline
+\textbf{Tác nhân} & Học sinh (student) \\ \hline
+\textbf{Điều kiện trước} & Học sinh đã đăng nhập vào hệ thống, bài thi đã có kết quả được công bố. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Xem bài thi và điểm số}
+\label{table:appendix:B.4_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Học sinh & Truy cập chức năng "Bài thi của tôi" hoặc "Điểm của tôi" trên giao diện web hoặc ứng dụng di động. \\ \hline
+2 & Hệ thống & Hiển thị danh sách các bài thi đã tham gia với điểm tổng và trạng thái công bố. \\ \hline
+3 & Học sinh & Chọn một bài thi để xem chi tiết. \\ \hline
+4 & Hệ thống & Hiển thị thông tin chi tiết gồm: điểm tổng, điểm từng câu, đáp án của học sinh, đáp án đúng, ảnh phiếu đã chấm. \\ \hline
+5 & Học sinh & Xem các đơn phúc khảo đã gửi cho bài thi này và trạng thái của chúng. \\ \hline
+6 & Học sinh & Nhấn nút "Tải báo cáo" để tải về báo cáo điểm cá nhân dạng PDF. \\ \hline
+7 & Hệ thống & Sinh file PDF báo cáo điểm và tải về thiết bị của học sinh. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Xem bài thi và điểm số}
+\label{table:appendix:B.4_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+4a & Hệ thống & Thông báo: Bài thi có câu bị giáo viên chỉnh sửa thủ công. Hiển thị danh sách các câu được chỉnh sửa để học sinh biết. \\ \hline
+6a & Hệ thống & Thông báo lỗi: Tải báo cáo thất bại. Vui lòng thử lại. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Xem bài thi và điểm số}
+\label{table:appendix:B.4_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, học sinh nắm được kết quả chi tiết bài thi của mình và có thể tải báo cáo điểm. Nếu thất bại, học sinh vẫn xem được thông tin cơ bản. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Xem bài thi và điểm số}
+\label{table:appendix:B.4_post}
+\end{table}
 
-\subsection*{Hậu điều kiện}
-Nếu thành công, trường mới được tạo và có thể được gán cho quản trị viên trường.
-
-\section{Đặc tả use case Quản lý giáo viên}
-\subsection*{Tên use case}
-Quản lý giáo viên.
-
-\subsection*{Tiền điều kiện}
-Quản trị viên hệ thống hoặc quản trị viên trường đã đăng nhập.
-
-\subsection*{Luồng sự kiện chính}
-\begin{enumerate}
-    \item Người dùng truy cập chức năng "Quản lý giáo viên".
-    \item Hệ thống hiển thị danh sách giáo viên theo trường (nếu là school-admin) hoặc toàn hệ thống (nếu là admin).
-    \item Người dùng chọn "Thêm giáo viên".
-    \item Hệ thống hiển thị form thêm giáo viên với các trường: họ tên, email, mã giáo viên, môn phụ trách.
-    \item Người dùng nhập thông tin và nhấn "Lưu".
-    \item Hệ thống tạo tài khoản giáo viên, gửi email kích hoạt đến giáo viên.
-    \item Người dùng có thể chọn một giáo viên để xem chi tiết, cập nhật thông tin, phân công môn hoặc vô hiệu hóa tài khoản.
-\end{enumerate}
-
-\subsection*{Luồng sự kiện phát sinh}
-\begin{itemize}
-    \item Tại bước 6, nếu email đã tồn tại: hệ thống thông báo và yêu cầu sử dụng email khác.
-    \item Tại bước 7, nếu vô hiệu hóa tài khoản: hệ thống yêu cầu xác nhận vì giáo viên có thể đang phụ trách lớp đang hoạt động.
-\end{itemize}
-
-\subsection*{Hậu điều kiện}
-Nếu thành công, tài khoản giáo viên được tạo và có thể đăng nhập vào hệ thống sau khi kích hoạt qua email.
-
-\section{Đặc tả use case Quản lý học sinh}
-\subsection*{Tên use case}
-Quản lý học sinh.
-
-\subsection*{Tiền điều kiện}
-Quản trị viên trường hoặc giáo viên đã đăng nhập.
-
-\subsection*{Luồng sự kiện chính}
-\begin{enumerate}
-    \item Người dùng truy cập chức năng "Quản lý học sinh".
-    \item Hệ thống hiển thị danh sách học sinh theo lớp hoặc theo trường.
-    \item Người dùng chọn "Thêm học sinh vào lớp".
-    \item Hệ thống cho phép thêm một học sinh mới (tạo tài khoản) hoặc thêm học sinh đã có tài khoản vào lớp.
-    \item Người dùng nhập thông tin cần thiết và nhấn "Lưu".
-    \item Hệ thống lưu thông tin và gửi thông báo cho học sinh.
-    \item Người dùng có thể chọn một học sinh để xem chi tiết, cập nhật thông tin, chuyển lớp hoặc xóa khỏi lớp.
-\end{enumerate}
-
-\subsection*{Luồng sự kiện phát sinh}
-\begin{itemize}
-    \item Tại bước 5, nếu mã số sinh viên đã tồn tại: hệ thống thông báo và đề xuất sử dụng học sinh hiện có.
-    \item Tại bước 7, nếu chuyển lớp: hệ thống yêu cầu chọn lớp đích và xác nhận.
-\end{itemize}
-
-\subsection*{Hậu điều kiện}
-Nếu thành công, học sinh được thêm vào lớp và có thể tham gia các bài kiểm tra của lớp.
-
-\section{Đặc tả use case Quản lý bài thi của học sinh}
-\subsection*{Tên use case}
-Quản lý các bài thi của học sinh.
-
-\subsection*{Tiền điều kiện}
-Giáo viên đã đăng nhập, có bài làm đã được chấm tự động trên hệ thống.
-
-\subsection*{Luồng sự kiện chính}
-\begin{enumerate}
-    \item Giáo viên truy cập chức năng "Bài nộp" và chọn bài kiểm tra tương ứng.
-    \item Hệ thống hiển thị danh sách bài làm của học sinh với các thông tin: tên học sinh, mã số, điểm, trạng thái.
-    \item Giáo viên chọn một bài làm để xem chi tiết.
-    \item Hệ thống hiển thị thông tin chi tiết: ảnh phiếu đã chấm, đáp án của học sinh, đáp án đúng, điểm từng câu, cảnh báo (nếu có).
-    \item Giáo viên có thể chỉnh sửa thủ công các câu bị nhận dạng sai bằng cách chọn lại đáp án đúng.
-    \item Giáo viên nhấn "Lưu chỉnh sửa" để cập nhật điểm.
-    \item Giáo viên có thể nhấn "Phê duyệt kết quả" để chuyển bài làm sang trạng thái sẵn sàng công bố.
-\end{enumerate}
-
-\subsection*{Luồng sự kiện phát sinh}
-\begin{itemize}
-    \item Tại bước 5, nếu giáo viên chỉnh sửa: hệ thống ghi nhận lịch sử chỉnh sửa và cập nhật điểm tự động.
-    \item Tại bước 7, nếu bài làm chưa được phê duyệt: học sinh chưa thể xem điểm.
-\end{itemize}
-
-\subsection*{Hậu điều kiện}
-Nếu thành công, bài làm được cập nhật và sẵn sàng công bố cho học sinh khi giáo viên phát hành kết quả.
-
-\section{Đặc tả use case Xem bài thi và điểm số}
-\subsection*{Tên use case}
-Xem bài thi và điểm số.
-
-\subsection*{Tiền điều kiện}
-Học sinh đã đăng nhập, bài thi đã có kết quả được công bố.
-
-\subsection*{Luồng sự kiện chính}
-\begin{enumerate}
-    \item Học sinh truy cập chức năng "Bài thi của tôi" hoặc "Điểm của tôi".
-    \item Hệ thống hiển thị danh sách các bài thi đã tham gia với điểm tổng và trạng thái.
-    \item Học sinh chọn một bài thi để xem chi tiết.
-    \item Hệ thống hiển thị: điểm tổng, điểm từng câu, đáp án của học sinh, đáp án đúng, ảnh phiếu đã chấm.
-    \item Học sinh có thể xem các đơn phúc khảo đã gửi cho bài thi này và trạng thái của chúng.
-    \item Học sinh có thể tải về báo cáo điểm cá nhân dạng PDF.
-\end{enumerate}
-
-\subsection*{Luồng sự kiện phát sinh}
-\begin{itemize}
-    \item Tại bước 4, nếu bài thi có câu bị giáo viên chỉnh sửa thủ công: hệ thống hiển thị thông báo để học sinh hiểu rõ.
-    \item Tại bước 6, nếu tải về thất bại: hệ thống thông báo và cho phép thử lại.
-\end{itemize}
-
-\subsection*{Hậu điều kiện}
-Nếu thành công, học sinh nắm được kết quả chi tiết bài thi của mình.
-
-\section{Đặc tả use case Tạo câu hỏi, đề thi}
-\subsection*{Tên use case}
-Tạo câu hỏi, đề thi.
-
-\subsection*{Tiền điều kiện}
-Giáo viên đã đăng nhập, có quyền quản lý ngân hàng câu hỏi.
-
-\subsection*{Luồng sự kiện chính}
-\begin{enumerate}
-    \item Giáo viên truy cập chức năng "Ngân hàng câu hỏi".
-    \item Hệ thống hiển thị danh sách câu hỏi hiện có theo môn học và chủ đề.
-    \item Giáo viên chọn "Tạo câu hỏi mới".
-    \item Giáo viên chọn một trong ba phương thức: tạo thủ công, sinh bằng AI, hoặc nhập từ file.
-    \item Đối với tạo thủ công: hệ thống hiển thị form với các trường nội dung, loại câu hỏi, các đáp án, đáp án đúng, độ khó, chủ đề, giải thích.
-    \item Đối với sinh bằng AI: hệ thống hiển thị form yêu cầu nhập chủ đề và số lượng câu hỏi; giáo viên nhấn "Sinh câu hỏi"; hệ thống gọi dịch vụ AI và hiển thị kết quả; giáo viên có thể chỉnh sửa trước khi lưu.
-    \item Đối với nhập từ file: hệ thống cho phép tải lên file Excel/CSV theo mẫu.
-    \item Giáo viên lưu câu hỏi vào ngân hàng; câu hỏi được đánh dấu là "chờ phê duyệt" nếu do AI sinh.
-\end{enumerate}
-
-\subsection*{Luồng sự kiện phát sinh}
-\begin{itemize}
-    \item Tại bước 6, nếu dịch vụ AI gặp lỗi: hệ thống thông báo và cho phép thử lại hoặc chuyển sang tạo thủ công.
-    \item Tại bước 7, nếu file nhập không đúng định dạng: hệ thống thông báo lỗi cụ thể và cho phép tải mẫu.
-\end{itemize}
-
-\subsection*{Hậu điều kiện}
-Nếu thành công, câu hỏi được lưu vào ngân hàng và có thể sử dụng để tạo đề thi.
-
-\section{Đặc tả use case Đăng ký/Đăng nhập}
-\subsection*{Tên use case}
-Đăng ký/Đăng nhập.
-
-\subsection*{Tiền điều kiện}
-Người dùng truy cập được vào ứng dụng web hoặc di động.
-
-\subsection*{Luồng sự kiện chính}
-\begin{enumerate}
-    \item Người dùng truy cập trang đăng nhập.
-    \item Người dùng nhập email và mật khẩu, nhấn "Đăng nhập".
-    \item Hệ thống kiểm tra thông tin đăng nhập.
-    \item Nếu hợp lệ, hệ thống cấp access token và refresh token, chuyển hướng đến dashboard phù hợp với vai trò.
-    \item Nếu người dùng chưa có tài khoản, có thể chọn "Đăng ký" và làm theo quy trình đăng ký gồm nhập thông tin cá nhân, xác thực email.
-    \item Nếu người dùng quên mật khẩu, có thể chọn "Quên mật khẩu" và làm theo quy trình khôi phục qua email.
-\end{enumerate}
-
-\subsection*{Luồng sự kiện phát sinh}
-\begin{itemize}
-    \item Tại bước 3, nếu thông tin sai: hệ thống thông báo lỗi và cho phép thử lại.
-    \item Tại bước 4, nếu tài khoản chưa xác thực email: hệ thống yêu cầu xác thực trước.
-    \item Tại bước 6, nếu email không tồn tại trong hệ thống: hệ thống thông báo và không gửi email khôi phục.
-\end{itemize}
-
-\subsection*{Hậu điều kiện}
-Nếu thành công, người dùng được đăng nhập và truy cập các chức năng theo vai trò.
+\subsection{Đặc tả use case Đăng ký/Đăng nhập}
+\label{subsection:appendix:B.5}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC002 \\ \hline
+\textbf{Tên use case} & Đăng ký/Đăng nhập \\ \hline
+\textbf{Tác nhân} & Tất cả người dùng (admin, school-admin, teacher, student) \\ \hline
+\textbf{Điều kiện trước} & Người dùng truy cập được vào ứng dụng web hoặc di động. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Đăng ký/Đăng nhập}
+\label{table:appendix:B.5_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Người dùng & Truy cập trang đăng nhập của ứng dụng. \\ \hline
+2 & Người dùng & Nhập email và mật khẩu, nhấn nút "Đăng nhập". \\ \hline
+3 & Hệ thống & Kiểm tra thông tin đăng nhập: xác thực email và mật khẩu đã nhập. \\ \hline
+4 & Hệ thống & Nếu hợp lệ, cấp access token và refresh token, chuyển hướng đến dashboard phù hợp với vai trò người dùng. \\ \hline
+5 & Người dùng & Nếu chưa có tài khoản, chọn "Đăng ký" và nhập thông tin cá nhân gồm: họ tên, email, mật khẩu. \\ \hline
+6 & Hệ thống & Gửi email xác thực đến địa chỉ email đã đăng ký. \\ \hline
+7 & Người dùng & Truy cập link trong email để xác thực tài khoản. \\ \hline
+8 & Hệ thống & Kích hoạt tài khoản và cho phép người dùng đăng nhập. \\ \hline
+9 & Người dùng & Nếu quên mật khẩu, chọn "Quên mật khẩu" và nhập email đã đăng ký. \\ \hline
+10 & Hệ thống & Gửi email chứa link khôi phục mật khẩu. \\ \hline
+11 & Người dùng & Truy cập link và nhập mật khẩu mới để đặt lại. \\ \hline
+12 & Hệ thống & Cập nhật mật khẩu mới và cho phép đăng nhập. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Đăng ký/Đăng nhập}
+\label{table:appendix:B.5_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+3a & Hệ thống & Thông báo lỗi: Email hoặc mật khẩu không đúng. Vui lòng thử lại. \\ \hline
+4a & Hệ thống & Thông báo: Tài khoản chưa được xác thực email. Vui lòng kiểm tra hộp thư và xác thực trước khi đăng nhập. \\ \hline
+6a & Hệ thống & Thông báo lỗi: Email đã được sử dụng. Vui lòng đăng nhập hoặc sử dụng email khác. \\ \hline
+10a & Hệ thống & Thông báo: Email không tồn tại trong hệ thống. Không gửi được email khôi phục. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Đăng ký/Đăng nhập}
+\label{table:appendix:B.5_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, người dùng được đăng nhập và truy cập các chức năng theo vai trò. Nếu thất bại, người dùng quay lại trang đăng nhập và có thể thử lại. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Đăng ký/Đăng nhập}
+\label{table:appendix:B.5_post}
+\end{table}
 
 \end{document}

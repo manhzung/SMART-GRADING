@@ -1,3 +1,4 @@
+\xpg@aux {}{vietnamese}
 \ttl@change@i {\@ne }{chapter}{0.0cm}{\bfseries \vspace {0.3cm}}{{\bfseries {\scshape } CHƯƠNG \thecontentslabel .\ }}{}{\titlerule *[0.3pc]{.}\contentspage }\relax 
 \ttl@change@v {chapter}{}{}{}\relax 
 \ttl@change@i {\@ne }{section}{0.0cm}{\vspace {0.3cm}}{\thecontentslabel \ }{}{\titlerule *[0.3pc]{.}\contentspage }\relax 
@@ -5,121 +6,202 @@
 \ttl@change@i {\@ne }{subsection}{1.0cm}{\vspace {0.3cm}}{\thecontentslabel \ }{}{\titlerule *[0.3pc]{.}\contentspage }\relax 
 \ttl@change@v {subsection}{}{}{}\relax 
 \thispagestyle {empty}
+\contentsline {chapter}{MỤC LỤC}{i}{section*.1}%
+\contentsline {chapter}{DANH MỤC HÌNH VẼ}{vii}{section*.3}%
 \contentsline {chapter}{\numberline {1}GIỚI THIỆU ĐỀ TÀI}{1}{chapter.1}%
-\contentsline {section}{\numberline {1.1}Tổng quan chương}{1}{section.1.1}%
-\contentsline {section}{\numberline {1.2}Đặt vấn đề}{1}{section.1.2}%
-\contentsline {section}{\numberline {1.3}Mục tiêu và phạm vi đề tài}{1}{section.1.3}%
-\contentsline {section}{\numberline {1.4}Định hướng giải pháp}{2}{section.1.4}%
-\contentsline {section}{\numberline {1.5}Bố cục đồ án}{3}{section.1.5}%
-\contentsline {section}{\numberline {1.6}Kết chương}{4}{section.1.6}%
-\contentsline {chapter}{\numberline {2}KHẢO SÁT VÀ PHÂN TÍCH YÊU CẦU}{5}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Tổng quan chương}{5}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Khảo sát hiện trạng}{5}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Tổng quan chức năng}{6}{section.2.3}%
-\contentsline {subsection}{\numberline {2.3.1}Biểu đồ use case phân rã Đăng ký/Đăng nhập}{8}{subsection.2.3.1}%
-\contentsline {subsection}{\numberline {2.3.2}Biểu đồ use case phân rã Quản lý trường học}{8}{subsection.2.3.2}%
-\contentsline {subsection}{\numberline {2.3.3}Biểu đồ use case phân rã Quản lý giáo viên}{8}{subsection.2.3.3}%
-\contentsline {subsection}{\numberline {2.3.4}Biểu đồ use case phân rã Quản lý học sinh}{8}{subsection.2.3.4}%
-\contentsline {subsection}{\numberline {2.3.5}Biểu đồ use case phân rã Tạo câu hỏi, đề thi}{9}{subsection.2.3.5}%
-\contentsline {subsection}{\numberline {2.3.6}Biểu đồ use case phân rã Tạo đề thi, trộn các câu cho nhiều đề thi}{9}{subsection.2.3.6}%
-\contentsline {subsection}{\numberline {2.3.7}Biểu đồ use case phân rã Quản lý các bài thi của học sinh}{9}{subsection.2.3.7}%
-\contentsline {subsection}{\numberline {2.3.8}Biểu đồ use case phân rã Chấm thi bằng ứng dụng}{10}{subsection.2.3.8}%
-\contentsline {subsection}{\numberline {2.3.9}Biểu đồ use case phân rã Tạo đơn phúc khảo}{10}{subsection.2.3.9}%
-\contentsline {subsection}{\numberline {2.3.10}Biểu đồ use case phân rã Phản hồi phúc khảo}{10}{subsection.2.3.10}%
-\contentsline {subsection}{\numberline {2.3.11}Biểu đồ use case phân rã Xem bài thi và điểm số}{11}{subsection.2.3.11}%
-\contentsline {subsection}{\numberline {2.3.12}Biểu đồ use case phân rã Tạo báo cáo cho bài kiểm tra}{11}{subsection.2.3.12}%
-\contentsline {subsection}{\numberline {2.3.13}Quy trình nghiệp vụ}{11}{subsection.2.3.13}%
-\contentsline {section}{\numberline {2.4}Đặc tả chức năng}{12}{section.2.4}%
-\contentsline {subsection}{\numberline {2.4.1}Đặc tả use case Đăng ký/Đăng nhập}{12}{subsection.2.4.1}%
-\contentsline {subsection}{\numberline {2.4.2}Đặc tả use case Tạo đề thi, trộn các câu cho nhiều đề thi}{13}{subsection.2.4.2}%
-\contentsline {subsection}{\numberline {2.4.3}Đặc tả use case Chấm thi bằng ứng dụng}{14}{subsection.2.4.3}%
-\contentsline {subsection}{\numberline {2.4.4}Đặc tả use case Tạo đơn phúc khảo}{15}{subsection.2.4.4}%
-\contentsline {subsection}{\numberline {2.4.5}Đặc tả use case Phản hồi phúc khảo}{16}{subsection.2.4.5}%
-\contentsline {subsection}{\numberline {2.4.6}Đặc tả use case Tạo báo cáo cho bài kiểm tra}{17}{subsection.2.4.6}%
-\contentsline {section}{\numberline {2.5}Yêu cầu phi chức năng}{18}{section.2.5}%
-\contentsline {section}{\numberline {2.6}Kết chương}{19}{section.2.6}%
-\contentsline {chapter}{\numberline {3}NỀN TẢNG LÝ THUYẾT VÀ CÔNG NGHỆ SỬ DỤNG}{20}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Tổng quan chương}{20}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Kỹ thuật nhận dạng OMR và xử lý ảnh số}{20}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Kỹ thuật tạo đề nhiều phiên bản với AMC}{21}{section.3.3}%
-\contentsline {section}{\numberline {3.4}Công nghệ phát triển backend}{22}{section.3.4}%
-\contentsline {section}{\numberline {3.5}Công nghệ phát triển giao diện web}{22}{section.3.5}%
-\contentsline {section}{\numberline {3.6}Công nghệ phát triển ứng dụng di động}{23}{section.3.6}%
-\contentsline {section}{\numberline {3.7}Công nghệ trí tuệ nhân tạo tích hợp}{24}{section.3.7}%
-\contentsline {section}{\numberline {3.8}Các công nghệ hỗ trợ khác}{24}{section.3.8}%
-\contentsline {section}{\numberline {3.9}Kết chương}{25}{section.3.9}%
-\contentsline {chapter}{\numberline {4}PHÂN TÍCH THIẾT KẾ, TRIỂN KHAI VÀ ĐÁNH GIÁ HỆ THỐNG}{26}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Tổng quan chương}{26}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Thiết kế kiến trúc}{26}{section.4.2}%
-\contentsline {subsection}{\numberline {4.2.1}Lựa chọn kiến trúc phần mềm}{26}{subsection.4.2.1}%
-\contentsline {subsection}{\numberline {4.2.2}Thiết kế tổng quan}{26}{subsection.4.2.2}%
-\contentsline {subsection}{\numberline {4.2.3}Thiết kế chi tiết gói}{28}{subsection.4.2.3}%
-\contentsline {section}{\numberline {4.3}Thiết kế chi tiết}{29}{section.4.3}%
-\contentsline {subsection}{\numberline {4.3.1}Thiết kế giao diện}{29}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Thiết kế lớp}{31}{subsection.4.3.2}%
-\contentsline {subsection}{\numberline {4.3.3}Thiết kế cơ sở dữ liệu}{33}{subsection.4.3.3}%
-\contentsline {section}{\numberline {4.4}Xây dựng ứng dụng}{34}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}Thư viện và công cụ sử dụng}{34}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}Kết quả đạt được}{36}{subsection.4.4.2}%
-\contentsline {subsection}{\numberline {4.4.3}Minh họa các chức năng chính}{36}{subsection.4.4.3}%
-\contentsline {section}{\numberline {4.5}Kiểm thử}{37}{section.4.5}%
-\contentsline {section}{\numberline {4.6}Triển khai}{38}{section.4.6}%
-\contentsline {section}{\numberline {4.7}Kết chương}{38}{section.4.7}%
-\contentsline {chapter}{\numberline {5}CÁC GIẢI PHÁP VÀ ĐÓNG GÓP NỔI BẬT}{40}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Tổng quan chương}{40}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Giải pháp tự động sinh đề thi nhiều phiên bản và phiếu OMR kèm tọa độ nhận dạng}{40}{section.5.2}%
-\contentsline {subsection}{\numberline {5.2.1}Dẫn dắt bài toán}{40}{subsection.5.2.1}%
-\contentsline {subsection}{\numberline {5.2.2}Giải pháp chi tiết}{40}{subsection.5.2.2}%
-\contentsline {subsection}{\numberline {5.2.3}Kết quả đạt được}{41}{subsection.5.2.3}%
-\contentsline {section}{\numberline {5.3}Giải pháp nhận dạng OMR trên thiết bị di động với khả năng phát hiện lỗi}{41}{section.5.3}%
-\contentsline {subsection}{\numberline {5.3.1}Dẫn dắt bài toán}{41}{subsection.5.3.1}%
-\contentsline {subsection}{\numberline {5.3.2}Giải pháp chi tiết}{41}{subsection.5.3.2}%
-\contentsline {subsection}{\numberline {5.3.3}Kết quả đạt được}{42}{subsection.5.3.3}%
-\contentsline {section}{\numberline {5.4}Giải pháp tích hợp trợ lý AI trong sinh câu hỏi và phản hồi phúc khảo}{43}{section.5.4}%
-\contentsline {subsection}{\numberline {5.4.1}Dẫn dắt bài toán}{43}{subsection.5.4.1}%
-\contentsline {subsection}{\numberline {5.4.2}Giải pháp chi tiết}{43}{subsection.5.4.2}%
-\contentsline {subsection}{\numberline {5.4.3}Kết quả đạt được}{44}{subsection.5.4.3}%
-\contentsline {section}{\numberline {5.5}Giải pháp quản lý phiên làm việc và phân quyền theo vai trò trên đa nền tảng}{44}{section.5.5}%
-\contentsline {subsection}{\numberline {5.5.1}Dẫn dắt bài toán}{44}{subsection.5.5.1}%
-\contentsline {subsection}{\numberline {5.5.2}Giải pháp chi tiết}{44}{subsection.5.5.2}%
-\contentsline {subsection}{\numberline {5.5.3}Kết quả đạt được}{45}{subsection.5.5.3}%
-\contentsline {section}{\numberline {5.6}Giải pháp thống kê và phân tích kết quả bài kiểm tra}{45}{section.5.6}%
-\contentsline {subsection}{\numberline {5.6.1}Dẫn dắt bài toán}{45}{subsection.5.6.1}%
-\contentsline {subsection}{\numberline {5.6.2}Giải pháp chi tiết}{45}{subsection.5.6.2}%
-\contentsline {subsection}{\numberline {5.6.3}Kết quả đạt được}{45}{subsection.5.6.3}%
-\contentsline {section}{\numberline {5.7}Kết chương}{46}{section.5.7}%
-\contentsline {chapter}{\numberline {6}KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}{47}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Tổng quan chương}{47}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Kết luận}{47}{section.6.2}%
-\contentsline {subsection}{\numberline {6.2.1}So sánh với các sản phẩm tương tự}{47}{subsection.6.2.1}%
-\contentsline {subsection}{\numberline {6.2.2}Những việc đã làm được}{47}{subsection.6.2.2}%
-\contentsline {subsection}{\numberline {6.2.3}Những việc chưa làm được}{48}{subsection.6.2.3}%
-\contentsline {subsection}{\numberline {6.2.4}Bài học kinh nghiệm}{49}{subsection.6.2.4}%
-\contentsline {section}{\numberline {6.3}Hướng phát triển}{49}{section.6.3}%
-\contentsline {subsection}{\numberline {6.3.1}Hoàn thiện các chức năng hiện có}{49}{subsection.6.3.1}%
-\contentsline {subsection}{\numberline {6.3.2}Mở rộng tính năng mới}{49}{subsection.6.3.2}%
-\contentsline {subsection}{\numberline {6.3.3}Nâng cấp công nghệ}{50}{subsection.6.3.3}%
-\contentsline {section}{\numberline {6.4}Kết chương}{50}{section.6.4}%
-\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{54}{section*.18}%
-\contentsline {chapter}{PHỤ LỤC}{56}{section*.19}%
+\contentsline {section}{\numberline {1.1}Đặt vấn đề}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Mục tiêu và phạm vi đề tài}{1}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Định hướng giải pháp}{2}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Bố cục đồ án}{2}{section.1.4}%
+\contentsline {chapter}{\numberline {2}KHẢO SÁT VÀ PHÂN TÍCH YÊU CẦU}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Khảo sát hiện trạng}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Tổng quan chức năng}{4}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Biểu đồ use case phân rã Đăng ký/Đăng nhập}{5}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Biểu đồ use case phân rã Quản lý trường học}{6}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}Biểu đồ use case phân rã Quản lý giáo viên}{7}{subsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.2.4}Biểu đồ use case phân rã Quản lý học sinh}{8}{subsection.2.2.4}%
+\contentsline {subsection}{\numberline {2.2.5}Biểu đồ use case phân rã Quản lý câu hỏi}{9}{subsection.2.2.5}%
+\contentsline {subsection}{\numberline {2.2.6}Biểu đồ use case phân rã Quản lý bài kiểm tra}{10}{subsection.2.2.6}%
+\contentsline {subsection}{\numberline {2.2.7}Biểu đồ use case phân rã Quản lý các bài thi của học sinh}{11}{subsection.2.2.7}%
+\contentsline {subsection}{\numberline {2.2.8}Biểu đồ use case phân rã Chấm thi bằng ứng dụng}{12}{subsection.2.2.8}%
+\contentsline {subsection}{\numberline {2.2.9}Biểu đồ use case phân rã Phúc khảo bài thi}{13}{subsection.2.2.9}%
+\contentsline {subsection}{\numberline {2.2.10}Biểu đồ use case phân rã Xem bài thi và điểm số}{14}{subsection.2.2.10}%
+\contentsline {subsection}{\numberline {2.2.11}Quy trình nghiệp vụ}{14}{subsection.2.2.11}%
+\contentsline {section}{\numberline {2.3}Đặc tả chức năng}{15}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Đặc tả use case Quản lý giáo viên}{15}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Đặc tả use case Quản lý câu hỏi}{17}{subsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.3.3}Đặc tả use case Quản lý bài kiểm tra}{18}{subsection.2.3.3}%
+\contentsline {subsection}{\numberline {2.3.4}Đặc tả use case Chấm thi bằng ứng dụng}{20}{subsection.2.3.4}%
+\contentsline {subsection}{\numberline {2.3.5}Đặc tả use case Phúc khảo bài thi}{22}{subsection.2.3.5}%
+\contentsline {section}{\numberline {2.4}Yêu cầu phi chức năng}{24}{section.2.4}%
+\contentsline {chapter}{\numberline {3}NỀN TẢNG LÝ THUYẾT VÀ CÔNG NGHỆ SỬ DỤNG}{26}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Kỹ thuật nhận dạng OMR và xử lý ảnh số}{26}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Kỹ thuật tạo đề nhiều phiên bản với AMC}{26}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Công nghệ phát triển backend}{27}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Công nghệ phát triển giao diện web}{27}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Công nghệ phát triển ứng dụng di động}{27}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Công nghệ trí tuệ nhân tạo tích hợp}{27}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Các công nghệ hỗ trợ khác}{28}{section.3.7}%
+\contentsline {chapter}{\numberline {4}PHÂN TÍCH THIẾT KẾ, TRIỂN KHAI VÀ ĐÁNH GIÁ HỆ THỐNG}{29}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Thiết kế kiến trúc}{29}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Lựa chọn kiến trúc phần mềm}{29}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}Thiết kế tổng quan}{29}{subsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.1.3}Thiết kế chi tiết các gói}{31}{subsection.4.1.3}%
+\contentsline {section}{\numberline {4.2}Thiết kế chi tiết}{38}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Thiết kế giao diện}{38}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Thiết kế chi tiết lớp}{42}{subsection.4.2.2}%
+\contentsline {subsubsection}{\numberline {a}Lớp SubmissionService (Backend -- Node.js)}{42}{subsubsection.4.2.2.1}%
+\contentsline {subparagraph}{Vị trí.}{42}{subparagraph*.56}%
+\contentsline {subparagraph}{Mô tả.}{42}{subparagraph*.57}%
+\contentsline {subparagraph}{Các thuộc tính.}{42}{subparagraph*.58}%
+\contentsline {subparagraph}{Các phương thức.}{43}{subparagraph*.60}%
+\contentsline {subparagraph}{Mối quan hệ.}{43}{subparagraph*.62}%
+\contentsline {subsubsection}{\numberline {b}Lớp ExamService (Backend -- Node.js)}{43}{subsubsection.4.2.2.2}%
+\contentsline {subparagraph}{Vị trí.}{43}{subparagraph*.63}%
+\contentsline {subparagraph}{Mô tả.}{43}{subparagraph*.64}%
+\contentsline {subparagraph}{Các thuộc tính.}{44}{subparagraph*.65}%
+\contentsline {subparagraph}{Các phương thức.}{44}{subparagraph*.67}%
+\contentsline {subparagraph}{Mối quan hệ.}{44}{subparagraph*.69}%
+\contentsline {subsubsection}{\numberline {c}Lớp OMREngine (Mobile -- Flutter)}{44}{subsubsection.4.2.2.3}%
+\contentsline {subparagraph}{Vị trí.}{44}{subparagraph*.70}%
+\contentsline {subparagraph}{Mô tả.}{44}{subparagraph*.71}%
+\contentsline {subparagraph}{Các thuộc tính.}{45}{subparagraph*.72}%
+\contentsline {subparagraph}{Các phương thức.}{45}{subparagraph*.74}%
+\contentsline {subparagraph}{Mối quan hệ.}{45}{subparagraph*.76}%
+\contentsline {subsubsection}{\numberline {d}Tổng hợp mối quan hệ giữa các lớp}{45}{subsubsection.4.2.2.4}%
+\contentsline {subparagraph}{Lớp SubmissionService (Backend -- Node.js).}{46}{subparagraph*.77}%
+\contentsline {subparagraph}{Lớp OMREngine (Mobile -- Flutter).}{46}{subparagraph*.78}%
+\contentsline {subparagraph}{Tương tác giữa Backend và Mobile.}{46}{subparagraph*.79}%
+\contentsline {subparagraph}{Bảng tổng hợp các lớp.}{46}{subparagraph*.80}%
+\contentsline {subparagraph}{Luồng truyền thông điệp -- Chấm thi OMR.}{46}{subparagraph*.82}%
+\contentsline {subsection}{\numberline {4.2.3}Thiết kế cơ sở dữ liệu}{49}{subsection.4.2.3}%
+\contentsline {section}{\numberline {4.3}Xây dựng ứng dụng}{57}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Thư viện và công cụ sử dụng}{57}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Kết quả đạt được}{57}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Minh họa các chức năng chính}{58}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Kiểm thử}{59}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Sản phẩm và hướng dẫn triển khai}{59}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Tổng quan sản phẩm}{60}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Hướng dẫn triển khai}{60}{subsection.4.5.2}%
+\contentsline {subsection}{\numberline {4.5.3}Kiểm thử trong môi trường cục bộ}{61}{subsection.4.5.3}%
+\contentsline {chapter}{\numberline {5}CÁC GIẢI PHÁP VÀ ĐÓNG GÓP NỔI BẬT}{62}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Giải pháp tự động sinh đề thi nhiều phiên bản và phiếu OMR kèm tọa độ nhận dạng}{62}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Dẫn dắt bài toán}{62}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}Giải pháp chi tiết}{62}{subsection.5.1.2}%
+\contentsline {subsubsection}{\numberline {a}Giai đoạn 1 -- Sinh phiên bản đề và hoán vị đáp án}{62}{subsubsection.5.1.2.1}%
+\contentsline {subsubsection}{\numberline {b}Giai đoạn 2 -- Sinh mã nguồn LaTeX cho đề và phiếu OMR}{63}{subsubsection.5.1.2.2}%
+\contentsline {subsubsection}{\numberline {c}Giai đoạn 3 -- Trích xuất tọa độ các ô từ AMC}{64}{subsubsection.5.1.2.3}%
+\contentsline {subsubsection}{\numberline {d}Giai đoạn 4 -- Tạo template OMR và ánh xạ câu hỏi}{65}{subsubsection.5.1.2.4}%
+\contentsline {subsubsection}{\numberline {e}Giai đoạn 5 -- Lưu trữ và phân phối đề thi}{66}{subsubsection.5.1.2.5}%
+\contentsline {subsection}{\numberline {5.1.3}Kết quả đạt được}{67}{subsection.5.1.3}%
+\contentsline {section}{\numberline {5.2}Giải pháp nhận dạng OMR trên thiết bị di động với khả năng phát hiện lỗi}{67}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Dẫn dắt bài toán}{67}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Giải pháp chi tiết}{67}{subsection.5.2.2}%
+\contentsline {subsubsection}{\numberline {a}Giai đoạn 1 -- Tiền xử lý ảnh}{67}{subsubsection.5.2.2.1}%
+\contentsline {subsubsection}{\numberline {b}Giai đoạn 2 -- Phát hiện và hiệu chỉnh góc nghiêng}{69}{subsubsection.5.2.2.2}%
+\contentsline {subsubsection}{\numberline {c}Giai đoạn 3 -- Phát hiện vùng phiếu}{69}{subsubsection.5.2.2.3}%
+\contentsline {subsubsection}{\numberline {d}Giai đoạn 4 -- Phát hiện bubble và đọc mã}{71}{subsubsection.5.2.2.4}%
+\contentsline {subsubsection}{\numberline {e}Giai đoạn 5 -- Đánh giá câu trả lời và phát hiện lỗi}{72}{subsubsection.5.2.2.5}%
+\contentsline {subsubsection}{\numberline {f}Giai đoạn 6 -- Tính điểm và lưu kết quả}{74}{subsubsection.5.2.2.6}%
+\contentsline {subsection}{\numberline {5.2.3}Kết quả đạt được}{74}{subsection.5.2.3}%
+\contentsline {section}{\numberline {5.3}Giải pháp quản lý phiên làm việc và phân quyền theo vai trò trên đa nền tảng}{75}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Dẫn dắt bài toán}{75}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Giải pháp chi tiết}{75}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Kết quả đạt được}{75}{subsection.5.3.3}%
+\contentsline {chapter}{\numberline {6}KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}{76}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Kết luận}{76}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Hướng phát triển}{76}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Hoàn thiện các chức năng hiện có}{76}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Mở rộng tính năng mới}{77}{subsection.6.2.2}%
+\contentsline {subsection}{\numberline {6.2.3}Nâng cấp công nghệ}{77}{subsection.6.2.3}%
+\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{79}{section*.90}%
+\contentsline {chapter}{PHỤ LỤC}{81}{section*.91}%
 \ttl@change@i {\@ne }{chapter}{0.0cm}{\bfseries \vspace {0.3cm}}{{\bfseries {\scshape } \thecontentslabel .\ }}{}{\titlerule *[0.3pc]{.}\contentspage }\relax 
 \ttl@change@v {chapter}{}{}{}\relax 
-\contentsline {chapter}{\numberline {A}HƯỚNG DẪN VIẾT ĐỒ ÁN TỐT NGHIỆP}{56}{appendix.1.A}%
-\contentsline {section}{\numberline {A.1}Ngành học}{57}{section.1.A.1}%
-\contentsline {section}{\numberline {A.2}Đánh dấu (bullet) và đánh số (numering)}{57}{section.1.A.2}%
-\contentsline {section}{\numberline {A.3}Cách thêm bảng}{58}{section.1.A.3}%
-\contentsline {section}{\numberline {A.4}Chèn hình ảnh}{58}{section.1.A.4}%
-\contentsline {section}{\numberline {A.5}Tài liệu tham khảo}{59}{section.1.A.5}%
-\contentsline {paragraph}{Cách liệt kê}{59}{paragraph*.22}%
-\contentsline {paragraph}{Các loại tài liệu tham khảo}{59}{paragraph*.23}%
-\contentsline {section}{\numberline {A.6}Cách viết phương trình và công thức toán học}{59}{section.1.A.6}%
-\contentsline {section}{\numberline {A.7}Qui cách đóng quyển}{59}{section.1.A.7}%
-\contentsline {chapter}{\numberline {B}ĐẶC TẢ USE CASE}{61}{appendix.1.B}%
-\contentsline {section}{\numberline {B.1}Đặc tả use case Quản lý trường học}{61}{section.1.B.1}%
-\contentsline {section}{\numberline {B.2}Đặc tả use case Quản lý giáo viên}{62}{section.1.B.2}%
-\contentsline {section}{\numberline {B.3}Đặc tả use case Quản lý học sinh}{62}{section.1.B.3}%
-\contentsline {section}{\numberline {B.4}Đặc tả use case Quản lý bài thi của học sinh}{63}{section.1.B.4}%
-\contentsline {section}{\numberline {B.5}Đặc tả use case Xem bài thi và điểm số}{64}{section.1.B.5}%
-\contentsline {section}{\numberline {B.6}Đặc tả use case Tạo câu hỏi, đề thi}{65}{section.1.B.6}%
-\contentsline {section}{\numberline {B.7}Đặc tả use case Đăng ký/Đăng nhập}{65}{section.1.B.7}%
+\contentsline {chapter}{\numberline {A}ĐẶC TẢ USE CASE}{81}{appendix.1.A}%
+\contentsline {subsection}{\numberline {A.0.1}Đặc tả use case Quản lý trường học}{81}{subsection.1.A.0.1}%
+\contentsline {subsection}{\numberline {A.0.2}Đặc tả use case Quản lý học sinh}{82}{subsection.1.A.0.2}%
+\contentsline {subsection}{\numberline {A.0.3}Đặc tả use case Quản lý các bài thi của học sinh}{83}{subsection.1.A.0.3}%
+\contentsline {subsection}{\numberline {A.0.4}Đặc tả use case Xem bài thi và điểm số}{84}{subsection.1.A.0.4}%
+\contentsline {subsection}{\numberline {A.0.5}Đặc tả use case Đăng ký/Đăng nhập}{85}{subsection.1.A.0.5}%
+\contentsline {chapter}{\numberline {B}THIẾT KẾ CHI TIẾT CÁC LỚP}{87}{appendix.1.B}%
+\contentsline {section}{\numberline {B.1}Lớp AppealService (Backend -- Node.js)}{87}{section.1.B.1}%
+\contentsline {subparagraph}{Vị trí.}{87}{subparagraph*.112}%
+\contentsline {subparagraph}{Mô tả.}{87}{subparagraph*.113}%
+\contentsline {subparagraph}{Các thuộc tính.}{87}{subparagraph*.114}%
+\contentsline {subparagraph}{Các phương thức.}{87}{subparagraph*.116}%
+\contentsline {subparagraph}{Mối quan hệ.}{87}{subparagraph*.118}%
+\contentsline {section}{\numberline {B.2}Lớp NotificationService (Backend -- Node.js)}{88}{section.1.B.2}%
+\contentsline {subparagraph}{Vị trí.}{88}{subparagraph*.119}%
+\contentsline {subparagraph}{Mô tả.}{88}{subparagraph*.120}%
+\contentsline {subparagraph}{Các thuộc tính.}{88}{subparagraph*.121}%
+\contentsline {subparagraph}{Các phương thức.}{88}{subparagraph*.123}%
+\contentsline {subparagraph}{Mối quan hệ.}{88}{subparagraph*.125}%
+\contentsline {section}{\numberline {B.3}Lớp AuthService (Backend -- Node.js)}{89}{section.1.B.3}%
+\contentsline {subparagraph}{Vị trí.}{89}{subparagraph*.126}%
+\contentsline {subparagraph}{Mô tả.}{89}{subparagraph*.127}%
+\contentsline {subparagraph}{Các thuộc tính.}{89}{subparagraph*.128}%
+\contentsline {subparagraph}{Các phương thức.}{89}{subparagraph*.130}%
+\contentsline {subparagraph}{Mối quan hệ.}{89}{subparagraph*.132}%
+\contentsline {section}{\numberline {B.4}Lớp ClassService (Backend -- Node.js)}{90}{section.1.B.4}%
+\contentsline {subparagraph}{Vị trí.}{90}{subparagraph*.133}%
+\contentsline {subparagraph}{Mô tả.}{90}{subparagraph*.134}%
+\contentsline {subparagraph}{Các thuộc tính.}{90}{subparagraph*.135}%
+\contentsline {subparagraph}{Các phương thức.}{90}{subparagraph*.137}%
+\contentsline {subparagraph}{Mối quan hệ.}{90}{subparagraph*.139}%
+\contentsline {section}{\numberline {B.5}Lớp AuthStore (Frontend -- React/Zustand)}{90}{section.1.B.5}%
+\contentsline {subparagraph}{Vị trí.}{90}{subparagraph*.140}%
+\contentsline {subparagraph}{Mô tả.}{90}{subparagraph*.141}%
+\contentsline {subparagraph}{Các thuộc tính.}{91}{subparagraph*.142}%
+\contentsline {subparagraph}{Các phương thức.}{91}{subparagraph*.144}%
+\contentsline {subparagraph}{Mối quan hệ.}{91}{subparagraph*.146}%
+\contentsline {section}{\numberline {B.6}Lớp SubmissionStore (Frontend -- React/Zustand)}{91}{section.1.B.6}%
+\contentsline {subparagraph}{Vị trí.}{91}{subparagraph*.147}%
+\contentsline {subparagraph}{Mô tả.}{91}{subparagraph*.148}%
+\contentsline {subparagraph}{Các thuộc tính.}{92}{subparagraph*.149}%
+\contentsline {subparagraph}{Các phương thức.}{92}{subparagraph*.151}%
+\contentsline {subparagraph}{Mối quan hệ.}{92}{subparagraph*.153}%
+\contentsline {section}{\numberline {B.7}Lớp ImageProcessor (Mobile -- Flutter)}{92}{section.1.B.7}%
+\contentsline {subparagraph}{Vị trí.}{92}{subparagraph*.154}%
+\contentsline {subparagraph}{Mô tả.}{92}{subparagraph*.155}%
+\contentsline {subparagraph}{Các thuộc tính.}{92}{subparagraph*.156}%
+\contentsline {subparagraph}{Các phương thức.}{93}{subparagraph*.158}%
+\contentsline {subparagraph}{Mối quan hệ.}{93}{subparagraph*.160}%
+\contentsline {section}{\numberline {B.8}Lớp BubbleDetector (Mobile -- Flutter)}{93}{section.1.B.8}%
+\contentsline {subparagraph}{Vị trí.}{93}{subparagraph*.161}%
+\contentsline {subparagraph}{Mô tả.}{93}{subparagraph*.162}%
+\contentsline {subparagraph}{Các thuộc tính.}{93}{subparagraph*.163}%
+\contentsline {subparagraph}{Các phương thức.}{94}{subparagraph*.165}%
+\contentsline {subparagraph}{Mối quan hệ.}{94}{subparagraph*.167}%
+\contentsline {section}{\numberline {B.9}Lớp AnswerReader (Mobile -- Flutter)}{94}{section.1.B.9}%
+\contentsline {subparagraph}{Vị trí.}{94}{subparagraph*.168}%
+\contentsline {subparagraph}{Mô tả.}{94}{subparagraph*.169}%
+\contentsline {subparagraph}{Các thuộc tính.}{94}{subparagraph*.170}%
+\contentsline {subparagraph}{Các phương thức.}{95}{subparagraph*.172}%
+\contentsline {subparagraph}{Mối quan hệ.}{95}{subparagraph*.174}%
+\contentsline {section}{\numberline {B.10}Tổng hợp các lớp trong phụ lục}{95}{section.1.B.10}%
+\contentsline {chapter}{\numberline {C}SINH CÂU HỎI BẰNG AI}{97}{appendix.1.C}%
+\contentsline {section}{\numberline {C.1}Tổng quan chức năng sinh câu hỏi bằng AI}{97}{section.1.C.1}%
+\contentsline {section}{\numberline {C.2}Sinh câu hỏi mới}{97}{section.1.C.2}%
+\contentsline {subsection}{\numberline {C.2.1}Mục đích}{97}{subsection.1.C.2.1}%
+\contentsline {subsection}{\numberline {C.2.2}Điều kiện trước}{97}{subsection.1.C.2.2}%
+\contentsline {subsection}{\numberline {C.2.3}Luồng thực thi chính}{97}{subsection.1.C.2.3}%
+\contentsline {subsection}{\numberline {C.2.4}Luồng thực thi mở rộng}{98}{subsection.1.C.2.4}%
+\contentsline {subsection}{\numberline {C.2.5}Điều kiện sau}{98}{subsection.1.C.2.5}%
+\contentsline {subsection}{\numberline {C.2.6}Cấu trúc prompt gửi đến AI}{98}{subsection.1.C.2.6}%
+\contentsline {subsection}{\numberline {C.2.7}Cấu trúc câu hỏi sinh ra}{98}{subsection.1.C.2.7}%
+\contentsline {section}{\numberline {C.3}Sinh câu hỏi tương tự}{98}{section.1.C.3}%
+\contentsline {subsection}{\numberline {C.3.1}Mục đích}{98}{subsection.1.C.3.1}%
+\contentsline {subsection}{\numberline {C.3.2}Điều kiện trước}{99}{subsection.1.C.3.2}%
+\contentsline {subsection}{\numberline {C.3.3}Luồng thực thi chính}{99}{subsection.1.C.3.3}%
+\contentsline {subsection}{\numberline {C.3.4}Luồng thực thi mở rộng}{99}{subsection.1.C.3.4}%
+\contentsline {subsection}{\numberline {C.3.5}Điều kiện sau}{99}{subsection.1.C.3.5}%
+\contentsline {subsection}{\numberline {C.3.6}Các kiểu thay đổi khi sinh tương tự}{100}{subsection.1.C.3.6}%
+\contentsline {subsection}{\numberline {C.3.7}Cấu trúc prompt cho chức năng sinh tương tự}{100}{subsection.1.C.3.7}%
+\contentsline {section}{\numberline {C.4}Xử lý lỗi và giới hạn}{100}{section.1.C.4}%
+\contentsline {subsection}{\numberline {C.4.1}Các lỗi thường gặp}{100}{subsection.1.C.4.1}%
+\contentsline {subsection}{\numberline {C.4.2}Giới hạn của hệ thống}{100}{subsection.1.C.4.2}%
+\contentsline {section}{\numberline {C.5}Bảo mật và đạo đức}{101}{section.1.C.5}%
+\contentsline {subsection}{\numberline {C.5.1}Các câu hỏi do AI sinh ra}{101}{subsection.1.C.5.1}%
+\contentsline {subsection}{\numberline {C.5.2}Xác thực nội dung}{101}{subsection.1.C.5.2}%
 \contentsfinish 

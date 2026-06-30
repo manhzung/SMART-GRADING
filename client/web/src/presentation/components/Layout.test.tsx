@@ -26,8 +26,8 @@ describe('Layout nav filtering', () => {
         <AdminLayout />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Dashboard hệ thống/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Điểm của tôi/i)).toBeNull();
+    expect(screen.getByText(/System Dashboard/i)).toBeInTheDocument();
+    expect(screen.queryByText(/My Scores/i)).toBeNull();
   });
 
   it('shows school dashboard for school-admin', async () => {
@@ -38,8 +38,8 @@ describe('Layout nav filtering', () => {
         <SchoolLayout />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Dashboard trường/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Dashboard hệ thống/i)).toBeNull();
+    expect(screen.getByText(/School Dashboard/i)).toBeInTheDocument();
+    expect(screen.queryByText(/System Dashboard/i)).toBeNull();
   });
 
   it('shows my-scores for student and hides admin items', async () => {
@@ -50,12 +50,12 @@ describe('Layout nav filtering', () => {
         <StudentLayout />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Điểm của tôi/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Dashboard hệ thống/i)).toBeNull();
-    expect(screen.queryByText(/Dashboard trường/i)).toBeNull();
+    expect(screen.getByText(/My Scores/i)).toBeInTheDocument();
+    expect(screen.queryByText(/System Dashboard/i)).toBeNull();
+    expect(screen.queryByText(/School Dashboard/i)).toBeNull();
   });
 
-  it('hides Thống kê and Quét OMR for all roles', async () => {
+  it('hides Analytics and Scan OMR for all roles', async () => {
     for (const role of ['admin', 'school-admin', 'teacher', 'student'] as const) {
       mockAuth(role);
       const { default: UniversalLayout } = await import('./Layout?' + role);
@@ -64,8 +64,8 @@ describe('Layout nav filtering', () => {
           <UniversalLayout />
         </MemoryRouter>
       );
-      expect(screen.queryByText(/Thống kê/i), `Thống kê should be hidden for ${role}`).toBeNull();
-      expect(screen.queryByText(/Quét OMR/i), `Quét OMR should be hidden for ${role}`).toBeNull();
+      expect(screen.queryByText(/Analytics/i), `Analytics should be hidden for ${role}`).toBeNull();
+      expect(screen.queryByText(/Scan OMR/i), `Scan OMR should be hidden for ${role}`).toBeNull();
       cleanup();
       vi.resetModules();
     }

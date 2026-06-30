@@ -23,7 +23,7 @@ interface DataTableProps<T> {
 
 export default function DataTable<T>({
   rows, columns, rowKey, loading, skeletonRows = 5,
-  emptyText = 'Chưa có dữ liệu', selectable, selectedIds = [], onSelectionChange, actionRenderer,
+  emptyText = 'No data available', selectable, selectedIds = [], onSelectionChange, actionRenderer,
 }: DataTableProps<T>) {
   const toggleAll = () => {
     if (!onSelectionChange) return;

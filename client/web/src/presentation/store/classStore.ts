@@ -94,17 +94,23 @@ export const useClassStore = create<ClassState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const user = useAuthStore.getState().user;
+      const role = user?.role || 'teacher';
       const schoolId = user?.schoolId;
-      
+
       let response;
-      if (schoolId) {
-        // Fetch classes associated with this school, passing any other query params
-        response = await classService.getBySchool(schoolId, params);
+      if (role === 'admin') {
+        // Admin can view all classes, or scope to a school when schoolId is set
+        response = schoolId
+          ? await classService.getBySchool(schoolId, params, user)
+          : await classService.getAll(params);
       } else {
-        // Fallback to fetch all active classes if no schoolId is present on user
-        response = await classService.getAll(params);
+        // school-admin and teacher are always scoped to their school
+        if (!schoolId) {
+          throw new Error('Missing school context for your role');
+        }
+        response = await classService.getBySchool(schoolId, params, user);
       }
-      
+
       set({
         classes: response.results || [],
         pagination: {

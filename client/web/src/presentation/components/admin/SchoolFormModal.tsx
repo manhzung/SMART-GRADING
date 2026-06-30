@@ -82,8 +82,8 @@ export default function SchoolFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!form.name.trim()) return setError('Tên trường là bắt buộc');
-    if (!school && !form.code.trim()) return setError('Mã trường là bắt buộc');
+    if (!form.name.trim()) return setError('School name is required');
+    if (!school && !form.code.trim()) return setError('School code is required');
 
     const payload: any = {
       name: form.name.trim(),
@@ -104,20 +104,20 @@ export default function SchoolFormModal({
     try {
       await onSubmit(payload);
     } catch (err: any) {
-      setError(err?.message || 'Có lỗi xảy ra');
+      setError(err?.message || 'An error occurred');
     }
   };
 
   return (
     <Modal
       open={open}
-      title={school ? 'Sửa thông tin trường' : 'Thêm trường học mới'}
+      title={school ? 'Edit School' : 'Add New School'}
       size="lg"
       onClose={onClose}
       footer={
         <>
           <button type="button" className={styles.btnCancel} onClick={onClose} disabled={submitting}>
-            Hủy
+            Cancel
           </button>
           <button
             type="submit"
@@ -125,7 +125,7 @@ export default function SchoolFormModal({
             className={styles.btnSubmit}
             disabled={submitting}
           >
-            {submitting ? 'Đang lưu...' : school ? 'Cập nhật' : 'Tạo trường'}
+            {submitting ? 'Saving...' : school ? 'Update' : 'Create School'}
           </button>
         </>
       }
@@ -135,43 +135,43 @@ export default function SchoolFormModal({
 
         <div className={styles.row}>
           <div className={styles.field}>
-            <label>Tên trường *</label>
+            <label>School Name *</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="VD: THPT Chu Văn An"
+              placeholder="e.g., Chu Van An High School"
               required
             />
           </div>
           <div className={styles.field}>
-            <label>Mã trường {!school && '*'}</label>
+            <label>School Code {!school && '*'}</label>
             <input
               type="text"
               value={form.code}
               onChange={(e) => handleChange('code', e.target.value.toUpperCase())}
-              placeholder="VD: CVAN"
+              placeholder="e.g., CVAN"
               disabled={!!school}
               required={!school}
             />
-            {school && <span className={styles.hint}>Mã trường không thể thay đổi</span>}
+            {school && <span className={styles.hint}>School code cannot be changed</span>}
           </div>
         </div>
 
         <fieldset className={styles.fieldGroup}>
-          <legend>Địa chỉ</legend>
+          <legend>Address</legend>
           <div className={styles.row}>
             <div className={styles.field}>
-              <label>Số nhà / Đường</label>
+              <label>Street</label>
               <input
                 type="text"
                 value={form.addressStreet}
                 onChange={(e) => handleChange('addressStreet', e.target.value)}
-                placeholder="Số 10, đường ABC"
+                placeholder="123 Main Street"
               />
             </div>
             <div className={styles.field}>
-              <label>Phường/Xã</label>
+              <label>Ward / Commune</label>
               <input
                 type="text"
                 value={form.addressWard}
@@ -181,7 +181,7 @@ export default function SchoolFormModal({
           </div>
           <div className={styles.row}>
             <div className={styles.field}>
-              <label>Quận/Huyện</label>
+              <label>District</label>
               <input
                 type="text"
                 value={form.addressDistrict}
@@ -189,7 +189,7 @@ export default function SchoolFormModal({
               />
             </div>
             <div className={styles.field}>
-              <label>Tỉnh/Thành phố</label>
+              <label>City / Province</label>
               <input
                 type="text"
                 value={form.addressCity}
@@ -201,7 +201,7 @@ export default function SchoolFormModal({
 
         <div className={styles.row}>
           <div className={styles.field}>
-            <label>Số điện thoại</label>
+            <label>Phone</label>
             <input
               type="tel"
               value={form.phone}
@@ -231,27 +231,27 @@ export default function SchoolFormModal({
             />
           </div>
           <div className={styles.field}>
-            <label>Hiệu trưởng</label>
+            <label>Principal</label>
             <input
               type="text"
               value={form.principalName}
               onChange={(e) => handleChange('principalName', e.target.value)}
-              placeholder="Họ và tên hiệu trưởng"
+              placeholder="Principal's full name"
             />
           </div>
         </div>
 
         <div className={styles.field}>
-          <label>Cấp học</label>
+          <label>Education Level</label>
           <select
             value={form.schoolType}
             onChange={(e) => handleChange('schoolType', e.target.value)}
           >
-            <option value="primary">Tiểu học</option>
-            <option value="secondary">THCS</option>
-            <option value="high">THPT</option>
-            <option value="university">Đại học</option>
-            <option value="other">Khác</option>
+            <option value="primary">Primary School</option>
+            <option value="secondary">Middle School</option>
+            <option value="high">High School</option>
+            <option value="university">University</option>
+            <option value="other">Other</option>
           </select>
         </div>
       </form>

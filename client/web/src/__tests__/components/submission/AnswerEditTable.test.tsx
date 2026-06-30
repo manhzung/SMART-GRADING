@@ -63,12 +63,12 @@ describe('AnswerEditTable', () => {
     const onReasonChange = vi.fn();
     render(<AnswerEditTable answers={mockAnswers} editable={true} onChange={vi.fn()} onReasonChange={onReasonChange} />);
     const textarea = screen.getAllByRole('textbox')[0];
-    fireEvent.change(textarea, { target: { value: 'HS tô sai' } });
-    expect(onReasonChange).toHaveBeenCalledWith(1, 'HS tô sai');
+    fireEvent.change(textarea, { target: { value: 'Student marked wrong' } });
+    expect(onReasonChange).toHaveBeenCalledWith(1, 'Student marked wrong');
   });
 
   it('displays empty state when answers is empty', () => {
     render(<AnswerEditTable answers={[]} editable={false} onChange={vi.fn()} />);
-    expect(screen.getByText(/chưa có đáp án/i)).toBeInTheDocument();
+    expect(screen.getByText(/no answers available/i)).toBeInTheDocument();
   });
 });

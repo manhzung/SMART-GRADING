@@ -180,7 +180,7 @@ export default function MyScoresPage() {
       case 'scanning':
         return { text: 'Đang xử lý', class: styles.pendingBadge, icon: MinusCircle };
       default:
-        return { text: 'Không xác định', class: styles.pendingBadge, icon: MinusCircle };
+        return { text: 'Unknown', class: styles.pendingBadge, icon: MinusCircle };
     }
   };
 
@@ -190,7 +190,7 @@ export default function MyScoresPage() {
       case 'under_review': return { text: 'Đang xem xét', class: styles.reviewingBadge, icon: Eye };
       case 'approved': return { text: 'Đã duyệt', class: styles.approvedBadge, icon: CheckCircle };
       case 'rejected': return { text: 'Đã từ chối', class: styles.rejectedBadge, icon: XCircle };
-      default: return { text: 'Không xác định', class: styles.pendingBadge, icon: Clock };
+      default: return { text: 'Unknown', class: styles.pendingBadge, icon: Clock };
     }
   };
 
@@ -199,7 +199,7 @@ export default function MyScoresPage() {
     { value: 'pending', label: 'Đang xử lý' },
     { value: 'scanned', label: 'Đã quét' },
     { value: 'manual_review', label: 'Đang duyệt' },
-    { value: 'completed', label: 'Hoàn thành' },
+    { value: 'completed', label: 'Completed' },
     { value: 'appealed', label: 'Đang phúc khảo' },
   ];
 
@@ -247,7 +247,7 @@ export default function MyScoresPage() {
       await fetchSubmissionAppeals(selectedSubmission._id);
       setShowCreateForm(false);
       setFormReason('');
-      toast.success('Đơn phúc khảo đã được gửi thành công!');
+      toast.success('Appeal submitted successfully!');
     } catch (err) {
       setFormError((err as Error).message || 'Có lỗi xảy ra khi gửi đơn.');
     } finally {

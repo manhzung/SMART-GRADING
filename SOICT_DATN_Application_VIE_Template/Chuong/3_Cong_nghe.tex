@@ -1,119 +1,57 @@
-\documentclass[../DoAn.tex]{subfiles}
+﻿\documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-\section{Tổng quan chương}
-Chương 2 đã trình bày chi tiết yêu cầu chức năng và phi chức năng của hệ thống Smart Graging. Trên cơ sở đó, Chương 3 giới thiệu các nền tảng lý thuyết và công nghệ được sử dụng để hiện thực hóa các yêu cầu đã nêu. Với mỗi công nghệ, chương này phân tích rõ công nghệ đó được dùng để giải quyết vấn đề cụ thể nào đã nêu ở Chương 2, đồng thời so sánh với các lựa chọn thay thế để giải thích lý do lựa chọn. Toàn bộ nội dung chương được tham chiếu chéo với danh mục tài liệu tham khảo để tăng tính khoa học và độ tin cậy.
+Chương này giới thiệu các nền tảng lý thuyết và công nghệ được lựa chọn để xây dựng Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR. Mỗi công nghệ được phân tích vai trò giải quyết yêu cầu cụ thể và so sánh với lựa chọn thay thế để giải thích lý do lựa chọn.
 
 \section{Kỹ thuật nhận dạng OMR và xử lý ảnh số}
 \label{section:3.1}
 
-Kỹ thuật nhận dạng dấu quang học (Optical Mark Recognition - OMR) là nền tảng cốt lõi để giải quyết yêu cầu chấm thi tự động các phiếu trả lời trên giấy đã nêu trong Chương 2. Theo tài liệu của Adams \cite{adams2003omr}, OMR là kỹ thuật sử dụng cảm biến quang học để phát hiện sự có mặt hoặc vắng mặt của dấu trên một vị trí xác định trước trên tờ giấy, từ đó suy ra lựa chọn của người trả lời. Kỹ thuật này đã được ứng dụng rộng rãi trong các bài kiểm tra trắc nghiệm, khảo sát ý kiến và bầu cử nhờ tốc độ xử lý nhanh và độ chính xác cao.
+Kỹ thuật nhận dạng dấu quang học (Optical Mark Recognition -- OMR) là nền tảng cốt lõi để chấm thi tự động. OMR phát hiện sự có mặt hoặc vắng mặt của dấu tại vị trí xác định trên giấy, từ đó suy ra lựa chọn của người trả lời. Quy trình OMR gồm: thu nhận ảnh, tiền xử lý, phát hiện vùng phiếu và chỉnh nghiêng, phát hiện ô trả lời, phân loại trạng thái tô, và ánh xạ câu trả lời.
 
-Quy trình xử lý OMR thường gồm các bước chính:
-\begin{itemize}
-    \item thu nhận ảnh từ máy quét chuyên dụng hoặc camera;
-    \item tiền xử lý ảnh để cải thiện chất lượng;
-    \item phát hiện vùng phiếu và chỉnh nghiêng;
-    \item phát hiện các ô trả lời;
-    \item phân loại trạng thái tô của từng ô;
-    \item ánh xạ câu trả lời.
-\end{itemize}
-Trong đồ án, các bước này được cài đặt trong module xử lý ảnh của ứng dụng di động Flutter và sử dụng thư viện OpenCV \cite{bradski2000opencv} thông qua package \texttt{opencv\_dart} để thực hiện các phép biến đổi ảnh cơ bản. Tài liệu của Gonzalez và Woods \cite{gonzalez2018digital} cung cấp nền tảng lý thuyết cho các phép biến đổi như chuyển ảnh xám, lọc Gaussian, nhị phân hóa Otsu và phát hiện cạnh Canny được sử dụng trong hệ thống.
-
-So với các giải pháp OMR truyền thống phụ thuộc vào máy quét chuyên dụng, đồ án lựa chọn hướng tiếp cận sử dụng camera của thiết bị di động kết hợp với các thuật toán xử lý ảnh để thực hiện nhận dạng. Hướng tiếp cận này có ưu điểm là giảm chi phí đầu tư phần cứng, dễ triển khai và cho phép giáo viên chấm bài ngay tại lớp học. Dự án mã nguồn mở OMRChecker \cite{omrchecker} cung cấp tham khảo quý giá về pipeline xử lý OMR trên thiết bị di động, mặc dù tập trung vào định dạng phiếu cố định. Trong khi đó, hệ thống Smart Grading tự thiết kế pipeline linh hoạt để làm việc với nhiều dạng phiếu khác nhau được sinh tự động bởi gói AMC.
+Trong đồ án, các bước này được cài đặt trong module xử lý ảnh của ứng dụng Flutter, sử dụng thư viện OpenCV \cite{bradski2000opencv} qua package \texttt{opencv\_dart}. Các phép biến đổi như chuyển ảnh xám, lọc Gaussian, nhị phân hóa Otsu và phát hiện cạnh Canny được áp dụng dựa trên lý thuyết xử lý ảnh số \cite{gonzalez2018digital}. Đồ án chọn hướng sử dụng camera di động thay vì máy quét chuyên dụng nhờ giảm chi phí và cho phép giáo viên chấm bài ngay tại lớp. Dự án mã nguồn mở OMRChecker \cite{omrchecker} cung cấp pipeline tham khảo quý giá.
 
 \section{Kỹ thuật tạo đề nhiều phiên bản với AMC}
 \label{section:3.2}
 
-Yêu cầu tạo nhiều phiên bản đề thi từ cùng một ngân hàng câu hỏi, được nêu trong mục \ref{subsection:2.2.6}, được giải quyết bằng cách sử dụng gói LaTeX AMC (Auto-Multiple-Choice) \cite{amcdoc}. AMC là một dự án mã nguồn mở cung cấp các công cụ toàn diện để tạo đề trắc nghiệm, sinh phiếu trả lời, chấm bài tự động và phân tích kết quả. AMC hỗ trợ tạo phiếu trả lời với các ô tô cho câu hỏi trắc nghiệm, mã đề và mã số sinh viên, đồng thời có khả năng trộn ngẫu nhiên thứ tự câu hỏi và đáp án.
+Yêu cầu tạo nhiều phiên bản đề thi được giải quyết bằng gói LaTeX AMC (Auto-Multiple-Choice) \cite{amcdoc}. AMC là dự án mã nguồn mở cung cấp công cụ toàn diện để tạo đề trắc nghiệm, sinh phiếu trả lời, chấm bài và phân tích kết quả, hỗ trợ trộn ngẫu nhiên thứ tự câu hỏi và đáp án.
 
-Trong hệ thống Smart Grading, AMC được tích hợp theo cơ chế sau:
-\begin{itemize}
-    \item backend tạo mã nguồn LaTeX dựa trên dữ liệu câu hỏi và cấu hình trộn đề bằng module \texttt{amcSourceGenerator};
-    \item mã nguồn được biên dịch sang PDF bằng trình biên dịch XeLaTeX thông qua WSL2 (Windows Subsystem for Linux 2);
-    \item đồng thời, phiếu trả lời OMR được sinh bằng module \texttt{amcAnswerSheetTexGenerator} và biên dịch tương tự;
-    \item hệ thống sử dụng chế độ \texttt{prepare --mode s --out-calage} của AMC để sinh file \texttt{.calage.xy} chứa tọa độ chính xác của các ô tô trên phiếu, phục vụ cho việc nhận dạng OMR sau này.
-\end{itemize}
-Các tọa độ này được đọc bằng module \texttt{amcCalageParser} và chuyển đổi về đơn vị DPI 300 chuẩn để lưu trữ cùng với mẫu phiếu OMR trong cơ sở dữ liệu. Việc sử dụng LaTeX \cite{kopka2004latex} làm ngôn ngữ trung gian giúp đảm bảo tính nhất quán về định dạng và dễ dàng tùy biến giao diện phiếu theo yêu cầu.
+Trong hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR, AMC được tích hợp theo cơ chế: backend tạo mã nguồn LaTeX từ dữ liệu câu hỏi và cấu hình trộn đề; mã nguồn được biên dịch sang PDF bằng XeLaTeX qua WSL2; đồng thời sinh phiếu OMR và gọi chế độ \texttt{prepare --mode s --out-calage} của AMC để trích xuất file tọa độ \texttt{.calage.xy} chứa tọa độ chính xác các ô trên phiếu, phục vụ nhận dạng OMR. Các tọa độ được chuẩn hóa về pixel ở độ phân giải 300 DPI và lưu trong bảng OMRTemplate.
 
-Có hai hướng tiếp cận thay thế đã được xem xét nhưng không lựa chọn. Hướng thứ nhất là tự viết module sinh phiếu PDF bằng thư viện \texttt{pdfkit} của Node.js; hướng này có ưu điểm là đơn giản hơn nhưng khó đảm bảo tính chính xác về tọa độ khi in và không tận dụng được hệ sinh thái LaTeX phong phú. Hướng thứ hai là sử dụng các thư viện Python như \texttt{reportlab} để sinh PDF; hướng này có thể phù hợp với hệ thống thuần Python nhưng lại tạo thêm phụ thuộc ngôn ngữ và khó tích hợp với pipeline Node.js hiện tại. Do đó, AMC được chọn vì cung cấp giải pháp toàn diện, đã được kiểm chứng trong thực tế giáo dục và hỗ trợ đầy đủ chu trình từ tạo đề đến chấm bài.
+Hai hướng thay thế đã xem xét nhưng không chọn: tự viết module sinh PDF bằng \texttt{pdfkit} (khó đảm bảo tọa độ chính xác) và dùng thư viện Python \texttt{reportlab} (thêm phụ thuộc ngôn ngữ, khó tích hợp Node.js). AMC được chọn vì cung cấp giải pháp toàn diện và đã được kiểm chứng trong thực tế giáo dục.
 
 \section{Công nghệ phát triển backend}
 \label{section:3.3}
 
-Yêu cầu xây dựng hệ thống backend xử lý nghiệp vụ phức tạp, tích hợp nhiều dịch vụ và đáp ứng được khả năng mở rộng, được giải quyết bằng nền tảng Node.js \cite{nodejs} kết hợp với framework Express \cite{expressjs}. Node.js là môi trường chạy JavaScript phía server với mô hình I/O không đồng bộ, phù hợp với các ứng dụng có nhiều thao tác I/O như gọi API, truy vấn cơ sở dữ liệu và xử lý file. Express là framework nhẹ cung cấp các tiện ích để xây dựng API REST \cite{rfc2616} một cách nhanh chóng và có tổ chức.
+Backend Node.js \cite{nodejs} kết hợp Express \cite{expressjs} đáp ứng yêu cầu xử lý nghiệp vụ phức tạp. Backend được tổ chức theo biến thể MVC \cite{mvc} gồm: routes (định tuyến API REST), controllers (điều phối request/response), services (logic nghiệp vụ) và models (schema Mongoose). Gói \texttt{services/} chứa logic theo miền: exam, submission, appeal, user, notification, ai.
 
-Hệ thống backend Smart Grading được tổ chức theo kiến trúc phân lớp rõ ràng gồm:
-\begin{itemize}
-    \item tầng định tuyến (\texttt{routes/}) định nghĩa các điểm cuối API theo chuẩn REST;
-    \item tầng điều khiển (\texttt{controllers/}) xử lý logic điều phối request và response;
-    \item tầng dịch vụ (\texttt{services/}) chứa logic nghiệp vụ;
-    \item tầng mô hình (\texttt{models/}) định nghĩa cấu trúc dữ liệu và tương tác với cơ sở dữ liệu.
-\end{itemize}
-Đây là biến thể của mô hình MVC \cite{mvc} phù hợp với đặc thù của Node.js. Việc xác thực người dùng được thực hiện thông qua JWT \cite{rfc7519} và thư viện Passport.js \cite{passportjs}, mật khẩu được mã hóa bằng \texttt{bcryptjs}. Xác thực đầu vào sử dụng thư viện Joi, đảm bảo dữ liệu hợp lệ trước khi xử lý.
-
-Cơ sở dữ liệu được lựa chọn là MongoDB \cite{mongodb}, một cơ sở dữ liệu NoSQL dạng tài liệu. MongoDB được sử dụng thông qua thư viện Mongoose làm lớp ánh xạ ODM \cite{odm}, cho phép định nghĩa schema linh hoạt phù hợp với đặc thù dữ liệu của hệ thống giáo dục như câu hỏi có nhiều dạng, đề thi có nhiều phiên bản. Các giải pháp thay thế được xem xét gồm: PostgreSQL với Sequelize (phù hợp với dữ liệu quan hệ chặt chẽ nhưng cứng nhắc hơn cho dữ liệu có cấu trúc thay đổi), Firebase Firestore (dễ triển khai nhưng khó tùy biến logic nghiệp vụ phức tạp). MongoDB được chọn vì cân bằng giữa tính linh hoạt của schema và khả năng truy vấn phong phú.
+Xác thực dùng JWT \cite{rfc7519} và Passport.js \cite{passportjs}, mật khẩu mã hóa bcrypt. Cơ sở dữ liệu MongoDB \cite{mongodb} qua Mongoose ODM \cite{odm} được chọn thay PostgreSQL vì linh hoạt schema phù hợp dữ liệu giáo dục (câu hỏi nhiều dạng, đề thi nhiều phiên bản).
 
 \section{Công nghệ phát triển giao diện web}
 \label{section:3.4}
 
-Giao diện web được xây dựng bằng React \cite{reactdocs} phiên bản 18 với ngôn ngữ TypeScript, đáp ứng yêu cầu quản lý, thống kê và tương tác với người dùng ở mục \ref{section:2.2}. React là thư viện JavaScript phổ biến với mô hình component giúp tổ chức giao diện thành các thành phần độc lập, có thể tái sử dụng. TypeScript bổ sung kiểu tĩnh giúp phát hiện lỗi sớm trong quá trình phát triển và tăng tính dễ bảo trì cho hệ thống lớn.
+Giao diện web xây dựng bằng React \cite{reactdocs} 18 với TypeScript, sử dụng mô hình component giúp tổ chức giao diện thành các thành phần độc lập, tái sử dụng. TypeScript bổ sung kiểu tĩnh giúp phát hiện lỗi sớm và tăng tính dễ bảo trì.
 
-Quản lý trạng thái phía client được thực hiện bằng Zustand \cite{zustand}, một thư viện quản lý trạng thái nhẹ với API đơn giản, phù hợp với quy mô của ứng dụng. Định tuyến sử dụng React Router v6 hỗ trợ định tuyến động và phân quyền truy cập theo vai trò. Để lấy và đồng bộ dữ liệu từ server, hệ thống kết hợp TanStack Query giúp giảm tải logic caching và cập nhật tự động. Biểu đồ thống kê sử dụng thư viện Recharts, hỗ trợ nhiều dạng biểu đồ phong phú phục vụ cho việc hiển thị báo cáo.
-
-So với hai lựa chọn thay thế phổ biến là Angular và Vue.js, React được chọn vì cộng đồng lớn, hệ sinh thái thư viện phong phú, đặc biệt là sự hỗ trợ tốt cho các tính năng phức tạp như biểu đồ, bảng dữ liệu và xử lý form. Angular có cấu trúc chặt chẽ nhưng đường cong học tập cao, trong khi Vue.js tuy dễ tiếp cận nhưng hệ sinh thái cho TypeScript và các thư viện doanh nghiệp còn hạn chế hơn React.
+Trạng thái client quản lý bằng Zustand \cite{zustand} (nhẹ, API đơn giản), định tuyến dùng React Router v6 hỗ trợ phân quyền, đồng bộ dữ liệu dùng TanStack Query (caching, cập nhật tự động), biểu đồ thống kê dùng Recharts. React được chọn thay Angular (đường cong học cao) và Vue.js (hệ sinh thái TypeScript hạn chế) nhờ cộng đồng lớn và hệ sinh thái thư viện phong phú.
 
 \section{Công nghệ phát triển ứng dụng di động}
 \label{section:3.5}
 
-Yêu cầu chấm OMR trên thiết bị di động (mục \ref{subsection:2.2.8}) được giải quyết bằng cách sử dụng Flutter \cite{flutter}, một framework đa nền tảng do Google phát triển, hỗ trợ biên dịch sang cả Android và iOS từ cùng một mã nguồn. Flutter sử dụng ngôn ngữ Dart với mô hình reactive và hệ thống widget phong phú, cho phép xây dựng giao diện người dùng có hiệu năng cao và trải nghiệm mượt mà.
+Flutter \cite{flutter} được sử dụng cho ứng dụng di động nhờ biên dịch đa nền tảng (Android/iOS) từ cùng mã nguồn, hiệu năng gần native nhờ biên dịch AOT, và hỗ trợ xử lý ảnh tốt qua OpenCV. Quản lý trạng thái dùng mô hình BLoC \cite{bloc} phân tách logic nghiệp vụ khỏi giao diện. Giao tiếp backend dùng Dio, lưu trữ cục bộ dùng \texttt{flutter\_secure\_storage} và \texttt{sqflite}.
 
-Quản lý trạng thái trong ứng dụng di động sử dụng mô hình BLoC \cite{bloc} (Business Logic Component), phân tách rõ ràng giữa logic nghiệp vụ và giao diện. BLoC sử dụng luồng dữ liệu một chiều và các sự kiện, giúp dễ dàng kiểm thử và bảo trì. Để giao tiếp với backend, ứng dụng sử dụng thư viện Dio hỗ trợ HTTP một cách linh hoạt và hiệu quả. Lưu trữ cục bộ phục vụ cho việc lưu trữ phiếu khi mất kết nối sử dụng \texttt{flutter\_secure\_storage} và cơ sở dữ liệu cục bộ \texttt{sqflite}. Xử lý ảnh và nhận dạng OMR được thực hiện bằng package \texttt{opencv\_dart} cho các phép biến đổi ảnh cơ bản và thư viện \texttt{camera} để truy cập camera thiết bị.
-
-So với hai lựa chọn thay thế là React Native và phát triển native (Java/Kotlin cho Android, Swift cho iOS), Flutter được chọn vì:
-\begin{itemize}
-    \item hiệu năng gần với native nhờ biên dịch Ahead-of-Time sang mã máy;
-    \item giao diện nhất quán giữa các nền tảng;
-    \item hỗ trợ xử lý ảnh tốt với tích hợp OpenCV;
-    \item tốc độ phát triển nhanh nhờ hot reload.
-\end{itemize}
-React Native có hiệu năng thấp hơn và khó tích hợp các thư viện xử lý ảnh phức tạp. Phát triển native tuy có hiệu năng tốt nhất nhưng đòi hỏi hai đội ngũ phát triển riêng biệt, làm tăng chi phí và thời gian.
+Flutter được chọn thay React Native (hiệu năng thấp hơn, khó tích hợp OpenCV) và phát triển native (đòi hai đội ngũ riêng, tăng chi phí).
 
 \section{Công nghệ trí tuệ nhân tạo tích hợp}
 \label{section:3.6}
 
-Yêu cầu tạo câu hỏi, đề thi và phân tích báo cáo có sự tương tác của System, được nêu trong các mục \ref{subsection:2.2.5} và \ref{subsection:2.2.12}, được giải quyết bằng cách tích hợp các mô hình ngôn ngữ lớn (LLM) thông qua nhiều nhà cung cấp. Hệ thống hỗ trợ Gemini của Google \cite{gemini} là nhà cung cấp chính, đồng thời có thể sử dụng OpenAI \cite{openaiapi} và Claude làm phương án dự phòng. Các mô hình này dựa trên kiến trúc Transformer \cite{vaswani2017attention} với khả năng hiểu và sinh ngôn ngữ tự nhiên mạnh mẽ.
+Hệ thống tích hợp các mô hình ngôn ngữ lớn (LLM) qua nhiều nhà cung cấp: Gemini \cite{gemini} (chính), OpenAI \cite{openaiapi} và Claude (dự phòng). Các mô hình dựa trên kiến trúc Transformer \cite{vaswani2017attention}.
 
-Trong hệ thống Smart Grading, công nghệ AI được ứng dụng cho các tác vụ:
-\begin{itemize}
-    \item sinh câu hỏi trắc nghiệm từ chủ đề hoặc tài liệu cho trước, sử dụng module \texttt{questionGen.service.js} với kỹ thuật prompt engineering và few-shot examples;
-    \item sinh nhận xét tổng quan cho báo cáo bài kiểm tra, sử dụng module \texttt{aiReport.service.js};
-    \item hỗ trợ học sinh ôn tập thông qua trợ lý AI chat, sử dụng module \texttt{aiChat.service.js} và module \texttt{gemini.service.js}.
-\end{itemize}
-Hệ thống có cơ chế cache kết quả với thời gian sống 5 phút cho các yêu cầu sinh câu hỏi để giảm chi phí và tăng tốc độ phản hồi, đồng thời sử dụng cơ chế exponential backoff để xử lý lỗi tạm thời từ nhà cung cấp.
-
-So với các lựa chọn thay thế gồm sử dụng mô hình AI tự huấn luyện hoặc dịch vụ AI on-premise, hướng tiếp cận sử dụng API đám mây của các nhà cung cấp lớn được chọn vì:
-\begin{itemize}
-    \item tiết kiệm chi phí và thời gian phát triển, không cần xây dựng cụm GPU riêng;
-    \item chất lượng đầu ra cao nhờ mô hình đã được huấn luyện trên tập dữ liệu lớn;
-    \item hỗ trợ tốt tiếng Việt.
-\end{itemize}
-Hệ thống được thiết kế để dễ dàng chuyển đổi nhà cung cấp AI thông qua cấu hình, giúp giảm rủi ro phụ thuộc vào một nhà cung cấp duy nhất.
+AI được ứng dụng cho: sinh câu hỏi trắc nghiệm (module \texttt{questionGen.service.js} dùng prompt engineering và few-shot examples), sinh nhận xét báo cáo (\texttt{aiReport.service.js}) và trợ lý chat cho học sinh (\texttt{aiChat.service.js}). Hệ thống áp dụng cache 5 phút và exponential backoff khi gặp lỗi nhà cung cấp. Được chọn thay tự huấn luyện hoặc on-premise nhờ tiết kiệm chi phí, chất lượng cao và hỗ trợ tiếng Việt.
 
 \section{Các công nghệ hỗ trợ khác}
 \label{section:3.7}
 
-Ngoài các công nghệ chính nêu trên, hệ thống còn sử dụng một số công nghệ hỗ trợ quan trọng. Để lưu trữ và phân phối hình ảnh phiếu thi cùng các file PDF, hệ thống sử dụng dịch vụ CDN đám mây Cloudinary \cite{cloudinary} thay vì tự xây dựng hệ thống lưu trữ; lý do là Cloudinary cung cấp khả năng tối ưu hóa ảnh tự động, sinh URL ký và tích hợp dễ dàng với Node.js. Để gửi email xác thực và thông báo, hệ thống sử dụng thư viện Nodemailer kết hợp với SMTP server. Hệ thống thông báo trong ứng dụng được thiết kế dựa trên cơ sở dữ liệu với các kênh in-app, email và push notification. Để ghi log và giám sát hệ thống, backend sử dụng Winston kết hợp với Morgan, hỗ trợ truy vết lỗi hiệu quả.
+Ngoài các công nghệ chính, hệ thống còn dùng Cloudinary \cite{cloudinary} lưu trữ ảnh và PDF, Nodemailer gửi email, Winston và Morgan ghi log. Container hóa Docker với docker-compose cho ba môi trường dev/test/prod. Backend kiểm thử bằng Jest (unit và integration test), tài liệu API sinh tự động qua Swagger.
 
-Quy trình phát triển và kiểm thử được hỗ trợ bởi hệ thống container hóa Docker với file \texttt{docker-compose.yml} cấu hình cho ba môi trường phát triển, kiểm thử và sản xuất. Backend sử dụng Jest làm framework kiểm thử tự động với hai loại kiểm thử là unit test và integration test, đảm bảo chất lượng mã nguồn. Tài liệu API được sinh tự động từ chú thích trong mã nguồn thông qua Swagger, giúp cho việc phối hợp giữa các thành viên trong nhóm và tích hợp với bên thứ ba được thuận lợi.
-
-\section{Kết chương}
-Chương 3 đã giới thiệu các nền tảng lý thuyết và công nghệ được lựa chọn để xây dựng hệ thống Smart Grading, bao gồm: kỹ thuật nhận dạng OMR và xử lý ảnh số; kỹ thuật tạo đề nhiều phiên bản với gói LaTeX AMC; công nghệ phát triển backend Node.js/Express kết hợp MongoDB; công nghệ phát triển giao diện web React với TypeScript; công nghệ phát triển ứng dụng di động Flutter với BLoC; công nghệ trí tuệ nhân tạo tích hợp qua các nhà cung cấp đám mây; và các công nghệ hỗ trợ khác. Với mỗi công nghệ, chương đã phân tích rõ vai trò giải quyết yêu cầu cụ thể nào đã nêu ở Chương 2, đồng thời so sánh với các lựa chọn thay thế và trích dẫn nguồn tài liệu khoa học đáng tin cậy. Các kết quả chính gồm:
-\begin{itemize}
-    \item hệ thống hóa bảy nhóm công nghệ cốt lõi;
-    \item làm rõ lý do lựa chọn và loại bỏ các phương án thay thế;
-    \item tạo nền tảng cho việc phân tích thiết kế ở chương tiếp theo.
-\end{itemize}
-Chương 4 sẽ trình bày chi tiết quá trình phân tích thiết kế kiến trúc phần mềm, thiết kế giao diện, lớp và cơ sở dữ liệu, cùng với kết quả triển khai và đánh giá hệ thống.
+Chương 3 đã giới thiệu các nền tảng lý thuyết và công nghệ xây dựng Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR: OMR, AMC, Node.js/Express, MongoDB, React, Flutter, AI và các công cụ hỗ trợ. Chương 4 sẽ trình bày chi tiết phân tích thiết kế kiến trúc, giao diện, lớp và cơ sở dữ liệu.
 
 \end{document}

@@ -29,7 +29,7 @@ export const AnswerEditTable: React.FC<AnswerEditTableProps> = ({
   if (answers.length === 0) {
     return (
       <div className={styles.emptyState} data-testid="empty-state">
-        Chưa có đáp án nào
+        No answers available
       </div>
     );
   }
@@ -39,11 +39,11 @@ export const AnswerEditTable: React.FC<AnswerEditTableProps> = ({
       <thead>
         <tr>
           <th>#</th>
-          <th>Đáp án HS</th>
-          <th>Đáp án đúng</th>
-          <th>Kết quả</th>
-          <th>Điểm</th>
-          {editable && <th>Lý do sửa</th>}
+          <th>Student Answer</th>
+          <th>Correct Answer</th>
+          <th>Result</th>
+          <th>Score</th>
+          {editable && <th>Edit Reason</th>}
         </tr>
       </thead>
       <tbody>
@@ -90,7 +90,7 @@ export const AnswerEditTable: React.FC<AnswerEditTableProps> = ({
                   onChange={(e) => onReasonChange?.(ans.position, e.target.value)}
                   className={styles.reasonInput}
                   rows={1}
-                  placeholder="Lý do (tùy chọn)"
+                  placeholder="Reason (optional)"
                 />
               </td>
             )}

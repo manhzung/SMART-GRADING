@@ -29,10 +29,10 @@ import styles from './SubmissionsPage.module.css';
 
 // Status configuration
 const STATUS_CONFIG: Record<string, { text: string; class: string }> = {
-  scanned: { text: 'Đã quét', class: styles.statusPending },
-  completed: { text: 'Hoàn thành', class: styles.statusGraded },
-  manual_review: { text: 'Phúc tra', class: styles.statusAppealed },
-  appealed: { text: 'Đã phúc tra', class: styles.statusAppealed },
+  scanned: { text: 'Scanned', class: styles.statusPending },
+  completed: { text: 'Completed', class: styles.statusGraded },
+  manual_review: { text: 'Reviewing', class: styles.statusAppealed },
+  appealed: { text: 'Reviewed', class: styles.statusAppealed },
 };
 
 interface SubmissionWithDetails extends BackendSubmission {
@@ -125,8 +125,8 @@ export default function SubmissionsPage() {
         ...submission,
         studentName: (submission.studentId as any)?.name || 'Unknown',
         studentEmail: (submission.studentId as any)?.email || '',
-        examTitle: exam?.title || 'Không xác định',
-        className: cls?.name || submission.classId || 'Không xác định',
+        examTitle: exam?.title || 'Unknown',
+        className: cls?.name || submission.classId || 'Unknown',
         maxScore,
         totalQuestions,
         correctCount,
@@ -237,13 +237,13 @@ export default function SubmissionsPage() {
 
   // Delete submission
   const handleDeleteSubmission = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa bài nộp này?')) return;
+    if (!confirm('Are you sure you want to delete this submission?')) return;
     try {
       await deleteSubmission(id);
       setSelectedSubmission(null);
-      toast.success('Đã xóa bài nộp');
+      toast.success('Submission deleted');
     } catch (error) {
-      toast.error('Xóa thất bại');
+      toast.error('Delete failed');
     }
   };
 
@@ -265,9 +265,9 @@ export default function SubmissionsPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('Tải xuống thành công');
+      toast.success('Download successful');
     } catch (error) {
-      toast.error('Tải xuống thất bại');
+      toast.error('Download failed');
     }
   };
 
@@ -281,7 +281,7 @@ export default function SubmissionsPage() {
       const correctAnswer = answerKey[questionId] || '';
       return {
         questionId,
-        questionContent: `Câu hỏi ${answer.position}`,
+        questionContent: `Question ${answer.position}`,
         studentAnswer: answer.selectedAnswer || '',
         correctAnswer,
         isCorrect: correctAnswer !== '' ? answer.selectedAnswer === correctAnswer : false,
@@ -294,7 +294,7 @@ export default function SubmissionsPage() {
   // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
+    return date.toLocaleDateString('en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -326,25 +326,25 @@ export default function SubmissionsPage() {
       <div className={styles.header}>
         <div className={styles.headerText}>
           <span className={`roleBadge ${roleBadgeClass}`}>{roleLabel}</span>
-          <h1 className={styles.title}>Quản lý bài nộp</h1>
-          <p className={styles.subtitle}>Xem và quản lý các bài thi đã nộp</p>
+          <h1 className={styles.title}>Manage Submissions</h1>
+          <p className={styles.subtitle}>View and manage submitted exam papers</p>
         </div>
         <div className={styles.headerStats}>
           <div className={styles.statItem}>
             <span className={styles.statValue}>{selectedExam === 'all' ? 0 : filteredSubmissions.length}</span>
-            <span className={styles.statLabel}>Tổng bài nộp</span>
+            <span className={styles.statLabel}>Total Submissions</span>
           </div>
           <div className={styles.statItem}>
             <span className={styles.statValue}>
               {selectedExam === 'all' ? 0 : filteredSubmissions.filter((s) => s.status === 'completed').length}
             </span>
-            <span className={styles.statLabel}>Hoàn thành</span>
+            <span className={styles.statLabel}>Completed</span>
           </div>
           <div className={styles.statItem}>
             <span className={styles.statValue}>
               {selectedExam === 'all' ? 0 : filteredSubmissions.filter((s) => s.status === 'scanned').length}
             </span>
-            <span className={styles.statLabel}>Đã quét</span>
+            <span className={styles.statLabel}>Scanned</span>
           </div>
         </div>
       </div>
@@ -357,7 +357,7 @@ export default function SubmissionsPage() {
             <Search size={16} className={styles.searchIcon} />
             <input
               type="text"
-              placeholder="Tìm kiếm theo tên, email, bài thi..."
+              placeholder="Search by name, email, exam..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -376,8 +376,8 @@ export default function SubmissionsPage() {
               <FileText size={14} className={styles.btnIconLeft} />
               <span>
                 {selectedExam === 'all'
-                  ? 'Tất cả bài thi'
-                  : exams.find((e) => e._id === selectedExam)?.title.slice(0, 30) + '...' || 'Bài thi'}
+                  ? 'All Exams'
+                  : exams.find((e) => e._id === selectedExam)?.title.slice(0, 30) + '...' || 'Exam'}
               </span>
               <ChevronDown size={14} className={styles.btnChevron} />
             </button>
@@ -390,7 +390,7 @@ export default function SubmissionsPage() {
                     setShowExamDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Tất cả bài thi
+                  All Exams
                 </button>
                 {exams.map((exam) => (
                   <button
@@ -415,7 +415,7 @@ export default function SubmissionsPage() {
               onClick={() => setShowClassDropdown(!showClassDropdown)}
             >
               <GraduationCap size={14} className={styles.btnIconLeft} />
-              <span>{selectedClass === 'all' ? 'Tất cả lớp' : `Lớp ${selectedClass}`}</span>
+              <span>{selectedClass === 'all' ? 'All Classes' : `Class ${selectedClass}`}</span>
               <ChevronDown size={14} className={styles.btnChevron} />
             </button>
             {showClassDropdown && (
@@ -427,7 +427,7 @@ export default function SubmissionsPage() {
                     setShowClassDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Tất cả lớp
+                  All Classes
                 </button>
                 {classes.map((cls) => (
                   <button
@@ -438,7 +438,7 @@ export default function SubmissionsPage() {
                       setShowClassDropdown(false);
                       setCurrentPage(1);
                     }}>
-                    Lớp {cls.name}
+                    Class {cls.name}
                   </button>
                 ))}
               </div>
@@ -454,7 +454,7 @@ export default function SubmissionsPage() {
               <Filter size={14} className={styles.btnIconLeft} />
               <span>
                 {selectedStatus === 'all'
-                  ? 'Tất cả trạng thái'
+                  ? 'All Statuses'
                   : STATUS_CONFIG[selectedStatus as keyof typeof STATUS_CONFIG]?.text || selectedStatus}
               </span>
               <ChevronDown size={14} className={styles.btnChevron} />
@@ -468,7 +468,7 @@ export default function SubmissionsPage() {
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Tất cả trạng thái
+                  All Statuses
                 </button>
                 <button
                   className={`${styles.dropdownItem} ${selectedStatus === 'scanned' ? styles.dropdownItemActive : ''}`}
@@ -477,7 +477,7 @@ export default function SubmissionsPage() {
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Đã quét
+                  Scanned
                 </button>
                 <button
                   className={`${styles.dropdownItem} ${selectedStatus === 'completed' ? styles.dropdownItemActive : ''}`}
@@ -486,7 +486,7 @@ export default function SubmissionsPage() {
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Hoàn thành
+                  Completed
                 </button>
                 <button
                   className={`${styles.dropdownItem} ${selectedStatus === 'manual_review' ? styles.dropdownItemActive : ''}`}
@@ -495,7 +495,7 @@ export default function SubmissionsPage() {
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Phúc tra
+                  Reviewing
                 </button>
                 <button
                   className={`${styles.dropdownItem} ${selectedStatus === 'appealed' ? styles.dropdownItemActive : ''}`}
@@ -504,7 +504,7 @@ export default function SubmissionsPage() {
                     setShowStatusDropdown(false);
                     setCurrentPage(1);
                   }}>
-                  Đã phúc tra
+                  Reviewed
                 </button>
               </div>
             )}
@@ -537,24 +537,24 @@ export default function SubmissionsPage() {
 
         <button className={styles.resetBtn} onClick={handleResetFilters}>
           <RotateCcw size={14} />
-          <span>Đặt lại</span>
+          <span>Reset</span>
         </button>
       </div>
 
       {/* Table */}
       <div className={styles.tableWrapper}>
         {error && <div className={styles.emptyContent}><p>{error}</p></div>}
-        {isLoading && <div className={styles.emptyContent}><p>Đang tải bài nộp...</p></div>}
+        {isLoading && <div className={styles.emptyContent}><p>Loading submissions...</p></div>}
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>STT</th>
-              <th>HỌC SINH</th>
-              <th>BÀI THI</th>
-              <th>LỚP</th>
-              <th>ĐIỂM</th>
-              <th>TRẠNG THÁI</th>
-              <th>NỘP LÚC</th>
+              <th>No.</th>
+              <th>STUDENT</th>
+              <th>EXAM</th>
+              <th>CLASS</th>
+              <th>SCORE</th>
+              <th>STATUS</th>
+              <th>SUBMITTED AT</th>
             </tr>
           </thead>
           <tbody>
@@ -563,8 +563,8 @@ export default function SubmissionsPage() {
                 <td colSpan={7} className={styles.emptyRow}>
                   <div className={styles.emptyContent}>
                     <FileText size={48} className={styles.emptyIcon} />
-                    <p>Chọn một bài thi để xem bài nộp</p>
-                    <span>Dữ liệu bài nộp được tải theo từng bài thi từ hệ thống</span>
+                    <p>Select an exam to view submissions</p>
+                    <span>Submission data is loaded from the system per exam</span>
                   </div>
                 </td>
               </tr>
@@ -573,8 +573,8 @@ export default function SubmissionsPage() {
                 <td colSpan={7} className={styles.emptyRow}>
                   <div className={styles.emptyContent}>
                     <FileText size={48} className={styles.emptyIcon} />
-                    <p>Không tìm thấy bài nộp nào</p>
-                    <span>Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</span>
+                    <p>No submissions found</p>
+                    <span>Try changing your filters or searching for different keywords</span>
                   </div>
                 </td>
               </tr>
@@ -631,8 +631,8 @@ export default function SubmissionsPage() {
       {/* Pagination */}
       <div className={styles.paginationRow}>
         <div className={styles.paginationLeft}>
-          Hiển thị {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, totalItems)} trong tổng số{' '}
-          {totalItems} bản ghi
+          Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, totalItems)} of{' '}
+          {totalItems} records
         </div>
         <div className={styles.paginationRight}>
           <button
@@ -679,7 +679,7 @@ export default function SubmissionsPage() {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Chi tiết bài nộp</h2>
+              <h2 className={styles.modalTitle}>Submission Details</h2>
               <button className={styles.closeBtn} onClick={handleCloseModal}>
                 <X size={20} />
               </button>
@@ -691,11 +691,11 @@ export default function SubmissionsPage() {
               <div className={styles.infoSection}>
                 <h3 className={styles.sectionTitle}>
                   <User size={16} />
-                  Thông tin học sinh
+                  Student Information
                 </h3>
                 <div className={styles.infoGrid}>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Họ tên</span>
+                    <span className={styles.infoLabel}>Name</span>
                     <span className={styles.infoValue}>{selectedSubmission.studentName}</span>
                   </div>
                   <div className={styles.infoItem}>
@@ -703,7 +703,7 @@ export default function SubmissionsPage() {
                     <span className={styles.infoValue}>{selectedSubmission.studentEmail}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Lớp</span>
+                    <span className={styles.infoLabel}>Class</span>
                     <span className={styles.infoValue}>{selectedSubmission.className}</span>
                   </div>
                 </div>
@@ -713,19 +713,19 @@ export default function SubmissionsPage() {
               <div className={styles.infoSection}>
                 <h3 className={styles.sectionTitle}>
                   <BookOpen size={16} />
-                  Thông tin bài thi
+                  Exam Information
                 </h3>
                 <div className={styles.infoGrid}>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Bài thi</span>
+                    <span className={styles.infoLabel}>Exam</span>
                     <span className={styles.infoValue}>{selectedSubmission.examTitle}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Phiên bản</span>
-                    <span className={styles.infoValue}>Đề {selectedSubmission.versionCode}</span>
+                    <span className={styles.infoLabel}>Version</span>
+                    <span className={styles.infoValue}>Code {selectedSubmission.versionCode}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Nộp lúc</span>
+                    <span className={styles.infoLabel}>Submitted At</span>
                     <span className={styles.infoValue}>{formatDate(selectedSubmission.submittedAt)}</span>
                   </div>
                 </div>
@@ -745,17 +745,17 @@ export default function SubmissionsPage() {
                   </div>
                   <div className={styles.scoreBreakdown}>
                     <div className={styles.breakdownItem}>
-                      <span className={styles.breakdownLabel}>Đúng</span>
+                      <span className={styles.breakdownLabel}>Correct</span>
                       <span className={styles.breakdownValueCorrect}>{selectedSubmission.correctCount}</span>
                     </div>
                     <div className={styles.breakdownItem}>
-                      <span className={styles.breakdownLabel}>Sai</span>
+                      <span className={styles.breakdownLabel}>Incorrect</span>
                       <span className={styles.breakdownValueIncorrect}>
                         {selectedSubmission.totalQuestions - selectedSubmission.correctCount}
                       </span>
                     </div>
                     <div className={styles.breakdownItem}>
-                      <span className={styles.breakdownLabel}>Tổng</span>
+                      <span className={styles.breakdownLabel}>Total</span>
                       <span className={styles.breakdownValue}>{selectedSubmission.totalQuestions}</span>
                     </div>
                   </div>
@@ -767,21 +767,21 @@ export default function SubmissionsPage() {
               <div className={styles.answersSection}>
                 <h3 className={styles.sectionTitle}>
                   <FileText size={16} />
-                  Chi tiết câu trả lời
+                  Answer Details
                 </h3>
                 <div className={styles.answersList}>
                   {getAnswerDetails(selectedSubmission).map((answer, idx) => (
                     <div key={answer.questionId} className={styles.answerItem}>
                       <div className={styles.answerHeader}>
-                        <span className={styles.questionNumber}>Câu {idx + 1}</span>
+                        <span className={styles.questionNumber}>Question {idx + 1}</span>
                         <span className={`${styles.answerStatus} ${answer.isCorrect ? styles.correct : styles.incorrect}`}>
                           {answer.isCorrect ? (
                             <>
-                              <CheckCircle size={14} /> Đúng
+                              <CheckCircle size={14} /> Correct
                             </>
                           ) : (
                             <>
-                              <X size={14} /> Sai
+                              <X size={14} /> Incorrect
                             </>
                           )}
                         </span>
@@ -789,19 +789,19 @@ export default function SubmissionsPage() {
                       <p className={styles.questionContent}>{answer.questionContent}</p>
                       <div className={styles.answerDetails}>
                         <div className={styles.answerOption}>
-                          <span className={styles.optionLabel}>Câu trả lời:</span>
+                          <span className={styles.optionLabel}>Answer:</span>
                           <span className={`${styles.optionValue} ${!answer.isCorrect ? styles.wrongAnswer : ''}`}>
-                            {answer.studentAnswer || 'Không trả lời'}
+                            {answer.studentAnswer || 'No answer'}
                           </span>
                         </div>
                         <div className={styles.answerOption}>
-                          <span className={styles.optionLabel}>Đáp án đúng:</span>
+                          <span className={styles.optionLabel}>Correct answer:</span>
                           <span className={`${styles.optionValue} ${styles.correctAnswer}`}>
                             {answer.correctAnswer}
                           </span>
                         </div>
                         <div className={styles.answerOption}>
-                          <span className={styles.optionLabel}>Điểm:</span>
+                          <span className={styles.optionLabel}>Score:</span>
                           <span className={`${styles.optionValue} ${answer.isCorrect ? styles.correctAnswer : styles.wrongAnswer}`}>
                             +{answer.score.toFixed(1)}/{answer.maxScore.toFixed(1)}
                           </span>
@@ -820,14 +820,14 @@ export default function SubmissionsPage() {
                 onClick={() => handleDeleteSubmission(selectedSubmission._id)}
               >
                 <Trash2 size={16} />
-                Xóa bài nộp
+                Delete Submission
               </button>
               <button
                 className={styles.downloadBtn}
                 onClick={() => handleDownload(selectedSubmission._id)}
               >
                 <Download size={16} />
-                Tải xuống phiếu trả lời
+                Download Answer Sheet
               </button>
               <button
                 className={styles.downloadBtn}
@@ -838,7 +838,7 @@ export default function SubmissionsPage() {
                   setOverrideReason('Manual override by teacher');
                   setShowOverrideModal(true);
                 }}>
-                Điều chỉnh điểm
+                Override Score
               </button>
             </div>
           </div>
@@ -850,18 +850,18 @@ export default function SubmissionsPage() {
         <div className={styles.modalOverlay} onClick={() => setShowOverrideModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
             <div className={styles.modalHeader}>
-              <h2 style={{ margin: 0, fontSize: '16px' }}>Điều chỉnh điểm</h2>
+              <h2 style={{ margin: 0, fontSize: '16px' }}>Override Score</h2>
               <button className={styles.closeBtn} onClick={() => setShowOverrideModal(false)}>
                 <X size={20} />
               </button>
             </div>
             <div className={styles.modalBody}>
               <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
-                Học sinh: <strong>{selectedSubmission.studentName}</strong><br />
-                Điểm hiện tại: <strong>{((selectedSubmission.totalScore ?? selectedSubmission.score) ?? 0).toFixed(1)} / {selectedSubmission.maxScore}</strong>
+                Student: <strong>{selectedSubmission.studentName}</strong><br />
+                Current score: <strong>{((selectedSubmission.totalScore ?? selectedSubmission.score) ?? 0).toFixed(1)} / {selectedSubmission.maxScore}</strong>
               </p>
               <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Câu hỏi cần sửa</label>
+                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Question to edit</label>
                 <select
                   value={overrideQuestionId}
                   onChange={(e) => setOverrideQuestionId(e.target.value)}
@@ -875,17 +875,17 @@ export default function SubmissionsPage() {
                     boxSizing: 'border-box',
                   }}
                 >
-                  <option value="">-- Chọn câu hỏi --</option>
+                  <option value="">-- Select Question --</option>
                   {getAnswerDetails(selectedSubmission).map((ans) => (
                     <option key={ans.questionId} value={ans.questionId}>
-                      Câu {ans.questionId}: Đáp án hiện tại "{ans.studentAnswer || 'Không trả lời'}"
-                      {ans.isCorrect ? ' (Đúng)' : ' (Sai)'}
+                      Question {ans.questionId}: Current answer "{ans.studentAnswer || 'No answer'}"
+                      {ans.isCorrect ? ' (Correct)' : ' (Incorrect)'}
                     </option>
                   ))}
                 </select>
               </div>
               <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Đáp án mới</label>
+                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>New answer</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {['A', 'B', 'C', 'D'].map(opt => (
                     <button
@@ -908,12 +908,12 @@ export default function SubmissionsPage() {
                 </div>
               </div>
               <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Lý do</label>
+                <label style={{ fontWeight: 600, fontSize: "13px", color: "#334155", display: "block", marginBottom: "6px" }}>Reason</label>
                 <input
                   type="text"
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
-                  placeholder="Nhập lý do điều chỉnh"
+                  placeholder="Enter reason for override"
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -928,18 +928,18 @@ export default function SubmissionsPage() {
             </div>
             <div className={styles.modalFooter}>
               <button className={styles.btnSecondary} onClick={() => setShowOverrideModal(false)}>
-                Hủy
+                Cancel
               </button>
               <button
                 className={styles.downloadBtn}
                 style={{ backgroundColor: '#7c3aed', color: '#ffffff' }}
                 onClick={async () => {
                   if (!overrideQuestionId) {
-                    toast.error('Vui lòng chọn câu hỏi cần sửa');
+                    toast.error('Please select a question to edit');
                     return;
                   }
                   if (!overrideNewAnswer) {
-                    toast.error('Vui lòng chọn đáp án mới');
+                    toast.error('Please select a new answer');
                     return;
                   }
                   try {
@@ -948,15 +948,15 @@ export default function SubmissionsPage() {
                       correctedAnswer: overrideNewAnswer,
                       reason: overrideReason,
                     });
-                    toast.success('Điều chỉnh điểm thành công');
+                    toast.success('Score overridden successfully');
                     setShowOverrideModal(false);
                     fetchByExam(selectedSubmission.examId);
                     setSelectedSubmission(null);
                   } catch {
-                    toast.error('Điều chỉnh điểm thất bại');
+                    toast.error('Failed to override score');
                   }
                 }}>
-                Lưu điểm
+                Save Score
               </button>
             </div>
           </div>
@@ -964,4 +964,4 @@ export default function SubmissionsPage() {
       ) : null}
     </div>
   );
-};
+}

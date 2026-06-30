@@ -1,18 +1,41 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Biểu đồ use case tổng quát của hệ thống Smart Grading}}{7}{figure.caption.8}%
+\contentsline {figure}{\numberline {2.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case tổng quát của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{5}{figure.caption.9}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Đăng ký/Đăng nhập}}{6}{figure.caption.10}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý trường học}}{7}{figure.caption.11}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý giáo viên}}{8}{figure.caption.12}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý học sinh}}{9}{figure.caption.13}%
+\contentsline {figure}{\numberline {2.6}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý câu hỏi}}{10}{figure.caption.14}%
+\contentsline {figure}{\numberline {2.7}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý bài kiểm tra}}{11}{figure.caption.15}%
+\contentsline {figure}{\numberline {2.8}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý các bài thi của học sinh}}{12}{figure.caption.16}%
+\contentsline {figure}{\numberline {2.9}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Chấm thi bằng ứng dụng}}{13}{figure.caption.17}%
+\contentsline {figure}{\numberline {2.10}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Phúc khảo bài thi}}{13}{figure.caption.18}%
+\contentsline {figure}{\numberline {2.11}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Xem bài thi và điểm số}}{14}{figure.caption.19}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Biểu đồ gói tổng quan của hệ thống Smart Grading}}{27}{figure.caption.9}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces Ví dụ thiết kế gói biểu đồ lớp}}{28}{figure.caption.10}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces Minh họa mockup giao diện dashboard trên web}}{30}{figure.caption.11}%
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Minh họa mockup giao diện quét phiếu trên di động}}{31}{figure.caption.12}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói tổng quan của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{30}{figure.caption.40}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Routers của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{31}{figure.caption.41}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Controllers của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{32}{figure.caption.42}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Services của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{32}{figure.caption.43}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Models của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{33}{figure.caption.44}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Pages của giao diện web React}}{34}{figure.caption.45}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Components của giao diện web React}}{34}{figure.caption.46}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Stores và Hooks của giao diện web React}}{35}{figure.caption.47}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói ApiService của giao diện web React}}{36}{figure.caption.48}%
+\contentsline {figure}{\numberline {4.10}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Widgets của ứng dụng di động Flutter}}{37}{figure.caption.49}%
+\contentsline {figure}{\numberline {4.11}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Screens của ứng dụng di động Flutter}}{37}{figure.caption.50}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói BLoCs của ứng dụng di động Flutter}}{38}{figure.caption.51}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Minh họa màn hình chi tiết lớp học trên web}}{39}{figure.caption.52}%
+\contentsline {figure}{\numberline {4.14}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Minh họa màn hình chi tiết bài kiểm tra trên web}}{40}{figure.caption.53}%
+\contentsline {figure}{\numberline {4.15}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Minh họa màn hình quét phiếu trên di động}}{41}{figure.caption.54}%
+\contentsline {figure}{\numberline {4.16}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Minh họa màn hình phúc khảo trên web}}{42}{figure.caption.55}%
+\contentsline {figure}{\numberline {4.17}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ trình tự use case Chấm thi bằng điện thoại}}{48}{figure.caption.83}%
+\contentsline {figure}{\numberline {4.18}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ trình tự use case Quản lý đề thi}}{49}{figure.caption.84}%
+\contentsline {figure}{\numberline {4.19}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Sơ đồ quan hệ thực thể (ER) của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}}{50}{figure.caption.85}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {A.1}{\ignorespaces Internet vạn vật}}{58}{figure.caption.21}%
-\contentsline {figure}{\numberline {A.2}{\ignorespaces Qui cách đóng quyển đồ án}}{60}{figure.caption.24}%
-\contentsline {figure}{\numberline {A.3}{\ignorespaces Qui cách đóng quyển đồ án}}{60}{figure.caption.25}%
+\addvspace {10\p@ }
 \addvspace {10\p@ }
 \contentsfinish 
 \contentsfinish 

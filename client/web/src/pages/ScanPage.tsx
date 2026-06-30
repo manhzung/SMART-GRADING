@@ -131,9 +131,9 @@ export default function ScanPage() {
       .filter((sheet) => sheet.status !== 'pending' && sheet.status !== 'scanning')
       .map((sheet): ScanHistoryItem => ({
         id: sheet.id,
-        studentName: sheet.matchedStudent?.name || 'Chưa khớp học sinh',
-        examTitle: sheet.matchedExam?.title || 'Chưa khớp bài thi',
-        className: sheet.matchedStudent?.className || 'Chưa xác định',
+        studentName: sheet.matchedStudent?.name || 'No student matched',
+        examTitle: sheet.matchedExam?.title || 'No exam matched',
+        className: sheet.matchedStudent?.className || 'Unassigned',
         status: sheet.status === 'error' ? 'failed' : sheet.status === 'matched' ? 'success' : 'pending',
         scannedAt: sheet.scannedAt,
         score: sheet.score,
@@ -309,7 +309,7 @@ export default function ScanPage() {
     if (!sheet) return;
 
     if (!selectedExamId) {
-      toast.error('Vui lòng chọn bài thi trước khi quét.');
+      toast.error('Please select an exam before scanning.');
       setUploadedFiles(prev => prev.map(s =>
         s.id === sheetId ? { ...s, status: 'error' as ScanStatus, processingProgress: 0 } : s
       ));
@@ -400,7 +400,7 @@ export default function ScanPage() {
       setUploadedFiles(prev => prev.map(s =>
         s.id === sheetId ? { ...s, status: 'error' as ScanStatus, processingProgress: 0 } : s
       ));
-      toast.error('Lỗi xử lý OMR: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('OMR processing error: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsScanning(false);
     }
@@ -412,7 +412,7 @@ export default function ScanPage() {
 
   const processAllPending = useCallback(() => {
     if (!selectedExamId) {
-      toast.error('Vui lòng chọn bài thi trước khi quét.');
+      toast.error('Please select an exam before scanning.');
       return;
     }
     const pendingSheets = uploadedFiles.filter(s => s.status === 'pending');
@@ -451,11 +451,11 @@ export default function ScanPage() {
   const saveEditedAnswers = useCallback((sheetId: string) => {
     const sheet = uploadedFiles.find(s => s.id === sheetId);
     if (!sheet?.matchedExam?.id) {
-      toast.error('Vui lòng khớp với bài thi trước khi lưu');
+      toast.error('Please match with an exam before saving');
       return;
     }
     if (!sheet.submissionId) {
-      toast.error('Chưa có kết quả quét. Vui lòng quét trước.');
+      toast.error('No scan results yet. Please scan first.');
       return;
     }
 
@@ -479,10 +479,10 @@ export default function ScanPage() {
             score: result.totalScore,
           } : s
         ));
-        toast.success('Đã lưu và chấm điểm thành công!');
+        toast.success('Saved and graded successfully!');
       })
       .catch((error) => {
-        toast.error('Lỗi submit: ' + (error instanceof Error ? error.message : 'Unknown error'));
+        toast.error('Submit error: ' + (error instanceof Error ? error.message : 'Unknown error'));
       });
   }, [uploadedFiles, editingAnswers]);
 
@@ -545,7 +545,7 @@ export default function ScanPage() {
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <h1>Quét phiếu trả lời OMR</h1>
+        <h1>Scan OMR Answer Sheets</h1>
         <p>Quản lý và xử lý các phiếu trả lời trắc nghiệm</p>
       </div>
 
@@ -638,7 +638,7 @@ export default function ScanPage() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 <FileImage size={18} />
-                Tải lên file
+                Upload files
               </button>
               <button
                 className={`${styles.actionBtn} ${styles.cameraBtn}`}
@@ -662,7 +662,7 @@ export default function ScanPage() {
                     disabled={isScanning || uploadedFiles.every(s => s.status !== 'pending')}
                   >
                     <RefreshCw size={14} />
-                    Quét tất cả
+                    Scan all
                   </button>
                 </div>
               </div>
@@ -703,7 +703,7 @@ export default function ScanPage() {
                       <span className={styles.sheetName}>{sheet.fileName}</span>
                       <span className={`${styles.sheetStatus} ${styles[`status_${sheet.status}`]}`}>
                         {sheet.status === 'pending' && 'Chờ quét'}
-                        {sheet.status === 'scanning' && 'Đang quét...'}
+                        {sheet.status === 'scanning' && 'Scanning...'}
                         {sheet.status === 'scanned' && 'Đã quét'}
                         {sheet.status === 'matched' && 'Đã khớp'}
                         {sheet.status === 'error' && 'Lỗi'}
@@ -734,7 +734,7 @@ export default function ScanPage() {
                       className={`${styles.smallBtn} ${styles.primaryBtn}`}
                       onClick={() => {
                         if (!selectedExamId) {
-                          toast.error('Vui lòng chọn bài thi trước khi quét.');
+                          toast.error('Please select an exam before scanning.');
                           return;
                         }
                         startScanning(selectedSheet.id);
@@ -750,7 +750,7 @@ export default function ScanPage() {
                       onClick={() => resetSheet(selectedSheet.id)}
                     >
                       <RotateCcw size={14} />
-                      Quét lại
+                      Rescan
                     </button>
                   )}
                 </div>
@@ -832,7 +832,7 @@ export default function ScanPage() {
                 <option value="all">Tất cả</option>
                 <option value="success">Thành công</option>
                 <option value="failed">Thất bại</option>
-                <option value="pending">Đang chờ</option>
+                <option value="pending">Pending</option>
               </select>
             </div>
 
@@ -1024,7 +1024,7 @@ export default function ScanPage() {
         <div className={styles.scanningOverlay}>
           <div className={styles.scanningContent}>
             <Loader2 size={48} className={styles.spinner} />
-            <h3>Đang quét phiếu...</h3>
+            <h3>Scanning sheets...</h3>
             <div className={styles.progressBar}>
               <div className={styles.progressFill} style={{ width: `${scanProgress}%` }} />
             </div>

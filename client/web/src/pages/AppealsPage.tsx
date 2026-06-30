@@ -233,9 +233,9 @@ export default function AppealsPage() {
       case 'reviewing':
         return { text: 'Đang xem xét', class: styles.reviewingBadge, icon: Eye };
       case 'approved':
-        return { text: 'Đã duyệt', class: styles.approvedBadge, icon: CheckCircle };
+        return { text: 'Approved', class: styles.approvedBadge, icon: CheckCircle };
       case 'rejected':
-        return { text: 'Đã từ chối', class: styles.rejectedBadge, icon: XCircle };
+        return { text: 'Rejected', class: styles.rejectedBadge, icon: XCircle };
       default:
         return { text: 'Không xác định', class: styles.pendingBadge, icon: Clock };
     }
@@ -290,8 +290,8 @@ export default function AppealsPage() {
     { value: 'all', label: 'Tất cả trạng thái' },
     { value: 'pending', label: 'Chờ duyệt' },
     { value: 'under_review', label: 'Đang xem xét' },
-    { value: 'approved', label: 'Đã duyệt' },
-    { value: 'rejected', label: 'Đã từ chối' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'rejected', label: 'Rejected' },
   ];
 
   return (
@@ -587,7 +587,7 @@ export default function AppealsPage() {
       {/* Pagination */}
       <div className={styles.paginationRow}>
         <div className={styles.paginationLeft}>
-          Hiển thị {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, totalItems)} trong tổng số {totalItems} bản ghi
+          Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, totalItems)} of {totalItems} records
         </div>
         <div className={styles.paginationRight}>
           <div className={styles.pageSizeSelector}>
@@ -665,7 +665,7 @@ export default function AppealsPage() {
                   <div className={styles.timelineDot}>
                     {selectedAppeal.status !== 'pending' && <Check size={12} />}
                   </div>
-                  <span>Đã gửi</span>
+                  <span>Submitted</span>
                   <span className={styles.timelineDate}>{formatDate(selectedAppeal.createdAt)}</span>
                 </div>
                 <div className={styles.timelineLine}></div>
@@ -682,7 +682,7 @@ export default function AppealsPage() {
                     {selectedAppeal.status === 'approved' && <Check size={12} />}
                     {selectedAppeal.status === 'rejected' && <X size={12} />}
                   </div>
-                  <span>{selectedAppeal.status === 'approved' ? 'Đã chấp nhận' : selectedAppeal.status === 'rejected' ? 'Đã từ chối' : 'Chưa xử lý'}</span>
+                  <span>{selectedAppeal.status === 'approved' ? 'Accepted' : selectedAppeal.status === 'rejected' ? 'Rejected' : 'Pending'}</span>
                   {selectedAppeal.resolvedAt && <span className={styles.timelineDate}>{formatDateTime(selectedAppeal.resolvedAt)}</span>}
                 </div>
               </div>
@@ -816,7 +816,7 @@ export default function AppealsPage() {
                     onClick={() => handleReview(selectedAppeal._id, 'rejected', resolutionNotes)}
                   >
                     <XCircle size={16} />
-                    Từ chối
+                    Reject
                   </button>
                   <button
                     className={styles.approveBtn}

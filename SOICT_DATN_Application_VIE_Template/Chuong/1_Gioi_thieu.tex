@@ -1,85 +1,34 @@
-\documentclass[../DoAn.tex]{subfiles}
+﻿\documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-\section{Tổng quan chương}
-Chương 1 mở đầu đồ án bằng việc trình bày bối cảnh thực tiễn của bài toán chấm thi trắc nghiệm hiện nay tại các trường phổ thông và đại học ở Việt Nam, từ đó nêu bật tính cấp thiết và quy mô của vấn đề mà đồ án hướng tới giải quyết. Trên cơ sở đó, chương này xác định rõ mục tiêu, phạm vi, định hướng giải pháp và bố cục tổng thể của đồ án, nhằm giúp người đọc có cái nhìn tổng quan trước khi đi vào các nội dung chi tiết ở các chương tiếp theo.
+Chương này trình bày bối cảnh thực tiễn của bài toán chấm thi trắc nghiệm, nêu bật các hạn chế của giải pháp hiện có, từ đó xác định mục tiêu, phạm vi và định hướng giải pháp Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR cho đồ án.
 
 \section{Đặt vấn đề}
 \label{section:1.1}
 
-Hình thức thi trắc nghiệm khách quan đang được sử dụng rộng rãi trong các kỳ thi tốt nghiệp, kỳ thi tuyển sinh đại học, các kỳ kiểm tra định kỳ tại các trường phổ thông và đại học ở Việt Nam nhờ ưu điểm khách quan, có thể chấm tự động và phù hợp với số lượng thí sinh lớn. Theo thống kê của Bộ Giáo dục và Đào tạo, mỗi năm hàng triệu thí sinh tham gia kỳ thi tốt nghiệp trung học phổ thông quốc gia, và mỗi trường đại học thường tổ chức hàng chục kỳ thi, kiểm tra với số lượng bài thi lên tới hàng trăm nghìn bài mỗi năm. Đi cùng với quy mô đó là nhu cầu tổ chức thi hiệu quả, minh bạch và giảm thiểu sai sót trong khâu chấm bài.
+Hình thức thi trắc nghiệm được sử dụng rộng rãi tại các kỳ thi tốt nghiệp, tuyển sinh và kiểm tra định kỳ ở Việt Nam. Tuy nhiên, quy trình chấm thi hiện nay tại nhiều trường còn tồn tại nhiều hạn chế: chấm thủ công tốn thời gian và dễ sai sót, máy quét OMR chuyên dụng chi phí cao và khó triển khai cho trường nhỏ, quy trình phúc khảo chưa số hóa và thiếu minh bạch, cùng với việc thiếu tích hợp giữa quản lý đào tạo và chấm thi.
 
-Tuy nhiên, quy trình chấm thi trắc nghiệm hiện nay tại nhiều trường vẫn còn tồn tại nhiều hạn chế đáng chú ý. Nhiều trường vẫn chấm bài thủ công hoặc bán thủ công trên phiếu điền tay, vừa tốn thời gian vừa dễ phát sinh sai sót do con người. Các giải pháp chấm thi bằng máy quét OMR chuyên dụng thường có chi phí đầu tư ban đầu lớn, đòi hỏi phần cứng riêng và khó triển khai đồng bộ cho các trường có quy mô nhỏ hoặc nguồn lực hạn chế. Ngoài ra, việc xử lý phúc khảo, thống kê kết quả và phân tích chất lượng đề thi cũng chưa được số hóa triệt để, dẫn đến thiếu thông tin phản hồi cho giáo viên trong việc cải tiến chất lượng giảng dạy và ra đề.
-
-Những hạn chế nêu trên cho thấy nhu cầu cấp thiết về một hệ thống chấm thi trắc nghiệm thông minh, có khả năng tự động hóa toàn bộ quy trình từ khâu tạo đề thi đến chấm bài, xử lý phúc khảo và cung cấp báo cáo thống kê chi tiết. Hệ thống như vậy sẽ giúp giảm tải công việc cho giáo viên, hạn chế sai sót, tăng tính minh bạch cho học sinh, đồng thời cung cấp dữ liệu phong phú cho nhà trường trong việc đánh giá chất lượng đào tạo.
+Từ đó, đồ án đặt mục tiêu xây dựng hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR -- hệ thống chấm thi trắc nghiệm thông minh đa nền tảng, tích hợp đầy đủ từ tạo đề thi đến chấm bài, phúc khảo và báo cáo thống kê, sử dụng camera điện thoại thay cho máy quét chuyên dụng.
 
 \section{Mục tiêu và phạm vi đề tài}
 \label{section:1.2}
 
-Hiện nay đã có một số phần mềm thương mại và mã nguồn mở hỗ trợ chấm thi trắc nghiệm trên thị trường, điển hình như các phần mềm chấm thi sử dụng máy quét chuyên dụng (ví dụ: Remark Office OMR, ReadSoft, Gradescope) hoặc các công cụ mã nguồn mở xử lý OMR như OMRChecker. Bên cạnh đó, các hệ thống quản lý học tập (LMS) truyền thống như Moodle hay Google Forms cũng hỗ trợ tạo đề và chấm trắc nghiệm, nhưng thường giới hạn ở dạng thi trực tuyến thay vì xử lý phiếu trả lời giấy.
+Hiện nay đã có một số phần mềm thương mại (Remark Office OMR, Gradescope) và mã nguồn mở (OMRChecker) hỗ trợ chấm thi trắc nghiệm. Qua khảo sát, các giải pháp hiện có còn tồn tại các hạn chế chính: phụ thuộc phần cứng máy quét (chi phí cao); chưa hỗ trợ tốt tạo nhiều phiên bản đề thi; quy trình phúc khảo chưa số hóa; thiếu tích hợp giữa quản lý đào tạo với chấm thi; và hầu hết chỉ chạy trên web, chưa có ứng dụng di động cho phép giáo viên chấm bài ngay tại lớp.
 
-Qua khảo sát sơ bộ, có thể nhận thấy các giải pháp hiện có còn tồn tại các hạn chế chính như sau:
-\begin{itemize}
-    \item phụ thuộc vào phần cứng máy quét chuyên dụng nên chi phí đầu tư cao và khó mở rộng;
-    \item chưa hỗ trợ tốt việc tạo nhiều phiên bản đề thi từ ngân hàng câu hỏi để hạn chế gian lận;
-    \item quy trình phúc khảo chưa được số hóa và thiếu tính minh bạch;
-    \item thiếu tích hợp giữa phần quản lý đào tạo (lớp, học sinh, giáo viên) với phần chấm thi;
-    \item hầu hết các giải pháp chỉ chạy trên nền tảng web, chưa có ứng dụng di động cho phép giáo viên chấm bài ngay tại lớp học bằng chính chiếc điện thoại của mình.
-\end{itemize}
-
-Từ những hạn chế này, mục tiêu chính của đồ án là xây dựng hệ thống chấm thi trắc nghiệm thông minh có tên gọi Smart Grading, với các chức năng chính gồm:
-\begin{itemize}
-    \item quản lý trường học, lớp học, giáo viên và học sinh;
-    \item quản lý ngân hàng câu hỏi và đề thi có hỗ trợ tạo câu hỏi bằng trí tuệ nhân tạo;
-    \item tự động tạo nhiều phiên bản đề thi khác nhau từ cùng một ngân hàng câu hỏi;
-    \item chấm thi tự động bằng nhận dạng OMR trên thiết bị di động;
-    \item hỗ trợ quy trình tạo đơn phúc khảo và phản hồi phúc khảo minh bạch;
-    \item tạo báo cáo thống kê chi tiết cho từng bài kiểm tra;
-    \item cho phép học sinh xem bài thi và điểm số của mình.
-\end{itemize}
-Phạm vi đề tài tập trung vào môi trường thi trên giấy với phiếu trả lời dạng OMR, sử dụng tiếng Việt và phù hợp với bậc phổ thông trung học và đại học.
+Từ đó, mục tiêu chính của đồ án là xây dựng hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR với các chức năng: (i) quản lý trường học, lớp học, giáo viên và học sinh; (ii) quản lý ngân hàng câu hỏi và đề thi có hỗ trợ sinh câu hỏi bằng AI; (iii) tự động tạo nhiều phiên bản đề thi; (iv) chấm thi tự động bằng nhận dạng OMR trên thiết bị di động; (v) quy trình phúc khảo minh bạch; (vi) báo cáo thống kê chi tiết; và (vii) cho phép học sinh xem bài thi và điểm số. Phạm vi tập trung vào môi trường thi trên giấy với phiếu OMR, tiếng Việt, phù hợp bậc phổ thông và đại học.
 
 \section{Định hướng giải pháp}
 \label{section:1.3}
 
-Dựa trên mục tiêu và phạm vi đã xác định, đồ án lựa chọn hướng tiếp cận xây dựng hệ thống đa nền tảng theo kiến trúc ba tầng, trong đó tầng giao diện gồm ứng dụng di động Flutter và giao diện web React, tầng xử lý nghiệp vụ là backend Node.js/Express với cơ sở dữ liệu MongoDB, và tầng sinh đề thi được thực hiện bằng gói LaTeX AMC (Auto-Multiple-Choice) biên dịch qua WSL2. Định hướng công nghệ này được lựa chọn dựa trên ba lý do chính:
-\begin{itemize}
-    \item cho phép tận dụng camera trên điện thoại thông minh để chấm OMR mà không cần đầu tư máy quét riêng;
-    \item AMC hỗ trợ tạo nhiều phiên bản đề thi tự động, giải quyết bài toán chống gian lận;
-    \item Node.js/Express và MongoDB giúp phát triển nhanh, dễ mở rộng và có hệ sinh thái thư viện phong phú.
-\end{itemize}
+Đồ án lựa chọn hướng tiếp cận xây dựng hệ thống đa nền tảng theo kiến trúc ba tầng: giao diện gồm ứng dụng di động Flutter và web React, backend Node.js/Express kết hợp MongoDB, và tầng sinh đề thi bằng gói LaTeX AMC qua WSL2. Hướng tiếp cận này được chọn vì: camera smartphone thay thế máy quét (giảm chi phí); AMC hỗ trợ tạo nhiều phiên bản đề tự động (chống gian lận); Node.js/Express và MongoDB dễ mở rộng với hệ sinh thái thư viện phong phú.
 
-Giải pháp thực tế mà đồ án xây dựng là một hệ thống end-to-end, trong đó giáo viên sử dụng giao diện web để tạo đề thi từ ngân hàng câu hỏi, hệ thống tự động sinh nhiều mã đề và phiếu OMR tương ứng, giáo viên in phiếu và tổ chức thi, sau khi thu phiếu sử dụng ứng dụng di động để chụp và chấm bằng thuật toán nhận dạng OMR, kết quả được đồng bộ về server và cung cấp cho học sinh xem điểm, gửi phúc khảo nếu cần, đồng thời giúp giáo viên thống kê, phân tích chất lượng đề thi và đưa ra báo cáo chi tiết.
-
-Đóng góp chính của đồ án gồm:
-\begin{itemize}
-    \item xây dựng thành công hệ thống tích hợp đầy đủ chu trình tạo đề, chấm thi, phúc khảo và báo cáo trên cùng một nền tảng;
-    \item đề xuất và triển khai phương pháp sinh tự động phiếu OMR kèm tọa độ nhận dạng dựa trên AMC, giúp rút ngắn đáng kể thời gian chuẩn bị thi;
-    \item triển khai thuật toán chấm OMR trên thiết bị di động có độ chính xác cao và khả năng phát hiện lỗi tô nhầm, tô nhẹ;
-    \item tích hợp trợ lý AI hỗ trợ sinh câu hỏi và phân tích bài làm.
-\end{itemize}
-Kết quả dự kiến là một hệ thống hoàn chỉnh có thể triển khai thử nghiệm trong môi trường học thuật thực tế.
+Đóng góp chính của đồ án gồm: pipeline tích hợp đầy đủ từ tạo đề, chấm thi, phúc khảo đến báo cáo; phương pháp sinh tự động phiếu OMR kèm tọa độ nhận dạng; thuật toán chấm OMR trên di động có khả năng phát hiện lỗi tô nhầm, tô nhẹ; và tích hợp trợ lý AI hỗ trợ sinh câu hỏi và phân tích bài làm.
 
 \section{Bố cục đồ án}
 \label{section:1.4}
 
-Phần còn lại của đồ án được tổ chức thành các chương tiếp theo. Chương 2 trình bày kết quả khảo sát hiện trạng, tổng quan các chức năng của hệ thống thông qua biểu đồ use case, biểu đồ phân rã cho từng use case chính cùng đặc tả chi tiết cho các use case quan trọng nhất; ngoài ra, chương này cũng nêu các yêu cầu phi chức năng làm cơ sở cho thiết kế và triển khai.
+Phần còn lại của đồ án gồm: Chương 2 trình bày khảo sát hiện trạng, biểu đồ use case và đặc tả chi tiết các use case chính cùng yêu cầu phi chức năng; Chương 3 giới thiệu các nền tảng lý thuyết và công nghệ sử dụng -- OMR, AMC, Node.js/Express, React, Flutter, AI; Chương 4 trình bày chi tiết phân tích thiết kế kiến trúc, giao diện, lớp, cơ sở dữ liệu, kết quả xây dựng, kiểm thử và triển khai; Chương 5 phân tích các giải pháp kỹ thuật nổi bật; và Chương 6 tổng kết, đối chiếu với sản phẩm tương tự và đề xuất hướng phát triển.
 
-Trong Chương 3, đồ án giới thiệu các nền tảng lý thuyết và công nghệ được sử dụng, bao gồm: kỹ thuật nhận dạng OMR và xử lý ảnh, nguyên lý tạo đề nhiều phiên bản với AMC, các công nghệ chính trong backend Node.js/Express, frontend React, ứng dụng di động Flutter, cùng với phân tích lý do lựa chọn từng công nghệ và so sánh với các lựa chọn thay thế.
-
-Chương 4 trình bày chi tiết quá trình phân tích thiết kế kiến trúc phần mềm, thiết kế giao diện, thiết kế lớp với biểu đồ trình tự cho các use case chính, thiết kế cơ sở dữ liệu, đồng thời mô tả kết quả xây dựng ứng dụng, minh họa các chức năng chính, kết quả kiểm thử và triển khai thử nghiệm trong môi trường thực tế.
-
-Chương 5 tập trung trình bày các giải pháp và đóng góp nổi bật của đồ án, trong đó phân tích chi tiết các bài toán khó đã giải quyết như: thuật toán trộn đề nhiều phiên bản với đảm bảo độ khó đồng đều, quy trình tự động sinh tọa độ phiếu OMR, thuật toán nhận dạng OMR trên thiết bị di động, và mô hình tích hợp trợ lý AI vào quy trình tạo đề và phản hồi phúc khảo.
-
-Cuối cùng, Chương 6 tổng kết những kết quả đạt được của đồ án, đối chiếu với các sản phẩm tương tự, rút ra bài học kinh nghiệm trong quá trình thực hiện, đồng thời đề xuất hướng phát triển trong tương lai để hoàn thiện hệ thống và mở rộng phạm vi ứng dụng.
-
-\section{Kết chương}
-Chương 1 đã trình bày tổng quan bối cảnh thực tiễn của bài toán chấm thi trắc nghiệm tại Việt Nam, qua đó làm nổi bật tính cấp thiết của việc xây dựng một hệ thống tích hợp đầy đủ từ quản lý đào tạo đến chấm thi và phúc khảo. Trên cơ sở đánh giá các giải pháp hiện có, chương này đã xác định rõ mục tiêu, phạm vi của hệ thống Smart Grading, đồng thời nêu định hướng giải pháp đa nền tảng kết hợp công nghệ nhận dạng OMR trên di động và tích hợp AI. Các kết quả chính được tổng kết gồm:
-\begin{itemize}
-    \item hệ thống hóa bài toán và mục tiêu rõ ràng;
-    \item xác định bảy nhóm chức năng chính cần xây dựng;
-    \item định hướng công nghệ khả thi cho từng thành phần.
-\end{itemize}
-Chương 2 sẽ trình bày chi tiết kết quả khảo sát hiện trạng và phân tích yêu cầu của hệ thống, làm cơ sở cho các quyết định thiết kế ở các chương sau.
+Chương 1 đã trình bày bối cảnh thực tiễn, xác định mục tiêu xây dựng hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR và định hướng giải pháp đa nền tảng. Chương 2 sẽ trình bày chi tiết khảo sát hiện trạng và phân tích yêu cầu của hệ thống.
 
 \end{document}

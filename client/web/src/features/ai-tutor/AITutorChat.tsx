@@ -23,16 +23,16 @@ interface SubjectOption {
 }
 
 const fallbackSubjects: SubjectOption[] = [
-  { _id: 'subj001', name: 'Toán học' },
-  { _id: 'subj002', name: 'Vật lý' },
-  { _id: 'subj003', name: 'Hóa học' },
+  { _id: 'subj001', name: 'Mathematics' },
+  { _id: 'subj002', name: 'Physics' },
+  { _id: 'subj003', name: 'Chemistry' },
 ];
 
 const initialMessages: ChatMessage[] = [
   {
     _id: 'chat-initial',
     role: 'assistant',
-    content: 'Xin chào! Tôi là AI Tutor. Bạn có thể yêu cầu phân tích bài thi, gợi ý học tập hoặc giải thích đáp án.',
+    content: 'Hello! I am an AI Tutor. You can request exam analysis, study suggestions, or answer explanations.',
     timestamp: new Date().toISOString(),
   },
 ];
@@ -95,8 +95,8 @@ export default function AITutorChat({
         timestamp: response.createdAt,
       };
       setMessages((prev) => [...prev, aiMessage]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể kết nối AI');
+      } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to connect to AI');
       setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsTyping(false);
@@ -116,9 +116,9 @@ export default function AITutorChat({
     setError(null);
 
     const actionLabels: Record<string, string> = {
-      analysis: 'Phân tích bài thi',
-      suggestions: 'Gợi ý học tập',
-      explanation: 'Giải thích đáp án',
+      analysis: 'Exam Analysis',
+      suggestions: 'Study Suggestions',
+      explanation: 'Answer Explanations',
     };
 
     const userMessage: ChatMessage = {
@@ -176,7 +176,7 @@ export default function AITutorChat({
             <h3 className={styles.headerTitle}>AI Tutor</h3>
             <span className={styles.headerStatus}>
               <span className={styles.statusDot}></span>
-              Trực tuyến
+              Online
             </span>
           </div>
         </div>
@@ -203,21 +203,21 @@ export default function AITutorChat({
           onClick={() => handleQuickAction('analysis')}
         >
           <BarChart3 size={16} />
-          <span>Phân tích bài thi</span>
+          <span>Exam Analysis</span>
         </button>
         <button
           className={styles.quickActionBtn}
           onClick={() => handleQuickAction('suggestions')}
         >
           <Lightbulb size={16} />
-          <span>Gợi ý học tập</span>
+          <span>Study Suggestions</span>
         </button>
         <button
           className={styles.quickActionBtn}
           onClick={() => handleQuickAction('explanation')}
         >
           <BookOpen size={16} />
-          <span>Giải thích đáp án</span>
+          <span>Answer Explanations</span>
         </button>
       </div>
 
@@ -273,7 +273,7 @@ export default function AITutorChat({
                 <span className={styles.typingDot}></span>
                 <span className={styles.typingDot}></span>
               </div>
-              <span className={styles.messageTime}>Đang trả lời...</span>
+              <span className={styles.messageTime}>Typing...</span>
             </div>
           </div>
         )}
@@ -292,7 +292,7 @@ export default function AITutorChat({
         <div className={styles.inputWrapper}>
           <textarea
             className={styles.messageInput}
-            placeholder="Nhập câu hỏi của bạn..."
+            placeholder="Type your question..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -308,7 +308,7 @@ export default function AITutorChat({
         </div>
         <p className={styles.inputHint}>
           <Sparkles size={12} />
-          Nhấn Enter để gửi, Shift + Enter để xuống dòng
+          Press Enter to send, Shift + Enter for new line
         </p>
       </div>
     </div>

@@ -14,7 +14,7 @@ export default function ProfilePage() {
         <div className={styles.avatar}>
           <User size={48} />
         </div>
-        <h2>{user?.name || 'Nguyễn Văn A'}</h2>
+        <h2>{user?.name || 'John Doe'}</h2>
         <p>{user?.email || 'user@smartgrading.com'}</p>
         <span className={styles.role}>{user?.role || 'student'}</span>
       </div>
@@ -22,15 +22,15 @@ export default function ProfilePage() {
       <div className={styles.menu}>
         <button className={styles.menuItem} onClick={() => navigate('/settings')}>
           <Settings size={20} />
-          <span>Cài đặt</span>
+          <span>Settings</span>
         </button>
         <button className={styles.menuItem} onClick={() => navigate('/help')}>
           <HelpCircle size={20} />
-          <span>Trợ giúp</span>
+          <span>Help</span>
         </button>
         <button className={`${styles.menuItem} ${styles.logout}`} onClick={logout}>
           <LogOut size={20} />
-          <span>Đăng xuất</span>
+          <span>Log Out</span>
         </button>
       </div>
     </div>

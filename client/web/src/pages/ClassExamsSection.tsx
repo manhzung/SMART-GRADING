@@ -27,11 +27,11 @@ interface ClassExamsSectionProps {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Bản nháp',
-  published: 'Đã xuất bản',
-  in_progress: 'Đang thi',
-  completed: 'Hoàn thành',
-  archived: 'Đã lưu trữ',
+  draft: 'Draft',
+  published: 'Published',
+  in_progress: 'In Progress',
+  completed: 'Completed',
+  archived: 'Archived',
 };
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -46,15 +46,15 @@ function formatDate(dateStr?: string): string {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function formatDuration(minutes?: number): string {
   if (!minutes) return '—';
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (h > 0) return `${h}h ${m > 0 ? `${m}p` : ''}`.trim();
-  return `${m}p`;
+  if (h > 0) return `${h}h ${m > 0 ? `${m}m` : ''}`.trim();
+  return `${m}m`;
 }
 
 export default function ClassExamsSection({ classId, className }: ClassExamsSectionProps) {
@@ -162,30 +162,30 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
       }
 
       if (failedCount === 0) {
-        setActionSuccess('Đã cập nhật danh sách bài thi thành công.');
+        setActionSuccess('Exam list updated successfully.');
         setTimeout(() => {
           handleCloseModal();
         }, 1200);
       } else {
-        setActionError(`${failedCount} bài thi không thể cập nhật (đang trong quá trình thi).`);
+        setActionError(`${failedCount} exams could not be updated (currently in progress).`);
       }
     } catch (err) {
-      setActionError((err as Error).message || 'Không thể cập nhật danh sách bài thi.');
+      setActionError((err as Error).message || 'Failed to update exam assignments.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleRemoveExam = async (examId: string, examTitle: string) => {
-    if (!window.confirm(`Xóa bài thi "${examTitle}" khỏi lớp này?`)) return;
+    if (!window.confirm(`Remove exam "${examTitle}" from this class?`)) return;
     setActionError(null);
     setActionSuccess(null);
     try {
       await removeExamFromClass(classId, examId);
-      setActionSuccess('Đã xóa bài thi khỏi lớp.');
+      setActionSuccess('Exam removed from class.');
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
-      setActionError((err as Error).message || 'Không thể xóa bài thi.');
+      setActionError((err as Error).message || 'Failed to remove exam.');
       setTimeout(() => setActionError(null), 5000);
     }
   };
@@ -210,14 +210,14 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
       {/* Header */}
       <div className={styles.sectionHeader}>
         <div>
-          <h3 className={styles.sectionTitle}>Bài thi của lớp</h3>
+          <h3 className={styles.sectionTitle}>Class Exams</h3>
           <p className={styles.sectionSubtitle}>
-            Quản lý các bài thi được gán cho lớp này
+            Manage exams assigned to this class
           </p>
         </div>
         <button className={styles.assignBtn} onClick={handleOpenModal}>
           <Plus size={16} />
-          <span>Gán bài thi</span>
+          <span>Assign Exam</span>
         </button>
       </div>
 
@@ -244,12 +244,12 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Tên bài thi</th>
-                <th>Ngày thi</th>
-                <th>Thời lượng</th>
-                <th>Số câu hỏi</th>
-                <th>Trạng thái</th>
-                <th style={{ width: '120px', textAlign: 'center' }}>Thao tác</th>
+                <th>Exam Title</th>
+                <th>Exam Date</th>
+                <th>Duration</th>
+                <th>No. of Questions</th>
+                <th>Status</th>
+                <th style={{ width: '120px', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -257,7 +257,7 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                 <tr>
                   <td colSpan={6} className={styles.emptyCell}>
                     <div className={styles.spinner} />
-                    <p>Đang tải danh sách bài thi...</p>
+                    <p>Loading exam list...</p>
                   </td>
                 </tr>
               ) : classExams.length === 0 ? (
@@ -266,10 +266,10 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                     <div className={styles.emptyIcon}>
                       <FileText size={32} />
                     </div>
-                    <p>Chưa có bài thi nào được gán cho lớp này.</p>
+                    <p>No exams assigned to this class yet.</p>
                     <button className={styles.emptyActionBtn} onClick={handleOpenModal}>
                       <Plus size={14} />
-                      <span>Gán bài thi đầu tiên</span>
+                      <span>Assign First Exam</span>
                     </button>
                   </td>
                 </tr>
@@ -330,8 +330,8 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                           <button
                             className={styles.viewScoresBtn}
                             onClick={() => setViewingScoresForExamId(exam._id)}
-                            title="Xem điểm bài thi"
-                            aria-label="Xem điểm bài thi"
+                            title="View Exam Scores"
+                            aria-label="View Exam Scores"
                             data-testid={`view-scores-${exam._id}`}
                           >
                             <Eye size={14} />
@@ -342,8 +342,8 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                             disabled={isInProgress}
                             title={
                               isInProgress
-                                ? 'Không thể xóa: bài thi đang trong quá trình thi'
-                                : 'Xóa khỏi lớp này'
+                                ? 'Cannot delete: exam is currently in progress'
+                                : 'Remove from class'
                             }
                           >
                             <Trash2 size={14} />
@@ -365,8 +365,8 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <div>
-                <h2 className={styles.modalTitle}>Gán bài thi</h2>
-                <p className={styles.modalSubtitle}>Chọn các bài thi muốn gán cho lớp này</p>
+                <h2 className={styles.modalTitle}>Assign Exam</h2>
+                <p className={styles.modalSubtitle}>Select exams to assign to this class</p>
               </div>
               <button className={styles.closeBtn} onClick={handleCloseModal}>
                 <X size={20} />
@@ -379,7 +379,7 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                 <Search size={16} className={styles.searchIcon} />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm bài thi..."
+                  placeholder="Search exams..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={styles.searchInput}
@@ -391,7 +391,7 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                   onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                 >
                   <Filter size={15} />
-                  <span>{statusFilter === 'ALL' ? 'Lọc' : STATUS_LABELS[statusFilter]}</span>
+                  <span>{statusFilter === 'ALL' ? 'Filter' : STATUS_LABELS[statusFilter]}</span>
                 </button>
                 {showFilterDropdown && (
                   <div className={styles.dropdownMenu}>
@@ -399,7 +399,7 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                       className={`${styles.dropdownItem} ${statusFilter === 'ALL' ? styles.dropdownItemActive : ''}`}
                       onClick={() => { setStatusFilter('ALL'); setShowFilterDropdown(false); }}
                     >
-                      Tất cả
+                      All
                     </button>
                     {Object.entries(STATUS_LABELS).map(([key, label]) => (
                       <button
@@ -434,7 +434,7 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
               {filteredModalExams.length === 0 ? (
                 <div className={styles.modalEmpty}>
                   <BookOpen size={28} />
-                  <p>Không tìm thấy bài thi nào.</p>
+                  <p>No exams found.</p>
                 </div>
               ) : (
                 filteredModalExams.map((exam) => {
@@ -476,7 +476,7 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                           {exam.numberOfQuestions && (
                             <span className={styles.metaItem}>
                               <Hash size={11} />
-                              {exam.numberOfQuestions} câu
+                              {exam.numberOfQuestions} questions
                             </span>
                           )}
                         </div>
@@ -493,7 +493,7 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
                           {STATUS_LABELS[exam.status]}
                         </span>
                         {wasAssigned && !isInProgress && (
-                          <span className={styles.assignedTag}>Đã gán</span>
+                          <span className={styles.assignedTag}>Assigned</span>
                         )}
                       </div>
                     </div>
@@ -505,14 +505,14 @@ export default function ClassExamsSection({ classId, className }: ClassExamsSect
             {/* Modal footer */}
             <div className={styles.modalFooter}>
               <button className={styles.cancelBtn} onClick={handleCloseModal}>
-                Hủy
+                Cancel
               </button>
               <button
                 className={styles.saveBtn}
                 onClick={handleSubmitAssignments}
                 disabled={isSubmitting || !hasChanges}
               >
-                {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

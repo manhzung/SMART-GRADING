@@ -137,6 +137,8 @@ export default function QuestionBankPage() {
   const [approvalFilter, setApprovalFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState('');
+  const [tagSearch, setTagSearch] = useState('');
+  const [showAllTags, setShowAllTags] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiForm, setAiForm] = useState({ topic: '', count: 5, difficulty: 'medium' as 'easy' | 'medium' | 'hard', requirements: '' });
   const [aiPreview, setAiPreview] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
@@ -177,10 +179,8 @@ export default function QuestionBankPage() {
   // Add Question modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newQuestionForm, setNewQuestionForm] = useState({
-    tags: '',
+    tags: [] as string[],
     difficulty: 'Medium' as 'Easy' | 'Medium' | 'Hard',
-    isAiGenerated: false,
-    isPremium: false,
     text: '',
     formula: '',
     optionA: '',
@@ -190,6 +190,7 @@ export default function QuestionBankPage() {
     correctOption: 'A',
     explanation: '',
   });
+  const [tagInputValue, setTagInputValue] = useState('');
 
   // Submit status for add modal
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -239,6 +240,8 @@ export default function QuestionBankPage() {
     setDifficulties({ Easy: false, Medium: false, Hard: false });
     setSelectedTags([]);
     setApprovalFilter('all');
+    setTagSearch('');
+    setShowAllTags(false);
     setFilters({ search: '', difficulty: '', source: '', tags: '', isApproved: null });
   };
 
@@ -246,9 +249,9 @@ export default function QuestionBankPage() {
     if (!confirm('Phê duyệt câu hỏi này?')) return;
     try {
       await approveQuestion(questionId);
-      toast.success('Câu hỏi đã được phê duyệt');
+      toast.success('Question approved');
     } catch {
-      toast.error('Phê duyệt thất bại');
+      toast.error('Approval failed');
     }
   };
 
@@ -273,11 +276,8 @@ export default function QuestionBankPage() {
       ],
       difficulty: newQuestionForm.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
       explanation: newQuestionForm.explanation || '',
-      source: newQuestionForm.isAiGenerated ? ('ai' as const) : ('manual' as const),
-      tags: newQuestionForm.tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
+      source: 'manual' as const,
+      tags: newQuestionForm.tags,
     };
 
     try {
@@ -289,8 +289,6 @@ export default function QuestionBankPage() {
         setNewQuestionForm({
           tags: '',
           difficulty: 'Medium',
-          isAiGenerated: false,
-          isPremium: false,
           text: '',
           formula: '',
           optionA: '',
@@ -324,6 +322,15 @@ export default function QuestionBankPage() {
     });
   }, [questions, selectedTags]);
 
+  const tagSearchLower = tagSearch.trim().toLowerCase();
+  const filteredTags = useMemo(() => {
+    if (!tagSearchLower) return availableTags;
+    return availableTags.filter((tag) => tag.toLowerCase().includes(tagSearchLower));
+  }, [availableTags, tagSearchLower]);
+
+  const visibleTags = showAllTags ? filteredTags : filteredTags.slice(0, 8);
+  const hasMoreTags = filteredTags.length > 8;
+
   // Bank integrity (loaded from API)
   const { data: bankStats } = useQuery({
     queryKey: ['question-bank-stats'],
@@ -343,12 +350,12 @@ export default function QuestionBankPage() {
               {selectedQuestionIds.size > 0 && (
                 <button className={styles.createBtn} style={{ backgroundColor: '#059669' }} onClick={() => setIsSimilarModalOpen(true)}>
                   <Sparkles size={18} />
-                  <span>Tạo tương tự ({selectedQuestionIds.size})</span>
+                  <span>Create similar ({selectedQuestionIds.size})</span>
                 </button>
               )}
               <button className={styles.createBtn} style={{ backgroundColor: '#7c3aed' }} onClick={() => setIsAiModalOpen(true)}>
                 <Sparkles size={18} />
-                <span>Tạo bằng AI</span>
+                <span>Generate with AI</span>
               </button>
               <button className={styles.createBtn} onClick={() => setIsAddModalOpen(true)}>
                 <Plus size={18} />
@@ -427,20 +434,45 @@ export default function QuestionBankPage() {
                   No tags available
                 </p>
               ) : (
-                <div className={styles.tagContainer}>
-                  {availableTags.map((tag) => {
-                    const isActive = selectedTags.includes(tag);
-                    return (
-                      <button
-                        key={tag}
-                        onClick={() => handleTagToggle(tag)}
-                        className={`${styles.tag} ${isActive ? styles.tagActive : ''}`}
-                      >
-                        {tag}
-                      </button>
-                    );
-                  })}
-                </div>
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search tags..."
+                    value={tagSearch}
+                    onChange={(e) => {
+                      setTagSearch(e.target.value);
+                      setShowAllTags(false);
+                    }}
+                    className={styles.tagSearchInput}
+                  />
+                  <div className={styles.tagContainer}>
+                    {visibleTags.map((tag) => {
+                      const isActive = selectedTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          onClick={() => handleTagToggle(tag)}
+                          className={`${styles.tag} ${isActive ? styles.tagActive : ''}`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                    {filteredTags.length === 0 && (
+                      <p style={{ fontSize: '12px', color: '#9ca3af', fontStyle: 'italic' }}>
+                        No tags found
+                      </p>
+                    )}
+                  </div>
+                  {hasMoreTags && (
+                    <button
+                      className={styles.showMoreBtn}
+                      onClick={() => setShowAllTags((prev) => !prev)}
+                    >
+                      {showAllTags ? 'Show less' : `Show more (${filteredTags.length - 8})`}
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
@@ -876,52 +908,101 @@ export default function QuestionBankPage() {
             <div className={styles.modalForm}>
               {/* Row 1: Tags */}
               <div className={styles.formGroup}>
-                <label>Tags (comma-separated, e.g. Math, Calculus, FinalExam) *</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Math, Calculus, FinalExam"
-                  value={newQuestionForm.tags}
-                  onChange={(e) => setNewQuestionForm({ ...newQuestionForm, tags: e.target.value })}
-                  className={styles.formInput}
-                  required
-                />
+                <label>Tags *</label>
+                <div className={styles.tagInputWrapper}>
+                  <div className={styles.tagChipList}>
+                    {newQuestionForm.tags.map((tag) => (
+                      <span key={tag} className={styles.tagChip}>
+                        #{tag}
+                        <button
+                          type="button"
+                          className={styles.tagChipRemove}
+                          onClick={() =>
+                            setNewQuestionForm({
+                              ...newQuestionForm,
+                              tags: newQuestionForm.tags.filter((t) => t !== tag),
+                            })
+                          }
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      type="text"
+                      placeholder={newQuestionForm.tags.length ? 'Add another tag...' : 'e.g. Math, Calculus, FinalExam'}
+                      value={tagInputValue}
+                      onChange={(e) => setTagInputValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          const raw = tagInputValue.replace(',', '').trim();
+                          if (!raw) return;
+                          setNewQuestionForm({
+                            ...newQuestionForm,
+                            tags: newQuestionForm.tags.includes(raw)
+                              ? newQuestionForm.tags
+                              : [...newQuestionForm.tags, raw],
+                          });
+                          setTagInputValue('');
+                        } else if (e.key === 'Backspace' && !tagInputValue && newQuestionForm.tags.length) {
+                          setNewQuestionForm({
+                            ...newQuestionForm,
+                            tags: newQuestionForm.tags.slice(0, -1),
+                          });
+                        }
+                      }}
+                      className={styles.tagInput}
+                    />
+                  </div>
+                  {!!tagInputValue.trim() && (
+                    <div className={styles.tagSuggestions}>
+                      {(() => {
+                        const query = tagInputValue.trim().toLowerCase();
+                        const matches = availableTags
+                          .filter((tag) => tag.toLowerCase().includes(query) && !newQuestionForm.tags.includes(tag))
+                          .slice(0, 6);
+                        if (!matches.length) return null;
+                        return (
+                          <div className={styles.tagSuggestionsList}>
+                            {matches.map((tag) => (
+                              <button
+                                type="button"
+                                key={tag}
+                                className={styles.tagSuggestionItem}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  setNewQuestionForm({
+                                    ...newQuestionForm,
+                                    tags: [...newQuestionForm.tags, tag],
+                                  });
+                                  setTagInputValue('');
+                                }}
+                              >
+                                #{tag}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Row 2: Difficulty & Badges */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'center' }}>
-                <div className={styles.formGroup}>
-                  <label>Difficulty *</label>
-                  <select
-                    value={newQuestionForm.difficulty}
-                    onChange={(e) => setNewQuestionForm({ ...newQuestionForm, difficulty: e.target.value as 'Easy' | 'Medium' | 'Hard' })}
-                    className={styles.formInput}
-                    required
-                  >
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                  </select>
-                </div>
-
-                <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={newQuestionForm.isAiGenerated}
-                      onChange={(e) => setNewQuestionForm({ ...newQuestionForm, isAiGenerated: e.target.checked })}
-                    />
-                    <span>AI Generated</span>
-                  </label>
-
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={newQuestionForm.isPremium}
-                      onChange={(e) => setNewQuestionForm({ ...newQuestionForm, isPremium: e.target.checked })}
-                    />
-                    <span>Premium</span>
-                  </label>
-                </div>
+              {/* Row 2: Difficulty */}
+              <div className={styles.formGroup}>
+                <label>Difficulty *</label>
+                <select
+                  value={newQuestionForm.difficulty}
+                  onChange={(e) => setNewQuestionForm({ ...newQuestionForm, difficulty: e.target.value as 'Easy' | 'Medium' | 'Hard' })}
+                  className={styles.formInput}
+                  required
+                >
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
               </div>
 
               {/* Question Text */}
@@ -1071,7 +1152,7 @@ export default function QuestionBankPage() {
             <div className={styles.modalHeader}>
               <h2>
                 <Sparkles size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                Tạo câu hỏi bằng AI
+                Generate questions with AI
               </h2>
               <button className={styles.closeBtn} onClick={() => !isGeneratingAi && setIsAiModalOpen(false)} disabled={isGeneratingAi}>
                 <X size={20} />
@@ -1170,7 +1251,7 @@ export default function QuestionBankPage() {
                               setAiPreview(next);
                             }}
                             style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '2px 6px', fontSize: '11px' }}
-                            title="Xóa câu hỏi này"
+                            title="Delete this question"
                           >
                             <X size={14} />
                           </button>
@@ -1263,7 +1344,7 @@ export default function QuestionBankPage() {
                   style={{ backgroundColor: '#7c3aed' }}
                   onClick={async () => {
                     if (!aiForm.topic.trim()) {
-                      toast.error('Vui lòng nhập chủ đề');
+                      toast.error('Please enter a topic');
                       return;
                     }
                     setIsGeneratingAi(true);
@@ -1275,9 +1356,9 @@ export default function QuestionBankPage() {
                         requirements: aiForm.requirements,
                       });
                       setAiPreview(rawQuestions.map(toFrontendQuestion));
-                      toast.success(`Đã tạo ${rawQuestions.length} câu hỏi! Vui lòng xem trước và lưu.`);
+                      toast.success(`Created ${rawQuestions.length} questions! Please preview and save.`);
                     } catch {
-                      toast.error('Tạo câu hỏi thất bại');
+                      toast.error('Failed to generate questions');
                     } finally {
                       setIsGeneratingAi(false);
                     }
@@ -1306,7 +1387,7 @@ export default function QuestionBankPage() {
                           });
                         } catch { /* individual error handled by store */ }
                       }
-                      toast.success(`Đã lưu ${aiPreview.length} câu hỏi vào ngân hàng!`);
+                      toast.success(`Saved ${aiPreview.length} questions to the bank!`);
                       setIsAiModalOpen(false);
                       setAiPreview([]);
                       setAiForm({ topic: '', count: 5, difficulty: 'medium', requirements: '' });
@@ -1314,14 +1395,14 @@ export default function QuestionBankPage() {
                     }}
                   >
                     <CheckCircle size={14} />
-                    Lưu tất cả ({aiPreview.length})
+                    Save all ({aiPreview.length})
                   </button>
                   <button
                     type="button"
                     className={styles.cancelBtn}
                     onClick={() => setAiPreview([])}
                   >
-                    Tạo lại
+                    Retry
                   </button>
                 </>
               )}
@@ -1337,7 +1418,7 @@ export default function QuestionBankPage() {
             <div className={styles.modalHeader}>
               <h2>
                 <Sparkles size={20} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#059669' }} />
-                Tạo câu hỏi tương tự
+                Create similar questions
               </h2>
               <button className={styles.closeBtn} onClick={() => !isGeneratingSimilar && setIsSimilarModalOpen(false)} disabled={isGeneratingSimilar}>
                 <X size={20} />
@@ -1347,20 +1428,20 @@ export default function QuestionBankPage() {
             <div className={styles.modalForm}>
               <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
                 <p style={{ fontSize: '13px', color: '#166534', margin: 0 }}>
-                  <strong>Đã chọn {selectedQuestionIds.size} câu hỏi</strong> làm mẫu để tạo câu hỏi tương tự.
+                  <strong>{selectedQuestionIds.size} questions</strong> selected as templates to create similar questions.
                 </p>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className={styles.formGroup}>
-                  <label>Số lượng câu hỏi mới</label>
+                  <label>Number of new questions</label>
                   <select
                     value={similarForm.count}
                     onChange={(e) => setSimilarForm({ ...similarForm, count: Number(e.target.value) })}
                     className={styles.formInput}
                     disabled={isGeneratingSimilar}
                   >
-                    {[1, 2, 3, 5, 10].map(n => <option key={n} value={n}>{n} câu</option>)}
+                    {[1, 2, 3, 5, 10].map(n => <option key={n} value={n}>{n} questions</option>)}
                   </select>
                 </div>
 
@@ -1417,7 +1498,7 @@ export default function QuestionBankPage() {
                               setSimilarPreview(next);
                             }}
                             style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '2px 6px', fontSize: '11px' }}
-                            title="Xóa câu hỏi này"
+                            title="Delete this question"
                           >
                             <X size={14} />
                           </button>
@@ -1519,9 +1600,9 @@ export default function QuestionBankPage() {
                         difficulty: similarForm.difficulty,
                       });
                       setSimilarPreview(rawQuestions.map(toFrontendQuestion));
-                      toast.success(`Đã tạo ${rawQuestions.length} câu hỏi tương tự!`);
+                      toast.success(`Created ${rawQuestions.length} similar questions!`);
                     } catch {
-                      toast.error('Tạo câu hỏi tương tự thất bại');
+                      toast.error('Failed to generate similar questions');
                     } finally {
                       setIsGeneratingSimilar(false);
                     }
@@ -1550,7 +1631,7 @@ export default function QuestionBankPage() {
                           });
                         } catch { /* individual error handled by store */ }
                       }
-                      toast.success(`Đã lưu ${similarPreview.length} câu hỏi vào ngân hàng!`);
+                      toast.success(`Saved ${similarPreview.length} questions to the bank!`);
                       setIsSimilarModalOpen(false);
                       setSimilarPreview([]);
                       setSelectedQuestionIds(new Set());
@@ -1559,14 +1640,14 @@ export default function QuestionBankPage() {
                     }}
                   >
                     <CheckCircle size={14} />
-                    Lưu tất cả ({similarPreview.length})
+                    Save all ({similarPreview.length})
                   </button>
                   <button
                     type="button"
                     className={styles.cancelBtn}
                     onClick={() => setSimilarPreview([])}
                   >
-                    Tạo lại
+                    Retry
                   </button>
                 </>
               )}

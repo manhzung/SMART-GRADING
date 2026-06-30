@@ -17,8 +17,8 @@ export default function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = 'Xác nhận',
-  cancelLabel = 'Hủy',
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
   danger = false,
   submitting = false,
   onConfirm,
@@ -40,7 +40,7 @@ export default function ConfirmDialog({
             onClick={onConfirm}
             disabled={submitting}
           >
-            {submitting ? 'Đang xử lý...' : confirmLabel}
+            {submitting ? 'Processing...' : confirmLabel}
           </button>
         </div>
       </div>

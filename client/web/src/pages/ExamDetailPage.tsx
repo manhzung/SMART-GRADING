@@ -97,22 +97,22 @@ export default function ExamDetailPage() {
       return (
         <div className={styles.loadingContainer}>
           <div className={styles.loader}></div>
-          <p>Đang tải dữ liệu bài thi...</p>
+          <p>Loading exam data...</p>
         </div>
       );
     }
     return (
       <div className={styles.container}>
         <nav className={styles.breadcrumb}>
-          <Link to="/exams" className={styles.breadcrumbLink}>Quản lý bài kiểm tra</Link>
+          <Link to="/exams" className={styles.breadcrumbLink}>Exam Management</Link>
           <span className={styles.breadcrumbSeparator}>&gt;</span>
           <span className={styles.breadcrumbActive}>Không tìm thấy</span>
         </nav>
         <div className={styles.emptyState}>
           <Info size={48} className={styles.emptyIcon} />
-          <h2>Không tìm thấy bài thi</h2>
-          <p>Bài kiểm tra này không tồn tại hoặc đã bị xóa khỏi hệ thống.</p>
-          <Link to="/exams" className={styles.btnSolid}>Quay lại danh sách</Link>
+          <h2>Exam not found</h2>
+          <p>This exam does not exist or has been removed from the system.</p>
+          <Link to="/exams" className={styles.btnSolid}>Back to list</Link>
         </div>
       </div>
     );
@@ -145,12 +145,12 @@ export default function ExamDetailPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'completed': return 'ĐÃ HOÀN THÀNH';
-      case 'in_progress': return 'ĐANG DIỄN RA';
-      case 'published': return 'ĐÃ PHÁT HÀNH';
+      case 'completed': return 'COMPLETED';
+      case 'in_progress': return 'IN PROGRESS';
+      case 'published': return 'PUBLISHED';
       case 'draft':
       default:
-        return 'ĐANG SOẠN THẢO';
+        return 'DRAFT';
     }
   };
 
@@ -165,12 +165,12 @@ export default function ExamDetailPage() {
 
   const getVersionStatusBadge = (status: string) => {
     switch (status) {
-      case 'Đã sinh PDF':
-        return <span className={`${styles.statusBadgeAMC} ${styles.statusReady}`}><CheckCircle2 size={10} />Đã sinh</span>;
-      case 'Chưa sinh':
-        return <span className={`${styles.statusBadgeAMC} ${styles.statusPending}`}>Chưa sinh</span>;
-      case 'Lỗi':
-        return <span className={`${styles.statusBadgeAMC} ${styles.statusError}`}><AlertTriangle size={10} />Lỗi</span>;
+      case 'PDF Generated':
+        return <span className={`${styles.statusBadgeAMC} ${styles.statusReady}`}><CheckCircle2 size={10} />Generated</span>;
+      case 'Not generated':
+        return <span className={`${styles.statusBadgeAMC} ${styles.statusPending}`}>Not generated</span>;
+      case 'Error':
+        return <span className={`${styles.statusBadgeAMC} ${styles.statusError}`}><AlertTriangle size={10} />Error</span>;
       default:
         return <span className={`${styles.statusBadgeAMC} ${styles.statusReady}`}><CheckCircle2 size={10} />{status}</span>;
     }
@@ -178,26 +178,26 @@ export default function ExamDetailPage() {
 
   const handlePublish = async () => {
     if (!id) return;
-    if (window.confirm('Bạn có chắc chắn muốn xuất bản đề thi này? Học sinh sẽ có thể xem thông tin bài thi.')) {
+    if (window.confirm('Are you sure you want to publish this exam? Students will be able to view exam information.')) {
       try {
         await publishExam(id);
-        alert('Xuất bản đề thi thành công!');
+        alert('Exam published successfully!');
       } catch (err: any) {
-        alert(err.message || 'Lỗi khi xuất bản đề thi');
+        alert(err.message || 'Error publishing exam');
       }
     }
   };
 
   const handleCompleteExam = async () => {
     if (!id) return;
-    if (!window.confirm('Kết thúc kỳ thi? Không thể hoàn tác.')) return;
+    if (!window.confirm('End exam? Cannot be undone.')) return;
     setIsCompleting(true);
     try {
       await completeExam(id);
-      alert('Kỳ thi đã được kết thúc');
+      alert('Exam ended');
       await fetchExamById(id);
     } catch (err: any) {
-      alert(err.message || 'Thao tác thất bại');
+      alert(err.message || 'Operation failed');
     } finally {
       setIsCompleting(false);
     }
@@ -205,18 +205,18 @@ export default function ExamDetailPage() {
 
   const handleGenerateVersions = async () => {
     if (!id) return;
-    const count = prompt('Nhập số lượng mã đề muốn trộn (Mặc định: 4):', '4');
+    const count = prompt('Enter number of variants to shuffle (Default: 4):', '4');
     if (count === null) return;
     const num = parseInt(count, 10);
     if (isNaN(num) || num <= 0) {
-      alert('Vui lòng nhập số nguyên dương hợp lệ.');
+      alert('Please enter a valid positive integer.');
       return;
     }
     try {
       await generateExamVersions(id, num);
-      alert('Trộn đề và sinh phiên bản thành công!');
+      alert('Variants shuffled and generated successfully!');
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi sinh mã đề');
+      alert(err.message || 'Error generating variants');
     }
   };
 
@@ -230,9 +230,9 @@ export default function ExamDetailPage() {
       // Fetch the exam-level template (now sourced from OMRTemplate.templateJson).
       await fetchExamTemplate(id);
       setIsCompileModalOpen(false);
-      alert('Compile hoàn tất! Kiểm tra trạng thái các mã đề bên dưới.');
+      alert('Compile complete! Check variant status below.');
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi compile: ' + err.message);
+      alert(err.message || 'Error during compile: ' + err.message);
     }
   };
 
@@ -241,7 +241,7 @@ export default function ExamDetailPage() {
     try {
       await exportExamPdf(id);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi xuất đề thi');
+      alert(err.message || 'Error exporting exam');
     }
   };
 
@@ -261,7 +261,7 @@ export default function ExamDetailPage() {
       const res = await fetch(`${apiBase}${pdfUrl}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('Tải thất bại');
+      if (!res.ok) throw new Error('Download failed');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -270,7 +270,7 @@ export default function ExamDetailPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tải file');
+      alert(err.message || 'Error downloading file');
     }
   };
 
@@ -279,19 +279,19 @@ export default function ExamDetailPage() {
     try {
       await exportResults(id, format);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi xuất kết quả');
+      alert(err.message || 'Error exporting results');
     }
   };
 
   const handleGenerateReport = async () => {
     if (!id) return;
-    if (!window.confirm('Tạo báo cáo phân tích cho bài thi này?')) return;
+    if (!window.confirm('Generate analysis report for this exam?')) return;
     try {
       await apiService.post(`/reports/exam/${id}/generate`);
-      alert('Báo cáo đã được tạo thành công!');
+      alert('Report generated successfully!');
       await fetchStatistics(id);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tạo báo cáo');
+      alert(err.message || 'Error generating report');
     }
   };
 
@@ -305,7 +305,7 @@ export default function ExamDetailPage() {
       const versions: any[] = Array.isArray(versionsRes) ? versionsRes : (versionsRes.results || []);
 
       if (versions.length === 0) {
-        alert('Bài thi chưa có mã đề nào. Vui lòng sinh mã đề trước.');
+        alert('This exam has no variants yet. Please generate variants first.');
         return;
       }
 
@@ -314,7 +314,7 @@ export default function ExamDetailPage() {
         .filter((v) => !!v.url);
 
       if (answerSheetUrls.length === 0) {
-        alert('Phiếu OMR chưa được sinh. Vui lòng compile AMC trước.');
+        alert('OMR answer sheets not generated yet. Please compile AMC first.');
         return;
       }
 
@@ -323,7 +323,7 @@ export default function ExamDetailPage() {
         await handleDownloadPdf(url!, `PhieuTraLoi_${versionCode}.pdf`);
       }
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tải phiếu OMR');
+      alert(err.message || 'Error downloading OMR sheets');
     } finally {
       setIsExportingOmr(false);
     }
@@ -332,50 +332,50 @@ export default function ExamDetailPage() {
   const handleDownloadOmrTemplateJson = async () => {
     if (!id) return;
     if (!examData.omrTemplateReady) {
-      alert('OMR template chưa sẵn sàng. Hãy compile AMC trước.');
+      alert('OMR template not ready. Please compile AMC first.');
       return;
     }
     try {
       await downloadExamTemplateJson(id);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tải OMR template');
+      alert(err.message || 'Error downloading OMR template');
     }
   };
 
   const handleDelete = async () => {
-    if (window.confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa bài kiểm tra này? Hành động này sẽ chuyển trạng thái bài thi thành lưu trữ.')) {
+    if (window.confirm('WARNING: Are you sure you want to delete this exam? This action will archive the exam.')) {
       try {
         await deleteExam(examData._id);
-        alert('Xóa bài thi thành công.');
+        alert('Exam deleted.');
         navigate('/exams');
       } catch (err: any) {
-        alert(err.message || 'Lỗi khi xóa bài thi');
+        alert(err.message || 'Error deleting exam');
       }
     }
   };
 
   const handleAddClass = async () => {
     if (!id) return;
-    const className = prompt('Nhập tên lớp học muốn thêm vào đề thi (Ví dụ: 12A3):');
+    const className = prompt('Enter class name to add to this exam (e.g. 12A3):');
     if (!className) return;
     try {
       await addClassesToExam(id, [className]);
-      alert(`Đã thêm lớp ${className} vào bài thi.`);
+      alert(`Added class ${className} to exam.`);
       await fetchExamById(id);
     } catch (err: any) {
-      alert(err.message || 'Không thể thêm lớp vào bài thi.');
+      alert(err.message || 'Cannot add class to exam.');
     }
   };
 
   const handleRemoveClass = async (classId: string, className: string) => {
     if (!id) return;
-    if (window.confirm(`Xóa lớp ${className} khỏi danh sách dự thi bài thi này?`)) {
+    if (window.confirm(`Remove class ${className} from this exam's participant list?`)) {
       try {
         await removeClassesFromExam(id, [classId]);
-        alert(`Đã xóa lớp ${className}.`);
+        alert(`Removed class ${className}.`);
         await fetchExamById(id);
       } catch (err: any) {
-        alert(err.message || 'Không thể xóa lớp khỏi bài thi.');
+        alert(err.message || 'Cannot remove class from exam.');
       }
     }
   };
@@ -384,7 +384,7 @@ export default function ExamDetailPage() {
     <div className={styles.container}>
       {/* Breadcrumbs */}
       <nav className={styles.breadcrumb}>
-        <Link to="/exams" className={styles.breadcrumbLink}>Quản lý bài kiểm tra</Link>
+        <Link to="/exams" className={styles.breadcrumbLink}>Exam Management</Link>
         <span className={styles.breadcrumbSeparator}>&gt;</span>
         <span className={styles.breadcrumbActive}>{examData.title}</span>
       </nav>
@@ -402,17 +402,17 @@ export default function ExamDetailPage() {
         <div className={styles.actions}>
           {/* Nhóm Phụ - Các tác vụ xem/in */}
           <div className={styles.actionGroup}>
-            <button className={styles.btnOutline} onClick={() => navigate(`/exams/${examData._id}/edit`)} title="Sửa bài thi">
+            <button className={styles.btnOutline} onClick={() => navigate(`/exams/${examData._id}/edit`)} title="Edit exam">
               <Edit size={16} />
-              <span>Sửa</span>
+              <span>Edit</span>
             </button>
-            <button className={styles.btnOutline} onClick={handleExportPdf} title="Xuất đề thi ra PDF">
+            <button className={styles.btnOutline} onClick={handleExportPdf} title="Export exam as PDF">
               <Printer size={16} />
-              <span>In đề</span>
+              <span>Print exam</span>
             </button>
             <button className={styles.btnOutline} onClick={handleExportOmrSheet} disabled={isExportingOmr} title="Tải phiếu trả lời OMR">
               <FileDown size={16} />
-              <span>{isExportingOmr ? 'Đang tải...' : 'In Phiếu OMR'}</span>
+              <span>{isExportingOmr ? 'Downloading...' : 'Print OMR Sheets'}</span>
             </button>
           </div>
           
@@ -421,32 +421,32 @@ export default function ExamDetailPage() {
           
           {/* Nhóm Chính - Tạo phiên bản và xuất bản */}
           <div className={styles.actionGroup}>
-            <button className={styles.btnOutline} onClick={handleGenerateVersions} disabled={isGeneratingVersions} title="Sinh mã đề trộn">
+            <button className={styles.btnOutline} onClick={handleGenerateVersions} disabled={isGeneratingVersions} title="Generate shuffled variants">
               <Copy size={16} />
-              <span>Sinh phiên bản</span>
+              <span>Generate variants</span>
             </button>
             {examData.status !== 'completed' && (
-              <button className={styles.btnOutlineComplete} onClick={handleCompleteExam} disabled={isCompleting} title="Kết thúc kỳ thi">
+              <button className={styles.btnOutlineComplete} onClick={handleCompleteExam} disabled={isCompleting} title="End exam">
                 <CheckCircle2 size={16} />
-                <span>{isCompleting ? 'Đang xử lý...' : 'Kết thúc'}</span>
+                <span>{isCompleting ? 'Processing...' : 'End'}</span>
               </button>
             )}
-            <button className={styles.btnSolidPublish} onClick={handlePublish} disabled={isPublishing || examData.status !== 'draft'} title="Xuất bản đề thi">
+            <button className={styles.btnSolidPublish} onClick={handlePublish} disabled={isPublishing || examData.status !== 'draft'} title="Publish exam">
               <Radio size={16} />
-              <span>Xuất bản</span>
+              <span>Publish</span>
             </button>
           </div>
           
           {/* Nút Xóa - ở cuối vì là tác vụ nguy hiểm */}
-          <button className={styles.btnDanger} onClick={handleDelete} title="Xóa bài thi">
+          <button className={styles.btnDanger} onClick={handleDelete} title="Delete exam">
             <Trash2 size={16} />
-            <span>Xóa</span>
+            <span>Delete</span>
           </button>
         </div>
       </div>
 
       <p className={styles.subtitle}>
-        Cập nhật lần cuối: {examData.updatedDate} bởi {examData.creator}
+        Last updated: {examData.updatedDate} by {examData.creator}
       </p>
 
       {/* Grid: Columns */}
@@ -455,11 +455,11 @@ export default function ExamDetailPage() {
         {/* Left Column: General + Detailed info */}
         <div className={styles.leftCol}>
           
-          {/* Card: Thông tin chung */}
+          {/* Card: General Information */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.headerTitle}>
-                <h2>Thông tin chung</h2>
+                <h2>General Information</h2>
                 <Info size={16} className={styles.infoIcon} />
               </div>
             </div>
@@ -467,35 +467,35 @@ export default function ExamDetailPage() {
             <div className={styles.cardContent}>
               <div className={styles.infoGrid}>
                 <div className={styles.infoField}>
-                  <span className={styles.infoLabel}>MÃ BÀI THI</span>
+                  <span className={styles.infoLabel}>EXAM CODE</span>
                   <span className={styles.infoValue}>{examData.code}</span>
                 </div>
                 <div className={styles.infoField}>
-                  <span className={styles.infoLabel}>NGƯỜI TẠO</span>
+                  <span className={styles.infoLabel}>CREATOR</span>
                   <span className={styles.infoValue}>{examData.creator}</span>
                 </div>
                 <div className={styles.infoField}>
-                  <span className={styles.infoLabel}>NGÀY TẠO</span>
+                  <span className={styles.infoLabel}>CREATED DATE</span>
                   <span className={styles.infoValue}>{examData.createdDate}</span>
                 </div>
               </div>
               <div className={styles.divider} />
               <div className={styles.descriptionSection}>
-                <span className={styles.infoLabel}>MÔ TẢ CHI TIẾT</span>
+                <span className={styles.infoLabel}>DETAILED DESCRIPTION</span>
                 <p className={styles.descriptionText}>{examData.description}</p>
               </div>
             </div>
           </div>
 
-          {/* Card: Thông tin thi */}
+          {/* Card: Exam Information */}
           <div className={styles.card}>
             <div className={styles.cardHeaderFlex}>
               <div className={styles.headerTitle}>
-                <h2>Thông tin thi</h2>
+                <h2>Exam Information</h2>
               </div>
               <div className={styles.progressSection}>
                 <span className={styles.progressText}>
-                  TỈ LỆ NỘP BÀI: <strong>{examData.submissionsCount} / {examData.totalStudents} ({Math.round((examData.submissionsCount / examData.totalStudents) * 100)}%)</strong>
+                  SUBMISSION RATE: <strong>{examData.submissionsCount} / {examData.totalStudents} ({Math.round((examData.submissionsCount / examData.totalStudents) * 100)}%)</strong>
                 </span>
                 <div className={styles.progressContainer}>
                   <div 
@@ -511,7 +511,7 @@ export default function ExamDetailPage() {
                 <div className={styles.detailBox}>
                   <div className={styles.detailIcon}><Calendar size={16} /></div>
                   <div className={styles.detailText}>
-                    <span className={styles.detailLabel}>NGÀY THI</span>
+                    <span className={styles.detailLabel}>EXAM DATE</span>
                     <span className={styles.detailValue}>{examData.examDate}</span>
                   </div>
                 </div>
@@ -519,7 +519,7 @@ export default function ExamDetailPage() {
                 <div className={styles.detailBox}>
                   <div className={styles.detailIcon}><Clock size={16} /></div>
                   <div className={styles.detailText}>
-                    <span className={styles.detailLabel}>GIỜ BẮT ĐẦU</span>
+                    <span className={styles.detailLabel}>START TIME</span>
                     <span className={styles.detailValue}>{examData.startTime}</span>
                   </div>
                 </div>
@@ -527,23 +527,23 @@ export default function ExamDetailPage() {
                 <div className={styles.detailBox}>
                   <div className={styles.detailIcon}><Timer size={16} /></div>
                   <div className={styles.detailText}>
-                    <span className={styles.detailLabel}>THỜI GIAN</span>
-                    <span className={styles.detailValue}>{examData.duration} phút</span>
+                    <span className={styles.detailLabel}>DURATION</span>
+                    <span className={styles.detailValue}>{examData.duration} minutes</span>
                   </div>
                 </div>
 
                 <div className={styles.detailBox}>
                   <div className={styles.detailIcon}><BookOpen size={16} /></div>
                   <div className={styles.detailText}>
-                    <span className={styles.detailLabel}>SỐ CÂU HỎI</span>
-                    <span className={styles.detailValue}>{examData.totalQuestions} câu</span>
+                    <span className={styles.detailLabel}>NUMBER OF QUESTIONS</span>
+                    <span className={styles.detailValue}>{examData.totalQuestions} questions</span>
                   </div>
                 </div>
 
                 <div className={styles.detailBox}>
                   <div className={styles.detailIcon}><Star size={16} /></div>
                   <div className={styles.detailText}>
-                    <span className={styles.detailLabel}>THANG ĐIỂM</span>
+                    <span className={styles.detailLabel}>SCORE SCALE</span>
                     <span className={styles.detailValue}>{examData.scoreScale}</span>
                   </div>
                 </div>
@@ -551,7 +551,7 @@ export default function ExamDetailPage() {
                 <div className={styles.detailBox}>
                   <div className={styles.detailIcon}><CheckCircle2 size={16} /></div>
                   <div className={styles.detailText}>
-                    <span className={styles.detailLabel}>ĐIỂM ĐẠT</span>
+                    <span className={styles.detailLabel}>PASSING SCORE</span>
                     <span className={styles.detailValue}>{examData.passingScore.toFixed(1)}</span>
                   </div>
                 </div>
@@ -559,7 +559,7 @@ export default function ExamDetailPage() {
                 <div className={styles.detailBox}>
                   <div className={styles.detailIcon}><Shield size={16} /></div>
                   <div className={styles.detailText}>
-                    <span className={styles.detailLabel}>GIÁM SÁT</span>
+                    <span className={styles.detailLabel}>SUPERVISION</span>
                     <span className={styles.detailValue}>{examData.monitoring}</span>
                   </div>
                 </div>
@@ -567,8 +567,8 @@ export default function ExamDetailPage() {
                 <div className={styles.detailBox}>
                   <div className={styles.detailIcon}><Layers size={16} /></div>
                   <div className={styles.detailText}>
-                    <span className={styles.detailLabel}>SỐ PHIÊN BẢN</span>
-                    <span className={styles.detailValue}>{examData.versions.length} Mã đề</span>
+                    <span className={styles.detailLabel}>NUMBER OF VARIANTS</span>
+                    <span className={styles.detailValue}>{examData.versions.length} variants</span>
                   </div>
                 </div>
               </div>
@@ -580,11 +580,11 @@ export default function ExamDetailPage() {
         {/* Right Column: Statistics + Classes */}
         <div className={styles.rightCol}>
           
-          {/* Card: Thống kê kết quả */}
+          {/* Card: Results Statistics */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.headerTitle}>
-                <h2>Thống kê kết quả</h2>
+                <h2>Results Statistics</h2>
               </div>
             </div>
             
@@ -592,25 +592,25 @@ export default function ExamDetailPage() {
               {/* Stats Grid */}
               <div className={styles.stats2x2}>
                 <div className={styles.statBox}>
-                  <span className={styles.statLabel}>Điểm Trung Bình</span>
+                  <span className={styles.statLabel}>Average Score</span>
                   <span className={styles.statValue}>
                     {statistics?.averageScore != null ? statistics.averageScore.toFixed(1) : '—'}
                   </span>
                 </div>
                 <div className={styles.statBox}>
-                  <span className={styles.statLabel}>Tỉ lệ Đạt</span>
+                  <span className={styles.statLabel}>Pass Rate</span>
                   <span className={`${styles.statValue} ${styles.colorAmber}`}>
                     {statistics?.passRate != null ? `${statistics.passRate}%` : '—'}
                   </span>
                 </div>
                 <div className={styles.statBox}>
-                  <span className={styles.statLabel}>Cao nhất</span>
+                  <span className={styles.statLabel}>Highest</span>
                   <span className={styles.statValue}>
                     {statistics?.highestScore != null ? statistics.highestScore.toFixed(1) : '—'}
                   </span>
                 </div>
                 <div className={styles.statBox}>
-                  <span className={styles.statLabel}>Thấp nhất</span>
+                  <span className={styles.statLabel}>Lowest</span>
                   <span className={styles.statValue}>
                     {statistics?.lowestScore != null ? statistics.lowestScore.toFixed(1) : '—'}
                   </span>
@@ -634,19 +634,19 @@ export default function ExamDetailPage() {
                   })}
                 </div>
                 ) : (
-                <p style={{ color: '#999', textAlign: 'center', padding: '16px' }}>Chưa có dữ liệu phổ điểm.</p>
+                <p style={{ color: '#999', textAlign: 'center', padding: '16px' }}>No score distribution data yet.</p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Card: Lớp tham gia */}
+          {/* Card: Participating Classes */}
           <div className={styles.card}>
             <div className={styles.cardHeaderFlex}>
               <div className={styles.headerTitle}>
-                <h2>Lớp tham gia</h2>
+                <h2>Participating Classes</h2>
               </div>
-              <button className={styles.settingsBtn} title="Quản lý lớp">
+              <button className={styles.settingsBtn} title="Manage classes">
                 <Settings size={16} />
               </button>
             </div>
@@ -654,7 +654,7 @@ export default function ExamDetailPage() {
             <div className={styles.cardContent}>
               <div className={styles.classesList}>
                 {examData.classes.length === 0 ? (
-                  <p className={styles.emptyText}>Chưa có lớp học nào.</p>
+                  <p className={styles.emptyText}>No classes yet.</p>
                 ) : (
                   examData.classes.map((cls, idx) => (
                     <div key={idx} className={styles.classCard}>
@@ -665,7 +665,7 @@ export default function ExamDetailPage() {
                         <span className={styles.className}>{cls.name}</span>
                         <span className={styles.classCount}>{cls.description}</span>
                       </div>
-                      <button className={styles.classRemoveBtn} onClick={() => handleRemoveClass(cls._id, cls.name)} title="Xóa lớp">
+                      <button className={styles.classRemoveBtn} onClick={() => handleRemoveClass(cls._id, cls.name)} title="Remove class">
                         <X size={14} />
                       </button>
                     </div>
@@ -674,7 +674,7 @@ export default function ExamDetailPage() {
               </div>
               
               <button className={styles.btnAddClass} onClick={handleAddClass}>
-                <span>+ Thêm lớp học</span>
+                <span>+ Add class</span>
               </button>
             </div>
           </div>
@@ -683,16 +683,16 @@ export default function ExamDetailPage() {
 
       </div>
 
-      {/* Section: Ngân hàng câu hỏi */}
+      {/* Section: Question Bank */}
       <div className={styles.sectionCard}>
         <div className={styles.card}>
           <div className={styles.sectionHeader}>
             <div className={styles.headerTitle}>
-              <h2>Ngân hàng câu hỏi ({examData.totalQuestions})</h2>
+              <h2>Question Bank ({examData.totalQuestions})</h2>
             </div>
             <div className={styles.headerActions}>
-              <button className={styles.btnOutlineCompact} onClick={() => alert('Đang thực hiện trộn câu hỏi...')}>Trộn câu hỏi</button>
-              <button className={styles.btnSolidCompact} onClick={() => navigate('/question-bank')}>Thêm câu hỏi</button>
+              <button className={styles.btnOutlineCompact} onClick={() => alert('Shuffling questions...')}>Shuffle questions</button>
+              <button className={styles.btnSolidCompact} onClick={() => navigate('/question-bank')}>Add questions</button>
             </div>
           </div>
 
@@ -700,20 +700,20 @@ export default function ExamDetailPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th style={{ width: '60px' }}>STT</th>
-                  <th>NỘI DUNG CÂU HỎI</th>
-                  <th style={{ width: '120px' }}>PHÂN LOẠI</th>
-                  <th style={{ width: '80px' }}>ĐÁP ÁN</th>
-                  <th style={{ width: '80px' }}>ĐIỂM</th>
-                  <th style={{ width: '120px' }}>ĐỘ KHÓ</th>
-                  <th style={{ width: '80px', textAlign: 'center' }}>THAO TÁC</th>
+                  <th style={{ width: '60px' }}>#</th>
+                  <th>QUESTION CONTENT</th>
+                  <th style={{ width: '120px' }}>TYPE</th>
+                  <th style={{ width: '80px' }}>ANSWER</th>
+                  <th style={{ width: '80px' }}>SCORE</th>
+                  <th style={{ width: '120px' }}>DIFFICULTY</th>
+                  <th style={{ width: '80px', textAlign: 'center' }}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
                 {examData.questions.length === 0 ? (
                   <tr>
                     <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#999' }}>
-                      Chưa có câu hỏi nào.
+                      No questions yet.
                     </td>
                   </tr>
                 ) : (
@@ -734,7 +734,7 @@ export default function ExamDetailPage() {
                           q.difficulty === 'medium' ? styles.diffBlue : styles.diffRed
                         }`}>
                           <span className={styles.dot}>●</span>
-                          {q.difficulty === 'easy' ? 'Dễ' : q.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
+                          {q.difficulty === 'easy' ? 'Easy' : q.difficulty === 'medium' ? 'Medium' : 'Hard'}
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>
@@ -752,9 +752,9 @@ export default function ExamDetailPage() {
           <div className={styles.tableFooter}>
             <div className={styles.paginationInfo}>
               {showAllQuestions ? (
-                <>Hiển thị tất cả {examData.questions.length} / {examData.questions.length} câu</>
+                <>Showing all {examData.questions.length} / {examData.questions.length} questions</>
               ) : (
-                <>Hiển thị {indexOfFirstQuestion + 1}-{Math.min(indexOfLastQuestion, examData.questions.length)} / {examData.questions.length} câu</>
+                <>Showing {indexOfFirstQuestion + 1}-{Math.min(indexOfLastQuestion, examData.questions.length)} / {examData.questions.length} questions</>
               )}
             </div>
             <div className={styles.pageButtons}>
@@ -788,30 +788,30 @@ export default function ExamDetailPage() {
                   setCurrentQuestionPage(1);
                 }}
               >
-                Thu gọn danh sách
+                Collapse list
               </button>
             ) : (
               <button
                 className={styles.viewAllLink}
                 onClick={() => setShowAllQuestions(true)}
               >
-                Xem tất cả {examData.totalQuestions} câu hỏi
+                View all {examData.totalQuestions} questions
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Section: Phiên bản đề thi */}
+      {/* Section: Exam Variants */}
       <div className={styles.sectionCard}>
         <div className={styles.card}>
           <div className={styles.cardHeaderFlex}>
             <div className={styles.headerTitle}>
-              <h2>Phiên bản đề thi ({examData.versions.length})</h2>
+              <h2>Exam Variants ({examData.versions.length})</h2>
               {examData.omrTemplateReady ? (
-                <span className={`${styles.templateBadge} ${styles.templateReady}`}>OMR: Sẵn sàng</span>
+                <span className={`${styles.templateBadge} ${styles.templateReady}`}>OMR: Ready</span>
               ) : (
-                <span className={`${styles.templateBadge} ${styles.templatePlaceholder}`}>OMR: Chưa sẵn sàng</span>
+                <span className={`${styles.templateBadge} ${styles.templatePlaceholder}`}>OMR: Not ready</span>
               )}
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -821,7 +821,7 @@ export default function ExamDetailPage() {
                 disabled={isGeneratingVersions}
               >
                 <Copy size={13} />
-                {isGeneratingVersions ? 'Đang sinh...' : 'Sinh mã đề'}
+                {isGeneratingVersions ? 'Generating...' : 'Generate variants'}
               </button>
               <button
                 className={styles.btnOutlineCompact}
@@ -830,14 +830,14 @@ export default function ExamDetailPage() {
                 title="Tải phiếu trả lời OMR"
               >
                 <FileDown size={13} />
-                {isExportingOmr ? 'Đang tải...' : 'In Phiếu OMR'}
+                {isExportingOmr ? 'Downloading...' : 'Print OMR Sheets'}
               </button>
               <button
                 className={styles.btnSolidCompact}
                 onClick={() => setIsCompileModalOpen(true)}
                 disabled={isCompiling || examData.versions.length === 0}
               >
-                {isCompiling ? 'Đang compile...' : 'Compile'}
+                {isCompiling ? 'Compiling...' : 'Compile'}
               </button>
             </div>
           </div>
@@ -845,9 +845,9 @@ export default function ExamDetailPage() {
           {examData.versions.length === 0 ? (
             <div className={styles.emptyState}>
               <FileText size={32} className={styles.emptyIcon} />
-              <p>Chưa có mã đề nào</p>
+              <p>No variants yet</p>
               <button className={styles.btnSolid} onClick={handleGenerateVersions}>
-                Sinh mã đề đầu tiên
+                Generate first variant
               </button>
             </div>
           ) : (
@@ -858,10 +858,10 @@ export default function ExamDetailPage() {
                 <div key={ver.code} className={styles.versionRow}>
                   <div className={styles.versionIndex}>{idx + 1}</div>
                   <div className={styles.versionInfo}>
-                    <span className={styles.versionCode}>Mã đề {ver.code}</span>
+                    <span className={styles.versionCode}>Variant {ver.code}</span>
                     <span className={styles.versionMeta}>
-                      Cập nhật: {ver.updatedAt}
-                      {ver.generatedAt && ` • Đã compile: ${ver.generatedAt}`}
+                      Updated: {ver.updatedAt}
+                      {ver.generatedAt && ` • Compiled: ${ver.generatedAt}`}
                     </span>
                   </div>
                   <div className={styles.versionStatus}>
@@ -878,26 +878,26 @@ export default function ExamDetailPage() {
                         <button
                           className={styles.actionBtn}
                           onClick={() => handleDownloadPdf(ver.pdfUrl, `De_${ver.code}.pdf`)}
-                          title="Tải đề thi"
+                          title="Download exam"
                         >
                           <Download size={14} />
-                          Đề
+                          Exam
                         </button>
                         {ver.corrigePdfUrl && (
                           <button
                             className={styles.actionBtn}
                             onClick={() => handleDownloadPdf(ver.corrigePdfUrl, `DapAn_${ver.code}.pdf`)}
-                            title="Tải đáp án"
+                            title="Download answer key"
                           >
                             <Download size={14} />
-                            Đáp án
+                            Answer key
                           </button>
                         )}
                         <button
                           className={styles.actionBtnSecondary}
                           onClick={() => handleCompile(true)}
                           disabled={isCompiling}
-                          title="Compile lại"
+                          title="Re-compile"
                         >
                           <RefreshCw size={14} />
                         </button>
@@ -921,25 +921,25 @@ export default function ExamDetailPage() {
         </div>
       </div>
 
-      {/* Section: Danh sách bài nộp */}
+      {/* Section: Submissions List */}
       <div className={styles.sectionCard}>
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.headerTitle}>
-              <h2>Danh sách bài nộp ({submissions.length})</h2>
+              <h2>Submissions List ({submissions.length})</h2>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               {examData.status === 'completed' && (
                 <button className={styles.btnOutlineCompact} onClick={handleGenerateReport}>
-                  Tạo báo cáo
+                  Generate report
                 </button>
               )}
               <button className={styles.btnOutlineCompact} onClick={() => handleExportResults('pdf')}>
                 <FileDown size={14} />
-                Xuất PDF
+                Export PDF
               </button>
               <button className={styles.btnSolidCompact} onClick={() => handleExportResults('excel')}>
-                Xuất Excel
+                Export Excel
               </button>
             </div>
           </div>
@@ -948,22 +948,22 @@ export default function ExamDetailPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th style={{ width: '50px' }}>STT</th>
-                  <th style={{ width: '180px' }}>HỌC SINH</th>
-                  <th style={{ width: '100px' }}>MÃ HS</th>
-                  <th style={{ width: '100px' }}>LỚP</th>
-                  <th style={{ width: '80px' }}>MÃ ĐỀ</th>
-                  <th style={{ width: '80px' }}>ĐIỂM</th>
-                  <th style={{ width: '80px' }}>TỶ LỆ</th>
-                  <th style={{ width: '100px' }}>TRẠNG THÁI</th>
-                  <th style={{ width: '140px' }}>THAO TÁC</th>
+                  <th style={{ width: '50px' }}>#</th>
+                  <th style={{ width: '180px' }}>STUDENT</th>
+                  <th style={{ width: '100px' }}>STUDENT ID</th>
+                  <th style={{ width: '100px' }}>CLASS</th>
+                  <th style={{ width: '80px' }}>VARIANT</th>
+                  <th style={{ width: '80px' }}>SCORE</th>
+                  <th style={{ width: '80px' }}>RATE</th>
+                  <th style={{ width: '100px' }}>STATUS</th>
+                  <th style={{ width: '140px' }}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
                 {submissions.length === 0 ? (
                   <tr>
                     <td colSpan={9} style={{ textAlign: 'center', padding: '32px', color: '#999' }}>
-                      Chưa có bài nộp nào.
+                      No submissions yet.
                     </td>
                   </tr>
                 ) : (
@@ -1007,17 +1007,17 @@ export default function ExamDetailPage() {
                               ? styles.diffBlue
                               : ''
                           }`}>
-                            {sub.status === 'completed' ? 'Hoàn thành'
-                              : sub.status === 'scanned' ? 'Đã quét'
-                              : sub.status === 'pending' ? 'Chờ quét'
-                              : sub.status === 'appealed' ? 'Phúc tra'
+                            {sub.status === 'completed' ? 'Completed'
+                              : sub.status === 'scanned' ? 'Scanned'
+                              : sub.status === 'pending' ? 'Pending scan'
+                              : sub.status === 'appealed' ? 'Appealed'
                               : sub.status}
                           </span>
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <button
                             className={styles.actionIconButton}
-                            title="Xem chi tiết"
+                            title="View details"
                             onClick={() => sub._id && setSubmissionModalId(sub._id)}
                           >
                             <FileText size={14} />
@@ -1051,10 +1051,10 @@ export default function ExamDetailPage() {
             if (!id) return;
             try {
               await generateExamVersions(id, count);
-              alert(`Đã sinh ${count} mã đề thành công!`);
+              alert(`Generated ${count} variants successfully!`);
               setIsGenerateModalOpen(false);
             } catch (err: any) {
-              alert(err.message || 'Lỗi khi sinh mã đề');
+              alert(err.message || 'Error generating variants');
             }
           }}
           isGenerating={isGeneratingVersions}
@@ -1089,7 +1089,7 @@ function CompileModal({
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>Compile đề thi với AMC</h3>
+          <h3 className={styles.modalTitle}>Compile exam with AMC</h3>
           <button className={styles.modalClose} onClick={onClose} disabled={isCompiling}>
             <X size={18} />
           </button>
@@ -1100,7 +1100,7 @@ function CompileModal({
             <div className={styles.engineOption} style={{ cursor: 'default' }}>
               <div className={styles.engineOptionLabel}>
                 <span className={styles.engineOptionName}>AMC (LaTeX)</span>
-                <span className={styles.engineOptionDesc}>Sinh đề chuẩn OMR với WSL2</span>
+                <span className={styles.engineOptionDesc}>Generate standard OMR exam with WSL2</span>
               </div>
             </div>
           </div>
@@ -1112,20 +1112,20 @@ function CompileModal({
               onChange={(e) => setForceRegenerate(e.target.checked)}
               disabled={isCompiling}
             />
-            <span>Buộc tạo lại (xóa PDF cũ)</span>
+            <span>Force regenerate (delete old PDFs)</span>
           </label>
 
           <div className={styles.modalWarning}>
             <AlertTriangle size={14} />
             <span>
-              Quá trình compile có thể mất 1–3 phút tùy số lượng mã đề. Vui lòng không đóng cửa sổ này trong khi đang xử lý.
+              Compilation process may take 1-3 minutes depending on the number of variants. Please do not close this window during processing.
             </span>
           </div>
         </div>
 
         <div className={styles.modalFooter}>
           <button className={styles.btnCancel} onClick={onClose} disabled={isCompiling}>
-            Hủy
+            Cancel
           </button>
           <button
             className={styles.btnCompile}
@@ -1135,12 +1135,12 @@ function CompileModal({
             {isCompiling ? (
               <>
                 <span className={styles.compilingSpinner} />
-                Đang compile...
+                Compiling...
               </>
             ) : (
               <>
                 <Cpu size={14} />
-                Bắt đầu Compile
+                Start Compile
               </>
             )}
           </button>
@@ -1163,7 +1163,7 @@ function GenerateVersionsModal({
 
   const handleSubmit = () => {
     if (count < 1 || count > 100) {
-      alert('Số lượng mã đề phải từ 1 đến 100');
+      alert('Number of variants must be between 1 and 100');
       return;
     }
     onGenerate(count);
@@ -1173,7 +1173,7 @@ function GenerateVersionsModal({
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>Sinh mã đề thi</h3>
+          <h3 className={styles.modalTitle}>Generate exam variants</h3>
           <button className={styles.modalClose} onClick={onClose} disabled={isGenerating}>
             <X size={18} />
           </button>
@@ -1181,7 +1181,7 @@ function GenerateVersionsModal({
 
         <div className={styles.modalBody}>
           <p style={{ marginBottom: '16px', color: '#64748b' }}>
-            Nhập số lượng mã đề bạn muốn sinh. Mỗi mã đề sẽ có thứ tự câu hỏi được xáo trộn khác nhau.
+            Enter the number of variants you want to generate. Each variant will have a different shuffled question order.
           </p>
 
           <div className={styles.formGroup}>
@@ -1200,7 +1200,7 @@ function GenerateVersionsModal({
 
         <div className={styles.modalFooter}>
           <button className={styles.btnCancel} onClick={onClose} disabled={isGenerating}>
-            Hủy
+            Cancel
           </button>
           <button
             className={styles.btnCompile}
@@ -1210,12 +1210,12 @@ function GenerateVersionsModal({
             {isGenerating ? (
               <>
                 <span className={styles.compilingSpinner} />
-                Đang sinh...
+                Generating...
               </>
             ) : (
               <>
                 <Copy size={14} />
-                Sinh {count} mã đề
+                Generate {count} variants
               </>
             )}
           </button>

@@ -1,0 +1,185 @@
+﻿\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+Phần này trình bày đặc tả chi tiết chức năng sinh câu hỏi bằng AI trong hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR. Chức năng gồm hai phần: sinh câu hỏi mới từ chủ đề và sinh câu hỏi tương tự từ câu hỏi có sẵn.
+
+\section{Tổng quan chức năng sinh câu hỏi bằng AI}
+
+Chức năng sinh câu hỏi bằng AI cho phép giáo viên tạo câu hỏi trắc nghiệm nhanh chóng thông qua hai phương thức: (i) sinh câu hỏi mới từ chủ đề hoặc nội dung cho trước, và (ii) sinh câu hỏi tương tự từ một câu hỏi đã có trong ngân hàng câu hỏi. Hệ thống sử dụng dịch vụ AI để phân tích yêu cầu và sinh ra các câu hỏi theo cấu trúc chuẩn trắc nghiệm.
+
+Giáo viên có thể chọn loại câu hỏi (một đáp án đúng, nhiều đáp án đúng, đúng sai), mức độ khó, chủ đề và số lượng câu hỏi cần sinh. Kết quả sinh ra sẽ được hiển thị để giáo viên kiểm tra, chỉnh sửa trước khi lưu vào ngân hàng câu hỏi.
+
+\section{Sinh câu hỏi mới}
+
+\subsection{Mục đích}
+Chức năng sinh câu hỏi mới cho phép giáo viên tạo các câu hỏi trắc nghiệm hoàn toàn mới dựa trên chủ đề, nội dung bài giảng hoặc tài liệu tham khảo do giáo viên cung cấp.
+
+\subsection{Điều kiện trước}
+Giáo viên đã đăng nhập vào hệ thống, có quyền quản lý ngân hàng câu hỏi.
+
+\subsection{Luồng thực thi chính}
+\begin{enumerate}
+    \item Giáo viên truy cập chức năng "Ngân hàng câu hỏi" và chọn "Sinh câu hỏi bằng AI".
+    \item Hệ thống hiển thị form sinh câu hỏi mới với các trường: chủ đề, nội dung/tài liệu tham khảo, loại câu hỏi, mức độ khó, số lượng câu hỏi.
+    \item Giáo viên nhập thông tin và nhấn nút "Sinh câu hỏi".
+    \item Hệ thống gửi yêu cầu đến dịch vụ AI kèm prompt chứa thông tin cấu hình.
+    \item Dịch vụ AI phân tích nội dung và sinh danh sách câu hỏi theo yêu cầu.
+    \item Hệ thống nhận kết quả và hiển thị danh sách câu hỏi đã sinh.
+    \item Giáo viên kiểm tra từng câu hỏi, chỉnh sửa nội dung, đáp án hoặc mức độ khó nếu cần.
+    \item Giáo viên nhấn "Lưu vào ngân hàng" để thêm các câu hỏi đã duyệt.
+    \item Hệ thống lưu câu hỏi vào ngân hàng với trạng thái "chờ phê duyệt".
+\end{enumerate}
+
+\subsection{Luồng thực thi mở rộng}
+\begin{itemize}
+    \item Tại bước 5, nếu dịch vụ AI gặp lỗi: hệ thống thông báo và cho phép thử lại hoặc chuyển sang tạo câu hỏi thủ công.
+    \item Tại bước 5, nếu nội dung đầu vào quá ngắn: hệ thống thông báo yêu cầu nhập thêm thông tin.
+    \item Tại bước 7, nếu câu hỏi sinh ra không phù hợp: giáo viên có thể nhấn "Tạo lại" để yêu cầu AI sinh lại.
+    \item Tại bước 8, nếu câu hỏi trùng lặp với câu hỏi đã có: hệ thống cảnh báo và cho phép bỏ qua hoặc lưu.
+\end{itemize}
+
+\subsection{Điều kiện sau}
+Nếu thành công, các câu hỏi được thêm vào ngân hàng câu hỏi và sẵn sàng sử dụng để tạo đề thi.
+
+\subsection{Cấu trúc prompt gửi đến AI}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Trường} & \textbf{Nội dung} \\ \hline
+System role & Bạn là một giáo viên có kinh nghiệm, chuyên tạo câu hỏi trắc nghiệm chất lượng cao. \\ \hline
+Loại câu hỏi & single-choice (một đáp án đúng), multiple-choice (nhiều đáp án đúng), true-false (đúng sai) \\ \hline
+Số lượng & Số câu hỏi cần sinh \\ \hline
+Mức độ khó & easy, medium, hard \\ \hline
+Chủ đề & Chủ đề chính của câu hỏi \\ \hline
+Nội dung gốc & Nội dung bài giảng hoặc tài liệu tham khảo (nếu có) \\ \hline
+Yêu cầu output & JSON array với cấu trúc: question, options[], correctAnswer, explanation, difficulty \\ \hline
+\end{tabular}
+\caption{Cấu trúc prompt cho chức năng sinh câu hỏi mới}
+\label{table:ai_gen_new_prompt}
+\end{table}
+
+\subsection{Cấu trúc câu hỏi sinh ra}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Trường} & \textbf{Mô tả} \\ \hline
+question & Nội dung câu hỏi (dạng text) \\ \hline
+options & Mảng các đáp án (tối thiểu 3, tối đa 5) \\ \hline
+correctAnswer & Đáp án đúng (index hoặc ký tự A, B, C, D, E) \\ \hline
+explanation & Giải thích ngắn gọn tại sao đáp án đúng \\ \hline
+difficulty & Mức độ khó: easy, medium, hard \\ \hline
+topic & Chủ đề của câu hỏi \\ \hline
+\end{tabular}
+\caption{Cấu trúc câu hỏi sinh ra bởi AI}
+\label{table:ai_gen_new_output}
+\end{table}
+
+\section{Sinh câu hỏi tương tự}
+
+\subsection{Mục đích}
+Chức năng sinh câu hỏi tương tự cho phép giáo viên tạo các phiên bản khác của một câu hỏi đã có, giúp tăng số lượng câu hỏi trong ngân hàng mà không cần tạo mới hoàn toàn. Các câu hỏi tương tự có cùng đáp án đúng nhưng khác về cách diễn đạt, thứ tự đáp án hoặc giá trị số.
+
+\subsection{Điều kiện trước}
+Giáo viên đã đăng nhập, có quyền quản lý ngân hàng câu hỏi và đã chọn một câu hỏi có sẵn trong ngân hàng.
+
+\subsection{Luồng thực thi chính}
+\begin{enumerate}
+    \item Giáo viên truy cập ngân hàng câu hỏi và chọn một câu hỏi muốn sinh tương tự.
+    \item Giáo viên nhấn nút "Sinh câu tương tự" trên giao diện chi tiết câu hỏi.
+    \item Hệ thống hiển thị form với các tùy chọn: số lượng câu sinh ra, kiểu thay đổi (diễn đạt lại, đảo đáp án, thay số liệu, kết hợp).
+    \item Giáo viên chọn tùy chọn và nhấn "Sinh".
+    \item Hệ thống gửi yêu cầu đến dịch vụ AI kèm câu hỏi gốc và các tùy chọn.
+    \item Dịch vụ AI phân tích câu hỏi gốc và sinh các phiên bản tương tự.
+    \item Hệ thống nhận kết quả và hiển thị danh sách câu hỏi tương tự.
+    \item Giáo viên kiểm tra từng câu hỏi sinh ra, đảm bảo đáp án đúng được giữ nguyên.
+    \item Giáo viên nhấn "Lưu tất cả" hoặc chọn từng câu để lưu vào ngân hàng.
+    \item Hệ thống lưu các câu hỏi mới và liên kết với câu hỏi gốc trong metadata.
+\end{enumerate}
+
+\subsection{Luồng thực thi mở rộng}
+\begin{itemize}
+    \item Tại bước 6, nếu câu hỏi gốc quá phức tạp: hệ thống thông báo và đề xuất giảm số lượng sinh ra.
+    \item Tại bước 8, nếu đáp án bị thay đổi: hệ thống cảnh báo và yêu cầu giáo viên xác nhận.
+    \item Tại bước 8, nếu câu hỏi sinh ra trùng lặp với câu hỏi gốc: hệ thống tự động loại bỏ và thông báo.
+    \item Tại bước 9, nếu câu hỏi đã tồn tại trong ngân hàng: hệ thống cảnh báo và cho phép bỏ qua.
+\end{itemize}
+
+\subsection{Điều kiện sau}
+Nếu thành công, các câu hỏi tương tự được thêm vào ngân hàng và được đánh dấu là phiên bản của câu hỏi gốc.
+
+\subsection{Các kiểu thay đổi khi sinh tương tự}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{4.5cm}|}
+\hline
+\textbf{Kiểu} & \textbf{Mô tả} & \textbf{Ví dụ} \\ \hline
+Diễn đạt lại & Giữ nguyên nội dung, thay đổi cách diễn đạt & "Tốc độ là gì?" → "Thế nào là tốc độ của một vật?" \\ \hline
+Đảo đáp án & Giữ nguyên câu hỏi và đáp án, thay đổi thứ tự các lựa chọn & Đáp án đúng từ vị trí A chuyển sang vị trí C \\ \hline
+Thay số liệu & Giữ nguyên cấu trúc, thay đổi giá trị số & "Một vật 10kg..." → "Một vật 15kg..." \\ \hline
+Kết hợp & Áp dụng nhiều kiểu thay đổi cùng lúc & Diễn đạt lại + thay số liệu + đảo đáp án \\ \hline
+\end{tabular}
+\caption{Các kiểu thay đổi khi sinh câu hỏi tương tự}
+\label{table:ai_gen_similar_types}
+\end{table}
+
+\subsection{Cấu trúc prompt cho chức năng sinh tương tự}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Trường} & \textbf{Nội dung} \\ \hline
+System role & Bạn là một giáo viên có kinh nghiệm, chuyên tạo các phiên bản tương tự của câu hỏi trắc nghiệm. \\ \hline
+Câu hỏi gốc & Câu hỏi ban đầu cần sinh tương tự \\ \hline
+Đáp án đúng & Đáp án đúng của câu hỏi gốc (phải giữ nguyên trong tất cả phiên bản) \\ \hline
+Kiểu thay đổi & Loại thay đổi muốn áp dụng (xem Bảng \ref{table:ai_gen_similar_types}) \\ \hline
+Số lượng & Số phiên bản cần sinh \\ \hline
+Yêu cầu output & JSON array với cấu trúc: question, options[], correctAnswer \\ \hline
+\end{tabular}
+\caption{Cấu trúc prompt cho chức năng sinh câu hỏi tương tự}
+\label{table:ai_gen_similar_prompt}
+\end{table}
+
+\section{Xử lý lỗi và giới hạn}
+
+\subsection{Các lỗi thường gặp}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{5cm}|p{4cm}|}
+\hline
+\textbf{Lỗi} & \textbf{Nguyên nhân} & \textbf{Xử lý} \\ \hline
+Timeout khi gọi AI & Dịch vụ AI phản hồi chậm & Thử lại hoặc giảm số lượng câu \\ \hline
+Nội dung không phù hợp & Prompt không đủ thông tin & Bổ sung nội dung chi tiết hơn \\ \hline
+Số lượng không đủ & AI không sinh đủ số câu yêu cầu & Tăng nội dung đầu vào, giảm số lượng \\ \hline
+Đáp án không hợp lệ & AI sinh ra đáp án ngoài phạm vi & Giáo viên chỉnh sửa thủ công \\ \hline
+\end{tabular}
+\caption{Các lỗi thường gặp và cách xử lý}
+\label{table:ai_gen_errors}
+\end{table}
+
+\subsection{Giới hạn của hệ thống}
+\begin{itemize}
+    \item Số lượng câu hỏi sinh ra tối đa trong một lần: 20 câu.
+    \item Thời gian chờ phản hồi tối đa từ dịch vụ AI: 30 giây.
+    \item Độ dài nội dung đầu vào tối đa: 5000 ký tự.
+    \item Số lần thử lại tối đa khi gặp lỗi: 3 lần.
+    \item Tất cả câu hỏi sinh ra đều được đánh dấu "chờ phê duyệt" trước khi sử dụng.
+\end{itemize}
+
+\section{Bảo mật và đạo đức}
+
+\subsection{Các câu hỏi do AI sinh ra}
+\begin{itemize}
+    \item Câu hỏi sinh ra bởi AI được đánh dấu trong metadata để phân biệt với câu hỏi do giáo viên tạo thủ công.
+    \item Giáo viên có trách nhiệm kiểm tra và phê duyệt tất cả câu hỏi do AI sinh trước khi đưa vào sử dụng.
+    \item Hệ thống không sử dụng câu hỏi do AI sinh ra để huấn luyện mô hình mà không có sự đồng ý của giáo viên.
+\end{itemize}
+
+\subsection{Xác thực nội dung}
+\begin{itemize}
+    \item Hệ thống có bộ lọc nội dung để ngăn chặn việc sinh ra câu hỏi chứa thông tin nhạy cảm, phân biệt đối xử hoặc không phù hợp.
+    \item Nếu phát hiện nội dung vi phạm, hệ thống sẽ từ chối sinh và thông báo cho giáo viên.
+\end{itemize}
+
+\end{document}

@@ -137,23 +137,23 @@ export default function EditExamPage() {
 
   // Format last saved time
   const formatLastSaved = () => {
-    if (!lastSaved) return 'Chưa lưu';
+    if (!lastSaved) return 'Not saved';
     const now = new Date();
     const diff = Math.floor((now.getTime() - lastSaved.getTime()) / 1000);
-    if (diff < 60) return 'Vừa xong';
-    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-    return lastSaved.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    return lastSaved.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   // Handle Save
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setErrorMessage('Vui lòng nhập tên bài kiểm tra.');
+      setErrorMessage('Please enter exam name.');
       return;
     }
     if (!selectedClassId) {
-      setErrorMessage('Vui lòng chọn lớp học.');
+      setErrorMessage('Please select a class.');
       return;
     }
 
@@ -187,13 +187,13 @@ export default function EditExamPage() {
         setLastSaved(new Date());
       }
       
-      setSuccessMessage('Lưu thay đổi thành công!');
+      setSuccessMessage('Changes saved successfully!');
       setTimeout(() => {
         navigate(`/exams/${id || ''}`);
       }, 1000);
     } catch (err: any) {
       console.error(err);
-      setErrorMessage(err.message || 'Có lỗi xảy ra khi lưu thay đổi.');
+      setErrorMessage(err.message || 'An error occurred while saving changes.');
     } finally {
       setIsSubmitLoading(false);
     }
@@ -215,10 +215,10 @@ export default function EditExamPage() {
       {/* ─── PAGE TITLE ─── */}
       <div className={styles.header}>
         <h1 className={styles.title}>
-          {isLoadingExam ? 'Đang tải...' : isPublished ? `Xem chi tiết bài kiểm tra` : 'Sửa bài kiểm tra'}
+          {isLoadingExam ? 'Loading...' : isPublished ? `View exam details` : 'Edit exam'}
         </h1>
         <span className={styles.statusBadge}>
-          {isLoadingExam ? '...' : isPublished ? _examStatus === 'completed' ? 'Hoàn thành' : _examStatus === 'in_progress' ? 'Đang diễn ra' : 'Đã xuất bản' : 'Nháp'}
+          {isLoadingExam ? '...' : isPublished ? _examStatus === 'completed' ? 'Completed' : _examStatus === 'in_progress' ? 'In Progress' : 'Published' : 'Draft'}
         </span>
       </div>
 
@@ -251,7 +251,7 @@ export default function EditExamPage() {
           marginBottom: '16px',
         }}>
           <AlertCircle size={16} />
-          <span>Bài kiểm tra đã được xuất bản. Một số trường bị khóa và không thể chỉnh sửa.</span>
+          <span>This exam has been published. Some fields are locked and cannot be edited.</span>
         </div>
       )}
 
@@ -262,24 +262,24 @@ export default function EditExamPage() {
           {/* LEFT COLUMN */}
           <div className={styles.leftCol}>
             
-            {/* Card 1: Thông tin chung */}
+            {/* Card 1: Basic Information */}
             <section className={styles.card}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardHeaderTitle}>
                   <HelpCircle size={18} className={styles.iconBlue} />
-                  <h2>Thông tin cơ bản</h2>
+                  <h2>Basic Information</h2>
                 </div>
               </div>
               
               <div className={styles.cardContent}>
                 {/* Exam Title */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="exam-title" className={styles.fieldLabel}>Tên bài kiểm tra</label>
+                  <label htmlFor="exam-title" className={styles.fieldLabel}>Exam name</label>
                   <input 
                     id="exam-title"
                     type="text" 
                     required 
-                    placeholder="VD: Kiểm tra cuối kỳ I - Môn Toán - Khối 12"
+                    placeholder="e.g. Final Exam I - Math - Grade 12"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className={styles.inputField}
@@ -290,7 +290,7 @@ export default function EditExamPage() {
                 {/* Class & Subject dropdowns in one row */}
                 <div className={styles.grid2Col}>
                   <div className={styles.formGroup}>
-                    <label htmlFor="class-select" className={styles.fieldLabel}>Lớp học</label>
+                    <label htmlFor="class-select" className={styles.fieldLabel}>Class</label>
                     <select 
                       id="class-select"
                       value={selectedClassId}
@@ -299,7 +299,7 @@ export default function EditExamPage() {
                       required
                       disabled={isLocked}
                     >
-                      <option value="">-- Chọn lớp học --</option>
+                      <option value="">-- Select class --</option>
                       {classes.map(cls => (
                         <option key={cls._id} value={cls._id}>{cls.name}</option>
                       ))}
@@ -312,10 +312,10 @@ export default function EditExamPage() {
 
                 {/* Description / Notes */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="exam-desc" className={styles.fieldLabel}>Mô tả (không bắt buộc)</label>
+                  <label htmlFor="exam-desc" className={styles.fieldLabel}>Description (optional)</label>
                   <textarea 
                     id="exam-desc"
-                    placeholder="VD: Bài kiểm tra tập trung vào kiến thức Giải tích và Hình học không gian chương 1-2."
+                    placeholder="e.g. Exam focusing on Calculus and Spatial Geometry chapters 1-2."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className={styles.textareaField}
@@ -327,7 +327,7 @@ export default function EditExamPage() {
                 {/* Exam Date & Time Grid */}
                 <div className={styles.grid2Col}>
                   <div className={styles.formGroup}>
-                    <label htmlFor="exam-date" className={styles.fieldLabel}>Ngày kiểm tra</label>
+                    <label htmlFor="exam-date" className={styles.fieldLabel}>Exam date</label>
                     <input 
                       id="exam-date"
                       type="date" 
@@ -339,7 +339,7 @@ export default function EditExamPage() {
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label htmlFor="start-time" className={styles.fieldLabel}>Giờ bắt đầu</label>
+                    <label htmlFor="start-time" className={styles.fieldLabel}>Start time</label>
                     <input 
                       id="start-time"
                       type="time" 
@@ -353,12 +353,12 @@ export default function EditExamPage() {
               </div>
             </section>
 
-            {/* Card 2: Cấu hình xáo trộn */}
+            {/* Card 2: Shuffle Configuration */}
             <section className={styles.card}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardHeaderTitle}>
                   <Shuffle size={18} className={styles.iconNavy} />
-                  <h2>Tùy chọn xáo trộn</h2>
+                  <h2>Shuffle Options</h2>
                 </div>
               </div>
               
@@ -371,7 +371,7 @@ export default function EditExamPage() {
                     className={styles.checkboxInput}
                     disabled={isLocked}
                   />
-                  <span>Xáo trộn thứ tự câu hỏi</span>
+                  <span>Shuffle question order</span>
                 </label>
 
                 <label className={styles.checkboxLabel}>
@@ -382,7 +382,7 @@ export default function EditExamPage() {
                     className={styles.checkboxInput}
                     disabled={isLocked}
                   />
-                  <span>Xáo trộn các phương án trả lời</span>
+                  <span>Shuffle answer choices</span>
                 </label>
 
                 <label className={styles.checkboxLabel}>
@@ -393,7 +393,7 @@ export default function EditExamPage() {
                     className={styles.checkboxInput}
                     disabled={isLocked}
                   />
-                  <span>Giữ cố định các câu hỏi khó ở cuối</span>
+                  <span>Keep hard questions fixed at the end</span>
                 </label>
               </div>
             </section>
@@ -403,19 +403,19 @@ export default function EditExamPage() {
           {/* RIGHT COLUMN */}
           <div className={styles.rightCol}>
             
-            {/* Card 3: Cấu trúc đề thi */}
+            {/* Card 3: Exam Structure */}
             <section className={styles.card}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardHeaderTitle}>
                   <GraduationCap size={18} className={styles.iconNavy} />
-                  <h2>Cấu trúc đề thi</h2>
+                  <h2>Exam Structure</h2>
                 </div>
               </div>
               
               <div className={styles.cardContent}>
                 {/* Number of questions */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="questions-count" className={styles.fieldLabel}>Số lượng câu hỏi</label>
+                  <label htmlFor="questions-count" className={styles.fieldLabel}>Number of questions</label>
                   <div className={styles.inputWithSuffixWrapper}>
                     <input 
                       id="questions-count"
@@ -427,13 +427,13 @@ export default function EditExamPage() {
                       className={styles.inputField}
                       disabled={isLocked}
                     />
-                    <span className={styles.inputSuffix}>Câu</span>
+                    <span className={styles.inputSuffix}>questions</span>
                   </div>
                 </div>
 
-                {/* Thời gian làm bài */}
+                {/* Exam duration */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="duration" className={styles.fieldLabel}>Thời gian làm bài</label>
+                  <label htmlFor="duration" className={styles.fieldLabel}>Exam duration</label>
                   <div className={styles.inputWithSuffixWrapper}>
                     <input 
                       id="duration"
@@ -445,14 +445,14 @@ export default function EditExamPage() {
                       className={styles.inputField}
                       disabled={isLocked}
                     />
-                    <span className={styles.inputSuffix}>Phút</span>
+                    <span className={styles.inputSuffix}>minutes</span>
                   </div>
                 </div>
 
-                {/* Điểm tổng & Điểm đạt */}
+                {/* Total & Passing Score */}
                 <div className={styles.grid2Col}>
                   <div className={styles.formGroup}>
-                    <label htmlFor="total-score" className={styles.fieldLabel}>Điểm tổng</label>
+                    <label htmlFor="total-score" className={styles.fieldLabel}>Total score</label>
                     <input 
                       id="total-score"
                       type="number" 
@@ -466,7 +466,7 @@ export default function EditExamPage() {
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label htmlFor="passing-score" className={styles.fieldLabel}>Điểm đạt</label>
+                    <label htmlFor="passing-score" className={styles.fieldLabel}>Passing score</label>
                     <input 
                       id="passing-score"
                       type="number" 
@@ -480,9 +480,9 @@ export default function EditExamPage() {
                   </div>
                 </div>
 
-                {/* Số lượng mã đề */}
+                {/* Number of variants */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="versions-count" className={styles.fieldLabel}>Số lượng mã đề cần tạo</label>
+                  <label htmlFor="versions-count" className={styles.fieldLabel}>Number of variants to create</label>
                   <select 
                     id="versions-count"
                     value={numberOfVersions}
@@ -491,19 +491,19 @@ export default function EditExamPage() {
                     disabled={isLocked}
                   >
                     {[2, 3, 4, 5, 6, 8, 10].map(v => (
-                      <option key={v} value={v}>{v} mã đề</option>
+                      <option key={v} value={v}>{v} variants</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Mã đề gốc */}
+                {/* Template code */}
                 <div className={styles.formGroup}>
-                  <label htmlFor="exam-code" className={styles.fieldLabel}>Mã đề gốc</label>
+                  <label htmlFor="exam-code" className={styles.fieldLabel}>Template code</label>
                   <input 
                     id="exam-code"
                     type="text" 
                     required 
-                    placeholder="VD: MATH12-HK1"
+                    placeholder="e.g. MATH12-HK1"
                     value={examCode}
                     onChange={(e) => setExamCode(e.target.value)}
                     className={styles.inputField}
@@ -525,10 +525,10 @@ export default function EditExamPage() {
         {/* ─── STICKY FOOTER ─── */}
         <footer className={styles.stickyFooter}>
           <div className={styles.footerContent}>
-            {/* Left side: status saved indicator - Hiển thị thời gian lưu thực tế */}
+            {/* Left side: status saved indicator */}
             <div className={styles.statusLeft}>
               <span className={styles.statusDot} />
-              <span>Lần cuối lưu: {formatLastSaved()}</span>
+              <span>Last saved: {formatLastSaved()}</span>
             </div>
 
             {/* Right side: buttons */}
@@ -538,7 +538,7 @@ export default function EditExamPage() {
                 onClick={() => navigate(id ? `/exams/${id}` : '/exams')}
                 className={styles.cancelBtn}
               >
-                Hủy bỏ
+                Cancel
               </button>
 
               <button
@@ -547,7 +547,7 @@ export default function EditExamPage() {
                 className={styles.submitBtn}
                 style={isLocked ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
               >
-                {isSubmitLoading ? 'Đang lưu...' : isLocked ? 'Khóa (đã xuất bản)' : 'Lưu thay đổi'}
+                {isSubmitLoading ? 'Saving...' : isLocked ? 'Locked (published)' : 'Save changes'}
               </button>
             </div>
           </div>

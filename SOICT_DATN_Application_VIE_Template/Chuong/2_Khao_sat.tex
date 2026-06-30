@@ -1,35 +1,25 @@
-\documentclass[../DoAn.tex]{subfiles}
+﻿\documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-\section{Tổng quan chương}
-Chương 1 đã giới thiệu bối cảnh thực tiễn, hạn chế của các giải pháp hiện có và định hướng giải pháp của hệ thống Smart Grading. Dựa trên những phân tích đó, Chương 2 trình bày chi tiết kết quả khảo sát hiện trạng và phân tích yêu cầu của hệ thống. Nội dung chương gồm: tổng quan các sản phẩm tương tự và nhu cầu thực tế của người dùng; mô tả tổng quan chức năng của hệ thống thông qua biểu đồ use case tổng quát, biểu đồ phân rã cho từng nhóm chức năng chính và quy trình nghiệp vụ trọng yếu; đặc tả chi tiết cho các use case quan trọng; và cuối cùng là các yêu cầu phi chức năng làm cơ sở cho việc thiết kế và triển khai ở các chương sau.
+Chương này trình bày kết quả khảo sát hiện trạng từ ba nguồn: nhu cầu người dùng, hệ thống chấm thi hiện tại và các ứng dụng tương tự. Trên cơ sở đó, chương mô tả tổng quan chức năng hệ thống thông qua biểu đồ use case, đặc tả chi tiết các use case quan trọng và xác định các yêu cầu phi chức năng làm cơ sở cho thiết kế và triển khai ở các chương sau.
 
 \section{Khảo sát hiện trạng}
 \label{section:2.1}
 
-Để xác định rõ yêu cầu cho hệ thống Smart Grading, đồ án tiến hành khảo sát hiện trạng từ ba nguồn thông tin chính, bao gồm:
-\begin{itemize}
-    \item khảo sát nhu cầu của giáo viên và học sinh tại một số trường phổ thông và đại học;
-    \item khảo sát hệ thống chấm thi đang được sử dụng tại trường;
-    \item khảo sát các ứng dụng tương tự trên thị trường.
-\end{itemize}
+Để xác định rõ yêu cầu cho hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR, đồ án tiến hành khảo sát hiện trạng từ ba nguồn thông tin chính, bao gồm: (i) khảo sát nhu cầu của giáo viên và học sinh tại một số trường phổ thông và đại học; (ii) khảo sát hệ thống chấm thi đang được sử dụng tại trường; và (iii) khảo sát các ứng dụng tương tự trên thị trường.
 
 \noindent\textbf{Khảo sát nhu cầu người dùng.} Qua khảo sát trực tuyến và phỏng vấn sơ bộ khoảng 30 giáo viên và 80 học sinh, có thể nhận thấy các nhu cầu phổ biến như sau: giáo viên mong muốn có công cụ tạo đề thi nhanh từ ngân hàng câu hỏi có sẵn, hỗ trợ sinh nhiều mã đề để hạn chế gian lận, có khả năng chấm bài ngay sau khi kết thúc buổi thi để công bố kết quả sớm; học sinh mong muốn được xem điểm và bài làm của mình một cách minh bạch, có cơ chế gửi phúc khảo rõ ràng khi cho rằng điểm chưa chính xác. Ngoài ra, cả giáo viên và học sinh đều mong muốn hệ thống hỗ trợ thống kê kết quả theo lớp, theo môn, theo chủ đề để phục vụ cho việc đánh giá chất lượng học tập.
 
-\noindent\textbf{Khảo sát hệ thống hiện tại.} Tại các trường được khảo sát, hệ thống chấm thi hiện đang sử dụng chủ yếu thuộc hai loại:
-\begin{itemize}
-    \item chấm thủ công bằng cách đối chiếu phiếu trả lời với đáp án, áp dụng phổ biến tại các trường có quy mô nhỏ;
-    \item chấm bằng máy quét OMR chuyên dụng kết hợp phần mềm đi kèm, áp dụng tại một số trường lớn và các hội đồng thi cấp tỉnh.
-\end{itemize}
+\noindent\textbf{Khảo sát hệ thống hiện tại.} Tại các trường được khảo sát, hệ thống chấm thi hiện đang sử dụng chủ yếu thuộc hai loại: (i) chấm thủ công bằng cách đối chiếu phiếu trả lời với đáp án, áp dụng phổ biến tại các trường có quy mô nhỏ; và (ii) chấm bằng máy quét OMR chuyên dụng kết hợp phần mềm đi kèm, áp dụng tại một số trường lớn và các hội đồng thi cấp tỉnh.
 Hệ thống loại thứ nhất có ưu điểm chi phí thấp nhưng tốn thời gian, dễ sai sót và khó thống kê. Hệ thống loại thứ hai cho tốc độ chấm nhanh và độ chính xác cao, nhưng chi phí đầu tư máy quét lớn, phần mềm thường đi kèm không hỗ trợ tốt các nghiệp vụ quản lý đào tạo và phúc khảo.
 
 \noindent\textbf{Khảo sát ứng dụng tương tự.} Đồ án khảo sát một số giải pháp chấm thi phổ biến hiện nay, gồm: phần mềm thương mại như Remark Office OMR và Gradescope; công cụ mã nguồn mở như OMRChecker; các hệ thống thi trực tuyến như Google Forms, Microsoft Forms và Quizizz. Đặc điểm so sánh giữa các giải pháp được tổng hợp trong Bảng \ref{table:2.1}.
-
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|p{2cm}|}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|p{3cm}|p{2.8cm}|p{2.8cm}|p{2.6cm}|p{1.5cm}|}
 \hline
-\textbf{Tính năng} & \textbf{Remark OMR} & \textbf{Gradescope} & \textbf{OMRChecker} & \textbf{Smart Grading} \\ \hline
+\textbf{Tính năng} & \textbf{Remark OMR} & \textbf{Gradescope} & \textbf{OMRChecker} & \textbf{Hệ thống} \\ \hline
 Chấm OMR tự động & Có & Có & Có & Có \\ \hline
 Tạo nhiều mã đề & Không & Không & Không & Có \\ \hline
 Quản lý lớp, học sinh & Không & Có & Không & Có \\ \hline
@@ -39,411 +29,499 @@ Hỗ trợ tiếng Việt & Không & Không & Một phần & Có \\ \hline
 Tích hợp AI & Không & Có & Không & Có \\ \hline
 Chi phí đầu tư & Cao & Cao & Miễn phí & Miễn phí \\ \hline
 \end{tabular}
+}
 \caption{So sánh tính năng giữa các giải pháp chấm thi hiện có}
 \label{table:2.1}
 \end{table}
-
-Qua bảng so sánh có thể nhận thấy hệ thống Smart Grading được đề xuất trong đồ án có sự kết hợp đầy đủ các tính năng mà các giải pháp hiện có chưa đáp ứng đồng thời, đặc biệt là khả năng tạo nhiều mã đề, quản lý đào tạo tích hợp, hỗ trợ phúc khảo minh bạch, chấm trên di động và hỗ trợ tiếng Việt đầy đủ.
+Qua bảng so sánh có thể nhận thấy hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR được đề xuất trong đồ án có sự kết hợp đầy đủ các tính năng mà các giải pháp hiện có chưa đáp ứng đồng thời, đặc biệt là khả năng tạo nhiều mã đề, quản lý đào tạo tích hợp, hỗ trợ phúc khảo minh bạch, chấm trên di động và hỗ trợ tiếng Việt đầy đủ.
 
 \section{Tổng quan chức năng}
 \label{section:2.2}
 
-Trên cơ sở kết quả khảo sát, hệ thống Smart Grading được đề xuất với các nhóm chức năng chính gồm: quản lý người dùng và đào tạo (trường, lớp, giáo viên, học sinh), quản lý ngân hàng câu hỏi và đề thi, chấm thi bằng nhận dạng OMR, quản lý bài thi và phúc khảo, và báo cáo thống kê. Biểu đồ use case tổng quát mô tả các tác nhân và use case chính của hệ thống như trong Hình \ref{fig:usecase_tongquat}.
+Trên cơ sở kết quả khảo sát, hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR được đề xuất với các nhóm chức năng chính gồm: quản lý người dùng và đào tạo (trường, lớp, giáo viên, học sinh), quản lý ngân hàng câu hỏi và đề thi, chấm thi bằng nhận dạng OMR, quản lý bài thi và phúc khảo, và báo cáo thống kê. Biểu đồ use case tổng quát mô tả các tác nhân và use case chính của hệ thống như trong Hình \ref{fig:usecase_tongquat}.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\textwidth]{Hinhve/UseCaseTongQuat.png}
-    \caption{Biểu đồ use case tổng quát của hệ thống Smart Grading}
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseTongQuat.png}
+    \caption{Biểu đồ use case tổng quát của hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR}
     \label{fig:usecase_tongquat}
 \end{figure}
 
-\noindent\textbf{Tác nhân tham gia hệ thống.} Hệ thống có bốn tác nhân chính:
-\begin{itemize}
-    \item \textit{Quản trị viên hệ thống} (admin): chịu trách nhiệm quản lý toàn bộ trường, tài khoản và cấu hình hệ thống;
-    \item \textit{Quản trị viên trường} (school-admin): quản lý các lớp, giáo viên, học sinh thuộc trường mình phụ trách;
-    \item \textit{Giáo viên} (teacher): thực hiện tạo đề thi, quản lý ngân hàng câu hỏi, chấm bài và xử lý phúc khảo;
-    \item \textit{Học sinh} (student): xem đề thi, xem điểm, gửi yêu cầu phúc khảo và sử dụng trợ lý AI.
-\end{itemize}
+\noindent\textbf{Tác nhân tham gia hệ thống.} Hệ thống có bốn tác nhân chính gồm: (i) \textit{Quản trị viên hệ thống} (admin) chịu trách nhiệm quản lý toàn bộ trường, tài khoản và cấu hình hệ thống; (ii) \textit{Quản trị viên trường} (school-admin) quản lý các lớp, giáo viên, học sinh thuộc trường mình phụ trách; (iii) \textit{Giáo viên} (teacher) thực hiện tạo đề thi, quản lý ngân hàng câu hỏi, chấm bài và xử lý phúc khảo; và (iv) \textit{Học sinh} (student) xem đề thi, xem điểm, gửi yêu cầu phúc khảo và sử dụng trợ lý AI.
 
-\noindent\textbf{Các use case chính.} Hệ thống có 13 use case chính, được phân thành 4 nhóm chức năng lớn và sẽ được phân rã chi tiết ở các mục tiếp theo:
-\begin{itemize}
-    \item \textit{Nhóm quản lý đào tạo:} Quản lý trường học, Quản lý giáo viên, Quản lý học sinh, Đăng ký/Đăng nhập;
-    \item \textit{Nhóm ngân hàng câu hỏi và đề thi:} Tạo câu hỏi/đề thi (có tương tác System), Tạo đề thi và trộn câu cho nhiều đề thi;
-    \item \textit{Nhóm chấm thi và phúc khảo:} Quản lý các bài thi của học sinh, Chấm thi bằng ứng dụng, Tạo đơn phúc khảo, Phản hồi phúc khảo, Xem bài thi và điểm số;
-    \item \textit{Nhóm thống kê:} Tạo báo cáo cho bài kiểm tra (có tương tác System).
-\end{itemize}
+\noindent\textbf{Các use case chính.} Hệ thống có 10 use case chính, được phân thành 3 nhóm chức năng lớn. \textit{Nhóm quản lý đào tạo} gồm Quản lý trường học, Quản lý giáo viên, Quản lý học sinh và Đăng ký/Đăng nhập. \textit{Nhóm ngân hàng câu hỏi và đề thi} gồm Quản lý câu hỏi và Quản lý bài kiểm tra. \textit{Nhóm chấm thi và phúc khảo} gồm Quản lý các bài thi của học sinh, Chấm thi bằng ứng dụng, Phúc khảo bài thi và Xem bài thi và điểm số. Trong đó, use case Phúc khảo bài thi bao trùm toàn bộ quy trình từ phía học sinh (gửi đơn phúc khảo) đến phía giáo viên (phản hồi phúc khảo) nhằm phản ánh đúng bản chất end-to-end của nghiệp vụ này. Các use case này được phân rã chi tiết ở các mục tiếp theo.
 
 \subsection{Biểu đồ use case phân rã Đăng ký/Đăng nhập}
 \label{subsection:2.2.1}
 
-Use case Đăng ký/Đăng nhập bao gồm các use case con:
-\begin{itemize}
-    \item Đăng ký tài khoản;
-    \item Đăng nhập hệ thống;
-    \item Xác thực email;
-    \item Đặt lại mật khẩu;
-    \item Đăng xuất;
-    \item Quản lý phiên truy cập.
-\end{itemize}
+Biểu đồ use case phân rã Đăng ký/Đăng nhập mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Đăng ký/Đăng nhập, được thể hiện trong Hình \ref{fig:usecase_dangnhap}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseDangKyDangNhap.png}
+    \caption{Biểu đồ use case phân rã Đăng ký/Đăng nhập}
+    \label{fig:usecase_dangnhap}
+\end{figure}
+
 Tác nhân chính là tất cả bốn vai trò người dùng.
 
 \subsection{Biểu đồ use case phân rã Quản lý trường học}
 \label{subsection:2.2.2}
 
-Use case Quản lý trường học gồm:
-\begin{itemize}
-    \item Tạo trường mới;
-    \item Cập nhật thông tin trường;
-    \item Xóa trường;
-    \item Xem danh sách trường;
-    \item Cấu hình thang điểm và tham số chấm.
-\end{itemize}
+Biểu đồ use case phân rã Quản lý trường học mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Quản lý trường học, được thể hiện trong Hình \ref{fig:usecase_truonghoc}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseQuanLyTruongHoc.png}
+    \caption{Biểu đồ use case phân rã Quản lý trường học}
+    \label{fig:usecase_truonghoc}
+\end{figure}
+
 Tác nhân chính là Quản trị viên hệ thống.
 
 \subsection{Biểu đồ use case phân rã Quản lý giáo viên}
 \label{subsection:2.2.3}
 
-Use case Quản lý giáo viên gồm:
-\begin{itemize}
-    \item Thêm giáo viên;
-    \item Cập nhật thông tin giáo viên;
-    \item Phân công giáo viên theo môn;
-    \item Vô hiệu hóa tài khoản giáo viên;
-    \item Xem danh sách giáo viên.
-\end{itemize}
+Biểu đồ use case phân rã Quản lý giáo viên mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Quản lý giáo viên, được thể hiện trong Hình \ref{fig:usecase_giaovien}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseQuanLyGiaoVien.png}
+    \caption{Biểu đồ use case phân rã Quản lý giáo viên}
+    \label{fig:usecase_giaovien}
+\end{figure}
+
 Tác nhân chính là Quản trị viên hệ thống và Quản trị viên trường.
 
 \subsection{Biểu đồ use case phân rã Quản lý học sinh}
 \label{subsection:2.2.4}
 
-Use case Quản lý học sinh gồm:
-\begin{itemize}
-    \item Thêm học sinh vào lớp;
-    \item Cập nhật thông tin học sinh;
-    \item Chuyển lớp cho học sinh;
-    \item Xóa học sinh khỏi lớp;
-    \item Xem danh sách học sinh theo lớp.
-\end{itemize}
+Biểu đồ use case phân rã Quản lý học sinh mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Quản lý học sinh, được thể hiện trong Hình \ref{fig:usecase_hocsinh}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseQuanLyHocSinh.png}
+    \caption{Biểu đồ use case phân rã Quản lý học sinh}
+    \label{fig:usecase_hocsinh}
+\end{figure}
+
 Tác nhân chính là Quản trị viên trường và Giáo viên.
 
-\subsection{Biểu đồ use case phân rã Tạo câu hỏi, đề thi}
+\subsection{Biểu đồ use case phân rã Quản lý câu hỏi}
 \label{subsection:2.2.5}
 
-Use case Tạo câu hỏi và đề thi có sự tương tác của System, gồm:
-\begin{itemize}
-    \item Tạo câu hỏi thủ công;
-    \item Sinh câu hỏi bằng AI;
-    \item Phê duyệt câu hỏi;
-    \item Nhập khẩu câu hỏi từ file;
-    \item Tạo bộ đề thi;
-    \item Cấu hình tham số đề thi.
-\end{itemize}
+Biểu đồ use case phân rã Quản lý câu hỏi mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Quản lý câu hỏi, được thể hiện trong Hình \ref{fig:usecase_cauhoi}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseQuanLyCauHoi.png}
+    \caption{Biểu đồ use case phân rã Quản lý câu hỏi}
+    \label{fig:usecase_cauhoi}
+\end{figure}
+
 Tác nhân chính là Giáo viên, có sự hỗ trợ của System thông qua các dịch vụ AI.
 
-\subsection{Biểu đồ use case phân rã Tạo đề thi, trộn các câu cho nhiều đề thi}
+\subsection{Biểu đồ use case phân rã Quản lý bài kiểm tra}
 \label{subsection:2.2.6}
 
-Use case Tạo đề thi và trộn câu cho nhiều đề thi gồm:
-\begin{itemize}
-    \item Chọn câu hỏi từ ngân hàng;
-    \item Cấu hình số lượng phiên bản;
-    \item Thiết lập cấu hình trộn (câu hỏi, đáp án);
-    \item Sinh phiếu OMR cho mỗi phiên bản;
-    \item Phát hành đề thi;
-    \item Xuất bản đề thi sang LaTeX/PDF.
-\end{itemize}
+Biểu đồ use case phân rã Quản lý bài kiểm tra mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Quản lý bài kiểm tra, được thể hiện trong Hình \ref{fig:usecase_baikiemtra}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseQuanLyBaiKiemTra.png}
+    \caption{Biểu đồ use case phân rã Quản lý bài kiểm tra}
+    \label{fig:usecase_baikiemtra}
+\end{figure}
+
 Tác nhân chính là Giáo viên.
 
 \subsection{Biểu đồ use case phân rã Quản lý các bài thi của học sinh}
 \label{subsection:2.2.7}
 
-Use case Quản lý các bài thi của học sinh gồm:
-\begin{itemize}
-    \item Ghi nhận bài nộp từ thiết bị di động;
-    \item Xem danh sách bài nộp;
-    \item Chỉnh sửa thủ công kết quả chấm;
-    \item Phê duyệt kết quả bài làm;
-    \item Xóa bài nộp.
-\end{itemize}
+Biểu đồ use case phân rã Quản lý các bài thi của học sinh mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Quản lý các bài thi của học sinh, được thể hiện trong Hình \ref{fig:usecase_baithi_hocsinh}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseQuanLyBaiThiHocSinh.png}
+    \caption{Biểu đồ use case phân rã Quản lý các bài thi của học sinh}
+    \label{fig:usecase_baithi_hocsinh}
+\end{figure}
+
 Tác nhân chính là Giáo viên.
 
 \subsection{Biểu đồ use case phân rã Chấm thi bằng ứng dụng}
 \label{subsection:2.2.8}
 
-Use case Chấm thi bằng ứng dụng gồm:
-\begin{itemize}
-    \item Chụp ảnh phiếu trả lời bằng camera;
-    \item Tiền xử lý ảnh (làm phẳng, cắt, nhị phân hóa);
-    \item Nhận dạng mã đề và mã học sinh;
-    \item Nhận dạng các lựa chọn được tô;
-    \item Đối chiếu đáp án và tính điểm;
-    \item Đồng bộ kết quả lên server.
-\end{itemize}
+Biểu đồ use case phân rã Chấm thi bằng ứng dụng mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Chấm thi bằng ứng dụng, được thể hiện trong Hình \ref{fig:usecase_chamthi}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseChamThiBangUngDung.png}
+    \caption{Biểu đồ use case phân rã Chấm thi bằng ứng dụng}
+    \label{fig:usecase_chamthi}
+\end{figure}
+
 Tác nhân chính là Giáo viên thông qua thiết bị di động.
 
-\subsection{Biểu đồ use case phân rã Tạo đơn phúc khảo}
+\subsection{Biểu đồ use case phân rã Phúc khảo bài thi}
 \label{subsection:2.2.9}
 
-Use case Tạo đơn phúc khảo gồm:
-\begin{itemize}
-    \item Chọn bài thi cần phúc khảo;
-    \item Chọn câu hỏi cần phúc khảo;
-    \item Nhập lý do phúc khảo;
-    \item Đính kèm hình ảnh bằng chứng (nếu có);
-    \item Gửi đơn phúc khảo;
-    \item Theo dõi trạng thái đơn.
-\end{itemize}
-Tác nhân chính là Học sinh.
+Biểu đồ use case phân rã Phúc khảo bài thi mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Phúc khảo bài thi, được thể hiện trong Hình \ref{fig:usecase_phuckhao}.
 
-\subsection{Biểu đồ use case phân rã Phản hồi phúc khảo}
-\label{subsection:2.2.10}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCasePhucKhaoBaiCham.png}
+    \caption{Biểu đồ use case phân rã Phúc khảo bài thi}
+    \label{fig:usecase_phuckhao}
+\end{figure}
 
-Use case Phản hồi phúc khảo gồm:
-\begin{itemize}
-    \item Tiếp nhận đơn phúc khảo;
-    \item Xem chi tiết bài làm của học sinh;
-    \item So sánh với đáp án;
-    \item Phê duyệt hoặc từ chối;
-    \item Nhập phản hồi cho học sinh;
-    \item Cập nhật lại điểm (nếu phê duyệt).
-\end{itemize}
-Tác nhân chính là Giáo viên.
+Tác nhân chính là Học sinh (phía gửi đơn) và Giáo viên (phía phản hồi).
 
 \subsection{Biểu đồ use case phân rã Xem bài thi và điểm số}
-\label{subsection:2.2.11}
+\label{subsection:2.2.10}
 
-Use case Xem bài thi và điểm số gồm:
-\begin{itemize}
-    \item Xem danh sách bài thi;
-    \item Xem điểm tổng và điểm từng câu;
-    \item Xem ảnh phiếu đã chấm;
-    \item Xem đáp án đúng;
-    \item Tải về báo cáo điểm cá nhân.
-\end{itemize}
+Biểu đồ use case phân rã Xem bài thi và điểm số mô tả chi tiết các chức năng con và mối quan hệ giữa các tác nhân với use case Xem bài thi và điểm số, được thể hiện trong Hình \ref{fig:usecase_xembaithi}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Hinhve/UseCaseXemBaiThiVaDiemSo.png}
+    \caption{Biểu đồ use case phân rã Xem bài thi và điểm số}
+    \label{fig:usecase_xembaithi}
+\end{figure}
+
 Tác nhân chính là Học sinh.
-
-\subsection{Biểu đồ use case phân rã Tạo báo cáo cho bài kiểm tra}
-\label{subsection:2.2.12}
-
-Use case Tạo báo cáo cho bài kiểm tra có sự tương tác của System, gồm:
-\begin{itemize}
-    \item Chọn bài kiểm tra cần báo cáo;
-    \item Yêu cầu hệ thống tổng hợp dữ liệu;
-    \item System phân tích thống kê (phổ điểm, độ khó câu hỏi, độ phân biệt);
-    \item Sinh báo cáo dạng biểu đồ và bảng số liệu;
-    \item Xuất báo cáo ra PDF/Excel.
-\end{itemize}
-Tác nhân chính là Giáo viên, có sự hỗ trợ của System thông qua các dịch vụ phân tích.
 
 \subsection{Quy trình nghiệp vụ}
 \label{subsection:2.2.13}
 
-Hệ thống Smart Grading có một số quy trình nghiệp vụ quan trọng kết hợp nhiều use case với nhau. Quy trình nghiệp vụ "Tổ chức kỳ thi và chấm bài" được mô tả tổng quan như sau: đầu tiên giáo viên tạo đề thi từ ngân hàng câu hỏi, hệ thống tự động trộn đề thành nhiều phiên bản và sinh phiếu OMR tương ứng; giáo viên in phiếu và phát cho học sinh làm bài; sau khi thu phiếu, giáo viên sử dụng ứng dụng di động để chấm từng phiếu; kết quả chấm được đồng bộ về server và công bố cho học sinh; học sinh có thể xem điểm và gửi đơn phúc khảo nếu cần; giáo viên tiếp nhận và phản hồi phúc khảo; cuối cùng giáo viên tạo báo cáo thống kê cho bài kiểm tra.
+Hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR có một số quy trình nghiệp vụ quan trọng kết hợp nhiều use case với nhau. Quy trình nghiệp vụ "Tổ chức kỳ thi và chấm bài" được mô tả tổng quan như sau: đầu tiên giáo viên quản lý câu hỏi trong ngân hàng và tạo bài kiểm tra, hệ thống tự động trộn đề thành nhiều phiên bản và sinh phiếu OMR tương ứng; giáo viên in phiếu và phát cho học sinh làm bài; sau khi thu phiếu, giáo viên sử dụng ứng dụng di động để chấm từng phiếu; kết quả chấm được đồng bộ về server và công bố cho học sinh; học sinh có thể xem điểm và gửi đơn phúc tra nếu cần; giáo viên tiếp nhận và phản hồi phúc tra.
 
 Quy trình nghiệp vụ "Quản lý đào tạo" gồm: admin tạo trường học và tài khoản quản trị trường; quản trị trường tạo năm học, khối lớp, môn học và tài khoản giáo viên; giáo viên được phân công phụ trách lớp và môn học, tạo lớp và thêm học sinh vào lớp; học sinh được cấp tài khoản và đăng nhập vào hệ thống để xem thông tin cá nhân, kết quả học tập.
 
-Quy trình nghiệp vụ "Phúc khảo" gồm: học sinh xem bài thi và phát hiện điểm chưa chính xác, gửi đơn phúc khảo kèm lý do và bằng chứng; giáo viên nhận thông báo, mở chi tiết bài làm của học sinh, so sánh với đáp án; giáo viên phê duyệt hoặc từ chối đơn phúc khảo kèm phản hồi; nếu phê duyệt, điểm của học sinh được cập nhật lại và thông báo kết quả được gửi cho học sinh.
+Quy trình nghiệp vụ "Phúc tra" gồm: học sinh xem bài thi và phát hiện điểm chưa chính xác, gửi đơn phúc tra kèm lý do và bằng chứng; giáo viên nhận thông báo, mở chi tiết bài làm của học sinh, so sánh với đáp án; giáo viên phê duyệt hoặc từ chối đơn phúc tra kèm phản hồi; nếu phê duyệt, điểm của học sinh được cập nhật lại và thông báo kết quả được gửi cho học sinh.
 
 \section{Đặc tả chức năng}
 \label{section:2.3}
 
-Căn cứ vào tầm quan trọng và độ phức tạp, đồ án lựa chọn đặc tả chi tiết cho 6 use case chính gồm:
-\begin{itemize}
-    \item Đăng ký/Đăng nhập;
-    \item Tạo đề thi, trộn câu cho nhiều đề thi;
-    \item Chấm thi bằng ứng dụng;
-    \item Tạo đơn phúc khảo;
-    \item Phản hồi phúc khảo;
-    \item Tạo báo cáo cho bài kiểm tra.
-\end{itemize}
-Mỗi đặc tả gồm tên use case, luồng sự kiện chính, luồng sự kiện phát sinh, tiền điều kiện và hậu điều kiện.
+Căn cứ vào tầm quan trọng và độ phức tạp, đồ án lựa chọn đặc tả chi tiết cho 6 use case chính gồm: Quản lý giáo viên, Quản lý câu hỏi, Quản lý bài kiểm tra, Chấm thi bằng ứng dụng, Phúc khảo bài thi và Quản lý các bài thi của học sinh. Mỗi đặc tả gồm mã use case, tên use case, tác nhân, điều kiện trước, luồng thực thi chính, luồng thực thi mở rộng và điều kiện kết thúc. Đặc tả đầy đủ cho các use case còn lại được trình bày trong Phụ lục B. Trong đó, use case Phúc khảo bài thi được trình bày gộp cả phía học sinh (gửi đơn) và phía giáo viên (phản hồi) nhằm thể hiện đúng bản chất end-to-end của nghiệp vụ phúc khảo.
 
-\subsection{Đặc tả use case Đăng ký/Đăng nhập}
+\subsection{Đặc tả use case Quản lý giáo viên}
 \label{subsection:2.3.1}
-
-\noindent\textbf{Tên use case:} Đăng ký/Đăng nhập.
-
-\noindent\textbf{Tiền điều kiện:} Người dùng truy cập được vào ứng dụng web hoặc ứng dụng di động Smart Grading.
-
-\noindent\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Người dùng truy cập trang đăng nhập và chọn chức năng "Đăng ký" nếu chưa có tài khoản.
-    \item Hệ thống hiển thị form đăng ký yêu cầu nhập họ tên, email, mật khẩu và xác nhận mật khẩu.
-    \item Người dùng nhập thông tin và gửi yêu cầu đăng ký.
-    \item Hệ thống kiểm tra tính hợp lệ của email, độ mạnh của mật khẩu và sự trùng lặp email trong cơ sở dữ liệu.
-    \item Hệ thống tạo tài khoản mới với trạng thái chưa xác thực email, gửi email xác thực chứa mã token đến email của người dùng.
-    \item Người dùng truy cập email, nhấp vào liên kết xác thực.
-    \item Hệ thống đánh dấu tài khoản đã xác thực email và hiển thị thông báo xác thực thành công.
-    \item Người dùng quay lại trang đăng nhập, nhập email và mật khẩu để đăng nhập.
-    \item Hệ thống kiểm tra thông tin đăng nhập, cấp access token và refresh token cho người dùng.
-    \item Hệ thống chuyển hướng người dùng đến trang dashboard tương ứng với vai trò của họ.
-\end{enumerate}
-
-\noindent\textbf{Luồng sự kiện phát sinh:}
-\begin{itemize}
-    \item Tại bước 4, nếu email đã tồn tại: hệ thống thông báo email đã được đăng ký và đề xuất chức năng đăng nhập hoặc đặt lại mật khẩu.
-    \item Tại bước 4, nếu mật khẩu không đủ mạnh: hệ thống yêu cầu người dùng nhập lại mật khẩu theo yêu cầu bảo mật.
-    \item Tại bước 7, nếu liên kết xác thực đã hết hạn: hệ thống cho phép gửi lại email xác thực mới.
-    \item Tại bước 9, nếu thông tin đăng nhập sai: hệ thống thông báo sai thông tin và cho phép thử lại tối đa 5 lần trước khi khóa tài khoản tạm thời.
-\end{itemize}
-
-\noindent\textbf{Hậu điều kiện:} Nếu thành công, người dùng được đăng nhập vào hệ thống và có quyền truy cập các chức năng tương ứng với vai trò. Nếu thất bại, trạng thái hệ thống không thay đổi.
-
-\subsection{Đặc tả use case Tạo đề thi, trộn các câu cho nhiều đề thi}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC003 \\ \hline
+\textbf{Tên use case} & Quản lý giáo viên \\ \hline
+\textbf{Tác nhân} & Quản trị viên hệ thống (admin), Quản trị viên trường (school-admin) \\ \hline
+\textbf{Điều kiện trước} & Quản trị viên đã đăng nhập vào hệ thống với vai trò phù hợp. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý giáo viên}
+\label{table:2.3.1_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Quản trị viên & Truy cập chức năng "Quản lý giáo viên" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách giáo viên hiện có kèm các điều khiển tìm kiếm, lọc theo môn và trạng thái. \\ \hline
+3 & Quản trị viên & Chọn chức năng "Thêm giáo viên mới". \\ \hline
+4 & Hệ thống & Hiển thị form yêu cầu nhập họ tên, email, số điện thoại, môn phụ trách và các thông tin liên quan. \\ \hline
+5 & Quản trị viên & Nhập thông tin giáo viên và nhấn nút "Lưu". \\ \hline
+6 & Hệ thống & Kiểm tra tính hợp lệ, kiểm tra email trùng lặp và tạo tài khoản giáo viên với trạng thái "chưa kích hoạt". \\ \hline
+7 & Hệ thống & Gửi email kích hoạt tài khoản cho giáo viên và hiển thị thông báo thành công trên giao diện. \\ \hline
+8 & Quản trị viên & Chọn một giáo viên trong danh sách để cập nhật thông tin hoặc vô hiệu hóa tài khoản. \\ \hline
+9 & Hệ thống & Cập nhật thông tin giáo viên tương ứng và ghi nhận nhật ký thao tác vào cơ sở dữ liệu. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Quản lý giáo viên}
+\label{table:2.3.1_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+6a & Hệ thống & Thông báo lỗi: Email đã được sử dụng. Vui lòng nhập email khác. \\ \hline
+6b & Hệ thống & Thông báo lỗi: Vui lòng nhập đầy đủ các trường bắt buộc (họ tên, email, môn phụ trách). \\ \hline
+9a & Hệ thống & Thông báo cảnh báo: Giáo viên đang phụ trách lớp học. Bạn có chắc chắn muốn vô hiệu hóa tài khoản? \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Quản lý giáo viên}
+\label{table:2.3.1_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, tài khoản giáo viên được tạo hoặc cập nhật trong hệ thống, email kích hoạt đã được gửi. Nếu thất bại, trạng thái danh sách giáo viên không thay đổi và giáo viên chưa được tạo. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý giáo viên}
+\label{table:2.3.1_post}
+\end{table}
+\subsection{Đặc tả use case Quản lý câu hỏi}
 \label{subsection:2.3.2}
-
-\noindent\textbf{Tên use case:} Tạo đề thi, trộn các câu cho nhiều đề thi.
-
-\noindent\textbf{Tiền điều kiện:} Giáo viên đã đăng nhập vào hệ thống, đã có ngân hàng câu hỏi thuộc môn học tương ứng.
-
-\noindent\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Giáo viên chọn chức năng "Tạo đề thi" trên giao diện web.
-    \item Hệ thống hiển thị form tạo đề thi với các trường: tiêu đề, mô tả, lớp áp dụng, môn học, thời gian làm bài, tổng điểm, số lượng phiên bản cần tạo.
-    \item Giáo viên nhập thông tin chung và lưu bản nháp.
-    \item Giáo viên chọn câu hỏi từ ngân hàng câu hỏi theo chủ đề, độ khó hoặc theo danh sách đã chuẩn bị trước.
-    \item Giáo viên cấu hình tham số trộn đề: có trộn thứ tự câu hỏi hay không, có trộn thứ tự đáp án hay không, số lượng phiên bản cần tạo (tối đa 50).
-    \item Giáo viên nhấn nút "Sinh đề thi" để yêu cầu hệ thống tạo các phiên bản đề.
-    \item Hệ thống tạo các phiên bản đề thi bằng cách hoán vị câu hỏi và đáp án theo cấu hình, đảm bảo đáp án đúng được cập nhật tương ứng cho từng phiên bản.
-    \item Hệ thống sinh mã nguồn LaTeX sử dụng gói AMC cho từng phiên bản đề, biên dịch sang PDF và tải lên dịch vụ lưu trữ đám mây.
-    \item Hệ thống sinh phiếu trả lời OMR kèm tọa độ nhận dạng cho từng phiên bản, lưu thông tin tọa độ vào cơ sở dữ liệu.
-    \item Giáo viên xem lại danh sách các phiên bản đề đã tạo, tải về file PDF đề thi và phiếu trả lời.
-    \item Giáo viên nhấn nút "Phát hành" để công bố đề thi cho học sinh.
-    \item Hệ thống gửi thông báo đến học sinh thuộc các lớp áp dụng và cập nhật trạng thái đề thi thành "đã phát hành".
-\end{enumerate}
-
-\noindent\textbf{Luồng sự kiện phát sinh:}
-\begin{itemize}
-    \item Tại bước 3, nếu thiếu thông tin bắt buộc: hệ thống yêu cầu giáo viên bổ sung.
-    \item Tại bước 4, nếu ngân hàng câu hỏi không đủ số lượng cần thiết: hệ thống cảnh báo và đề xuất giảm số lượng phiên bản.
-    \item Tại bước 7, nếu có lỗi khi trộn đề: hệ thống thông báo và giữ nguyên bản nháp.
-    \item Tại bước 8, nếu biên dịch LaTeX thất bại: hệ thống ghi nhận log lỗi và cho phép giáo viên thử lại.
-\end{itemize}
-
-\noindent\textbf{Hậu điều kiện:} Nếu thành công, đề thi được tạo với nhiều phiên bản, phiếu OMR tương ứng được sinh và học sinh nhận được thông báo. Nếu thất bại, trạng thái đề thi giữ nguyên ở bản nháp.
-
-\subsection{Đặc tả use case Chấm thi bằng ứng dụng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC005 \\ \hline
+\textbf{Tên use case} & Quản lý câu hỏi \\ \hline
+\textbf{Tác nhân} & Giáo viên (teacher); hỗ trợ bởi System (dịch vụ AI) \\ \hline
+\textbf{Điều kiện trước} & Giáo viên đã đăng nhập vào hệ thống và có quyền quản lý ngân hàng câu hỏi. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý câu hỏi}
+\label{table:2.3.2_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Giáo viên & Truy cập chức năng "Ngân hàng câu hỏi" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách câu hỏi hiện có kèm các điều khiển tìm kiếm, lọc theo môn, chủ đề, độ khó. \\ \hline
+3 & Giáo viên & Chọn "Tạo câu hỏi mới" và chọn hình thức: tạo thủ công, sinh bằng AI hoặc nhập khẩu từ file. \\ \hline
+4 & Giáo viên & Đối với tạo thủ công: nhập nội dung, đáp án, mức độ khó, chủ đề, môn học trong form soạn thảo. \\ \hline
+5 & Giáo viên & Đối với sinh bằng AI: nhập chủ đề hoặc tài liệu tham khảo; nhấn "Sinh câu hỏi". \\ \hline
+6 & Hệ thống & Đối với sinh bằng AI: gọi dịch vụ AI để sinh danh sách câu hỏi gợi ý và hiển thị cho giáo viên. \\ \hline
+7 & Giáo viên & Đối với nhập khẩu: tải lên file theo định dạng hỗ trợ (Excel/CSV). \\ \hline
+8 & Hệ thống & Đối với nhập khẩu: đọc file và tạo câu hỏi hàng loạt, hiển thị danh sách để giáo viên kiểm tra. \\ \hline
+9 & Giáo viên & Kiểm tra, chỉnh sửa nội dung câu hỏi và nhấn nút "Lưu". \\ \hline
+10 & Hệ thống & Kiểm tra tính hợp lệ (đủ đáp án, đáp án đúng được chọn) và lưu câu hỏi vào ngân hàng. \\ \hline
+11 & Giáo viên & Chọn một câu hỏi bất kỳ để cập nhật hoặc xóa. \\ \hline
+12 & Hệ thống & Cập nhật hoặc xóa câu hỏi tương ứng; cảnh báo nếu câu hỏi đang được sử dụng trong đề thi. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Quản lý câu hỏi}
+\label{table:2.3.2_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+6a & Hệ thống & Thông báo lỗi: Dịch vụ AI gặp sự cố. Vui lòng thử lại hoặc chuyển sang tạo câu hỏi thủ công. \\ \hline
+8a & Hệ thống & Thông báo lỗi: File không đúng định dạng. Vui lòng kiểm tra lại và tải lại. \\ \hline
+10a & Hệ thống & Thông báo lỗi: Câu hỏi thiếu đáp án đúng. Vui lòng bổ sung trước khi lưu. \\ \hline
+12a & Hệ thống & Thông báo cảnh báo: Câu hỏi đang được sử dụng trong đề thi. Bạn có chắc chắn muốn xóa? \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Quản lý câu hỏi}
+\label{table:2.3.2_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, ngân hàng câu hỏi được cập nhật với câu hỏi mới hoặc thay đổi tương ứng. Nếu thất bại, trạng thái ngân hàng câu hỏi không thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý câu hỏi}
+\label{table:2.3.2_post}
+\end{table}
+\subsection{Đặc tả use case Quản lý bài kiểm tra}
 \label{subsection:2.3.3}
-
-\noindent\textbf{Tên use case:} Chấm thi bằng ứng dụng.
-
-\noindent\textbf{Tiền điều kiện:} Giáo viên đã đăng nhập trên ứng dụng di động, có bài thi đã được phát hành và phiếu OMR tương ứng.
-
-\noindent\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Giáo viên mở ứng dụng di động Smart Grading và chọn chức năng "Quét phiếu".
-    \item Ứng dụng yêu cầu quyền truy cập camera và hiển thị giao diện chụp ảnh.
-    \item Giáo viên đặt phiếu trả lời trên bề mặt phẳng, căn chỉnh vào khung hình và chụp ảnh.
-    \item Ứng dụng tải thông tin mẫu OMR tương ứng với bài thi từ server.
-    \item Ứng dụng thực hiện tiền xử lý ảnh: chuyển ảnh sang thang xám, làm mờ Gaussian, nhị phân hóa bằng phương pháp Otsu, phát hiện và chỉnh nghiêng phiếu, cắt vùng phiếu.
-    \item Ứng dụng phát hiện các ô trả lời bằng cách so sánh vị trí với tọa độ đã lưu trong mẫu OMR.
-    \item Ứng dụng đánh giá mức độ tô của từng ô, xác định ô được chọn dựa trên ngưỡng diện tích tô, phát hiện lỗi tô nhầm (nhiều ô trong cùng một câu) hoặc tô nhẹ.
-    \item Ứng dụng nhận dạng mã đề và mã số sinh viên từ vùng đầu phiếu.
-    \item Ứng dụng đối chiếu câu trả lời của học sinh với đáp án của phiên bản đề tương ứng, tính điểm cho từng câu và tổng điểm.
-    \item Ứng dụng hiển thị kết quả chấm cho giáo viên kèm ảnh phiếu đã được đánh dấu.
-    \item Giáo viên kiểm tra và có thể chỉnh sửa thủ công các câu bị nhận dạng sai hoặc đánh dấu là không hợp lệ.
-    \item Giáo viên nhấn nút "Lưu kết quả" để đồng bộ kết quả lên server.
-\end{enumerate}
-
-\noindent\textbf{Luồng sự kiện phát sinh:}
-\begin{itemize}
-    \item Tại bước 5, nếu ảnh chụp mờ hoặc nghiêng quá nhiều: ứng dụng yêu cầu giáo viên chụp lại.
-    \item Tại bước 8, nếu không nhận dạng được mã đề: ứng dụng cho phép giáo viên chọn thủ công mã đề.
-    \item Tại bước 8, nếu phát hiện câu tô nhầm hoặc tô nhẹ: ứng dụng đánh dấu cảnh báo và yêu cầu giáo viên xác nhận.
-    \item Tại bước 13, nếu mất kết nối mạng: ứng dụng lưu kết quả cục bộ và tự động đồng bộ khi có kết nối.
-\end{itemize}
-
-\noindent\textbf{Hậu điều kiện:} Nếu thành công, bài làm của học sinh được lưu trên server với điểm số đã tính, học sinh có thể xem điểm sau khi giáo viên phát hành kết quả. Nếu thất bại, ứng dụng giữ kết quả ở trạng thái chờ xử lý.
-
-\subsection{Đặc tả use case Tạo đơn phúc khảo}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC006 \\ \hline
+\textbf{Tên use case} & Quản lý bài kiểm tra \\ \hline
+\textbf{Tác nhân} & Giáo viên (teacher) \\ \hline
+\textbf{Điều kiện trước} & Giáo viên đã đăng nhập vào hệ thống và đã có ngân hàng câu hỏi thuộc môn học tương ứng. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý bài kiểm tra}
+\label{table:2.3.3_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Giáo viên & Truy cập chức năng "Quản lý bài kiểm tra" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách bài kiểm tra hiện có kèm các điều khiển lọc theo lớp, môn, trạng thái. \\ \hline
+3 & Giáo viên & Chọn "Tạo bài kiểm tra mới". \\ \hline
+4 & Hệ thống & Hiển thị form tạo bài kiểm tra với các trường: tiêu đề, mô tả, lớp áp dụng, môn học, thời gian làm bài, tổng điểm, số lượng phiên bản cần tạo. \\ \hline
+5 & Giáo viên & Nhập thông tin chung và chọn câu hỏi từ ngân hàng câu hỏi theo chủ đề hoặc độ khó. \\ \hline
+6 & Giáo viên & Cấu hình tham số trộn đề: trộn thứ tự câu hỏi (Có/Không), trộn thứ tự đáp án (Có/Không), số lượng phiên bản cần tạo. \\ \hline
+7 & Giáo viên & Nhấn nút "Sinh đề thi" để yêu cầu hệ thống tạo các phiên bản đề. \\ \hline
+8 & Hệ thống & Tạo các phiên bản đề thi bằng cách hoán vị câu hỏi và đáp án theo cấu hình, đảm bảo đáp án đúng được cập nhật tương ứng. \\ \hline
+9 & Hệ thống & Sinh mã nguồn LaTeX sử dụng gói AMC cho từng phiên bản đề, biên dịch sang PDF và tải lên dịch vụ lưu trữ đám mây. \\ \hline
+10 & Hệ thống & Sinh phiếu trả lời OMR kèm tọa độ nhận dạng cho từng phiên bản, lưu thông tin tọa độ vào cơ sở dữ liệu. \\ \hline
+11 & Giáo viên & Xem lại danh sách các phiên bản đề đã tạo, tải về file PDF đề thi và phiếu trả lời. \\ \hline
+12 & Giáo viên & Nhấn nút "Phát hành" để công bố bài kiểm tra cho học sinh. \\ \hline
+13 & Hệ thống & Gửi thông báo đến học sinh thuộc các lớp áp dụng và cập nhật trạng thái bài kiểm tra thành "đã phát hành". \\ \hline
+14 & Giáo viên & Chọn một bài kiểm tra để cập nhật thông tin hoặc xóa. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Quản lý bài kiểm tra}
+\label{table:2.3.3_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+5a & Hệ thống & Thông báo lỗi: Thiếu thông tin bắt buộc. Vui lòng bổ sung tiêu đề, môn học và số lượng phiên bản. \\ \hline
+5b & Hệ thống & Thông báo cảnh báo: Ngân hàng câu hỏi không đủ số lượng cần thiết. Đề xuất giảm số lượng phiên bản hoặc bổ sung câu hỏi. \\ \hline
+8a & Hệ thống & Thông báo lỗi: Có lỗi khi trộn đề. Hệ thống giữ nguyên bản nháp. Vui lòng thử lại. \\ \hline
+9a & Hệ thống & Thông báo lỗi: Biên dịch LaTeX thất bại. Hệ thống ghi nhận log lỗi và cho phép giáo viên thử lại. \\ \hline
+14a & Hệ thống & Thông báo cảnh báo: Bài kiểm tra đã có bài làm của học sinh. Bạn có chắc chắn muốn xóa? \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Quản lý bài kiểm tra}
+\label{table:2.3.3_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, bài kiểm tra được tạo với nhiều phiên bản, phiếu OMR tương ứng được sinh và học sinh nhận được thông báo. Nếu thất bại, trạng thái bài kiểm tra giữ nguyên. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý bài kiểm tra}
+\label{table:2.3.3_post}
+\end{table}
+\subsection{Đặc tả use case Chấm thi bằng ứng dụng}
 \label{subsection:2.3.4}
-
-\noindent\textbf{Tên use case:} Tạo đơn phúc khảo.
-
-\noindent\textbf{Tiền điều kiện:} Học sinh đã đăng nhập vào hệ thống, đã có kết quả bài thi được công bố và còn trong thời hạn phúc khảo.
-
-\noindent\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Học sinh truy cập chức năng "Bài thi của tôi" và chọn bài thi muốn phúc khảo.
-    \item Hệ thống hiển thị chi tiết bài thi gồm: điểm tổng, điểm từng câu, ảnh phiếu đã chấm và đáp án đúng.
-    \item Học sinh chọn chức năng "Tạo đơn phúc khảo" và chọn một hoặc nhiều câu cần phúc khảo.
-    \item Hệ thống hiển thị form yêu cầu nhập lý do phúc khảo cho từng câu, cho phép đính kèm hình ảnh minh chứng (nếu có).
-    \item Học sinh nhập lý do, đính kèm bằng chứng (nếu có) và nhấn nút "Gửi đơn".
-    \item Hệ thống kiểm tra thời hạn phúc khảo và tính hợp lệ của thông tin.
-    \item Hệ thống tạo đơn phúc khảo mới với trạng thái "đang chờ", gửi thông báo cho giáo viên phụ trách.
-    \item Hệ thống gửi thông báo xác nhận cho học sinh và hiển thị trạng thái đơn phúc khảo trong danh sách "Đơn phúc khảo của tôi".
-\end{enumerate}
-
-\noindent\textbf{Luồng sự kiện phát sinh:}
-\begin{itemize}
-    \item Tại bước 6, nếu hết thời hạn phúc khảo: hệ thống từ chối và thông báo thời hạn đã kết thúc.
-    \item Tại bước 6, nếu học sinh đã gửi đơn cho cùng một câu: hệ thống từ chối và đề xuất xem trạng thái đơn cũ.
-    \item Tại bước 4, nếu lý do phúc khảo quá ngắn: hệ thống yêu cầu nhập chi tiết hơn.
-\end{itemize}
-
-\noindent\textbf{Hậu điều kiện:} Nếu thành công, đơn phúc khảo được tạo và ở trạng thái "đang chờ", giáo viên nhận được thông báo để xử lý. Nếu thất bại, trạng thái các đơn cũ không thay đổi.
-
-\subsection{Đặc tả use case Phản hồi phúc khảo}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC008 \\ \hline
+\textbf{Tên use case} & Chấm thi bằng ứng dụng \\ \hline
+\textbf{Tác nhân} & Giáo viên (teacher), thông qua thiết bị di động \\ \hline
+\textbf{Điều kiện trước} & Giáo viên đã đăng nhập trên ứng dụng di động, có bài thi đã được phát hành và phiếu OMR tương ứng. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Chấm thi bằng ứng dụng}
+\label{table:2.3.4_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Giáo viên & Mở ứng dụng di động Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR và chọn chức năng "Quét phiếu". \\ \hline
+2 & Ứng dụng & Yêu cầu quyền truy cập camera và hiển thị giao diện chụp ảnh. \\ \hline
+3 & Giáo viên & Đặt phiếu trả lời trên bề mặt phẳng, căn chỉnh vào khung hình và chụp ảnh. \\ \hline
+4 & Ứng dụng & Tải thông tin mẫu OMR tương ứng với bài thi từ server. \\ \hline
+5 & Ứng dụng & Tiền xử lý ảnh: chuyển sang thang xám, làm mờ Gaussian, nhị phân hóa bằng phương pháp Otsu, phát hiện và chỉnh nghiêng phiếu, cắt vùng phiếu. \\ \hline
+6 & Ứng dụng & Phát hiện các ô trả lời bằng cách so sánh vị trí với tọa độ đã lưu trong mẫu OMR. \\ \hline
+7 & Ứng dụng & Đánh giá mức độ tô của từng ô, xác định ô được chọn dựa trên ngưỡng diện tích tô, phát hiện lỗi tô nhầm (nhiều ô trong cùng một câu) hoặc tô nhẹ. \\ \hline
+8 & Ứng dụng & Nhận dạng mã đề và mã số sinh viên từ vùng đầu phiếu. \\ \hline
+9 & Ứng dụng & Đối chiếu câu trả lời của học sinh với đáp án của phiên bản đề tương ứng, tính điểm cho từng câu và tổng điểm. \\ \hline
+10 & Ứng dụng & Hiển thị kết quả chấm cho giáo viên kèm ảnh phiếu đã được đánh dấu. \\ \hline
+11 & Giáo viên & Kiểm tra và chỉnh sửa thủ công các câu bị nhận dạng sai hoặc đánh dấu là không hợp lệ. \\ \hline
+12 & Giáo viên & Nhấn nút "Lưu kết quả" để đồng bộ kết quả lên server. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Chấm thi bằng ứng dụng}
+\label{table:2.3.4_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+5a & Ứng dụng & Thông báo lỗi: Ảnh chụp mờ hoặc nghiêng quá nhiều. Vui lòng chụp lại. \\ \hline
+8a & Ứng dụng & Thông báo lỗi: Không nhận dạng được mã đề. Cho phép giáo viên chọn thủ công mã đề từ danh sách. \\ \hline
+7a & Ứng dụng & Thông báo cảnh báo: Phát hiện câu tô nhầm hoặc tô nhẹ. Yêu cầu giáo viên xác nhận. \\ \hline
+12a & Ứng dụng & Thông báo: Mất kết nối mạng. Kết quả được lưu cục bộ và tự động đồng bộ khi có kết nối. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Chấm thi bằng ứng dụng}
+\label{table:2.3.4_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, bài làm của học sinh được lưu trên server với điểm số đã tính, học sinh có thể xem điểm sau khi giáo viên phát hành kết quả. Nếu thất bại, ứng dụng giữ kết quả ở trạng thái chờ xử lý. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Chấm thi bằng ứng dụng}
+\label{table:2.3.4_post}
+\end{table}
+\subsection{Đặc tả use case Phúc khảo bài thi}
 \label{subsection:2.3.5}
 
-\noindent\textbf{Tên use case:} Phản hồi phúc khảo.
-
-\noindent\textbf{Tiền điều kiện:} Giáo viên đã đăng nhập, có đơn phúc khảo đang ở trạng thái "đang chờ".
-
-\noindent\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Giáo viên truy cập chức năng "Phúc khảo" và xem danh sách đơn phúc khảo đang chờ.
-    \item Giáo viên chọn một đơn phúc khảo để xem chi tiết.
-    \item Hệ thống hiển thị thông tin bài thi của học sinh, câu được phúc khảo, lý do và hình ảnh minh chứng (nếu có).
-    \item Giáo viên so sánh câu trả lời của học sinh với đáp án, đối chiếu với hình ảnh phiếu gốc.
-    \item Giáo viên quyết định phê duyệt hoặc từ chối và nhập nội dung phản hồi cho học sinh.
-    \item Giáo viên nhấn nút "Gửi phản hồi" để hoàn tất.
-    \item Hệ thống cập nhật trạng thái đơn phúc khảo thành "đã phê duyệt" hoặc "đã từ chối".
-    \item Nếu phê duyệt, hệ thống tính lại điểm cho câu được phúc khảo và cập nhật tổng điểm của học sinh.
-    \item Hệ thống gửi thông báo kết quả phúc khảo cho học sinh.
-\end{enumerate}
-
-\noindent\textbf{Luồng sự kiện phát sinh:}
-\begin{itemize}
-    \item Tại bước 5, nếu giáo viên cần thêm thời gian: đơn được đánh dấu "đang xử lý" và có thể tiếp tục sau.
-    \item Tại bước 8, nếu có lỗi khi tính lại điểm: hệ thống ghi nhận lỗi, giữ nguyên điểm cũ và thông báo cho quản trị hệ thống.
-    \item Tại bước 5, nếu đơn đã hết thời hạn xử lý: hệ thống cảnh báo và yêu cầu giáo viên xác nhận trước khi gửi.
-\end{itemize}
-
-\noindent\textbf{Hậu điều kiện:} Nếu thành công, đơn phúc khảo được đóng và điểm được cập nhật (nếu phê duyệt). Học sinh nhận được thông báo kết quả.
-
-\subsection{Đặc tả use case Tạo báo cáo cho bài kiểm tra}
-\label{subsection:2.3.6}
-
-\noindent\textbf{Tên use case:} Tạo báo cáo cho bài kiểm tra.
-
-\noindent\textbf{Tiền điều kiện:} Giáo viên đã đăng nhập, bài kiểm tra đã có kết quả chấm từ học sinh.
-
-\noindent\textbf{Luồng sự kiện chính:}
-\begin{enumerate}
-    \item Giáo viên truy cập chức năng "Báo cáo" và chọn bài kiểm tra cần tạo báo cáo.
-    \item Hệ thống tổng hợp dữ liệu: danh sách bài làm, điểm số, đáp án, thời gian làm bài.
-    \item Hệ thống (System) phân tích thống kê: tính phổ điểm, điểm trung bình, độ lệch chuẩn, tỉ lệ đạt, độ khó và độ phân biệt của từng câu hỏi.
-    \item Hệ thống sinh báo cáo dưới dạng biểu đồ (cột, tròn, phân tán) và bảng số liệu.
-    \item Hệ thống sử dụng AI để sinh nhận xét tổng quan về chất lượng đề thi và gợi ý cải thiện.
-    \item Giáo viên xem trước báo cáo, có thể tùy chỉnh các chỉ số muốn hiển thị.
-    \item Giáo viên chọn xuất báo cáo ra định dạng PDF hoặc Excel.
-    \item Hệ thống sinh file báo cáo và cho phép giáo viên tải về.
-\end{enumerate}
-
-\noindent\textbf{Luồng sự kiện phát sinh:}
-\begin{itemize}
-    \item Tại bước 3, nếu dữ liệu chưa đầy đủ: hệ thống cảnh báo và chỉ sinh báo cáo với các chỉ số khả dụng.
-    \item Tại bước 5, nếu dịch vụ AI gặp sự cố: hệ thống bỏ qua phần nhận xét AI và tiếp tục sinh phần còn lại của báo cáo.
-    \item Tại bước 7, nếu xuất file thất bại: hệ thống thông báo lỗi và cho phép thử lại.
-\end{itemize}
-
-\noindent\textbf{Hậu điều kiện:} Nếu thành công, giáo viên nhận được file báo cáo hoàn chỉnh để sử dụng cho công tác đánh giá chất lượng giảng dạy và ra đề.
-
+Use case Phúc khảo bài thi bao trùm toàn bộ quy trình phúc khảo từ phía học sinh (gửi đơn phúc khảo) đến phía giáo viên (phản hồi phúc khảo), thể hiện đúng bản chất end-to-end của nghiệp vụ phúc khảo trong hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR.
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC009 \\ \hline
+\textbf{Tên use case} & Phúc khảo bài thi \\ \hline
+\textbf{Tác nhân} & Học sinh (student), Giáo viên (teacher) \\ \hline
+\textbf{Điều kiện trước} & Học sinh đã đăng nhập vào hệ thống, đã có kết quả bài thi được công bố và còn trong thời hạn phúc khảo. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Phúc khảo bài thi}
+\label{table:2.3.5_info}
+\end{table}
+\noindent\textbf{Luồng thực thi chính}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Học sinh & Truy cập chức năng "Bài thi của tôi" và chọn bài thi muốn phúc khảo. \\ \hline
+2 & Hệ thống & Hiển thị chi tiết bài thi gồm: điểm tổng, điểm từng câu, ảnh phiếu đã chấm và đáp án đúng. \\ \hline
+3 & Học sinh & Chọn chức năng "Tạo đơn phúc khảo" và chọn một hoặc nhiều câu cần phúc khảo. \\ \hline
+4 & Hệ thống & Hiển thị form yêu cầu nhập lý do phúc khảo cho từng câu, cho phép đính kèm hình ảnh minh chứng (nếu có). \\ \hline
+5 & Học sinh & Nhập lý do, đính kèm bằng chứng (nếu có) và nhấn nút "Gửi đơn". \\ \hline
+6 & Hệ thống & Kiểm tra thời hạn phúc khảo và tính hợp lệ của thông tin. \\ \hline
+7 & Hệ thống & Tạo đơn phúc khảo mới với trạng thái "đang chờ", gửi thông báo cho giáo viên phụ trách. \\ \hline
+8 & Hệ thống & Gửi thông báo xác nhận cho học sinh và hiển thị trạng thái đơn phúc khảo trong danh sách "Đơn phúc khảo của tôi". \\ \hline
+9 & Giáo viên & Truy cập chức năng "Phúc khảo" và xem danh sách đơn phúc khảo đang chờ. \\ \hline
+10 & Giáo viên & Chọn một đơn phúc khảo để xem chi tiết. \\ \hline
+11 & Hệ thống & Hiển thị thông tin bài thi của học sinh, câu được phúc khảo, lý do và hình ảnh minh chứng (nếu có). \\ \hline
+12 & Giáo viên & So sánh câu trả lời của học sinh với đáp án, đối chiếu với hình ảnh phiếu gốc. \\ \hline
+13 & Giáo viên & Quyết định phê duyệt hoặc từ chối và nhập nội dung phản hồi cho học sinh. \\ \hline
+14 & Giáo viên & Nhấn nút "Gửi phản hồi" để hoàn tất. \\ \hline
+15 & Hệ thống & Cập nhật trạng thái đơn phúc khảo thành "đã phê duyệt" hoặc "đã từ chối". \\ \hline
+16 & Hệ thống & Nếu phê duyệt, tính lại điểm cho câu được phúc khảo và cập nhật tổng điểm của học sinh. \\ \hline
+17 & Hệ thống & Gửi thông báo kết quả phúc khảo cho học sinh. \\ \hline
+\end{tabular}
+\caption{Luồng thực thi chính của use case Phúc khảo bài thi}
+\label{table:2.3.5_main}
+\end{table}
+\noindent\textbf{Luồng thực thi mở rộng}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+6a & Hệ thống & Thông báo lỗi: Đã hết thời hạn phúc khảo. Không thể gửi đơn. \\ \hline
+6b & Hệ thống & Thông báo lỗi: Bạn đã gửi đơn phúc khảo cho câu này. Vui lòng xem trạng thái đơn cũ. \\ \hline
+4a & Hệ thống & Thông báo lỗi: Lý do phúc khảo quá ngắn. Vui lòng nhập chi tiết hơn (tối thiểu 20 ký tự). \\ \hline
+13a & Hệ thống & Thông báo: Đơn đang được đánh dấu "đang xử lý". Giáo viên có thể tiếp tục xử lý sau. \\ \hline
+16a & Hệ thống & Thông báo lỗi: Có lỗi khi tính lại điểm. Hệ thống giữ nguyên điểm cũ và thông báo cho quản trị hệ thống. \\ \hline
+14a & Hệ thống & Thông báo cảnh báo: Đơn đã hết thời hạn xử lý. Bạn có chắc chắn muốn gửi phản hồi? \\ \hline
+\end{tabular}
+\caption{Luồng thực thi mở rộng của use case Phúc khảo bài thi}
+\label{table:2.3.5_ext}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, đơn phúc khảo được đóng và điểm được cập nhật (nếu phê duyệt). Học sinh nhận được thông báo kết quả phúc khảo. Nếu thất bại ở bất kỳ bước nào, trạng thái đơn và điểm không bị thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Phúc khảo bài thi}
+\label{table:2.3.5_post}
+\end{table}
 \section{Yêu cầu phi chức năng}
 \label{section:2.4}
 
-Ngoài các yêu cầu chức năng đã nêu, hệ thống Smart Grading cần đáp ứng các yêu cầu phi chức năng sau:
+Ngoài các yêu cầu chức năng đã nêu, hệ thống Xây dựng hệ thống quản lý ngân hàng câu hỏi và chấm thi trắc nghiệm tự động sử dụng công nghệ OMR cần đáp ứng các yêu cầu phi chức năng sau:
 
 \noindent\textbf{Yêu cầu về hiệu năng.} Hệ thống phải đảm bảo thời gian phản hồi của các API dưới 2 giây đối với các thao tác thông thường và dưới 5 giây đối với các thao tác tổng hợp dữ liệu lớn như tạo báo cáo. Thời gian chấm một phiếu trả lời bằng ứng dụng di động không quá 3 giây với điều kiện ảnh đầu vào đạt chất lượng.
 
@@ -457,14 +535,6 @@ Ngoài các yêu cầu chức năng đã nêu, hệ thống Smart Grading cần 
 
 \noindent\textbf{Yêu cầu về cơ sở dữ liệu và công nghệ.} Hệ thống sử dụng cơ sở dữ liệu MongoDB phiên bản 5.0 trở lên để lưu trữ dữ liệu nghiệp vụ. Hệ thống phải hỗ trợ triển khai trên cả môi trường phát triển (local) và môi trường đám mây (cloud). Backend chạy trên Node.js v18 trở lên, frontend web xây dựng trên React 18 với TypeScript, ứng dụng di động xây dựng trên Flutter 3.x.
 
-\section{Kết chương}
-Chương 2 đã trình bày kết quả khảo sát hiện trạng từ ba nguồn: nhu cầu người dùng, hệ thống chấm thi hiện tại tại các trường và các ứng dụng tương tự trên thị trường. Trên cơ sở đó, chương này đã mô tả tổng quan chức năng của hệ thống Smart Grading với mười ba use case chính phân thành bốn nhóm, đồng thời đặc tả chi tiết sáu use case quan trọng nhất với đầy đủ luồng sự kiện chính, luồng phát sinh, tiền điều kiện và hậu điều kiện. Bên cạnh đó, các yêu cầu phi chức năng về hiệu năng, độ tin cậy, tính dễ dùng, bảo trì, bảo mật và công nghệ cũng đã được xác định rõ. Các kết quả chính của chương gồm:
-\begin{itemize}
-    \item bảng so sánh tính năng giữa các giải pháp hiện có;
-    \item biểu đồ use case tổng quát và mười hai biểu đồ phân rã cho từng nhóm use case;
-    \item ba quy trình nghiệp vụ trọng yếu;
-    \item sáu đặc tả use case chi tiết.
-\end{itemize}
-Chương 3 sẽ trình bày các nền tảng lý thuyết và công nghệ được lựa chọn để hiện thực hóa các yêu cầu đã nêu trong chương này.
+Chương 2 đã trình bày kết quả khảo sát hiện trạng, mô tả tổng quan chức năng hệ thống thông qua biểu đồ use case, đặc tả chi tiết các use case quan trọng và xác định các yêu cầu phi chức năng. Chương 3 sẽ giới thiệu các nền tảng lý thuyết và công nghệ được lựa chọn để hiện thực hóa các yêu cầu đã nêu.
 
 \end{document}

@@ -14,21 +14,21 @@ export default function NotFoundPage() {
         </div>
 
         <h1 className={styles.title}>404</h1>
-        <h2 className={styles.subtitle}>Trang không tìm thấy</h2>
+        <h2 className={styles.subtitle}>Page Not Found</h2>
         <p className={styles.message}>
-          Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
+          Sorry, the page you are looking for does not exist or has been moved.
         </p>
 
         <div className={styles.actions}>
           <Link to="/" className={styles.primaryButton}>
             <Home size={18} />
-            <span>Quay về trang chủ</span>
+            <span>Go to Home</span>
           </Link>
 
           {!isAuthenticated && (
             <Link to="/login" className={styles.secondaryButton}>
               <LogIn size={18} />
-              <span>Đăng nhập</span>
+              <span>Log In</span>
             </Link>
           )}
         </div>

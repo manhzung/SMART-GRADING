@@ -1,0 +1,41 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case tổng quát của hệ thống Xây dựng hệ thống nhận diện phiếu trả lời trắc nghiệm dựa trên công nghệ OMR}}{5}{figure.caption.5}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Đăng ký/Đăng nhập}}{6}{figure.caption.6}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý trường học}}{7}{figure.caption.7}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý giáo viên}}{8}{figure.caption.8}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý học sinh}}{9}{figure.caption.9}%
+\contentsline {figure}{\numberline {2.6}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý câu hỏi}}{10}{figure.caption.10}%
+\contentsline {figure}{\numberline {2.7}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý bài kiểm tra}}{11}{figure.caption.11}%
+\contentsline {figure}{\numberline {2.8}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Quản lý các bài thi của học sinh}}{12}{figure.caption.12}%
+\contentsline {figure}{\numberline {2.9}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Chấm thi bằng ứng dụng}}{13}{figure.caption.13}%
+\contentsline {figure}{\numberline {2.10}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Phúc khảo bài thi}}{13}{figure.caption.14}%
+\contentsline {figure}{\numberline {2.11}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ use case phân rã Xem bài thi và điểm số}}{14}{figure.caption.15}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói tổng quan của hệ thống Xây dựng hệ thống nhận diện phiếu trả lời trắc nghiệm dựa trên công nghệ OMR}}{30}{figure.caption.36}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Routers của hệ thống Xây dựng hệ thống nhận diện phiếu trả lời trắc nghiệm dựa trên công nghệ OMR}}{31}{figure.caption.37}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Controllers của hệ thống Xây dựng hệ thống nhận diện phiếu trả lời trắc nghiệm dựa trên công nghệ OMR}}{32}{figure.caption.38}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Services của hệ thống Xây dựng hệ thống nhận diện phiếu trả lời trắc nghiệm dựa trên công nghệ OMR}}{32}{figure.caption.39}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Models của hệ thống Xây dựng hệ thống nhận diện phiếu trả lời trắc nghiệm dựa trên công nghệ OMR}}{33}{figure.caption.40}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Pages của giao diện web React}}{34}{figure.caption.41}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Components của giao diện web React}}{34}{figure.caption.42}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Stores và Hooks của giao diện web React}}{35}{figure.caption.43}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói ApiService của giao diện web React}}{36}{figure.caption.44}%
+\contentsline {figure}{\numberline {4.10}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Widgets của ứng dụng di động Flutter}}{37}{figure.caption.45}%
+\contentsline {figure}{\numberline {4.11}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói Screens của ứng dụng di động Flutter}}{37}{figure.caption.46}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ gói BLoCs của ứng dụng di động Flutter}}{38}{figure.caption.47}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Minh họa màn hình chi tiết lớp học trên web}}{39}{figure.caption.48}%
+\contentsline {figure}{\numberline {4.14}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Minh họa màn hình chi tiết bài kiểm tra trên web}}{40}{figure.caption.49}%
+\contentsline {figure}{\numberline {4.15}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Minh họa màn hình quét phiếu trên di động}}{41}{figure.caption.50}%
+\contentsline {figure}{\numberline {4.16}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Minh họa màn hình phúc khảo trên web}}{42}{figure.caption.51}%
+\contentsline {figure}{\numberline {4.17}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ trình tự use case Chấm thi bằng điện thoại}}{48}{figure.caption.79}%
+\contentsline {figure}{\numberline {4.18}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Biểu đồ trình tự use case Quản lý đề thi}}{49}{figure.caption.80}%
+\contentsline {figure}{\numberline {4.19}{\ignorespaces \xpg@aux {}{vietnamese}\ignorespaces Sơ đồ quan hệ thực thể (ER) của hệ thống Xây dựng hệ thống nhận diện phiếu trả lời trắc nghiệm dựa trên công nghệ OMR}}{50}{figure.caption.81}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsfinish 
+\contentsfinish 

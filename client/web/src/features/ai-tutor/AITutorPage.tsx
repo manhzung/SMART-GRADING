@@ -66,7 +66,7 @@ export default function AITutorPage() {
           <div>
             <h1 className={styles.title}>AI Tutor</h1>
             <p className={styles.subtitle}>
-              Trợ lý học tập thông minh - Phân tích kết quả và đưa ra gợi ý cá nhân hóa
+              Smart Learning Assistant - Analyze results and provide personalized suggestions
             </p>
           </div>
         </div>
@@ -95,15 +95,15 @@ export default function AITutorPage() {
               <div className={styles.reportHeaderLeft}>
                 <FileText size={20} className={styles.reportIcon} />
                 <div>
-                  <h3 className={styles.reportTitle}>Báo cáo AI</h3>
-                  <span className={styles.reportSubtitle}>Phân tích học tập</span>
+                  <h3 className={styles.reportTitle}>AI Report</h3>
+                  <span className={styles.reportSubtitle}>Learning Analysis</span>
                 </div>
               </div>
               <div className={styles.reportBadge}>
-                {activeReport?._id === 'ai-report-summary' && 'Tổng quan'}
-                {activeReport?._id === 'ai-report-performance' && 'Hiệu suất'}
-                {activeReport?._id === 'ai-report-insight' && 'Chi tiết'}
-                {activeReport?._id === 'ai-report-recommendation' && 'Khuyến nghị'}
+                {activeReport?._id === 'ai-report-summary' && 'Overview'}
+                {activeReport?._id === 'ai-report-performance' && 'Performance'}
+                {activeReport?._id === 'ai-report-insight' && 'Details'}
+                {activeReport?._id === 'ai-report-recommendation' && 'Recommendations'}
               </div>
             </div>
 
@@ -113,10 +113,10 @@ export default function AITutorPage() {
               <div className={styles.summarySection}>
                 <h4 className={styles.sectionTitle}>
                   <Target size={16} />
-                  Tổng quan
+                  Overview
                 </h4>
                 <p className={styles.summaryText}>
-                  {activeReport?.summary || 'Chọn một báo cáo để xem chi tiết phân tích AI về kết quả học tập của bạn.'}
+                  {activeReport?.summary || 'Select a report to view detailed AI analysis of your learning results.'}
                 </p>
               </div>
 
@@ -130,7 +130,7 @@ export default function AITutorPage() {
                     <span className={styles.statValue}>
                       {activeReport?.avgScore != null ? activeReport.avgScore.toFixed(1) : '—'}
                     </span>
-                    <span className={styles.statLabel}>Điểm TB</span>
+                    <span className={styles.statLabel}>Avg Score</span>
                   </div>
                 </div>
                 <div className={styles.statCard}>
@@ -141,7 +141,7 @@ export default function AITutorPage() {
                     <span className={styles.statValue}>
                       {activeReport?.passRate != null ? `${Math.round(activeReport.passRate * 100)}%` : '—'}
                     </span>
-                    <span className={styles.statLabel}>Tỷ lệ đạt</span>
+                    <span className={styles.statLabel}>Pass Rate</span>
                   </div>
                 </div>
                 <div className={styles.statCard}>
@@ -152,7 +152,7 @@ export default function AITutorPage() {
                     <span className={styles.statValue}>
                       {activeReport?.totalStudents ?? '—'}
                     </span>
-                    <span className={styles.statLabel}>Học sinh</span>
+                    <span className={styles.statLabel}>Students</span>
                   </div>
                 </div>
               </div>
@@ -161,7 +161,7 @@ export default function AITutorPage() {
               <div className={styles.strengthsSection}>
                 <h4 className={styles.sectionTitle}>
                   <CheckCircle2 size={16} className={styles.strengthIcon} />
-                  Điểm mạnh
+                  Strengths
                 </h4>
                 <ul className={styles.strengthsList}>
                   {(activeReport?.strengths || []).map((strength) => (
@@ -177,7 +177,7 @@ export default function AITutorPage() {
               <div className={styles.weaknessesSection}>
                 <h4 className={styles.sectionTitle}>
                   <XCircle size={16} className={styles.weaknessIcon} />
-                  Điểm cần cải thiện
+                  Areas for Improvement
                 </h4>
                 <ul className={styles.weaknessesList}>
                   {(activeReport?.weaknesses || []).map((weakness) => (
@@ -193,7 +193,7 @@ export default function AITutorPage() {
               <div className={styles.recommendationsSection}>
                 <h4 className={styles.sectionTitle}>
                   <TrendingDown size={16} className={styles.recommendIcon} />
-                  Khuyến nghị
+                  Recommendations
                 </h4>
                 <ol className={styles.recommendationsList}>
                   {(activeReport?.recommendations || []).map((recommendation, index) => (
@@ -210,13 +210,13 @@ export default function AITutorPage() {
             <div className={styles.reportFooter}>
               <div className={styles.reportMeta}>
                 <Clock size={14} />
-                <span>Cập nhật: {activeReport?.createdAt 
+                <span>Updated: {activeReport?.createdAt 
                   ? new Date(activeReport.createdAt).toLocaleDateString('vi-VN')
-                  : 'Chưa có dữ liệu'
+                  : 'No data available'
                 }</span>
               </div>
               <button className={styles.viewDetailsBtn} onClick={() => activeReport && handleViewDetails(activeReport)}>
-                <span>Xem chi tiết</span>
+                <span>View Details</span>
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -224,16 +224,16 @@ export default function AITutorPage() {
 
           {/* Recent Reports List */}
           <div className={styles.recentReports}>
-            <h4 className={styles.recentTitle}>Báo cáo gần đây</h4>
+            <h4 className={styles.recentTitle}>Recent Reports</h4>
             <div className={styles.recentList}>
               {isLoading ? (
                 <div className={styles.loadingContainer}>
                   <div className={styles.loadingSpinner} />
-                  <p>Đang tải báo cáo...</p>
+                  <p>Loading reports...</p>
                 </div>
               ) : reports.length === 0 ? (
                 <div className={styles.emptyState}>
-                  <p>Chưa có báo cáo AI nào. Hãy bắt đầu trò chuyện với AI Tutor để nhận hướng dẫn!</p>
+                  <p>No AI reports yet. Start chatting with AI Tutor to receive guidance!</p>
                 </div>
               ) : (
                 reports.slice(0, 3).map((report) => (
@@ -251,10 +251,10 @@ export default function AITutorPage() {
                         }
                       </span>
                       <span className={styles.recentItemType}>
-                        {report._id === 'ai-report-summary' && 'Tổng quan'}
-                        {report._id === 'ai-report-performance' && 'Hiệu suất'}
-                        {report._id === 'ai-report-insight' && 'Chi tiết'}
-                        {report._id === 'ai-report-recommendation' && 'Khuyến nghị'}
+                        {report._id === 'ai-report-summary' && 'Overview'}
+                        {report._id === 'ai-report-performance' && 'Performance'}
+                        {report._id === 'ai-report-insight' && 'Details'}
+                        {report._id === 'ai-report-recommendation' && 'Recommendations'}
                       </span>
                     </div>
                   </button>

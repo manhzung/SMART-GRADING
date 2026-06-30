@@ -1,0 +1,850 @@
+\section{Đặc tả chức năng}
+\label{section:2.3}
+
+Căn cứ vào tầm quan trọng và độ phức tạp, đồ án lựa chọn đặc tả chi tiết cho 6 use case chính gồm: Quản lý trường học, Quản lý giáo viên, Quản lý học sinh, Quản lý bài kiểm tra, Quản lý câu hỏi và Chấm thi bằng ứng dụng. Mỗi đặc tả gồm mã use case, tên use case, tác nhân, điều kiện trước, luồng thực thi chính, luồng thực thi mở rộng và điều kiện kết thúc. Đặc tả đầy đủ cho các use case còn lại được trình bày trong Phụ lục B.
+
+\subsection{Đặc tả use case Quản lý trường học}
+\label{subsection:2.3.1}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC001 \\ \hline
+\textbf{Tên use case} & Quản lý trường học \\ \hline
+\textbf{Tác nhân} & Quản trị viên hệ thống (admin) \\ \hline
+\textbf{Điều kiện trước} & Quản trị viên đã đăng nhập vào hệ thống với vai trò admin. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý trường học}
+\label{table:2.3.1_info}
+\end{table}
+
+\noindent\textbf{Luồng thực thi chính}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Quản trị viên & Truy cập chức năng "Quản lý trường học" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách trường học hiện có kèm các điều khiển tìm kiếm, lọc theo loại trường và trạng thái. \\ \hline
+3 & Quản trị viên & Chọn chức năng "Thêm trường mới". \\ \hline
+4 & Hệ thống & Hiển thị form yêu cầu nhập tên trường, mã trường, địa chỉ, số điện thoại, email, website, tên hiệu trưởng, loại trường và cấp học. \\ \hline
+5 & Quản trị viên & Nhập thông tin trường học và nhấn nút "Lưu". \\ \hline
+6 & Hệ thống & Kiểm tra tính hợp lệ, kiểm tra mã trường không trùng lặp và lưu thông tin trường học. \\ \hline
+7 & Hệ thống & Hiển thị thông báo thành công và cập nhật danh sách trường học. \\ \hline
+8 & Quản trị viên & Chọn một trường trong danh sách để xem chi tiết, cập nhật thông tin hoặc cấu hình thang điểm. \\ \hline
+9 & Hệ thống & Cập nhật thông tin trường học, lưu cấu hình thang điểm (Giỏi/Khá/Trung bình/Yếu), cấu hình OMR và ghi nhận nhật ký thao tác. \\ \hline
+10 & Quản trị viên & Chọn "Vô hiệu hóa" để tạm khóa tài khoản trường. \\ \hline
+11 & Hệ thống & Cập nhật trạng thái trường thành "không hoạt động" và thông báo cho quản trị viên. \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi chính của use case Quản lý trường học}
+\label{table:2.3.1_main}
+\end{table}
+
+\noindent\textbf{Luồng thực thi mở rộng}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+6a & Hệ thống & Thông báo lỗi: Mã trường đã tồn tại. Vui lòng nhập mã trường khác. \\ \hline
+6b & Hệ thống & Thông báo lỗi: Vui lòng nhập đầy đủ các trường bắt buộc (tên trường, mã trường, loại trường). \\ \hline
+6c & Hệ thống & Thông báo lỗi: Mã trường chỉ được chứa chữ cái và số, không có khoảng trắng. \\ \hline
+9a & Hệ thống & Thông báo cảnh báo: Trường đang có giáo viên và học sinh. Bạn có chắc chắn muốn vô hiệu hóa? \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi mở rộng của use case Quản lý trường học}
+\label{table:2.3.1_ext}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, trường học được tạo hoặc cập nhật trong hệ thống với đầy đủ cấu hình thang điểm và OMR. Nếu thất bại, trạng thái danh sách trường học không thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý trường học}
+\label{table:2.3.1_post}
+\end{table}
+
+\vspace{0.5em}
+\noindent\textbf{Bảng dữ liệu trường học:}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Trường} & \textbf{Kiểu} & \textbf{Mô tả} \\
+\hline
+\_id & ObjectId & Khóa chính của trường học \\
+\hline
+name & String & Tên trường học (bắt buộc) \\
+\hline
+code & String & Mã trường, duy nhất, viết hoa (bắt buộc) \\
+\hline
+address & Object & Địa chỉ gồm street, ward, district, city \\
+\hline
+phone & String & Số điện thoại liên hệ \\
+\hline
+email & String & Email của trường (lowercase) \\
+\hline
+website & String & Website của trường \\
+\hline
+principalName & String & Tên hiệu trưởng \\
+\hline
+schoolType & Enum & Loại trường: primary, secondary, high, university, other \\
+\hline
+gradeLevels & Array[Number] & Cấp học: 1-12 \\
+\hline
+settings.gradingScale & Map & Thang điểm: excellent (8.5), good (7.0), average (5.0), poor (0) \\
+\hline
+settings.maxScore & Number & Điểm tối đa (mặc định: 10) \\
+\hline
+settings.passingScore & Number & Điểm đạt (mặc định: 5) \\
+\hline
+settings.omrConfig & Object & Cấu hình OMR: bubbleSize, rowHeight, colWidth, margins \\
+\hline
+isActive & Boolean & Trạng thái hoạt động (mặc định: true) \\
+\hline
+registrationStatus & Enum & Trạng thái đăng ký: pending, approved, rejected \\
+\hline
+createdAt & DateTime & Thời điểm tạo \\
+\hline
+updatedAt & DateTime & Thời điểm cập nhật cuối \\
+\hline
+\end{tabular}
+}
+\caption{Cấu trúc dữ liệu trường học}
+\end{table}
+
+\subsection{Đặc tả use case Quản lý giáo viên}
+\label{subsection:2.3.2}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC002 \\ \hline
+\textbf{Tên use case} & Quản lý giáo viên \\ \hline
+\textbf{Tác nhân} & Quản trị viên hệ thống (admin), Quản trị viên trường (school-admin) \\ \hline
+\textbf{Điều kiện trước} & Quản trị viên đã đăng nhập vào hệ thống với vai trò phù hợp. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý giáo viên}
+\label{table:2.3.2_info}
+\end{table}
+
+\noindent\textbf{Luồng thực thi chính}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Quản trị viên & Truy cập chức năng "Quản lý giáo viên" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách giáo viên hiện có kèm các điều khiển tìm kiếm, lọc theo trường, môn và trạng thái. \\ \hline
+3 & Quản trị viên & Chọn chức năng "Thêm giáo viên mới". \\ \hline
+4 & Hệ thống & Hiển thị form yêu cầu nhập họ tên, email, số điện thoại, ngày sinh, giới tính, địa chỉ, trường phụ trách và vai trò. \\ \hline
+5 & Quản trị viên & Nhập thông tin giáo viên và nhấn nút "Lưu". \\ \hline
+6 & Hệ thống & Kiểm tra tính hợp lệ, kiểm tra email không trùng lặp và tạo tài khoản giáo viên với mật khẩu tạm. \\ \hline
+7 & Hệ thống & Gửi email kích hoạt tài khoản cho giáo viên (mật khẩu tạm) và hiển thị thông báo thành công. \\ \hline
+8 & Quản trị viên & Chọn một giáo viên để xem chi tiết, cập nhật thông tin hoặc gán lớp phụ trách. \\ \hline
+9 & Hệ thống & Cập nhật thông tin giáo viên, quản lý danh sách lớp phụ trách (classIds) và ghi nhận nhật ký thao tác. \\ \hline
+10 & Quản trị viên & Chọn "Duyệt" để phê duyệt tài khoản giáo viên mới hoặc "Từ chối" kèm lý do. \\ \hline
+11 & Hệ thống & Cập nhật trạng thái đăng ký (registrationStatus), gửi thông báo cho giáo viên. \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi chính của use case Quản lý giáo viên}
+\label{table:2.3.2_main}
+\end{table}
+
+\noindent\textbf{Luồng thực thi mở rộng}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+6a & Hệ thống & Thông báo lỗi: Email đã được sử dụng. Vui lòng nhập email khác. \\ \hline
+6b & Hệ thống & Thông báo lỗi: Vui lòng nhập đầy đủ các trường bắt buộc (họ tên, email, vai trò). \\ \hline
+6c & Hệ thống & Thông báo lỗi: Email không hợp lệ. Vui lòng kiểm tra lại. \\ \hline
+9a & Hệ thống & Thông báo cảnh báo: Giáo viên đang phụ trách lớp học. Thao tác này sẽ ảnh hưởng đến các lớp đó. \\ \hline
+10a & Hệ thống & Thông báo cảnh báo: Từ chối sẽ gửi email thông báo lý do cho giáo viên. Bạn có chắc chắn? \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi mở rộng của use case Quản lý giáo viên}
+\label{table:2.3.2_ext}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, tài khoản giáo viên được tạo hoặc cập nhật, email kích hoạt đã được gửi, thông tin được đồng bộ với trường phụ trách. Nếu thất bại, trạng thái danh sách giáo viên không thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý giáo viên}
+\label{table:2.3.2_post}
+\end{table}
+
+\vspace{0.5em}
+\noindent\textbf{Bảng dữ liệu giáo viên (User):}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Trường} & \textbf{Kiểu} & \textbf{Mô tả} \\
+\hline
+\_id & ObjectId & Khóa chính của tài khoản \\
+\hline
+name & String & Họ tên giáo viên (bắt buộc, trim) \\
+\hline
+email & String & Email, duy nhất, lowercase (bắt buộc) \\
+\hline
+password & String & Mật khẩu đã mã hóa bcrypt (min 8 ký tự, chứa chữ và số) \\
+\hline
+role & Enum & Vai trò: teacher, admin, student, parent (mặc định: teacher) \\
+\hline
+phone & String & Số điện thoại liên hệ \\
+\hline
+dateOfBirth & Date & Ngày sinh \\
+\hline
+gender & Enum & Giới tính: male, female, other, null \\
+\hline
+address & Object & Địa chỉ gồm street, ward, district, city \\
+\hline
+schoolId & ObjectId & Trường phụ trách (ref: School) \\
+\hline
+classIds & Array[ObjectId] & Danh sách lớp phụ trách (ref: Class) \\
+\hline
+isActive & Boolean & Trạng thái hoạt động (mặc định: true) \\
+\hline
+isEmailVerified & Boolean & Email đã được xác thực (mặc định: false) \\
+\hline
+registrationStatus & Enum & Trạng thái đăng ký: pending, approved, rejected \\
+\hline
+rejectedReason & String & Lý do từ chối (nếu có) \\
+\hline
+lastLoginAt & DateTime & Thời điểm đăng nhập cuối \\
+\hline
+avatarUrl & String & URL avatar \\
+\hline
+createdAt & DateTime & Thời điểm tạo \\
+\hline
+updatedAt & DateTime & Thời điểm cập nhật cuối \\
+\hline
+\end{tabular}
+}
+\caption{Cấu trúc dữ liệu giáo viên (User)}
+\end{table}
+
+\subsection{Đặc tả use case Quản lý học sinh}
+\label{subsection:2.3.3}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC003 \\ \hline
+\textbf{Tên use case} & Quản lý học sinh \\ \hline
+\textbf{Tác nhân} & Quản trị viên trường (school-admin), Giáo viên (teacher) \\ \hline
+\textbf{Điều kiện trước} & Người dùng đã đăng nhập vào hệ thống với vai trò school-admin hoặc teacher và có quyền quản lý học sinh. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý học sinh}
+\label{table:2.3.3_info}
+\end{table}
+
+\noindent\textbf{Luồng thực thi chính}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Người dùng & Truy cập chức năng "Quản lý học sinh" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách học sinh hiện có kèm các điều khiển tìm kiếm, lọc theo lớp, giới tính và trạng thái. \\ \hline
+3 & Người dùng & Chọn chức năng "Thêm học sinh mới" hoặc "Nhập học sinh từ file". \\ \hline
+4 & Hệ thống & Hiển thị form hoặc hướng dẫn nhập file (Excel/CSV). \\ \hline
+5 & Người dùng & Nhập thông tin học sinh: họ tên, mã học sinh (studentCode), email phụ huynh, số điện thoại phụ huynh, ngày sinh, giới tính, địa chỉ, lớp đăng ký. \\ \hline
+6 & Hệ thống & Kiểm tra tính hợp lệ, kiểm tra mã học sinh không trùng lặp trong trường. \\ \hline
+7 & Hệ thống & Tạo tài khoản học sinh với mật khẩu tạm, gửi email thông tin đăng nhập cho phụ huynh (nếu có email). \\ \hline
+8 & Hệ thống & Thêm học sinh vào danh sách lớp (studentIds trong Class) và hiển thị thông báo thành công. \\ \hline
+9 & Người dùng & Chọn một học sinh để xem chi tiết, cập nhật thông tin hoặc chuyển lớp. \\ \hline
+10 & Hệ thống & Cập nhật thông tin học sinh, quản lý danh sách lớp học và ghi nhận nhật ký thao tác. \\ \hline
+11 & Người dùng & Chọn "Xóa" để xóa tài khoản học sinh khỏi hệ thống. \\ \hline
+12 & Hệ thống & Kiểm tra học sinh không có bài thi đang chờ xử lý, xóa khỏi danh sách lớp và đánh dấu tài khoản là không hoạt động. \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi chính của use case Quản lý học sinh}
+\label{table:2.3.3_main}
+\end{table}
+
+\noindent\textbf{Luồng thực thi mở rộng}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+6a & Hệ thống & Thông báo lỗi: Mã học sinh đã tồn tại trong trường. Vui lòng nhập mã khác. \\ \hline
+6b & Hệ thống & Thông báo lỗi: Vui lòng nhập đầy đủ các trường bắt buộc (họ tên, mã học sinh, lớp). \\ \hline
+7a & Hệ thống & Thông báo lỗi: Lớp đã đạt sĩ số tối đa. Vui lòng chọn lớp khác. \\ \hline
+8a & Hệ thống & Thông báo: Email thông tin đăng nhập đã được gửi cho phụ huynh. \\ \hline
+10a & Hệ thống & Thông báo cảnh báo: Học sinh đang có bài thi đã nộp. Bạn có chắc chắn muốn chuyển lớp? \\ \hline
+12a & Hệ thống & Thông báo cảnh báo: Học sinh có bài thi đang xử lý. Không thể xóa tài khoản. \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi mở rộng của use case Quản lý học sinh}
+\label{table:2.3.3_ext}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, tài khoản học sinh được tạo/cập nhật, thông tin đăng nhập đã được gửi cho phụ huynh, học sinh được thêm vào danh sách lớp tương ứng. Nếu thất bại, trạng thái không thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý học sinh}
+\label{table:2.3.3_post}
+\end{table}
+
+\vspace{0.5em}
+\noindent\textbf{Bảng dữ liệu học sinh:}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Trường} & \textbf{Kiểu} & \textbf{Mô tả} \\
+\hline
+\_id & ObjectId & Khóa chính của tài khoản học sinh \\
+\hline
+name & String & Họ tên học sinh (bắt buộc, trim) \\
+\hline
+email & String & Email học sinh (nếu có) \\
+\hline
+password & String & Mật khẩu đã mã hóa bcrypt \\
+\hline
+role & String & Luôn là "student" \\
+\hline
+studentCode & String & Mã học sinh, duy nhất trong trường (sparse index) \\
+\hline
+parentEmail & String & Email phụ huynh (lowercase) \\
+\hline
+parentPhone & String & Số điện thoại phụ huynh \\
+\hline
+dateOfBirth & Date & Ngày sinh \\
+\hline
+gender & Enum & Giới tính: male, female, other, null \\
+\hline
+address & Object & Địa chỉ gồm street, ward, district, city \\
+\hline
+schoolId & ObjectId & Trường đang học (ref: School) \\
+\hline
+classIds & Array[ObjectId] & Danh sách lớp đang học (ref: Class) \\
+\hline
+isActive & Boolean & Trạng thái hoạt động (mặc định: true) \\
+\hline
+isEmailVerified & Boolean & Email đã được xác thực \\
+\hline
+createdAt & DateTime & Thời điểm tạo \\
+\hline
+updatedAt & DateTime & Thời điểm cập nhật cuối \\
+\hline
+\end{tabular}
+}
+\caption{Cấu trúc dữ liệu học sinh}
+\end{table}
+
+\vspace{0.5em}
+\noindent\textbf{Bảng dữ liệu lớp học:}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Trường} & \textbf{Kiểu} & \textbf{Mô tả} \\
+\hline
+\_id & ObjectId & Khóa chính của lớp học \\
+\hline
+name & String & Tên lớp (VD: "10A1") (bắt buộc) \\
+\hline
+code & String & Mã lớp (bắt buộc) \\
+\hline
+gradeLevel & Number & Khối lớp: 1-12 (bắt buộc) \\
+\hline
+academicYear & String & Năm học (VD: "2025-2026") (bắt buộc) \\
+\hline
+homeroomTeacherId & ObjectId & Giáo viên chủ nhiệm (ref: User) \\
+\hline
+studentIds & Array[ObjectId] & Danh sách học sinh trong lớp (ref: User) \\
+\hline
+subjectTeachers & Array[Object] & DS giáo viên bộ môn: subjectId, teacherId, addedAt \\
+\hline
+schoolId & ObjectId & Trường học (ref: School) (bắt buộc) \\
+\hline
+isActive & Boolean & Trạng thái hoạt động (mặc định: true) \\
+\hline
+enrollmentCode & String & Mã nhập học cho học sinh tự đăng ký \\
+\hline
+createdAt & DateTime & Thời điểm tạo \\
+\hline
+updatedAt & DateTime & Thời điểm cập nhật cuối \\
+\hline
+\end{tabular}
+}
+\caption{Cấu trúc dữ liệu lớp học}
+\end{table}
+
+\subsection{Đặc tả use case Quản lý bài kiểm tra}
+\label{subsection:2.3.4}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC004 \\ \hline
+\textbf{Tên use case} & Quản lý bài kiểm tra \\ \hline
+\textbf{Tác nhân} & Giáo viên (teacher) \\ \hline
+\textbf{Điều kiện trước} & Giáo viên đã đăng nhập vào hệ thống, đã có ngân hàng câu hỏi thuộc môn học tương ứng và có lớp phụ trách. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý bài kiểm tra}
+\label{table:2.3.4_info}
+\end{table}
+
+\noindent\textbf{Luồng thực thi chính}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Giáo viên & Truy cập chức năng "Quản lý bài kiểm tra" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách bài kiểm tra hiện có kèm các điều khiển lọc theo lớp, môn, trạng thái. \\ \hline
+3 & Giáo viên & Chọn "Tạo bài kiểm tra mới". \\ \hline
+4 & Hệ thống & Hiển thị form tạo bài kiểm tra với các trường: tiêu đề, mô tả, lớp áp dụng (hỗ trợ nhiều lớp), môn học, ngày thi, giờ bắt đầu, thời gian làm bài, tổng điểm, số câu hỏi. \\ \hline
+5 & Giáo viên & Nhập thông tin chung, chọn mẫu OMR (omrTemplateId) và cấu hình in (printConfig). \\ \hline
+6 & Giáo viên & Chọn câu hỏi từ ngân hàng câu hỏi theo chủ đề hoặc độ khó, hoặc để hệ thống chọn ngẫu nhiên. \\ \hline
+7 & Giáo viên & Cấu hình tham số trộn đề (shuffleConfig): trộn thứ tự câu hỏi, trộn thứ tự đáp án, số lượng phiên bản (1-50). \\ \hline
+8 & Giáo viên & Nhấn nút "Sinh đề thi" để yêu cầu hệ thống tạo các phiên bản đề (ExamVersion). \\ \hline
+9 & Hệ thống & Tạo các phiên bản đề thi bằng cách hoán vị câu hỏi và đáp án theo cấu hình, mỗi phiên bản có versionCode riêng. \\ \hline
+10 & Hệ thống & Sinh mã nguồn LaTeX sử dụng gói AMC cho từng phiên bản đề, biên dịch sang PDF. \\ \hline
+11 & Hệ thống & Sinh phiếu trả lời OMR kèm tọa độ nhận dạng cho từng phiên bản, lưu thông tin tọa độ vào cơ sở dữ liệu. \\ \hline
+12 & Giáo viên & Xem lại danh sách các phiên bản đề đã tạo, tải về file PDF đề thi và phiếu trả lời. \\ \hline
+13 & Giáo viên & Nhấn nút "Phát hành" để công bố bài kiểm tra cho học sinh. \\ \hline
+14 & Hệ thống & Gửi thông báo đến học sinh thuộc các lớp áp dụng, cập nhật trạng thái thành "published" và ghi nhận publishedAt. \\ \hline
+15 & Giáo viên & Chọn một bài kiểm tra để xem chi tiết, cập nhật hoặc đánh dấu "Hoàn thành" sau khi kỳ thi kết thúc. \\ \hline
+16 & Hệ thống & Cập nhật trạng thái bài kiểm tra, tổng hợp kết quả chấm và cập nhật completedAt. \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi chính của use case Quản lý bài kiểm tra}
+\label{table:2.3.4_main}
+\end{table}
+
+\noindent\textbf{Luồng thực thi mở rộng}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+5a & Hệ thống & Thông báo lỗi: Thiếu thông tin bắt buộc. Vui lòng bổ sung tiêu đề, môn học, ngày thi và thời gian. \\ \hline
+5b & Hệ thống & Thông báo cảnh báo: Ngân hàng câu hỏi không đủ số lượng cần thiết. Đề xuất giảm số câu hoặc bổ sung câu hỏi. \\ \hline
+6a & Hệ thống & Thông báo: Chưa chọn câu hỏi nào. Hệ thống sẽ chọn ngẫu nhiên từ ngân hàng. \\ \hline
+8a & Hệ thống & Thông báo lỗi: Có lỗi khi trộn đề. Hệ thống giữ nguyên bản nháp. Vui lòng thử lại. \\ \hline
+10a & Hệ thống & Thông báo lỗi: Biên dịch LaTeX thất bại. Hệ thống ghi nhận log lỗi và cho phép giáo viên thử lại. \\ \hline
+13a & Hệ thống & Thông báo cảnh báo: Bài kiểm tra chưa có câu hỏi. Bạn có chắc chắn muốn phát hành? \\ \hline
+15a & Hệ thống & Thông báo cảnh báo: Bài kiểm tra đã có bài làm của học sinh. Bạn có chắc chắn muốn chỉnh sửa? \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi mở rộng của use case Quản lý bài kiểm tra}
+\label{table:2.3.4_ext}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, bài kiểm tra được tạo với nhiều phiên bản, phiếu OMR tương ứng được sinh, PDF đề thi và phiếu trả lời có sẵn, học sinh nhận được thông báo. Nếu thất bại, trạng thái bài kiểm tra giữ nguyên. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý bài kiểm tra}
+\label{table:2.3.4_post}
+\end{table}
+
+\vspace{0.5em}
+\noindent\textbf{Bảng dữ liệu bài kiểm tra:}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Trường} & \textbf{Kiểu} & \textbf{Mô tả} \\
+\hline
+\_id & ObjectId & Khóa chính của bài kiểm tra \\
+\hline
+title & String & Tiêu đề bài kiểm tra (bắt buộc) \\
+\hline
+description & String & Mô tả bài kiểm tra \\
+\hline
+classIds & Array[ObjectId] & Danh sách lớp áp dụng (ref: Class) (bắt buộc) \\
+\hline
+primaryClassId & ObjectId & Lớp chính để hiển thị (ref: Class) \\
+\hline
+createdBy & ObjectId & Giáo viên tạo (ref: User) (bắt buộc) \\
+\hline
+omrTemplateId & ObjectId & Mẫu OMR sử dụng (ref: OMRTemplate) (bắt buộc) \\
+\hline
+examDate & Date & Ngày thi (bắt buộc) \\
+\hline
+startTime & String & Giờ bắt đầu (mặc định: "07:00") \\
+\hline
+duration & Number & Thời gian làm bài (phút) (bắt buộc) \\
+\hline
+totalScore & Number & Tổng điểm (bắt buộc) \\
+\hline
+subjectName & String & Tên môn học \\
+\hline
+subjectId & ObjectId & Môn học (ref: Subject) \\
+\hline
+subjectColor & String & Màu hiển thị (mặc định: "\#64748b") \\
+\hline
+passingScore & Number & Điểm đạt (mặc định: 5) \\
+\hline
+numberOfQuestions & Number & Số câu hỏi (bắt buộc) \\
+\hline
+questionIds & Array[ObjectId] & Danh sách câu hỏi (ref: Question) \\
+\hline
+status & Enum & Trạng thái: draft, published, in\_progress, completed, archived \\
+\hline
+numberOfVersions & Number & Số phiên bản đề (1-50, mặc định: 4) \\
+\hline
+versions & Array[ObjectId] & Danh sách ExamVersion (ref: ExamVersion) \\
+\hline
+shuffleConfig & Object & Cấu hình trộn: shuffleQuestions, shuffleOptions \\
+\hline
+printConfig & Object & Cấu hình in: paperSize, questionsPerPage, includeAnswerSheet \\
+\hline
+totalStudents & Number & Tổng số học sinh tham gia \\
+\hline
+totalSubmissions & Number & Tổng số bài đã nộp \\
+\hline
+publishedAt & DateTime & Thời điểm phát hành \\
+\hline
+completedAt & DateTime & Thời điểm hoàn thành \\
+\hline
+createdAt & DateTime & Thời điểm tạo \\
+\hline
+updatedAt & DateTime & Thời điểm cập nhật cuối \\
+\hline
+\end{tabular}
+}
+\caption{Cấu trúc dữ liệu bài kiểm tra}
+\end{table}
+
+\subsection{Đặc tả use case Quản lý câu hỏi}
+\label{subsection:2.3.5}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC005 \\ \hline
+\textbf{Tên use case} & Quản lý câu hỏi \\ \hline
+\textbf{Tác nhân} & Giáo viên (teacher); hỗ trợ bởi System (dịch vụ AI) \\ \hline
+\textbf{Điều kiện trước} & Giáo viên đã đăng nhập vào hệ thống và có quyền quản lý ngân hàng câu hỏi. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Quản lý câu hỏi}
+\label{table:2.3.5_info}
+\end{table}
+
+\noindent\textbf{Luồng thực thi chính}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Giáo viên & Truy cập chức năng "Ngân hàng câu hỏi" trên giao diện web. \\ \hline
+2 & Hệ thống & Hiển thị danh sách câu hỏi hiện có kèm các điều khiển tìm kiếm, lọc theo môn, chủ đề (topicId/topicName), độ khó, nguồn gốc. \\ \hline
+3 & Giáo viên & Chọn "Tạo câu hỏi mới" và chọn hình thức: tạo thủ công, sinh bằng AI hoặc nhập khẩu từ file. \\ \hline
+4 & Giáo viên & Đối với tạo thủ công: chọn loại câu hỏi (single\_choice/multiple\_choice), nhập nội dung câu hỏi, nhập 4 đáp án (A, B, C, D) với đáp án đúng được đánh dấu, chọn độ khó, chủ đề, điểm số. \\ \hline
+5 & Giáo viên & Đối với sinh bằng AI: nhập chủ đề hoặc tài liệu tham khảo, chọn số lượng câu hỏi, chọn độ khó; nhấn "Sinh câu hỏi". \\ \hline
+6 & Hệ thống & Đối với sinh bằng AI: gọi dịch vụ AI để sinh danh sách câu hỏi gợi ý với nội dung và đáp án, hiển thị cho giáo viên kiểm tra. \\ \hline
+7 & Giáo viên & Đối với nhập khẩu: tải lên file theo định dạng hỗ trợ (Excel/CSV). \\ \hline
+8 & Hệ thống & Đối với nhập khẩu: đọc file, parse dữ liệu và tạo câu hỏi hàng loạt, hiển thị danh sách để giáo viên kiểm tra và xác nhận. \\ \hline
+9 & Giáo viên & Kiểm tra, chỉnh sửa nội dung câu hỏi (content, options, đáp án đúng) và nhấn nút "Lưu". \\ \hline
+10 & Hệ thống & Kiểm tra tính hợp lệ: đủ 4 đáp án, có đáp án đúng được chọn (isCorrect), lưu câu hỏi vào ngân hàng với source (manual/ai/imported). \\ \hline
+11 & Giáo viên & Chọn một câu hỏi bất kỳ để xem chi tiết, cập nhật hoặc xóa. \\ \hline
+12 & Hệ thống & Cập nhật hoặc xóa câu hỏi tương ứng; tăng usageCount nếu câu hỏi đang được sử dụng trong đề thi. \\ \hline
+13 & Giáo viên & Chọn "Duyệt" để phê duyệt câu hỏi (isApproved) hoặc từ chối. \\ \hline
+14 & Hệ thống & Cập nhật trạng thái duyệt, ghi nhận approvedBy và approvedAt. \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi chính của use case Quản lý câu hỏi}
+\label{table:2.3.5_main}
+\end{table}
+
+\noindent\textbf{Luồng thực thi mở rộng}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+6a & Hệ thống & Thông báo lỗi: Dịch vụ AI gặp sự cố. Vui lòng thử lại hoặc chuyển sang tạo câu hỏi thủ công. \\ \hline
+6b & Hệ thống & Thông báo: AI chỉ có thể sinh câu hỏi trắc nghiệm. Vui lòng kiểm tra lại đáp án. \\ \hline
+8a & Hệ thống & Thông báo lỗi: File không đúng định dạng. Vui lòng kiểm tra mẫu và tải lại. \\ \hline
+8b & Hệ thống & Thông báo: Một số câu hỏi trong file không hợp lệ và đã bị bỏ qua. \\ \hline
+10a & Hệ thống & Thông báo lỗi: Câu hỏi thiếu đáp án đúng. Vui lòng chọn đáp án đúng (isCorrect). \\ \hline
+10b & Hệ thống & Thông báo lỗi: Câu hỏi thiếu nội dung. Vui lòng nhập nội dung câu hỏi. \\ \hline
+12a & Hệ thống & Thông báo cảnh báo: Câu hỏi đang được sử dụng trong đề thi. Bạn có chắc chắn muốn xóa? Câu hỏi đã xóa sẽ ảnh hưởng đến các đề thi liên quan. \\ \hline
+13a & Hệ thống & Thông báo cảnh báo: Câu hỏi chưa được sử dụng bao giờ. Độ chính xác chưa có dữ liệu thực tế. \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi mở rộng của use case Quản lý câu hỏi}
+\label{table:2.3.5_ext}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, ngân hàng câu hỏi được cập nhật với câu hỏi mới hoặc thay đổi tương ứng, usageCount và correctRate được cập nhật theo thời gian. Nếu thất bại, trạng thái ngân hàng câu hỏi không thay đổi. \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Quản lý câu hỏi}
+\label{table:2.3.5_post}
+\end{table}
+
+\vspace{0.5em}
+\noindent\textbf{Bảng dữ liệu câu hỏi:}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Trường} & \textbf{Kiểu} & \textbf{Mô tả} \\
+\hline
+\_id & ObjectId & Khóa chính của câu hỏi \\
+\hline
+content & String & Nội dung câu hỏi (bắt buộc) \\
+\hline
+type & Enum & Loại: single\_choice, multiple\_choice (mặc định: single\_choice) \\
+\hline
+options & Array[Object] & Danh sách đáp án: id (A/B/C/D), content, isCorrect, order \\
+\hline
+correctAnswer & Enum & Đáp án đúng (A/B/C/D) cho single\_choice \\
+\hline
+correctAnswers & Array[Enum] & Danh sách đáp án đúng cho multiple\_choice \\
+\hline
+score & Number & Điểm số của câu hỏi (0.5-10, mặc định: 1) \\
+\hline
+difficulty & Enum & Độ khó: easy, medium, hard (mặc định: medium) \\
+\hline
+topicId & ObjectId & Chủ đề của câu hỏi \\
+\hline
+topicName & String & Tên chủ đề (nếu có) \\
+\hline
+createdBy & ObjectId & Người tạo (ref: User) \\
+\hline
+schoolId & ObjectId & Trường sở hữu (ref: School) \\
+\hline
+source & Enum & Nguồn: ai, manual, imported (mặc định: manual) \\
+\hline
+aiPrompt & String & Prompt đã sử dụng để sinh bằng AI \\
+\hline
+explanation & String & Giải thích đáp án \\
+\hline
+imageUrl & String & URL hình ảnh đính kèm (nếu có) \\
+\hline
+tags & Array[String] & Tags phân loại \\
+\hline
+isApproved & Boolean & Đã được duyệt (mặc định: false) \\
+\hline
+approvedBy & ObjectId & Người duyệt (ref: User) \\
+\hline
+approvedAt & DateTime & Thời điểm duyệt \\
+\hline
+usageCount & Number & Số lần được sử dụng trong đề thi \\
+\hline
+correctRate & Number & Tỷ lệ trả đúng thực tế (0-100\%) \\
+\hline
+isActive & Boolean & Trạng thái hoạt động (mặc định: true) \\
+\hline
+createdAt & DateTime & Thời điểm tạo \\
+\hline
+updatedAt & DateTime & Thời điểm cập nhật cuối \\
+\hline
+\end{tabular}
+}
+\caption{Cấu trúc dữ liệu câu hỏi}
+\end{table}
+
+\subsection{Đặc tả use case Chấm thi bằng ứng dụng}
+\label{subsection:2.3.6}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin chung} & \textbf{Chi tiết} \\ \hline
+\textbf{Mã UC (UC \#)} & UC006 \\ \hline
+\textbf{Tên use case} & Chấm thi bằng ứng dụng \\ \hline
+\textbf{Tác nhân} & Giáo viên (teacher), thông qua thiết bị di động \\ \hline
+\textbf{Điều kiện trước} & Giáo viên đã đăng nhập trên ứng dụng di động Smart Grading, có bài thi đã được phát hành và phiếu OMR tương ứng. \\ \hline
+\end{tabular}
+\caption{Thông tin chung use case Chấm thi bằng ứng dụng}
+\label{table:2.3.6_info}
+\end{table}
+
+\noindent\textbf{Luồng thực thi chính}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+1 & Giáo viên & Mở ứng dụng di động Smart Grading và chọn chức năng "Quét phiếu". \\ \hline
+2 & Ứng dụng & Yêu cầu quyền truy cập camera và hiển thị giao diện chụp ảnh với hướng dẫn căn chỉnh. \\ \hline
+3 & Giáo viên & Đặt phiếu trả lời trên bề mặt phẳng, căn chỉnh vào khung hình và chụp ảnh. \\ \hline
+4 & Ứng dụng & Tải thông tin mẫu OMR tương ứng với bài thi từ server (zones, gridConfig, bubbleConfig). \\ \hline
+5 & Ứng dụng & Tiền xử lý ảnh: chuyển sang thang xám, làm mờ Gaussian, nhị phân hóa bằng phương pháp Otsu, phát hiện và chỉnh nghiêng phiếu (deskew), cắt vùng phiếu. \\ \hline
+6 & Ứng dụng & Phát hiện các ô trả lời bằng cách so sánh vị trí với tọa độ đã lưu trong mẫu OMR (answerArea.zones). \\ \hline
+7 & Ứng dụng & Đánh giá mức độ tô của từng ô (fillIntensity.percentage), xác định ô được chọn dựa trên ngưỡng minFillIntensity (mặc định: 180), phát hiện lỗi tô nhầm (double\_fill) hoặc tô nhẹ (too\_light). \\ \hline
+8 & Ứng dụng & Nhận dạng mã đề (versionCode) và mã số sinh viên (studentCode) từ vùng đầu phiếu bằng OCR. \\ \hline
+9 & Ứng dụng & Đối chiếu câu trả lời của học sinh với đáp án của ExamVersion tương ứng, tính điểm cho từng câu và tổng điểm (totalScore, finalScore). \\ \hline
+10 & Ứng dụng & Lưu thông tin chi tiết vào Submission: answers (position, selectedAnswer, isCorrect, score), omrSummary (totalQuestions, correctCount, incorrectCount, emptyCount, accuracy), scanMetadata (deviceInfo, processingTimeMs, ocr). \\ \hline
+11 & Ứng dụng & Hiển thị kết quả chấm cho giáo viên kèm ảnh phiếu đã được đánh dấu (annotated image với markers). \\ \hline
+12 & Giáo viên & Kiểm tra và chỉnh sửa thủ công (manual override) các câu bị nhận dạng sai hoặc đánh dấu là không hợp lệ. \\ \hline
+13 & Giáo viên & Nhấn nút "Lưu kết quả" để đồng bộ kết quả lên server. \\ \hline
+14 & Ứng dụng & Cập nhật trạng thái Submission thành "completed", ghi nhận scannedBy, scannedAt, reviewedBy, reviewedAt. \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi chính của use case Chấm thi bằng ứng dụng}
+\label{table:2.3.6_main}
+\end{table}
+
+\noindent\textbf{Luồng thực thi mở rộng}
+
+\begin{table}[htbp]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|p{8.5cm}|}
+\hline
+\textbf{No.} & \textbf{Thực hiện} & \textbf{Hành động} \\ \hline
+3a & Ứng dụng & Thông báo lỗi: Ảnh chụp mờ hoặc nghiêng quá nhiều. Vui lòng chụp lại với ánh sáng tốt hơn. \\ \hline
+3b & Ứng dụng & Thông báo: Không phát hiện phiếu OMR. Vui lòng đảm bảo phiếu nằm trong khung hình. \\ \hline
+8a & Ứng dụng & Thông báo lỗi: Không nhận dạng được mã đề. Cho phép giáo viên chọn thủ công mã đề từ danh sách các phiên bản. \\ \hline
+8b & Ứng dụng & Thông báo: Không nhận dạng được mã học sinh. Yêu cầu giáo viên nhập thủ công. \\ \hline
+7a & Ứng dụng & Thông báo cảnh báo: Phát hiện câu tô nhầm (double\_fill). Hệ thống ghi nhận warning và yêu cầu giáo viên xác nhận đáp án cuối cùng. \\ \hline
+7b & Ứng dụng & Thông báo cảnh báo: Phát hiện câu tô nhẹ (too\_light). Điểm có thể không chính xác. \\ \hline
+7c & Ứng dụng & Thông báo: Phát hiện câu bỏ trống (empty). \\ \hline
+10a & Ứng dụng & Thông báo lỗi: Không tìm thấy đáp án cho mã đề này. Vui lòng kiểm tra lại mã đề hoặc bài thi. \\ \hline
+13a & Ứng dụng & Thông báo: Mất kết nối mạng. Kết quả được lưu cục bộ (status: pending) và tự động đồng bộ khi có kết nối. \\ \hline
+13b & Ứng dụng & Thông báo: Bài này đã được chấm trước đó. Bạn có muốn cập nhật lại không? \\ \hline
+\end{tabular}
+}
+\caption{Luồng thực thi mở rộng của use case Chấm thi bằng ứng dụng}
+\label{table:2.3.6_ext}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Điều kiện kết thúc} & \textbf{Chi tiết} \\ \hline
+\textbf{Điều kiện sau} & Nếu thành công, bài làm của học sinh được lưu trên server với điểm số đã tính (totalScore, finalScore), ảnh phiếu đã xử lý (original, preprocessed, annotated) và metadata, học sinh có thể xem điểm sau khi giáo viên phát hành kết quả. Nếu thất bại, ứng dụng giữ kết quả ở trạng thái chờ xử lý (pending). \\ \hline
+\end{tabular}
+\caption{Điều kiện kết thúc use case Chấm thi bằng ứng dụng}
+\label{table:2.3.6_post}
+\end{table}
+
+\vspace{0.5em}
+\noindent\textbf{Bảng dữ liệu bài nộp (Submission):}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Trường} & \textbf{Kiểu} & \textbf{Mô tả} \\
+\hline
+\_id & ObjectId & Khóa chính của bài nộp \\
+\hline
+examId & ObjectId & Bài kiểm tra (ref: Exam) (bắt buộc) \\
+\hline
+versionId & ObjectId & Phiên bản đề thi (ref: ExamVersion) (bắt buộc) \\
+\hline
+omrTemplateId & ObjectId & Mẫu OMR đã sử dụng (ref: OMRTemplate) (bắt buộc) \\
+\hline
+studentId & ObjectId & Học sinh nộp bài (ref: User) (bắt buộc) \\
+\hline
+studentCode & String & Mã học sinh trên phiếu (bắt buộc) \\
+\hline
+classId & ObjectId & Lớp của học sinh (ref: Class) \\
+\hline
+answers & Array[Object] & Chi tiết đáp án: position, questionId, selectedAnswer, correctAnswer, isCorrect, score, maxScore, omrData \\
+\hline
+totalScore & Number & Tổng điểm chấm được (bắt buộc) \\
+\hline
+maxScore & Number & Điểm tối đa (bắt buộc) \\
+\hline
+finalScore & Number & Điểm cuối cùng (sau override) (bắt buộc) \\
+\hline
+images & Object & Ảnh: original, preprocessed, annotated (với markers) \\
+\hline
+scanMetadata & Object & Metadata quét: deviceInfo, scannedAt, processingTimeMs, ocr (versionCode, studentCode) \\
+\hline
+status & Enum & Trạng thái: pending, scanning, scanned, manual\_review, completed, appealed \\
+\hline
+omrSummary & Object & Tổng kết OMR: totalQuestions, correctCount, incorrectCount, emptyCount, doubleFillCount, accuracy, warnings \\
+\hline
+manualOverrides & Array[Object] & DS sửa đổi thủ công: position, originalAnswer, correctedAnswer, reason, overriddenBy, overriddenAt \\
+\hline
+scannedBy & ObjectId & Người quét (ref: User) \\
+\hline
+scannedAt & DateTime & Thời điểm quét \\
+\hline
+reviewedBy & ObjectId & Người duyệt (ref: User) \\
+\hline
+reviewedAt & DateTime & Thời điểm duyệt \\
+\hline
+createdAt & DateTime & Thời điểm tạo \\
+\hline
+updatedAt & DateTime & Thời điểm cập nhật cuối \\
+\hline
+\end{tabular}
+}
+\caption{Cấu trúc dữ liệu bài nộp (Submission)}
+\end{table}
+
+\section{Yêu cầu phi chức năng}
+\label{section:2.4}

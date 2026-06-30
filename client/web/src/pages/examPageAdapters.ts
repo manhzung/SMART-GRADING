@@ -63,7 +63,7 @@ export interface ExamDetailData {
   history: Array<{ action: string; timestamp: string; user: string; type: 'edit' | 'class' | 'create' }>;
 }
 
-const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString('vi-VN') : 'Chưa đặt ngày');
+const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString('en-US') : 'Not set');
 
 export function mapExamListItem(exam: Partial<Exam>): ExamListItem {
   const classNames = (exam.classIds || [])
@@ -75,10 +75,10 @@ export function mapExamListItem(exam: Partial<Exam>): ExamListItem {
 
   return {
     _id: exam._id || '',
-    title: exam.title || 'Chưa có tiêu đề',
-    classNames: classNames.length ? classNames : ['Chưa gán'],
+    title: exam.title || 'Untitled exam',
+    classNames: classNames.length ? classNames : ['Not assigned'],
     date: formatDate(exam.examDate || exam.date),
-    duration: `${exam.duration || 0} phút`,
+    duration: `${exam.duration || 0} min`,
     questionCount,
     status: (exam.status || 'draft') as ExamListItem['status'],
     variantsCount: exam.numberOfVersions || 0,
@@ -99,7 +99,8 @@ export function buildExamFilters(exams: ExamListItem[], filters: ExamFilterInput
     if (filters.startDate || filters.endDate) {
       const parts = exam.date.split('/');
       if (parts.length === 3) {
-        const current = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+        // Date format is now MM/dd/yyyy (en-US locale)
+        const current = new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
         if (filters.startDate && current < new Date(filters.startDate)) return false;
         if (filters.endDate) {
           const end = new Date(filters.endDate);
@@ -127,7 +128,7 @@ export function mapExamDetailData(
     .filter((question): question is NonNullable<Exam['questionIds']>[number] & Record<string, unknown> => typeof question === 'object' && question !== null)
     .map((question: any, index: number) => ({
       stt: String(index + 1),
-      content: question.content || `Câu hỏi ${index + 1}`,
+      content: question.content || `Question ${index + 1}`,
       correctAnswer: question.correctAnswer || question.options?.find((option: any) => option.isCorrect)?.id || 'A',
       difficulty: (question.difficulty || 'medium') as 'easy' | 'medium' | 'hard',
       score: question.score || 1,
@@ -136,8 +137,8 @@ export function mapExamDetailData(
 
   const mappedClasses = (exam.classIds || []).map((item: any) => ({
     _id: item._id || item,
-    name: item.name || 'Lớp học',
-    description: item.code ? `Mã lớp: ${item.code}` : 'Chưa có mã lớp',
+    name: item.name || 'Class',
+    description: item.code ? `Class code: ${item.code}` : 'No class code',
     studentCount: item.studentCount || 0,
     isPrimary: typeof exam.primaryClassId === 'object' ? exam.primaryClassId?._id === item._id : exam.primaryClassId === item._id,
   }));
@@ -159,19 +160,19 @@ export function mapExamDetailData(
     totalQuestions: exam.numberOfQuestions || mappedQuestions.length,
     scoreScale: String(exam.totalScore || 10),
     passingScore: exam.passingScore || 5,
-    monitoring: 'Bật AI',
+    monitoring: 'AI Enabled',
     omrTemplateName: exam.omrTemplateId?.name || '',
     subjectId: typeof exam.subjectId === 'object' ? (exam.subjectId as any)?._id : (exam.subjectId as string),
     subjectName: typeof exam.subjectId === 'object' ? (exam.subjectId as any)?.name : '',
     classes: mappedClasses,
     questions: mappedQuestions,
-    versions: versions.map((version) => {
+      versions: versions.map((version) => {
       const hasErrors = (version.generationErrors?.length ?? 0) > 0;
       const pdfReady = !!version.pdfUrl;
-      let status = 'Sẵn sàng';
-      if (hasErrors) status = 'Lỗi';
-      else if (pdfReady) status = 'Đã sinh PDF';
-      else status = 'Chưa sinh';
+      let status = 'Ready';
+      if (hasErrors) status = 'Error';
+      else if (pdfReady) status = 'PDF Generated';
+      else status = 'Not generated';
 
       return {
         code: version.versionCode,

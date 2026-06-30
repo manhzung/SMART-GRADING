@@ -32,11 +32,11 @@ function formatRelativeTime(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Vừa xong';
-  if (diffMins < 60) return `${diffMins} phút trước`;
-  if (diffHours < 24) return `${diffHours} giờ trước`;
-  if (diffDays < 7) return `${diffDays} ngày trước`;
-  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' });
 }
 
 export default function NotificationPanel() {
@@ -89,7 +89,7 @@ export default function NotificationPanel() {
         ref={buttonRef}
         className={styles.bellButton}
         onClick={togglePanel}
-        aria-label={`Thông báo${unreadCount > 0 ? ` (${unreadCount} chưa đọc)` : ''}`}
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
       >
         {unreadCount > 0 ? (
           <BellRing size={18} className={styles.bellIconActive} />
@@ -104,11 +104,11 @@ export default function NotificationPanel() {
       {isOpen && (
         <div ref={panelRef} className={styles.panel}>
           <div className={styles.panelHeader}>
-            <h3 className={styles.panelTitle}>Thông báo</h3>
+            <h3 className={styles.panelTitle}>Notifications</h3>
             {unreadCount > 0 && (
               <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
                 <Check size={14} />
-                <span>Đánh dấu tất cả đã đọc</span>
+                <span>Mark all as read</span>
               </button>
             )}
           </div>
@@ -116,13 +116,13 @@ export default function NotificationPanel() {
           <div className={styles.notificationList}>
             {isLoading && notifications.length === 0 ? (
               <div className={styles.emptyState}>
-                <p className={styles.emptyTitle}>Đang tải...</p>
+                <p className={styles.emptyTitle}>Loading...</p>
               </div>
             ) : notifications.length === 0 ? (
               <div className={styles.emptyState}>
                 <Bell size={40} className={styles.emptyIcon} />
-                <p className={styles.emptyTitle}>Không có thông báo nào</p>
-                <p className={styles.emptySubtitle}>Bạn sẽ nhận được thông báo khi có cập nhật mới</p>
+                <p className={styles.emptyTitle}>No notifications</p>
+                <p className={styles.emptySubtitle}>You will receive notifications when there are new updates</p>
               </div>
             ) : (
               notifications.map(notification => {
@@ -153,7 +153,7 @@ export default function NotificationPanel() {
 
           <div className={styles.panelFooter}>
             <a href="/notifications" className={styles.viewAllLink}>
-              <span>Xem tất cả thông báo</span>
+              <span>View all notifications</span>
               <ExternalLink size={14} />
             </a>
           </div>

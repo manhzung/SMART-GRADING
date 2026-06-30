@@ -10,10 +10,10 @@ import { SubmissionDetailModal } from '../../../components/submission/Submission
 
 const mockSubmission = {
   _id: 'sub1',
-  examId: { _id: 'exam1', title: 'Đề thi Toán' },
+  examId: { _id: 'exam1', title: 'Math Exam' },
   versionId: { _id: 'v1', versionCode: 'A' },
-  studentId: { _id: 's1', name: 'Nguyen Van A', studentCode: 'HS001', email: 'a@school.com' },
-  classId: { _id: 'c1', name: 'Lớp 12A1' },
+  studentId: { _id: 's1', name: 'John Doe', studentCode: 'ST001', email: 'a@school.com' },
+  classId: { _id: 'c1', name: 'Grade 12A1' },
   answers: [
     { position: 1, selectedAnswer: 'A', correctAnswer: 'A', isCorrect: true, score: 1, maxScore: 1 },
     { position: 2, selectedAnswer: 'B', correctAnswer: 'C', isCorrect: false, score: 0, maxScore: 1 },
@@ -59,8 +59,8 @@ describe('SubmissionDetailModal', () => {
       (apiService.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockSubmission);
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => {
-        expect(screen.getByText('Nguyen Van A')).toBeInTheDocument();
-        expect(screen.getByText('HS001')).toBeInTheDocument();
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+        expect(screen.getByText('ST001')).toBeInTheDocument();
       });
     });
 
@@ -76,7 +76,7 @@ describe('SubmissionDetailModal', () => {
       (apiService.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockSubmission);
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => {
-        const versionLabels = screen.getAllByText('Mã đề:');
+        const versionLabels = screen.getAllByText('Version:');
         expect(versionLabels.length).toBeGreaterThanOrEqual(1);
       });
     });
@@ -86,7 +86,7 @@ describe('SubmissionDetailModal', () => {
         () => new Promise(() => {})
       );
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
-      expect(screen.getByText(/đang tải/i)).toBeInTheDocument();
+      expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });
 
     it('displays error message on fetch failure', async () => {
@@ -102,7 +102,7 @@ describe('SubmissionDetailModal', () => {
       const onClose = vi.fn();
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={onClose} />);
       await waitFor(() => screen.getByRole('dialog'));
-      const closeBtn = screen.getByLabelText(/đóng/i);
+      const closeBtn = screen.getByLabelText(/close/i);
       fireEvent.click(closeBtn);
       expect(onClose).toHaveBeenCalledTimes(1);
     });
@@ -123,14 +123,14 @@ describe('SubmissionDetailModal', () => {
       (apiService.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockSubmission);
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => screen.getByRole('dialog'));
-      expect(screen.getByRole('button', { name: /sửa/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
     });
 
     it('switches to edit mode when Edit clicked', async () => {
       (apiService.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockSubmission);
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => screen.getByRole('dialog'));
-      fireEvent.click(screen.getByRole('button', { name: /sửa/i }));
+      fireEvent.click(screen.getByRole('button', { name: /edit/i }));
       await waitFor(() => {
         const selects = screen.getAllByRole('combobox');
         expect(selects.length).toBeGreaterThan(0);
@@ -141,9 +141,9 @@ describe('SubmissionDetailModal', () => {
       (apiService.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockSubmission);
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => screen.getByRole('dialog'));
-      fireEvent.click(screen.getByRole('button', { name: /sửa/i }));
+      fireEvent.click(screen.getByRole('button', { name: /edit/i }));
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /lưu/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
       });
     });
 
@@ -152,11 +152,11 @@ describe('SubmissionDetailModal', () => {
       (apiService.patch as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true, totalScore: 8 });
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => screen.getByRole('dialog'));
-      fireEvent.click(screen.getByRole('button', { name: /sửa/i }));
+      fireEvent.click(screen.getByRole('button', { name: /edit/i }));
       await waitFor(() => screen.getAllByRole('combobox'));
       const select = screen.getAllByRole('combobox')[1];
       fireEvent.change(select, { target: { value: 'C' } });
-      fireEvent.click(screen.getByRole('button', { name: /lưu/i }));
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
       await waitFor(() => {
         expect(apiService.patch).toHaveBeenCalled();
         const callArgs = (apiService.patch as ReturnType<typeof vi.fn>).mock.calls[0];
@@ -169,9 +169,9 @@ describe('SubmissionDetailModal', () => {
       (apiService.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockSubmission);
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => screen.getByRole('dialog'));
-      fireEvent.click(screen.getByRole('button', { name: /sửa/i }));
-      await waitFor(() => screen.getByRole('button', { name: /lưu/i }));
-      const saveButton = screen.getByRole('button', { name: /lưu/i });
+      fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+      await waitFor(() => screen.getByRole('button', { name: /save/i }));
+      const saveButton = screen.getByRole('button', { name: /save/i });
       expect(saveButton).toBeDisabled();
     });
   });
@@ -181,16 +181,16 @@ describe('SubmissionDetailModal', () => {
       (apiService.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockSubmission);
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => screen.getByRole('dialog'));
-      expect(screen.getByRole('button', { name: /xóa/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
     });
 
     it('shows confirm dialog when Delete clicked', async () => {
       (apiService.get as ReturnType<typeof vi.fn>).mockResolvedValue(mockSubmission);
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={vi.fn()} />);
       await waitFor(() => screen.getByRole('dialog'));
-      fireEvent.click(screen.getByRole('button', { name: /^xóa$/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /xác nhận xóa/i })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /confirm delete/i })).toBeInTheDocument();
       });
     });
 
@@ -200,9 +200,9 @@ describe('SubmissionDetailModal', () => {
       const onClose = vi.fn();
       render(<SubmissionDetailModal open={true} submissionId="sub1" onClose={onClose} />);
       await waitFor(() => screen.getByRole('dialog'));
-      fireEvent.click(screen.getByRole('button', { name: /^xóa$/i }));
-      await waitFor(() => screen.getByRole('heading', { name: /xác nhận xóa/i }));
-      const confirmButton = screen.getByRole('button', { name: /xác nhận xóa/i });
+      fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+      await waitFor(() => screen.getByRole('heading', { name: /confirm delete/i }));
+      const confirmButton = screen.getByRole('button', { name: /confirm delete/i });
       fireEvent.click(confirmButton);
       await waitFor(() => {
         expect(apiService.delete).toHaveBeenCalledWith('/submissions/sub1');

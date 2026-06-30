@@ -8,7 +8,7 @@ const createClass = {
   body: Joi.object().keys({
     name: Joi.string().min(2).max(50).trim().required(),
     code: Joi.string().min(2).max(20).trim().required(),
-    gradeLevel: Joi.number().min(1).max(12).required(),
+    gradeLevel: Joi.number().min(0).max(12).required(),
     academicYear: Joi.string().pattern(/^\d{4}-\d{4}$/).required(),
     schoolId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
     homeroomTeacherId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
@@ -20,7 +20,7 @@ const updateClass = {
   params: id,
   body: Joi.object().keys({
     name: Joi.string().min(2).max(50).trim(),
-    gradeLevel: Joi.number().min(1).max(12),
+    gradeLevel: Joi.number().min(0).max(12),
     academicYear: Joi.string().pattern(/^\d{4}-\d{4}$/),
     homeroomTeacherId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
   }),
