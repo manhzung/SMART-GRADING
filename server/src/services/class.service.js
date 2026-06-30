@@ -218,7 +218,7 @@ class ClassService {
           student = new User({
             name: studentData.name,
             email: studentData.email,
-            password: 'EduGrade123!',
+            password: 'student123',
             studentCode: studentData.studentCode,
             phone: studentData.phone,
             dateOfBirth: studentData.dateOfBirth || null,
@@ -355,7 +355,7 @@ class ClassService {
       dateOfBirth: s.dateOfBirth,
       // Indicate that this account still uses the default password (set at import).
       // Use the dedicated reset endpoint to set a new password.
-      passwordHint: 'EduGrade123!',
+      passwordHint: 'student123',
     }));
     return result;
   }

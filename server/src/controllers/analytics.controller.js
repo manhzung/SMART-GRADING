@@ -9,48 +9,52 @@ const getDashboardStats = catchAsync(async (req, res) => {
   const schoolId = req.user?.schoolId;
   const userRole = req.user?.role;
 
-  // Class and User carry `schoolId` directly. Exam/Submission/Appeal do NOT —
-  // they relate to a school only through Class.classIds and Submission.examId,
-  // so we must derive the school's classIds/examIds and filter via those refs.
-  const schoolClassIds = schoolId
-    ? (await Class.find({ schoolId }).select('_id').lean()).map((c) => c._id)
-    : null;
-  const schoolExamIds =
-    schoolId && schoolClassIds
-      ? (await Exam.find({ classIds: { $in: schoolClassIds } }).select('_id').lean()).map((e) => e._id)
-      : null;
-
-  const examFilter = schoolId ? { classIds: { $in: schoolClassIds } } : {};
-  const submissionFilter = schoolId ? { examId: { $in: schoolExamIds } } : {};
-  const appealFilter = schoolId ? { examId: { $in: schoolExamIds } } : {};
-
   let classFilter = { isActive: true };
-  if (schoolId) classFilter.schoolId = schoolId;
   if (userId && userRole === 'teacher') {
     classFilter = {
       isActive: true,
-      ...(schoolId ? { schoolId } : {}),
       $or: [{ homeroomTeacherId: userId }, { 'subjectTeachers.teacherId': userId }],
     };
   } else if (userId && userRole === 'student') {
     classFilter = {
       isActive: true,
-      ...(schoolId ? { schoolId } : {}),
       studentIds: userId,
     };
+  } else if (schoolId && userRole !== 'admin') {
+    classFilter = { ...classFilter, schoolId };
   }
 
+  const [totalClasses, scopedClasses] = await Promise.all([
+    Class.countDocuments(classFilter),
+    Class.find(classFilter).select('_id').lean(),
+  ]);
+
+  const scopedClassIds = scopedClasses.map((c) => c._id);
+  const effectiveClassIds = userRole === 'admin' ? null : schoolId ? scopedClassIds : null;
+
+  const schoolExamIds =
+    effectiveClassIds &&
+      (await Exam.find({ classIds: { $in: effectiveClassIds } }).select('_id').lean()).map((e) => e._id);
+
+  const examFilter = effectiveClassIds ? { classIds: { $in: effectiveClassIds } } : {};
+  const submissionFilter = effectiveClassIds ? { examId: { $in: schoolExamIds } } : {};
+  const appealFilter = effectiveClassIds ? { examId: { $in: schoolExamIds } } : {};
+
   const [
-    totalClasses,
     totalExams,
     totalStudents,
     totalSubmissions,
     pendingAppeals,
     publishedExams,
   ] = await Promise.all([
-    Class.countDocuments(classFilter),
     Exam.countDocuments(examFilter),
-    User.countDocuments({ role: 'student', isActive: true, ...(schoolId ? { schoolId } : {}) }),
+    User.countDocuments({
+      role: 'student',
+      isActive: true,
+      ...(userRole === 'admin' ? {} : schoolId ? { schoolId } : {}),
+      ...(userRole === 'teacher' ? { classIds: { $in: scopedClassIds } } : {}),
+      ...(userRole === 'student' ? { _id: userId } : {}),
+    }),
     Submission.countDocuments(submissionFilter),
     Appeal.countDocuments({ status: 'pending', ...appealFilter }),
     Exam.countDocuments({ status: 'published', ...examFilter }),
@@ -127,6 +131,8 @@ const getDashboardStats = catchAsync(async (req, res) => {
 const getAnalytics = catchAsync(async (req, res) => {
   const { period = 'month' } = req.query;
   const schoolId = req.user?.schoolId;
+  const userRole = req.user?.role;
+  const userId = req.user?.id;
 
   const now = new Date();
   let startDate;
@@ -138,7 +144,26 @@ const getAnalytics = catchAsync(async (req, res) => {
     startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   }
 
-  const baseFilter = schoolId ? { schoolId } : {};
+  let classFilter = { isActive: true };
+  if (userId && userRole === 'teacher') {
+    classFilter = {
+      isActive: true,
+      $or: [{ homeroomTeacherId: userId }, { 'subjectTeachers.teacherId': userId }],
+    };
+  } else if (userId && userRole === 'student') {
+    classFilter = {
+      isActive: true,
+      studentIds: userId,
+    };
+  } else if (schoolId && userRole !== 'admin') {
+    classFilter = { ...classFilter, schoolId };
+  }
+
+  const scopedClasses = await Class.find(classFilter).select('_id').lean();
+  const scopedClassIds = scopedClasses.map((c) => c._id);
+  const effectiveClassIds = userRole === 'admin' ? null : schoolId ? scopedClassIds : null;
+
+  const baseFilter = effectiveClassIds ? { classIds: { $in: effectiveClassIds } } : schoolId ? { schoolId } : {};
   const dateFilter = { createdAt: { $gte: startDate } };
   const filter = { ...baseFilter, ...dateFilter };
 
@@ -282,7 +307,13 @@ const getAnalytics = catchAsync(async (req, res) => {
           { $group: { _id: null, avg: { $avg: '$finalScore' } } },
         ])
       )[0]?.avg || 0,
-    totalStudents: await User.countDocuments({ role: 'student', isActive: true, ...(schoolId ? { schoolId } : {}) }),
+    totalStudents: await User.countDocuments({
+      role: 'student',
+      isActive: true,
+      ...(userRole === 'admin' ? {} : schoolId ? { schoolId } : {}),
+      ...(userRole === 'teacher' ? { classIds: { $in: scopedClassIds } } : {}),
+      ...(userRole === 'student' ? { _id: userId } : {}),
+    }),
   };
 
   res.send({

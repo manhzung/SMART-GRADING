@@ -35,10 +35,54 @@ class ExamService {
     return exam;
   }
 
-  async getById(id) {
+  async getById(id, requestingUser = null) {
+    const examForAuth = await Exam.findById(id).lean();
+
+    if (!examForAuth) return null;
+
+    if (requestingUser) {
+      if (requestingUser.role === 'admin') {
+        // Admin can access any exam
+      } else if (requestingUser.role === 'school-admin') {
+        const examClassIds = examForAuth.classIds || [];
+        const isCreator = examForAuth.createdBy && examForAuth.createdBy.toString() === requestingUser.id.toString();
+        const schoolClasses = await Class.find({
+          schoolId: requestingUser.schoolId,
+          _id: { $in: examClassIds },
+        }).countDocuments();
+        if (schoolClasses === 0 && !isCreator) {
+          throw new ApiError(403, 'You can only view exams in your own school');
+        }
+      } else if (requestingUser.role === 'teacher') {
+        const teacherId = requestingUser.id;
+        const isCreator = examForAuth.createdBy && examForAuth.createdBy.toString() === teacherId.toString();
+        if (!isCreator) {
+          const examClassIds = examForAuth.classIds || [];
+          const teacherClasses = await Class.find({
+            $or: [
+              { homeroomTeacherId: teacherId },
+              { 'subjectTeachers.teacherId': teacherId },
+            ],
+            _id: { $in: examClassIds },
+          }).countDocuments();
+          if (teacherClasses === 0) {
+            throw new ApiError(403, 'You can only view exams for your classes');
+          }
+        }
+      } else if (requestingUser.role === 'student') {
+        const examClassIds = examForAuth.classIds || [];
+        const overlap = examClassIds.some((cid) =>
+          (requestingUser.classIds || []).some((ucid) => ucid.toString() === cid.toString())
+        );
+        if (!overlap) {
+          throw new ApiError(403, 'You can only view exams for your enrolled classes');
+        }
+      }
+    }
+
     const [exam, submissionStats] = await Promise.all([
       Exam.findById(id)
-        .populate('classIds', 'name code studentCount')
+        .populate('classIds', 'name code schoolId')
         .populate('primaryClassId', 'name code')
         .populate('createdBy', 'name email')
         .populate('omrTemplateId', 'name code zones')
@@ -56,9 +100,6 @@ class ExamService {
       ]),
     ]);
 
-    if (!exam) return null;
-
-    // Attach aggregated totals to exam object for response
     const stats = submissionStats[0] || { totalSubmissions: 0, totalStudents: [] };
     exam.totalSubmissions = stats.totalSubmissions;
     exam.totalStudents = stats.totalStudents.length;
@@ -98,9 +139,22 @@ class ExamService {
 
     const sortOrder = order === 'asc' ? 1 : -1;
 
-    // User-based filtering: teachers see their own exams, students see their class's exams
+    // User-based filtering: admins see all exams, school-admins see their school exams,
+    // teachers see their own exams, students see their class's exams
     if (user) {
-      if (user.role === 'teacher') {
+      if (user.role === 'admin') {
+        // No filter - admin sees all exams
+      } else if (user.role === 'school-admin' && user.schoolId) {
+        const schoolClassIds = await Class.find({ schoolId: user.schoolId }).distinct('_id');
+        if (schoolClassIds.length > 0) {
+          filter.$or = [
+            { classIds: { $in: schoolClassIds } },
+            { createdBy: user.id },
+          ];
+        } else {
+          filter.createdBy = user.id;
+        }
+      } else if (user.role === 'teacher') {
         filter.createdBy = user.id;
       } else if (user.role === 'student' && user.classIds?.length) {
         filter.classIds = { $in: user.classIds };
@@ -129,17 +183,39 @@ class ExamService {
 
   async getUpcomingExams(user, limit) {
     const now = new Date();
-    // Get exams that are either upcoming (examDate in future) or recently created/completed
-    // Also include exams without examDate that were recently created
-    return Exam.find({
-      createdBy: user.id,
+    const baseFilter = {
       $or: [
-        { examDate: { $ne: null, $gte: now } },  // Upcoming exams
-        { examDate: null, createdAt: { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } }, // Recent exams without date (last 30 days)
-        { status: { $in: ['draft', 'published', 'in_progress', 'completed'] }, examDate: { $ne: null, $lt: now } }, // Past exams with date
+        { examDate: { $ne: null, $gte: now } },
+        { examDate: null, createdAt: { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } },
+        { status: { $in: ['draft', 'published', 'in_progress', 'completed'] }, examDate: { $ne: null, $lt: now } },
       ],
-    })
-      .sort({ examDate: -1, createdAt: -1 })  // Sort by examDate desc, then by createdAt
+    };
+
+    if (user) {
+      if (user.role === 'admin') {
+        // No extra filter - admin sees all exams
+      } else if (user.role === 'school-admin' && user.schoolId) {
+        const schoolClassIds = await Class.find({ schoolId: user.schoolId }).distinct('_id');
+        if (schoolClassIds.length > 0) {
+          baseFilter.$or = [
+            ...(baseFilter.$or || []),
+            { classIds: { $in: schoolClassIds } },
+            { createdBy: user.id },
+          ];
+        } else {
+          baseFilter.createdBy = user.id;
+        }
+      } else if (user.role === 'teacher') {
+        baseFilter.createdBy = user.id;
+      } else if (user.role === 'student' && user.classIds?.length) {
+        baseFilter.classIds = { $in: user.classIds };
+      } else {
+        baseFilter.createdBy = user.id;
+      }
+    }
+
+    return Exam.find(baseFilter)
+      .sort({ examDate: -1, createdAt: -1 })
       .limit(limit)
       .populate('classIds', 'name code')
       .populate('primaryClassId', 'name code')

@@ -131,6 +131,7 @@ export default function RoleDashboard() {
 
   const isAdmin = user.role === 'admin';
   const isSchoolAdmin = user.role === 'school-admin';
+  const isTeacher = user.role === 'teacher';
   const roleLabel = isAdmin ? 'SUPER ADMIN' : isSchoolAdmin ? 'SCHOOL ADMIN' : user.role.toUpperCase();
   const roleBadgeClass = isAdmin
     ? styles.roleBadgeAdmin
@@ -179,19 +180,21 @@ export default function RoleDashboard() {
         </div>
       )}
 
-      <div className={styles.kpiGrid}>
+      <div className={isTeacher ? styles.kpiGridTeacher : styles.kpiGrid}>
         <Kpi
           label="Classes"
           value={stats?.totalClasses ?? 0}
           icon={<GraduationCap size={22} />}
           colorClass={styles.blueIcon}
         />
-        <Kpi
-          label="Students"
-          value={stats?.totalStudents ?? 0}
-          icon={<Users size={22} />}
-          colorClass={styles.greenIcon}
-        />
+        {!isTeacher && (
+          <Kpi
+            label="Students"
+            value={stats?.totalStudents ?? 0}
+            icon={<Users size={22} />}
+            colorClass={styles.greenIcon}
+          />
+        )}
         <Kpi
           label="Exams"
           value={stats?.totalExams ?? 0}
@@ -205,22 +208,26 @@ export default function RoleDashboard() {
           icon={<Send size={22} />}
           colorClass={styles.orangeIcon}
         />
-        <Kpi
-          label="Avg Score"
-          value={stats?.avgScore?.toFixed?.(2) ?? '0.00'}
-          hint="/10"
-          icon={<Award size={22} />}
-          colorClass={styles.amberIcon}
-        />
-        <Kpi
-          label="Pass Rate"
-          value={stats ? `${stats.passRate}%` : '0%'}
-          icon={<Percent size={22} />}
-          colorClass={styles.tealIcon}
-        />
+        {!isTeacher && (
+          <>
+            <Kpi
+              label="Avg Score"
+              value={stats?.avgScore?.toFixed?.(2) ?? '0.00'}
+              hint="/10"
+              icon={<Award size={22} />}
+              colorClass={styles.amberIcon}
+            />
+            <Kpi
+              label="Pass Rate"
+              value={stats ? `${stats.passRate}%` : '0%'}
+              icon={<Percent size={22} />}
+              colorClass={styles.tealIcon}
+            />
+          </>
+        )}
       </div>
 
-      <div className={styles.row}>
+      <div className={isTeacher ? styles.rowTeacher : styles.row}>
         <div className={styles.listCard}>
           <h3 className={styles.listTitle}>Recent Submissions</h3>
           {(stats?.recentSubmissions ?? []).length === 0 && (
@@ -255,21 +262,23 @@ export default function RoleDashboard() {
           })}
         </div>
 
-        <div className={styles.listCard}>
-          <h3 className={styles.listTitle}>Pending Appeals</h3>
-          <div className={styles.appealsContainer}>
-            <div className={styles.appealCountBox}>
-              <span className={styles.appealCount}>{stats?.pendingAppeals ?? 0}</span>
-              <span className={styles.appealLabel}>Request(s)</span>
+        {!isTeacher && (
+          <div className={styles.listCard}>
+            <h3 className={styles.listTitle}>Pending Appeals</h3>
+            <div className={styles.appealsContainer}>
+              <div className={styles.appealCountBox}>
+                <span className={styles.appealCount}>{stats?.pendingAppeals ?? 0}</span>
+                <span className={styles.appealLabel}>Request(s)</span>
+              </div>
+              <p className={styles.appealDescription}>
+                Go to <strong>Appeals</strong> in the menu to process exam appeals requested by students.
+              </p>
+              <Link to="/appeals" className={styles.appealBtn}>
+                Go to Appeals
+              </Link>
             </div>
-            <p className={styles.appealDescription}>
-              Go to <strong>Appeals</strong> in the menu to process exam appeals requested by students.
-            </p>
-            <Link to="/appeals" className={styles.appealBtn}>
-              Go to Appeals
-            </Link>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -96,7 +96,6 @@ export default function ClassesPage() {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    gradeLevel: 12,
     academicYear: '2025-2026',
     homeroomTeacherId: user?.id || ''
   });
@@ -132,7 +131,6 @@ export default function ClassesPage() {
     setFormData({
       name: '',
       code: '',
-      gradeLevel: 12,
       academicYear: '2025-2026',
       homeroomTeacherId: defaultTeacherId,
     });
@@ -145,7 +143,6 @@ export default function ClassesPage() {
     setFormData({
       name: cls.name,
       code: cls.code,
-      gradeLevel: cls.gradeLevel,
       academicYear: cls.academicYear,
       homeroomTeacherId: (cls.homeroomTeacherId as any)?._id || (cls.homeroomTeacherId as any)?.id || ''
     });
@@ -169,11 +166,12 @@ export default function ClassesPage() {
       let created;
       if (editingClass) {
         const { homeroomTeacherId, ...rest } = formData;
-        await updateClass(editingClass._id, { ...rest, homeroomTeacherId: homeroomTeacherId || undefined });
+        await updateClass(editingClass._id, { ...rest, homeroomTeacherId: homeroomTeacherId || undefined, gradeLevel: null });
       } else {
         const payload = {
           ...formData,
           homeroomTeacherId: formData.homeroomTeacherId || user?.id || undefined,
+          gradeLevel: null,
         };
         created = await createClass(payload);
       }
@@ -505,37 +503,19 @@ export default function ClassesPage() {
                 />
               </div>
 
-              {/* Row: Grade Level & Academic Year */}
-              <div className={styles.rowInputs}>
-                {/* Grade Level */}
-                <div className={styles.formGroup}>
-                  <label htmlFor="gradeLevel">Grade Level *</label>
-                  <select
-                    id="gradeLevel"
-                    className={styles.formInput}
-                    value={formData.gradeLevel}
-                    onChange={(e) => setFormData({ ...formData, gradeLevel: parseInt(e.target.value) })}
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
-                      <option key={num} value={num}>Grade {num}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Academic Year */}
-                <div className={styles.formGroup}>
-                  <label htmlFor="academicYear">Academic Year *</label>
-                  <select
-                    id="academicYear"
-                    className={styles.formInput}
-                    value={formData.academicYear}
-                    onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
-                  >
-                    <option value="2024-2025">2024-2025</option>
-                    <option value="2025-2026">2025-2026</option>
-                    <option value="2026-2027">2026-2027</option>
-                  </select>
-                </div>
+              {/* Academic Year */}
+              <div className={styles.formGroup}>
+                <label htmlFor="academicYear">Academic Year *</label>
+                <select
+                  id="academicYear"
+                  className={styles.formInput}
+                  value={formData.academicYear}
+                  onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
+                >
+                  <option value="2024-2025">2024-2025</option>
+                  <option value="2025-2026">2025-2026</option>
+                  <option value="2026-2027">2026-2027</option>
+                </select>
               </div>
 
               {/* Homeroom Teacher */}

@@ -79,14 +79,53 @@ class AppealService {
       .populate('examId', 'title');
   }
 
-  async getAll(query = {}) {
-    const { examId, submissionId, studentId, status, page, limit, ...rest } = query;
+  async getAll(query = {}, user = null) {
+    const {
+      examId,
+      submissionId,
+      studentId,
+      status,
+      page,
+      limit,
+      search,
+      startDate,
+      endDate,
+      ...rest
+    } = query;
     const { skip } = parsePagination({ page, limit });
     const filter = { ...rest };
     if (examId) filter.examId = examId;
     if (submissionId) filter.submissionId = submissionId;
     if (studentId) filter.studentId = studentId;
     if (status) filter.status = status;
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+
+    if (search) {
+      filter.reason = { $regex: search, $options: 'i' };
+    }
+
+    if (user) {
+      if (user.role === 'school-admin') {
+        const examIds = await this._getExamIdsBySchool(user.schoolId);
+        if (examIds.length) {
+          filter.examId = { $in: examIds };
+        } else {
+          filter.examId = new mongoose.Types.ObjectId();
+        }
+      } else if (user.role === 'teacher') {
+        const examIds = await this._getExamIdsByTeacherClasses(user._id || user.id);
+        if (examIds.length) {
+          filter.examId = { $in: examIds };
+        } else {
+          filter.examId = new mongoose.Types.ObjectId();
+        }
+      }
+    }
 
     const [results, total] = await Promise.all([
       Appeal.find(filter)
@@ -106,6 +145,30 @@ class AppealService {
       total,
       pages: Math.ceil(total / (limit || 20)),
     };
+  }
+
+  async _getExamIdsBySchool(schoolId) {
+    const { Exam, Class } = require('../models');
+    const classIds = (await Class.find({ schoolId }).select('_id').lean()).map((c) => c._id);
+    if (!classIds.length) return [];
+    const exams = await Exam.find({ classIds: { $in: classIds } }).select('_id').lean();
+    return exams.map((e) => e._id);
+  }
+
+  async _getExamIdsByTeacherClasses(teacherId) {
+    const { Exam, Class } = require('../models');
+    const classes = await Class.find({
+      $or: [
+        { homeroomTeacherId: teacherId },
+        { 'subjectTeachers.teacherId': teacherId },
+      ],
+    })
+      .select('_id')
+      .lean();
+    const classIds = classes.map((c) => c._id);
+    if (!classIds.length) return [];
+    const exams = await Exam.find({ classIds: { $in: classIds } }).select('_id').lean();
+    return exams.map((e) => e._id);
   }
 
   async getByStudent(studentId, query = {}) {

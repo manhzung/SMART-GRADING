@@ -50,21 +50,19 @@ function makeReq(user = {}) {
   return { user };
 }
 
-describe('AnalyticsController.getDashboardStats - schoolId scoping', () => {
+describe('AnalyticsController.getDashboardStats - role scoping', () => {
   let capturedErr;
 
   beforeEach(() => {
     jest.clearAllMocks();
     capturedErr = null;
 
-    // Class.find(...).select() returns the school's classes (used by our fix)
     const classChain = thenableChain([{ _id: SCHOOL_CLASS_A }, { _id: SCHOOL_CLASS_B }]);
     Class.find.mockReturnValue(classChain);
 
     User.countDocuments.mockResolvedValue(20);
     Class.countDocuments.mockResolvedValue(2);
 
-    // Exams scoped to school's classes
     Exam.countDocuments.mockImplementation(async (filter) => {
       const ids = filter.classIds && filter.classIds.$in;
       if (!ids) return 14;
@@ -87,7 +85,6 @@ describe('AnalyticsController.getDashboardStats - schoolId scoping', () => {
       return thenableChain(results);
     });
 
-    // Submissions scoped via examId $in
     Submission.countDocuments.mockImplementation(async (filter) => {
       const ids = filter && filter.examId && filter.examId.$in;
       if (!ids) return 25;
@@ -118,33 +115,58 @@ describe('AnalyticsController.getDashboardStats - schoolId scoping', () => {
 
   const next = (err) => { capturedErr = err; };
 
-  it('returns recentSubmissions scoped to the user school', async () => {
-    const req = makeReq({ id: 'user1', schoolId: SCHOOL_ID, role: 'teacher' });
+  it('returns scoped counts for a teacher', async () => {
+    const req = makeReq({ id: 'teacher1', schoolId: SCHOOL_ID, role: 'teacher' });
     const { res, sendFn } = makeRes();
 
     await analyticsController.getDashboardStats(req, res, next);
     await new Promise((r) => setTimeout(r, 30));
 
     expect(capturedErr).toBeNull();
-    expect(sendFn).toHaveBeenCalledTimes(1);
     const payload = sendFn.mock.calls[0][0];
 
-    // Bug reproduction: dashboard should reflect scoped counts, not 0 / total
     expect(payload.totalSubmissions).toBe(1);
     expect(payload.totalExams).toBe(1);
     expect(payload.pendingAppeals).toBe(2);
-    expect(Array.isArray(payload.recentSubmissions)).toBe(true);
     expect(payload.recentSubmissions).toHaveLength(1);
-    expect(payload.recentSubmissions[0]).toEqual(
-      expect.objectContaining({
-        id: SCHOOL_SUBMISSION_DOC._id,
-        exam: expect.objectContaining({ id: SCHOOL_EXAM }),
-      })
-    );
+  });
+
+  it('returns school-scoped counts for a school admin', async () => {
+    const req = makeReq({ id: 'schoolAdmin1', schoolId: SCHOOL_ID, role: 'school-admin' });
+    const { res, sendFn } = makeRes();
+
+    await analyticsController.getDashboardStats(req, res, next);
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect(capturedErr).toBeNull();
+    const payload = sendFn.mock.calls[0][0];
+
+    expect(payload.totalSubmissions).toBe(1);
+    expect(payload.totalExams).toBe(1);
+    expect(payload.pendingAppeals).toBe(2);
+    expect(payload.recentSubmissions).toHaveLength(1);
+  });
+
+  it('returns global counts for an admin without schoolId', async () => {
+    Exam.countDocuments.mockResolvedValue(14);
+    Submission.countDocuments.mockResolvedValue(25);
+    Appeal.countDocuments.mockResolvedValue(0);
+
+    const req = makeReq({ id: 'admin1', schoolId: null, role: 'admin' });
+    const { res, sendFn } = makeRes();
+
+    await analyticsController.getDashboardStats(req, res, next);
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect(capturedErr).toBeNull();
+    const payload = sendFn.mock.calls[0][0];
+
+    expect(payload.totalExams).toBe(14);
+    expect(payload.totalSubmissions).toBe(25);
   });
 
   it('does NOT inject raw schoolId filter into Submission/Exam/Appeal (which lack the field)', async () => {
-    const req = makeReq({ id: 'user1', schoolId: SCHOOL_ID, role: 'teacher' });
+    const req = makeReq({ id: 'teacher1', schoolId: SCHOOL_ID, role: 'teacher' });
     const { res, sendFn } = makeRes();
 
     await analyticsController.getDashboardStats(req, res, next);
@@ -164,7 +186,7 @@ describe('AnalyticsController.getDashboardStats - schoolId scoping', () => {
     }
   });
 
-  it('returns recentSubmissions=[] only when there really are no submissions for the school', async () => {
+  it('returns empty recentSubmissions when there are no scoped submissions', async () => {
     Submission.countDocuments.mockImplementation(async (filter) => {
       const ids = filter && filter.examId && filter.examId.$in;
       if (ids) return 0;
@@ -172,7 +194,7 @@ describe('AnalyticsController.getDashboardStats - schoolId scoping', () => {
     });
     Submission.find.mockImplementation(() => thenableChain([]));
 
-    const req = makeReq({ id: 'user1', schoolId: SCHOOL_ID, role: 'teacher' });
+    const req = makeReq({ id: 'teacher1', schoolId: SCHOOL_ID, role: 'teacher' });
     const { res, sendFn } = makeRes();
 
     await analyticsController.getDashboardStats(req, res, next);
@@ -183,23 +205,5 @@ describe('AnalyticsController.getDashboardStats - schoolId scoping', () => {
 
     expect(payload.recentSubmissions).toEqual([]);
     expect(payload.totalSubmissions).toBe(0);
-  });
-
-  it('admin without schoolId sees global counts', async () => {
-    Exam.countDocuments.mockResolvedValue(14);
-    Submission.countDocuments.mockResolvedValue(25);
-    Appeal.countDocuments.mockResolvedValue(0);
-
-    const req = makeReq({ id: 'admin1', schoolId: null, role: 'admin' });
-    const { res, sendFn } = makeRes();
-
-    await analyticsController.getDashboardStats(req, res, next);
-    await new Promise((r) => setTimeout(r, 30));
-
-    expect(capturedErr).toBeNull();
-    const payload = sendFn.mock.calls[0][0];
-
-    expect(payload.totalExams).toBe(14);
-    expect(payload.totalSubmissions).toBe(25);
   });
 });

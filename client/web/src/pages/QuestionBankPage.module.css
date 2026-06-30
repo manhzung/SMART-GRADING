@@ -609,6 +609,11 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s ease;
+}
+
+.modalWithDrawer {
+  transform: translateX(-400px);
 }
 
 .modalHeader {

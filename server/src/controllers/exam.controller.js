@@ -105,7 +105,7 @@ const getUpcoming = catchAsync(async (req, res) => {
 });
 
 const getById = catchAsync(async (req, res) => {
-  const exam = await examService.getById(req.params.id);
+  const exam = await examService.getById(req.params.id, req.user);
   if (!exam) {
     return res.status(httpStatus.NOT_FOUND).send({ message: 'Exam not found' });
   }

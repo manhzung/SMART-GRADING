@@ -198,6 +198,18 @@
   gap: 24px;
 }
 
+.rowTeacher {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.kpiGridTeacher {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
 @media (max-width: 1024px) {
   .row {
     grid-template-columns: 1fr;

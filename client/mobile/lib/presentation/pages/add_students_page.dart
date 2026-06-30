@@ -585,7 +585,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Thêm thông tin học sinh dưới đây. Email là bắt buộc và duy nhất. Mật khẩu mặc định sẽ được đặt là EduGrade123!',
+                            'Thêm thông tin học sinh dưới đây. Email là bắt buộc và duy nhất. Mật khẩu mặc định sẽ được đặt là student123',
                             style: TextStyle(
                               color: Color(0xFF1E40AF),
                               fontSize: 12.5,

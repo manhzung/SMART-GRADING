@@ -45,6 +45,7 @@ describe('AppealController', () => {
           studentId: 'student789',
           questionId: 'q001',
         },
+        user: { id: 'student-user-id' },
       });
       const res = httpMocks.createResponse();
 
@@ -52,7 +53,13 @@ describe('AppealController', () => {
       await new Promise((r) => setTimeout(r, 30));
 
       expect(capturedErr).toBeNull();
-      expect(appealService.create).toHaveBeenCalledWith(req.body);
+      expect(appealService.create).toHaveBeenCalledWith({
+        submissionId: 'sub123',
+        examId: 'exam456',
+        studentId: 'student789',
+        questionId: 'q001',
+        studentId: 'student-user-id',
+      });
       expect(res.statusCode).toBe(201);
       expect(res._getData()).toMatchObject({
         _id: APPEAL_ID,

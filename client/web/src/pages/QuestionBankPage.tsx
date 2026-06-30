@@ -17,6 +17,8 @@ import {
   CheckCircle,
   RefreshCw,
   CheckCircle2,
+  Eye,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import katex from 'katex';
@@ -151,6 +153,10 @@ export default function QuestionBankPage() {
   const [similarPreview, setSimilarPreview] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
   const [isGeneratingSimilar, setIsGeneratingSimilar] = useState(false);
 
+  const [isPreviewDrawerOpen, setIsPreviewDrawerOpen] = useState(false);
+  const [previewQuestions, setPreviewQuestions] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
+  const [previewMode, setPreviewMode] = useState<'ai' | 'similar'>('ai');
+
   const toggleQuestionSelection = (id: string) => {
     setSelectedQuestionIds(prev => {
       const next = new Set(prev);
@@ -217,12 +223,14 @@ export default function QuestionBankPage() {
       : '';
 
     setFilters({ difficulty: diffStr });
+    fetchQuestions({ difficulty: diffStr, page: 1, limit: pagination.limit });
   };
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) => {
       const next = prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag];
       setFilters({ tags: next.join(',') });
+      fetchQuestions({ tags: next.join(','), page: 1, limit: pagination.limit });
       return next;
     });
   };
@@ -404,6 +412,7 @@ export default function QuestionBankPage() {
                         const next = approvalFilter === 'pending' ? 'all' : 'pending';
                         setApprovalFilter(next);
                         setFilters({ isApproved: next === 'pending' ? false : null });
+                        fetchQuestions({ isApproved: next === 'pending' ? false : undefined, page: 1, limit: pagination.limit });
                       }}
                       className={styles.checkbox}
                     />
@@ -417,6 +426,7 @@ export default function QuestionBankPage() {
                         const next = approvalFilter === 'approved' ? 'all' : 'approved';
                         setApprovalFilter(next);
                         setFilters({ isApproved: next === 'approved' ? true : null });
+                        fetchQuestions({ isApproved: next === 'approved' ? true : undefined, page: 1, limit: pagination.limit });
                       }}
                       className={styles.checkbox}
                     />
@@ -1148,7 +1158,7 @@ export default function QuestionBankPage() {
       {/* ─── MODAL: AI Generate Questions ──────────────────────────────────────── */}
       {isAiModalOpen && (
         <div className={styles.modalOverlay} onClick={() => { if (!isGeneratingAi) setIsAiModalOpen(false); }}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px', width: '100%' }}>
+          <div className={`${styles.modal} ${isPreviewDrawerOpen && previewMode === 'ai' ? styles.modalWithDrawer : ''}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px', width: '100%' }}>
             <div className={styles.modalHeader}>
               <h2>
                 <Sparkles size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
@@ -1222,101 +1232,23 @@ export default function QuestionBankPage() {
 
               {/* Preview Section */}
               {aiPreview.length > 0 && !isGeneratingAi && (
-                <div style={{ marginTop: '16px' }}>
-                  <h4 style={{ marginBottom: '12px', color: '#0b2240', fontSize: '14px' }}>
-                    Xem trước &amp; chỉnh sửa ({aiPreview.length} câu hỏi)
-                  </h4>
-                  <div style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
-                    {aiPreview.map((q, idx) => (
-                      <div key={idx} style={{ padding: '12px 0', borderBottom: idx < aiPreview.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <span style={{ fontWeight: 600, fontSize: '13px', color: '#334155' }}>Câu {idx + 1}.</span>
-                          <select
-                            value={q.difficulty}
-                            onChange={(e) => {
-                              const next = [...aiPreview];
-                              next[idx] = { ...next[idx], difficulty: e.target.value as any };
-                              setAiPreview(next);
-                            }}
-                            style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: q.difficulty === 'Easy' ? '#f0fdf4' : q.difficulty === 'Hard' ? '#fef2f2' : '#fffbeb', color: q.difficulty === 'Easy' ? '#16a34a' : q.difficulty === 'Hard' ? '#dc2626' : '#d97706' }}
-                          >
-                            <option value="Easy">Easy</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Hard">Hard</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const next = aiPreview.filter((_, i) => i !== idx);
-                              setAiPreview(next);
-                            }}
-                            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '2px 6px', fontSize: '11px' }}
-                            title="Delete this question"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                        <textarea
-                          value={q.text}
-                          onChange={(e) => {
-                            const next = [...aiPreview];
-                            next[idx] = { ...next[idx], text: e.target.value };
-                            setAiPreview(next);
-                          }}
-                          style={{ width: '100%', minHeight: '50px', fontSize: '13px', color: '#475569', marginBottom: '8px', padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: '4px', resize: 'vertical', fontFamily: 'inherit' }}
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                          {q.options.map((opt, optIdx) => (
-                            <div key={opt.letter} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const next = [...aiPreview];
-                                  const updatedOptions = next[idx].options.map((o, i) => ({
-                                    ...o,
-                                    isCorrect: i === optIdx,
-                                  }));
-                                  next[idx] = { ...next[idx], options: updatedOptions };
-                                  setAiPreview(next);
-                                }}
-                                style={{
-                                  flexShrink: 0,
-                                  width: '22px',
-                                  height: '22px',
-                                  borderRadius: '50%',
-                                  border: `2px solid ${opt.isCorrect ? '#16a34a' : '#cbd5e1'}`,
-                                  backgroundColor: opt.isCorrect ? '#dcfce7' : 'transparent',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  color: opt.isCorrect ? '#16a34a' : '#94a3b8',
-                                  padding: 0,
-                                }}
-                                title={opt.isCorrect ? 'Đáp án đúng' : 'Click để chọn làm đáp án đúng'}
-                              >
-                                {opt.letter}
-                              </button>
-                              <input
-                                type="text"
-                                value={opt.text}
-                                onChange={(e) => {
-                                  const next = [...aiPreview];
-                                  const updatedOptions = [...next[idx].options];
-                                  updatedOptions[optIdx] = { ...updatedOptions[optIdx], text: e.target.value };
-                                  next[idx] = { ...next[idx], options: updatedOptions };
-                                  setAiPreview(next);
-                                }}
-                                style={{ flex: 1, fontSize: '12px', padding: '4px 6px', border: '1px solid #e2e8f0', borderRadius: '4px', color: '#475569' }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: '14px', color: '#0b2240' }}>Preview Ready</span>
+                    <span style={{ marginLeft: '8px', fontSize: '13px', color: '#6b7280' }}>{aiPreview.length} questions generated</span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewMode('ai');
+                      setPreviewQuestions(aiPreview);
+                      setIsPreviewDrawerOpen(true);
+                    }}
+                    style={{ padding: '8px 16px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Eye size={16} />
+                    Preview All
+                  </button>
                 </div>
               )}
 
@@ -1414,7 +1346,7 @@ export default function QuestionBankPage() {
       {/* ─── Similar Questions Modal ─────────────────────────────────────────────── */}
       {isSimilarModalOpen && (
         <div className={styles.modalOverlay} onClick={() => { if (!isGeneratingSimilar) setIsSimilarModalOpen(false); }}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px', width: '100%' }}>
+          <div className={`${styles.modal} ${isPreviewDrawerOpen && previewMode === 'similar' ? styles.modalWithDrawer : ''}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px', width: '100%' }}>
             <div className={styles.modalHeader}>
               <h2>
                 <Sparkles size={20} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#059669' }} />
@@ -1469,101 +1401,23 @@ export default function QuestionBankPage() {
 
               {/* Preview Section */}
               {similarPreview.length > 0 && !isGeneratingSimilar && (
-                <div style={{ marginTop: '16px' }}>
-                  <h4 style={{ marginBottom: '12px', color: '#0b2240', fontSize: '14px' }}>
-                    Xem trước &amp; chỉnh sửa ({similarPreview.length} câu hỏi)
-                  </h4>
-                  <div style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
-                    {similarPreview.map((q, idx) => (
-                      <div key={idx} style={{ padding: '12px 0', borderBottom: idx < similarPreview.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <span style={{ fontWeight: 600, fontSize: '13px', color: '#334155' }}>Câu {idx + 1}.</span>
-                          <select
-                            value={q.difficulty}
-                            onChange={(e) => {
-                              const next = [...similarPreview];
-                              next[idx] = { ...next[idx], difficulty: e.target.value as any };
-                              setSimilarPreview(next);
-                            }}
-                            style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: q.difficulty === 'Easy' ? '#f0fdf4' : q.difficulty === 'Hard' ? '#fef2f2' : '#fffbeb', color: q.difficulty === 'Easy' ? '#16a34a' : q.difficulty === 'Hard' ? '#dc2626' : '#d97706' }}
-                          >
-                            <option value="Easy">Easy</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Hard">Hard</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const next = similarPreview.filter((_, i) => i !== idx);
-                              setSimilarPreview(next);
-                            }}
-                            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '2px 6px', fontSize: '11px' }}
-                            title="Delete this question"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                        <textarea
-                          value={q.text}
-                          onChange={(e) => {
-                            const next = [...similarPreview];
-                            next[idx] = { ...next[idx], text: e.target.value };
-                            setSimilarPreview(next);
-                          }}
-                          style={{ width: '100%', minHeight: '50px', fontSize: '13px', color: '#475569', marginBottom: '8px', padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: '4px', resize: 'vertical', fontFamily: 'inherit' }}
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                          {q.options.map((opt, optIdx) => (
-                            <div key={opt.letter} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const next = [...similarPreview];
-                                  const updatedOptions = next[idx].options.map((o, i) => ({
-                                    ...o,
-                                    isCorrect: i === optIdx,
-                                  }));
-                                  next[idx] = { ...next[idx], options: updatedOptions };
-                                  setSimilarPreview(next);
-                                }}
-                                style={{
-                                  flexShrink: 0,
-                                  width: '22px',
-                                  height: '22px',
-                                  borderRadius: '50%',
-                                  border: `2px solid ${opt.isCorrect ? '#16a34a' : '#cbd5e1'}`,
-                                  backgroundColor: opt.isCorrect ? '#dcfce7' : 'transparent',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  color: opt.isCorrect ? '#16a34a' : '#94a3b8',
-                                  padding: 0,
-                                }}
-                                title={opt.isCorrect ? 'Đáp án đúng' : 'Click để chọn làm đáp án đúng'}
-                              >
-                                {opt.letter}
-                              </button>
-                              <input
-                                type="text"
-                                value={opt.text}
-                                onChange={(e) => {
-                                  const next = [...similarPreview];
-                                  const updatedOptions = [...next[idx].options];
-                                  updatedOptions[optIdx] = { ...updatedOptions[optIdx], text: e.target.value };
-                                  next[idx] = { ...next[idx], options: updatedOptions };
-                                  setSimilarPreview(next);
-                                }}
-                                style={{ flex: 1, fontSize: '12px', padding: '4px 6px', border: '1px solid #e2e8f0', borderRadius: '4px', color: '#475569' }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: '14px', color: '#0b2240' }}>Similar Questions Ready</span>
+                    <span style={{ marginLeft: '8px', fontSize: '13px', color: '#6b7280' }}>{similarPreview.length} questions generated</span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewMode('similar');
+                      setPreviewQuestions(similarPreview);
+                      setIsPreviewDrawerOpen(true);
+                    }}
+                    style={{ padding: '8px 16px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Eye size={16} />
+                    Preview All
+                  </button>
                 </div>
               )}
 
@@ -1656,11 +1510,193 @@ export default function QuestionBankPage() {
         </div>
       )}
 
+      {/* ─── Preview Drawer ─────────────────────────────────────────────── */}
+      {isPreviewDrawerOpen && (
+        <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '900px', maxWidth: '90vw', backgroundColor: '#ffffff', boxShadow: '-8px 0 30px rgba(0, 0, 0, 0.15)', zIndex: 2000, display: 'flex', flexDirection: 'column', animation: 'slideInRight 0.3s ease-out' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fafbfc' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0b2240', fontFamily: "'Outfit', sans-serif" }}>
+                {previewMode === 'ai' ? 'AI Generated Questions Preview' : 'Similar Questions Preview'}
+              </h2>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+                {previewQuestions.length} questions • Edit and save to bank
+              </p>
+            </div>
+            <button
+              onClick={() => setIsPreviewDrawerOpen(false)}
+              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', borderRadius: '6px', transition: 'all 0.15s' }}
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', backgroundColor: '#f8fafc' }}>
+            {previewQuestions.map((q, idx) => (
+              <div key={idx} style={{ backgroundColor: '#ffffff', borderRadius: '12px', marginBottom: '20px', padding: '24px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '20px', color: '#0b2240', minWidth: '100px' }}>Question {idx + 1}</span>
+                  <select
+                    value={q.difficulty}
+                    onChange={(e) => {
+                      const next = [...previewQuestions];
+                      next[idx] = { ...next[idx], difficulty: e.target.value as any };
+                      setPreviewQuestions(next);
+                      if (previewMode === 'ai') setAiPreview(next);
+                      else setSimilarPreview(next);
+                    }}
+                    style={{ fontSize: '14px', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 600 }}
+                  >
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = previewQuestions.filter((_, i) => i !== idx);
+                      setPreviewQuestions(next);
+                      if (previewMode === 'ai') setAiPreview(next);
+                      else setSimilarPreview(next);
+                    }}
+                    style={{ marginLeft: 'auto', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+                    title="Delete this question"
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Question Text</label>
+                  <textarea
+                    value={q.text}
+                    onChange={(e) => {
+                      const next = [...previewQuestions];
+                      next[idx] = { ...next[idx], text: e.target.value };
+                      setPreviewQuestions(next);
+                      if (previewMode === 'ai') setAiPreview(next);
+                      else setSimilarPreview(next);
+                    }}
+                    style={{ width: '100%', minHeight: '100px', fontSize: '15px', color: '#1f2937', padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.7', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '12px' }}>Answer Options</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {q.options.map((opt, optIdx) => (
+                      <div key={opt.letter} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = [...previewQuestions];
+                            const updatedOptions = next[idx].options.map((o, i) => ({
+                              ...o,
+                              isCorrect: i === optIdx,
+                            }));
+                            next[idx] = { ...next[idx], options: updatedOptions };
+                            setPreviewQuestions(next);
+                            if (previewMode === 'ai') setAiPreview(next);
+                            else setSimilarPreview(next);
+                          }}
+                          style={{
+                            flexShrink: 0,
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            border: `3px solid ${opt.isCorrect ? '#16a34a' : '#cbd5e1'}`,
+                            backgroundColor: opt.isCorrect ? '#dcfce7' : 'transparent',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            color: opt.isCorrect ? '#16a34a' : '#64748b',
+                            padding: 0,
+                          }}
+                          title={opt.isCorrect ? 'Correct answer' : 'Click to set as correct'}
+                        >
+                          {opt.letter}
+                        </button>
+                        <input
+                          type="text"
+                          value={opt.text}
+                          onChange={(e) => {
+                            const next = [...previewQuestions];
+                            const updatedOptions = [...next[idx].options];
+                            updatedOptions[optIdx] = { ...updatedOptions[optIdx], text: e.target.value };
+                            next[idx] = { ...next[idx], options: updatedOptions };
+                            setPreviewQuestions(next);
+                            if (previewMode === 'ai') setAiPreview(next);
+                            else setSimilarPreview(next);
+                          }}
+                          style={{ flex: 1, fontSize: '15px', padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#1f2937', backgroundColor: '#ffffff', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ padding: '20px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '12px', backgroundColor: '#ffffff' }}>
+            <button
+              type="button"
+              onClick={() => setIsPreviewDrawerOpen(false)}
+              style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #cbd5e1', color: '#475569', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const questionsToSave = previewMode === 'ai' ? aiPreview : similarPreview;
+                for (const q of questionsToSave) {
+                  try {
+                    await createQuestion({
+                      content: q.text,
+                      type: 'single_choice',
+                      options: q.options.map(o => ({ id: o.letter as 'A' | 'B' | 'C' | 'D', content: o.text, isCorrect: !!o.isCorrect })),
+                      difficulty: q.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
+                      source: 'ai',
+                      tags: q.tags,
+                    });
+                  } catch { /* individual error handled by store */ }
+                }
+                toast.success(`Saved ${questionsToSave.length} questions to the bank!`);
+                setIsPreviewDrawerOpen(false);
+                if (previewMode === 'ai') {
+                  setIsAiModalOpen(false);
+                  setAiPreview([]);
+                  setAiForm({ topic: '', count: 5, difficulty: 'medium', requirements: '' });
+                } else {
+                  setIsSimilarModalOpen(false);
+                  setSimilarPreview([]);
+                  setSimilarForm({ count: 3, difficulty: 'medium' });
+                  setSelectedQuestionIds(new Set());
+                }
+                fetchQuestions({ page: 1, limit: 20 });
+              }}
+              style={{ padding: '10px 20px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <CheckCircle size={18} />
+              Save All ({previewQuestions.length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ─── Global spinner keyframes ─────────────────────────────────────────── */}
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes slideInRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
       `}</style>
     </div>

@@ -3,7 +3,7 @@ const appealService = require('../services/appeal.service');
 const catchAsync = require('../utils/catchAsync');
 
 const create = catchAsync(async (req, res) => {
-  const appeal = await appealService.create({ ...req.body, studentId: req.user.id });
+  const appeal = await appealService.create({ ...req.body, studentId: req.user?.id });
   res.status(httpStatus.CREATED).send(appeal);
 });
 
@@ -16,7 +16,7 @@ const getById = catchAsync(async (req, res) => {
 });
 
 const getAll = catchAsync(async (req, res) => {
-  const result = await appealService.getAll(req.query);
+  const result = await appealService.getAll(req.query, req.user);
   res.send(result);
 });
 
