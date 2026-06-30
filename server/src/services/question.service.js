@@ -123,6 +123,8 @@ class QuestionService {
 
     if (topicId) filter.topicId = topicId;
 
+    if (query.bankId) filter.bankId = query.bankId;
+
     // Case-insensitive difficulty filter (accepts single "easy" or comma-separated "easy,medium,hard")
     if (difficulty) {
       const levels = difficulty.split(',').map((d) => d.trim().toLowerCase()).filter(Boolean);

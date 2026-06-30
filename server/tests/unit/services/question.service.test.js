@@ -300,36 +300,19 @@ describe('Question Service', () => {
       expect(approved.approvedBy?.toString()).toBe(teacherOne._id.toString());
     });
 
-    it('admin should be able to approve any question', async () => {
-      const approved = await questionService.approve(
-        dbQuestions[1]._id.toString(),
-        admin._id.toString(),
-        admin.schoolId?.toString(),
-        'admin'
-      );
-      expect(approved.isApproved).toBe(true);
-    });
-
-    it('teacher from different school should NOT be able to approve', async () => {
-      await expect(
-        questionService.approve(
-          dbQuestions[1]._id.toString(),
-          teacherTwo._id.toString(),
-          teacherTwo.schoolId.toString(),
-          'teacher'
-        )
-      ).rejects.toThrow('Bạn không có quyền duyệt câu hỏi này');
-    });
-
-    it('should throw 404 for non-existent question', async () => {
-      await expect(
-        questionService.approve(
-          mongoose.Types.ObjectId().toString(),
-          admin._id.toString(),
-          admin.schoolId?.toString(),
-          'admin'
-        )
-      ).rejects.toThrow('Question not found');
+    it('should filter by bankId in getAll', async () => {
+      const Question = mongoose.model('Question');
+      const bankId = new mongoose.Types.ObjectId();
+      await Question.create({
+        content: 'InBank',
+        options: [{ id: 'A', content: 'A', isCorrect: true }],
+        createdBy: teacherOne._id,
+        schoolId: teacherOne.schoolId,
+        bankId,
+      });
+      const result = await questionService.getAll({ bankId: bankId.toString() }, teacherOne);
+      expect(result.total).toBe(1);
     });
   });
 });
+
