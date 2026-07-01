@@ -442,6 +442,12 @@ export default function QuestionBankPage() {
 
   const activeMembership = bankInfo?.membership;
 
+  // Combined membership check - use whichever is available
+  const effectiveMembershipRole = activeMembership?.role || currentMembership?.role;
+
+  // Debug: log role to console
+  console.log('[ManageBank] activeMembership:', activeMembership, 'currentMembership:', currentMembership, 'effectiveRole:', effectiveMembershipRole);
+
   return (
     <div className={styles.container}>
       {/* ─── Top Header ─────────────────────────────────────────────────────── */}
@@ -486,7 +492,7 @@ export default function QuestionBankPage() {
           {activeMembership?.role && renderRoleBadge(activeMembership.role)}
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {(currentMembership?.role === 'owner' || currentMembership?.role === 'manager' || activeMembership?.role === 'owner' || activeMembership?.role === 'manager') && (
+          {(effectiveMembershipRole === 'owner' || effectiveMembershipRole === 'manager') && (
             <button
               className={styles.createBtn}
               style={{ backgroundColor: '#0b2240' }}
@@ -2364,7 +2370,7 @@ export default function QuestionBankPage() {
           bankId={bankId}
           open={isManagementOpen}
           onClose={() => setIsManagementOpen(false)}
-          userRole={activeMembership?.role || currentMembership?.role}
+          userRole={effectiveMembershipRole}
         />
       )}
 
