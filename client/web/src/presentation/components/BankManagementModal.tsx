@@ -54,7 +54,7 @@ export default function BankManagementModal({ bankId, open, onClose, userRole }:
 
       const allMembers: MemberWithUser[] = [
         ...activeRes.results,
-        ...pendingRes.results,
+        ...(Array.isArray(pendingRes) ? pendingRes : pendingRes.results || []),
       ].map((m) => ({
         ...m,
         userId: m.userId as UserInfo,
