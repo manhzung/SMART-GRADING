@@ -5,19 +5,96 @@ const QuestionBankService = require('../services/questionBank.service');
 const { QuestionBank, QuestionBankMember, User } = require('../models');
 
 const createBank = catchAsync(async (req, res) => {
+  const type = req.body.type || 'personal';
+
+  // Chỉ admin hoặc school-admin mới được tạo school bank
+  if (type === 'school' && req.user.role !== 'admin' && req.user.role !== 'school-admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới được tạo ngân hàng câu hỏi cho trường');
+  }
+
+  // For school banks, default schoolId to the creator's school if not provided
+  let schoolId = req.body.schoolId || null;
+  if (type === 'school' && !schoolId) {
+    schoolId = req.user.schoolId || null;
+  }
+  if (type === 'school' && !schoolId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'School banks require a schoolId or a user associated with a school');
+  }
+
   const bank = await QuestionBankService.createBank({
     name: req.body.name,
     description: req.body.description,
-    type: req.body.type || 'personal',
-    schoolId: req.body.schoolId || null,
+    type,
+    schoolId,
     createdBy: req.user.id,
   });
   res.status(httpStatus.CREATED).send(bank);
 });
 
 const listBanks = catchAsync(async (req, res) => {
-  const banks = await QuestionBankService.listBanksForUser(req.user.id);
-  res.send(banks);
+  // Role-based filtering
+  if (req.user.role === 'admin') {
+    // Admin sees all banks
+    const banks = await QuestionBank.find()
+      .select('name description type schoolId createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.send(banks);
+  } else if (req.user.schoolId) {
+    // School users see all banks in their school
+    const banks = await QuestionBank.find({ schoolId: req.user.schoolId })
+      .select('name description type schoolId createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.send(banks);
+  } else {
+    // User without school: only banks they are members of
+    const banks = await QuestionBankService.listBanksForUser(req.user.id);
+    return res.send(banks);
+  }
+});
+
+/**
+ * List ALL banks in the system (for searching across all banks).
+ * Everyone can search all banks - no school restriction.
+ * Students/Teachers can view banks and request access.
+ */
+const listAllBanks = catchAsync(async (req, res) => {
+  const { search, type, limit = 50, page = 1 } = req.query;
+  
+  let filter = {};
+  
+  // Filter by type (personal/school)
+  if (type) {
+    filter.type = type;
+  }
+  
+  // Text search on name/description
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { description: { $regex: search, $options: 'i' } },
+    ];
+  }
+  
+  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+  
+  const [banks, total] = await Promise.all([
+    QuestionBank.find(filter)
+      .select('name description type schoolId createdAt')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit, 10))
+      .lean(),
+    QuestionBank.countDocuments(filter),
+  ]);
+  
+  res.send({
+    results: banks,
+    total,
+    page: parseInt(page, 10),
+    pages: Math.ceil(total / parseInt(limit, 10)),
+  });
 });
 
 const getBank = catchAsync(async (req, res) => {
@@ -25,7 +102,15 @@ const getBank = catchAsync(async (req, res) => {
   if (!bank) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Bank not found');
   }
-  res.send(bank);
+
+  // Get current user's membership for this bank
+  const membership = await QuestionBankMember.findOne({
+    bankId: req.params.bankId,
+    userId: req.user.id,
+    status: 'active',
+  }).lean();
+
+  res.send({ bank, membership: membership || null });
 });
 
 const listMembers = catchAsync(async (req, res) => {
@@ -109,6 +194,7 @@ const transferOwnership = catchAsync(async (req, res) => {
 module.exports = {
   createBank,
   listBanks,
+  listAllBanks,
   getBank,
   listMembers,
   inviteMember,
