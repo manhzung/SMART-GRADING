@@ -222,6 +222,73 @@ const removeSchoolAdmin = async (schoolId, userId) => {
   return user;
 };
 
+// ── Admin Teacher Approval Methods ──────────────────────────────────────────────
+
+/**
+ * Get pending teachers for a specific school (used by admin to view any school's pending list)
+ * @param {ObjectId|string} schoolId
+ * @param {Object} options - pagination options
+ */
+const getPendingTeachersForSchool = async (schoolId, options = {}) => {
+  const filter = {
+    role: 'teacher',
+    registrationStatus: 'pending',
+    registeredSchoolId: schoolId,
+  };
+  const { results, page, limit, totalPages, totalResults } = await User.paginate(filter, options);
+  return {
+    results,
+    page,
+    limit,
+    total: totalResults,
+    pages: totalPages,
+  };
+};
+
+/**
+ * Admin approve a teacher — uses the teacher's own registeredSchoolId (admin can approve any school's teachers)
+ */
+const adminApproveTeacher = async (userId) => {
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  if (user.role !== 'teacher') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Chỉ có thể duyệt tài khoản giáo viên');
+  }
+  if (user.registrationStatus !== 'pending') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Tài khoản không trong trạng thái chờ duyệt');
+  }
+  if (!user.registeredSchoolId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Giáo viên chưa đăng ký vào trường nào');
+  }
+  user.registrationStatus = 'approved';
+  user.schoolId = user.registeredSchoolId;
+  user.isActive = true;
+  await user.save();
+  return user;
+};
+
+/**
+ * Admin reject a teacher
+ */
+const adminRejectTeacher = async (userId, reason = null) => {
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  if (user.role !== 'teacher') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Chỉ có thể từ chối tài khoản giáo viên');
+  }
+  if (user.registrationStatus !== 'pending') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Tài khoản không trong trạng thái chờ duyệt');
+  }
+  user.registrationStatus = 'rejected';
+  user.rejectedReason = reason;
+  await user.save();
+  return user;
+};
+
 module.exports = {
   createUser,
   queryUsers,
@@ -236,4 +303,7 @@ module.exports = {
   getSchoolAdmins,
   addSchoolAdmin,
   removeSchoolAdmin,
+  getPendingTeachersForSchool,
+  adminApproveTeacher,
+  adminRejectTeacher,
 };
