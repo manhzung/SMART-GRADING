@@ -44,7 +44,7 @@ const teacherOne = {
   name: faker.name.findName(),
   email: faker.internet.email().toLowerCase(),
   password,
-  role: 'teacher',
+  role: 'school-admin',
   isEmailVerified: false,
   schoolId: schoolIdA,
 };

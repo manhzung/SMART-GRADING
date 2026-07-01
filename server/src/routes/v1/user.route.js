@@ -24,6 +24,20 @@ router
   .route('/school-admin/:schoolId/:userId')
   .delete(auth('manageUsers'), userController.removeSchoolAdmin);
 
+// ── Admin Teacher Approval routes (must be defined BEFORE /:userId to avoid being matched as userId) ──
+
+router
+  .route('/admin/teachers/pending')
+  .get(auth('manageUsers'), userController.adminGetPendingTeachers);
+
+router
+  .route('/admin/teachers/:userId/approve')
+  .post(auth('manageUsers'), userController.adminApproveTeacher);
+
+router
+  .route('/admin/teachers/:userId/reject')
+  .post(auth('manageUsers'), userController.adminRejectTeacher);
+
 // ── Generic CRUD routes ────────────────────────────────────────────────────────
 
 router

@@ -105,6 +105,38 @@ const removeSchoolAdmin = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+// ── Admin Teacher Approval Controllers ──────────────────────────────────────────
+
+const adminGetPendingTeachers = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền truy cập');
+  }
+  const { schoolId } = req.query;
+  if (!schoolId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'schoolId is required');
+  }
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const result = await userService.getPendingTeachersForSchool(schoolId, options);
+  res.send(result);
+});
+
+const adminApproveTeacher = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền duyệt giáo viên');
+  }
+  const user = await userService.adminApproveTeacher(req.params.userId);
+  res.send(user);
+});
+
+const adminRejectTeacher = catchAsync(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới có quyền từ chối giáo viên');
+  }
+  const { reason } = req.body || {};
+  const user = await userService.adminRejectTeacher(req.params.userId, reason);
+  res.send(user);
+});
+
 module.exports = {
   createUser,
   getUsers,
@@ -118,4 +150,7 @@ module.exports = {
   getSchoolAdmins,
   addSchoolAdmin,
   removeSchoolAdmin,
+  adminGetPendingTeachers,
+  adminApproveTeacher,
+  adminRejectTeacher,
 };
