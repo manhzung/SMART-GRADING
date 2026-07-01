@@ -3,15 +3,120 @@ import { Building2, Mail, Phone, MapPin, User, Users, Trash2, Plus } from 'lucid
 import Modal from '../shared/Modal';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import { useSchoolManagementStore } from '../../store/schoolManagementStore';
+import { useApprovalStore } from '../../store/approvalStore';
 import AddSchoolAdminModal from './AddSchoolAdminModal';
 import type { School } from '../../../types';
 import styles from './SchoolDetailModal.module.css';
+import { toast } from 'sonner';
 
 interface SchoolDetailModalProps {
   open: boolean;
   school: School | null;
   onClose: () => void;
 }
+
+// ── Sub-component: PendingTeachersSection ──────────────────────────────────────
+
+interface PendingTeachersSectionProps {
+  schoolId: string;
+}
+
+const PendingTeachersSection: React.FC<PendingTeachersSectionProps> = ({ schoolId }) => {
+  const {
+    adminPendingTeachers,
+    adminPendingTeachersCount,
+    isLoadingAdminTeachers,
+    fetchAdminPendingTeachers,
+    adminApproveTeacher: storeApprove,
+    adminRejectTeacher: storeReject,
+  } = useApprovalStore();
+
+  useEffect(() => {
+    if (schoolId) {
+      fetchAdminPendingTeachers(schoolId);
+    }
+  }, [schoolId, fetchAdminPendingTeachers]);
+
+  const handleApprove = async (userId: string) => {
+    try {
+      await storeApprove(userId);
+      toast.success('Đã duyệt giáo viên thành công');
+    } catch {
+      toast.error('Duyệt giáo viên thất bại');
+    }
+  };
+
+  const handleReject = async (userId: string) => {
+    const reason = window.prompt('Lý do từ chối (tuỳ chọn):') || undefined;
+    try {
+      await storeReject(userId, reason);
+      toast.success('Đã từ chối giáo viên');
+    } catch {
+      toast.error('Từ chối giáo viên thất bại');
+    }
+  };
+
+  return (
+    <section className={styles.section}>
+      <header className={styles.sectionHeader}>
+        <h3><Users size={18} /> Giáo viên chờ duyệt</h3>
+        {adminPendingTeachersCount > 0 && (
+          <span className={styles.badge}>{adminPendingTeachersCount} pending</span>
+        )}
+      </header>
+
+      {isLoadingAdminTeachers ? (
+        <div className={styles.loadingState}>
+          <span className={styles.spinner} />
+          <span>Đang tải...</span>
+        </div>
+      ) : adminPendingTeachers.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p>Không có giáo viên nào đang chờ duyệt.</p>
+        </div>
+      ) : (
+        <div className={styles.teacherList}>
+          {adminPendingTeachers.map((teacher) => (
+            <div key={teacher._id || teacher.id} className={styles.teacherCard}>
+              <div className={styles.teacherAvatar}>
+                {teacher.name?.charAt(0).toUpperCase() || '?'}
+              </div>
+              <div className={styles.teacherInfo}>
+                <div className={styles.teacherName}>{teacher.name}</div>
+                <div className={styles.teacherEmail}>
+                  <Mail size={12} /> {teacher.email}
+                </div>
+                {teacher.createdAt && (
+                  <div className={styles.teacherDate}>
+                    Đăng ký: {new Date(teacher.createdAt).toLocaleDateString('vi-VN')}
+                  </div>
+                )}
+              </div>
+              <div className={styles.teacherActions}>
+                <button
+                  type="button"
+                  className={styles.btnApprove}
+                  onClick={() => handleApprove(teacher._id || teacher.id)}
+                >
+                  Duyệt
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnReject}
+                  onClick={() => handleReject(teacher._id || teacher.id)}
+                >
+                  Từ chối
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+};
+
+// ── Main modal component ────────────────────────────────────────────────────────
 
 export default function SchoolDetailModal({ open, school, onClose }: SchoolDetailModalProps) {
   const {
@@ -88,6 +193,10 @@ export default function SchoolDetailModal({ open, school, onClose }: SchoolDetai
               </div>
             </div>
           </section>
+
+          {school?._id && (
+            <PendingTeachersSection schoolId={school._id} />
+          )}
 
           <section className={styles.section}>
             <header className={styles.sectionHeader}>
@@ -179,3 +288,5 @@ export default function SchoolDetailModal({ open, school, onClose }: SchoolDetai
     </>
   );
 }
+
+export { PendingTeachersSection };
