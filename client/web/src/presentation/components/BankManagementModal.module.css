@@ -1,0 +1,211 @@
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 12px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px 0;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.section {
+  background: var(--bg-secondary, #f9fafb);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.iconGold {
+  color: #f59e0b;
+}
+
+.iconGray {
+  color: #9ca3af;
+}
+
+.badge {
+  background: var(--bg-tertiary, #e5e7eb);
+  color: var(--text-secondary, #6b7280);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: auto;
+}
+
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.empty {
+  color: var(--text-secondary, #6b7280);
+  font-size: 14px;
+  text-align: center;
+  padding: 16px;
+  margin: 0;
+}
+
+.memberCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-primary, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.memberInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.memberName {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+}
+
+.memberEmail {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.memberActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roleBadge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 16px;
+}
+
+.ownerBadge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.managerBadge {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.promoteBtn,
+.approveBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.promoteBtn {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.promoteBtn:hover:not(:disabled) {
+  background: #bfdbfe;
+}
+
+.approveBtn {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.approveBtn:hover:not(:disabled) {
+  background: #bbf7d0;
+}
+
+.removeBtn,
+.rejectBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.removeBtn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.removeBtn:hover:not(:disabled) {
+  background: #fecaca;
+}
+
+.rejectBtn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.rejectBtn:hover:not(:disabled) {
+  background: #fecaca;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
