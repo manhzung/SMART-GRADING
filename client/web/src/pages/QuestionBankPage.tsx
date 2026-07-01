@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Search,
   Plus,
@@ -19,15 +20,21 @@ import {
   CheckCircle2,
   Eye,
   Trash2,
+  Pencil,
+  BookOpen,
+  ArrowLeft,
+  Settings2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import styles from './QuestionBankPage.module.css';
 import { useQuestionStore, questionService, toFrontendQuestion, type BackendQuestion, type Question } from '../presentation/store/questionStore';
+import { useBankStore } from '../presentation/store/bankStore';
 import { useQuestionPermissions } from '../hooks/useQuestionPermissions';
 import EntityListPage, { type Column } from '../presentation/components/shared/EntityListPage';
 import EntityPageHeader from '../presentation/components/shared/EntityPageHeader';
+import BankManagementModal from '../presentation/components/BankManagementModal';
 
 // ─── LaTeX renderer ────────────────────────────────────────────────────────────
 function Latex({ math, block = false }: { math: string; block?: boolean }) {
@@ -103,6 +110,8 @@ const difficultyBg: Record<string, string> = {
 
 
 export default function QuestionBankPage() {
+  const { bankId } = useParams<{ bankId: string }>();
+  const navigate = useNavigate();
   const {
     questions,
     availableTags,
@@ -114,6 +123,8 @@ export default function QuestionBankPage() {
     fetchQuestions,
     fetchTags,
     createQuestion,
+    updateQuestion,
+    deleteQuestion,
     setFilters,
     clearError,
     clearCreateError,
@@ -122,8 +133,28 @@ export default function QuestionBankPage() {
     generateSimilarQuestions,
   } = useQuestionStore();
 
+  const { banks, fetchBank, fetchBanks, currentBank, currentMembership } = useBankStore();
   const permissions = useQuestionPermissions();
   const canManage = permissions.canCreate;
+
+  // Bank: read from URL, sync to store
+  const activeBankId = banks.find(
+    (b) => b.bank._id === bankId && b.membership?.status === 'active',
+  )
+    ? bankId
+    : null;
+  const bankInfo = banks.find((b) => b.bank._id === bankId);
+
+  useEffect(() => {
+    // Fetch all banks first, then fetch specific bank info
+    fetchBanks();
+  }, [fetchBanks]);
+
+  useEffect(() => {
+    if (bankId) {
+      fetchBank(bankId);
+    }
+  }, [bankId, fetchBank]);
 
   // Layout
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -145,6 +176,8 @@ export default function QuestionBankPage() {
   const [aiForm, setAiForm] = useState({ topic: '', count: 5, difficulty: 'medium' as 'easy' | 'medium' | 'hard', requirements: '' });
   const [aiPreview, setAiPreview] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiTagInputValue, setAiTagInputValue] = useState('');
+  const [aiTags, setAiTags] = useState<string[]>([]);
 
   // ─── Similar Questions (multi-select) ─────────────────────────────────────────
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
@@ -152,6 +185,8 @@ export default function QuestionBankPage() {
   const [similarForm, setSimilarForm] = useState({ count: 3, difficulty: 'medium' as 'easy' | 'medium' | 'hard' });
   const [similarPreview, setSimilarPreview] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
   const [isGeneratingSimilar, setIsGeneratingSimilar] = useState(false);
+  const [similarTagInputValue, setSimilarTagInputValue] = useState('');
+  const [similarTags, setSimilarTags] = useState<string[]>([]);
 
   const [isPreviewDrawerOpen, setIsPreviewDrawerOpen] = useState(false);
   const [previewQuestions, setPreviewQuestions] = useState<ReturnType<typeof toFrontendQuestion>[]>([]);
@@ -182,6 +217,20 @@ export default function QuestionBankPage() {
     explanation?: string;
   } | null>(null);
 
+  // Edit Question modal
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [editForm, setEditForm] = useState({
+    text: '',
+    difficulty: 'Medium' as 'Easy' | 'Medium' | 'Hard',
+    options: [] as { letter: string; text: string; isCorrect: boolean }[],
+    explanation: '',
+    tags: [] as string[],
+  });
+  const [editTagInput, setEditTagInput] = useState('');
+
+  // Delete confirmation
+  const [deletingQuestionId, setDeletingQuestionId] = useState<string | null>(null);
+
   // Add Question modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newQuestionForm, setNewQuestionForm] = useState({
@@ -201,12 +250,29 @@ export default function QuestionBankPage() {
   // Submit status for add modal
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Manage Bank modal
+  const [isManagementOpen, setIsManagementOpen] = useState(false);
+
   // ─── Initial fetch ────────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchQuestions({ limit: pagination.limit, page: pagination.page });
-    fetchTags();
+    fetchTags(bankId);
+    if (bankId) {
+      fetchQuestions({ bankId, limit: pagination.limit, page: 1 });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [bankId]);
+
+  // ─── Refetch when bank changes ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!bankId) return;
+    fetchQuestions({
+      bankId,
+      page: 1,
+      limit: pagination.limit,
+    });
+    fetchTags(bankId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bankId]);
 
   // ─── Filter handlers ──────────────────────────────────────────────────────────
   const handleDifficultyChange = (level: 'Easy' | 'Medium' | 'Hard') => {
@@ -223,20 +289,21 @@ export default function QuestionBankPage() {
       : '';
 
     setFilters({ difficulty: diffStr });
-    fetchQuestions({ difficulty: diffStr, page: 1, limit: pagination.limit });
+    fetchQuestions({ bankId, difficulty: diffStr, page: 1, limit: pagination.limit });
   };
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) => {
       const next = prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag];
       setFilters({ tags: next.join(',') });
-      fetchQuestions({ tags: next.join(','), page: 1, limit: pagination.limit });
+      fetchQuestions({ bankId, tags: next.join(','), page: 1, limit: pagination.limit });
       return next;
     });
   };
 
   const handleSearch = () => {
     setFilters({ search: searchInput });
+    fetchQuestions({ bankId, search: searchInput, page: 1, limit: pagination.limit });
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
@@ -273,7 +340,7 @@ export default function QuestionBankPage() {
       ? `${newQuestionForm.text}\n\n$$${newQuestionForm.formula}$$`
       : newQuestionForm.text;
 
-    const payload = {
+    const payload: any = {
       content,
       type: 'single_choice' as const,
       options: [
@@ -286,6 +353,7 @@ export default function QuestionBankPage() {
       explanation: newQuestionForm.explanation || '',
       source: 'manual' as const,
       tags: newQuestionForm.tags,
+      bankId: bankId,
     };
 
     try {
@@ -341,19 +409,94 @@ export default function QuestionBankPage() {
 
   // Bank integrity (loaded from API)
   const { data: bankStats } = useQuery({
-    queryKey: ['question-bank-stats'],
-    queryFn: () => questionService.getBankStats(),
+    queryKey: ['question-bank-stats', bankId],
+    queryFn: () => questionService.getBankStats(bankId!),
+    enabled: !!bankId,
   });
+
+  const renderRoleBadge = (role: string) => {
+    const map: Record<string, { color: string; bg: string; label: string }> = {
+      owner: { color: '#7c3aed', bg: '#ede9fe', label: 'Owner' },
+      manager: { color: '#2563eb', bg: '#dbeafe', label: 'Manager' },
+      viewer: { color: '#475569', bg: '#e2e8f0', label: 'Viewer' },
+    };
+    const info = map[role];
+    if (!info) return null;
+    return (
+      <span
+        style={{
+          fontSize: '10px',
+          fontWeight: 700,
+          padding: '2px 8px',
+          borderRadius: '999px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          color: info.color,
+          backgroundColor: info.bg,
+        }}
+      >
+        {info.label}
+      </span>
+    );
+  };
+
+  const activeMembership = bankInfo?.membership;
 
   return (
     <div className={styles.container}>
       {/* ─── Top Header ─────────────────────────────────────────────────────── */}
-            <EntityPageHeader
-        mode="teacher"
-        title="Question Bank"
-        subtitle="Create, manage, and filter academic questions and equations"
-        extraActions={
-          canManage ? (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <Link
+          to="/question-bank"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            color: '#0b2240',
+            textDecoration: 'none',
+            fontSize: '13px',
+            fontWeight: 600,
+            padding: '6px 10px',
+            borderRadius: 8,
+            background: '#f8fafc',
+            border: '1px solid #e5e7eb',
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#f8fafc')}
+        >
+          <ArrowLeft size={14} />
+          Back to Banks
+        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <BookOpen size={22} style={{ color: '#1d4ed8' }} />
+          <span style={{ fontWeight: 700, fontSize: 18, color: '#0b2240' }}>
+            {bankInfo?.bank.name || currentBank?.name || 'Question Bank'}
+          </span>
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            padding: '2px 8px',
+            borderRadius: 6,
+            background: bankInfo?.bank.type === 'school' ? '#eff6ff' : '#f3f4f6',
+            color: bankInfo?.bank.type === 'school' ? '#1d4ed8' : '#475569',
+          }}>
+            {bankInfo?.bank.type === 'school' ? 'School bank' : 'Personal bank'}
+          </span>
+          {activeMembership?.role && renderRoleBadge(activeMembership.role)}
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {(currentMembership?.role === 'owner' || currentMembership?.role === 'manager' || activeMembership?.role === 'owner' || activeMembership?.role === 'manager') && (
+            <button
+              className={styles.createBtn}
+              style={{ backgroundColor: '#0b2240' }}
+              onClick={() => setIsManagementOpen(true)}
+            >
+              <Settings2 size={18} />
+              <span>Manage Bank</span>
+            </button>
+          )}
+          {canManage && (
             <>
               {selectedQuestionIds.size > 0 && (
                 <button className={styles.createBtn} style={{ backgroundColor: '#059669' }} onClick={() => setIsSimilarModalOpen(true)}>
@@ -370,9 +513,9 @@ export default function QuestionBankPage() {
                 <span>Add Question</span>
               </button>
             </>
-          ) : undefined
-        }
-      />
+          )}
+        </div>
+      </div>
 
       {/* ─── Main Layout ────────────────────────────────────────────────────── */}
       <div className={styles.pageLayout}>
@@ -412,7 +555,7 @@ export default function QuestionBankPage() {
                         const next = approvalFilter === 'pending' ? 'all' : 'pending';
                         setApprovalFilter(next);
                         setFilters({ isApproved: next === 'pending' ? false : null });
-                        fetchQuestions({ isApproved: next === 'pending' ? false : undefined, page: 1, limit: pagination.limit });
+                        fetchQuestions({ bankId, isApproved: next === 'pending' ? false : undefined, page: 1, limit: pagination.limit });
                       }}
                       className={styles.checkbox}
                     />
@@ -426,7 +569,7 @@ export default function QuestionBankPage() {
                         const next = approvalFilter === 'approved' ? 'all' : 'approved';
                         setApprovalFilter(next);
                         setFilters({ isApproved: next === 'approved' ? true : null });
-                        fetchQuestions({ isApproved: next === 'approved' ? true : undefined, page: 1, limit: pagination.limit });
+                        fetchQuestions({ bankId, isApproved: next === 'approved' ? true : undefined, page: 1, limit: pagination.limit });
                       }}
                       className={styles.checkbox}
                     />
@@ -637,7 +780,41 @@ export default function QuestionBankPage() {
           )}
 
           {/* ─── Question List ─────────────────────────────────────────────── */}
-          {isLoading && questions.length === 0 ? (
+          {!bankId ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '60px 24px',
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                border: '1px dashed #cbd5e1',
+              }}
+            >
+              <BookOpen size={32} style={{ color: '#7c3aed', marginBottom: '12px' }} />
+              <h4 style={{ margin: 0, color: '#0b2240' }}>Select a question bank to begin</h4>
+              <p
+                style={{
+                  margin: '6px auto 0',
+                  fontSize: '13px',
+                  color: '#64748b',
+                  maxWidth: 480,
+                  lineHeight: 1.5,
+                }}
+              >
+                Each bank holds its own questions and members. Pick an existing bank from the
+                selector above, or create a new one to get started.
+              </p>
+              <p
+                style={{
+                  marginTop: '16px',
+                  fontSize: '12px',
+                  color: '#94a3b8',
+                }}
+              >
+                Use the <strong>+ New bank</strong> button in the bank selector above.
+              </p>
+            </div>
+          ) : isLoading && questions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
               <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
               <p>Loading questions...</p>
@@ -751,16 +928,22 @@ export default function QuestionBankPage() {
 
                   {/* Footer */}
                   <div className={styles.questionCardFooter}>
-                    <div className={styles.footerStats}>
-                      <div className={styles.footerStatItem}>
-                        <Clock size={14} className={styles.footerStatIcon} />
-                        <span>Used in {q.usedInExams} {q.usedInExams === 1 ? 'exam' : 'exams'}</span>
+                    {(q.usedInExams > 0 || q.successRate > 0) && (
+                      <div className={styles.footerStats}>
+                        {q.usedInExams > 0 && (
+                          <div className={styles.footerStatItem}>
+                            <Clock size={14} className={styles.footerStatIcon} />
+                            <span>Used in {q.usedInExams} {q.usedInExams === 1 ? 'exam' : 'exams'}</span>
+                          </div>
+                        )}
+                        {q.successRate > 0 && (
+                          <div className={styles.footerStatItem}>
+                            <TrendingUp size={14} className={styles.footerStatIcon} />
+                            <span>Success rate: {q.successRate}%</span>
+                          </div>
+                        )}
                       </div>
-                      <div className={styles.footerStatItem}>
-                        <TrendingUp size={14} className={styles.footerStatIcon} />
-                        <span>Success rate: {q.successRate}%</span>
-                      </div>
-                    </div>
+                    )}
 
                     <button
                       className={styles.explanationLink}
@@ -777,6 +960,36 @@ export default function QuestionBankPage() {
                       >
                         <CheckCircle2 size={14} />
                         <span>Approve</span>
+                      </button>
+                    )}
+                    {permissions.canEdit(q) && (
+                      <button
+                        className={styles.explanationLink}
+                        onClick={() => {
+                          setEditingQuestion(q);
+                          setEditForm({
+                            text: q.text,
+                            difficulty: q.difficulty,
+                            options: q.options.map(o => ({ ...o })),
+                            explanation: q.explanation || '',
+                            tags: q.tags ? [...q.tags] : [],
+                          });
+                          setEditTagInput('');
+                        }}
+                        style={{ color: '#7c3aed' }}
+                      >
+                        <Pencil size={14} />
+                        <span>Edit</span>
+                      </button>
+                    )}
+                    {permissions.canDelete(q) && (
+                      <button
+                        className={styles.explanationLink}
+                        onClick={() => setDeletingQuestionId(q._id)}
+                        style={{ color: '#dc2626' }}
+                      >
+                        <Trash2 size={14} />
+                        <span>Delete</span>
                       </button>
                     )}
                   </div>
@@ -916,9 +1129,24 @@ export default function QuestionBankPage() {
             </div>
 
             <div className={styles.modalForm}>
-              {/* Row 1: Tags */}
+              {/* Row 1: Difficulty */}
               <div className={styles.formGroup}>
-                <label>Tags *</label>
+                <label>Difficulty *</label>
+                <select
+                  value={newQuestionForm.difficulty}
+                  onChange={(e) => setNewQuestionForm({ ...newQuestionForm, difficulty: e.target.value as 'Easy' | 'Medium' | 'Hard' })}
+                  className={styles.formInput}
+                  required
+                >
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
+              </div>
+
+              {/* Row 2: Tags */}
+              <div className={styles.formGroup}>
+                <label>Tags</label>
                 <div className={styles.tagInputWrapper}>
                   <div className={styles.tagChipList}>
                     {newQuestionForm.tags.map((tag) => (
@@ -998,21 +1226,6 @@ export default function QuestionBankPage() {
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Row 2: Difficulty */}
-              <div className={styles.formGroup}>
-                <label>Difficulty *</label>
-                <select
-                  value={newQuestionForm.difficulty}
-                  onChange={(e) => setNewQuestionForm({ ...newQuestionForm, difficulty: e.target.value as 'Easy' | 'Medium' | 'Hard' })}
-                  className={styles.formInput}
-                  required
-                >
-                  <option value="Easy">Easy</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Hard">Hard</option>
-                </select>
               </div>
 
               {/* Question Text */}
@@ -1223,6 +1436,90 @@ export default function QuestionBankPage() {
                 />
               </div>
 
+              <div className={styles.formGroup}>
+                <label>Tags (tùy chọn)</label>
+                <div style={{
+                  minHeight: '42px',
+                  padding: '8px 12px',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  backgroundColor: '#fff',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '6px',
+                  alignItems: 'center',
+                  marginBottom: '8px'
+                }}>
+                  {aiTags.length === 0 ? (
+                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>Chưa có tags</span>
+                  ) : (
+                    aiTags.map((tag) => (
+                      <span key={tag} className={styles.tagChip}>
+                        #{tag}
+                        <button
+                          type="button"
+                          className={styles.tagChipRemove}
+                          onClick={() => setAiTags(aiTags.filter((t) => t !== tag))}
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+                <div className={styles.tagInputWrapper}>
+                  <div className={styles.tagChipList}>
+                    <input
+                      type="text"
+                      placeholder="Thêm tag mới..."
+                      value={aiTagInputValue}
+                      onChange={(e) => setAiTagInputValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          const raw = aiTagInputValue.replace(',', '').trim();
+                          if (!raw) return;
+                          if (!aiTags.includes(raw)) setAiTags([...aiTags, raw]);
+                          setAiTagInputValue('');
+                        } else if (e.key === 'Backspace' && !aiTagInputValue && aiTags.length) {
+                          setAiTags(aiTags.slice(0, -1));
+                        }
+                      }}
+                      className={styles.tagInput}
+                    />
+                  </div>
+                  {!!aiTagInputValue.trim() && (
+                    <div className={styles.tagSuggestions}>
+                      {(() => {
+                        const query = aiTagInputValue.trim().toLowerCase();
+                        const matches = availableTags
+                          .filter((tag) => tag.toLowerCase().includes(query) && !aiTags.includes(tag))
+                          .slice(0, 6);
+                        if (!matches.length) return null;
+                        return (
+                          <div className={styles.tagSuggestionsList}>
+                            {matches.map((tag) => (
+                              <button
+                                type="button"
+                                key={tag}
+                                className={styles.tagSuggestionItem}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  if (!aiTags.includes(tag)) setAiTags([...aiTags, tag]);
+                                  setAiTagInputValue('');
+                                }}
+                              >
+                                #{tag}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {isGeneratingAi && (
                 <div style={{ textAlign: 'center', padding: '16px', color: '#7c3aed' }}>
                   <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
@@ -1240,8 +1537,12 @@ export default function QuestionBankPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      const questionsWithTags = aiPreview.map(q => ({
+                        ...q,
+                        tags: aiTags.length > 0 ? [...aiTags] : (q.tags || []),
+                      }));
                       setPreviewMode('ai');
-                      setPreviewQuestions(aiPreview);
+                      setPreviewQuestions(questionsWithTags);
                       setIsPreviewDrawerOpen(true);
                     }}
                     style={{ padding: '8px 16px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
@@ -1287,7 +1588,11 @@ export default function QuestionBankPage() {
                         difficulty: aiForm.difficulty,
                         requirements: aiForm.requirements,
                       });
-                      setAiPreview(rawQuestions.map(toFrontendQuestion));
+                      const previewWithTags = rawQuestions.map(q => ({
+                        ...toFrontendQuestion(q),
+                        tags: aiTags.length > 0 ? [...aiTags] : (q.tags || []),
+                      }));
+                      setAiPreview(previewWithTags);
                       toast.success(`Created ${rawQuestions.length} questions! Please preview and save.`);
                     } catch {
                       toast.error('Failed to generate questions');
@@ -1316,6 +1621,7 @@ export default function QuestionBankPage() {
                             difficulty: q.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
                             source: 'ai',
                             tags: q.tags,
+                            bankId: bankId,
                           });
                         } catch { /* individual error handled by store */ }
                       }
@@ -1323,7 +1629,7 @@ export default function QuestionBankPage() {
                       setIsAiModalOpen(false);
                       setAiPreview([]);
                       setAiForm({ topic: '', count: 5, difficulty: 'medium', requirements: '' });
-                      fetchQuestions({ page: 1, limit: 20 });
+                      if (bankId) fetchQuestions({ bankId, page: 1, limit: 20 });
                     }}
                   >
                     <CheckCircle size={14} />
@@ -1392,6 +1698,90 @@ export default function QuestionBankPage() {
                 </div>
               </div>
 
+              <div className={styles.formGroup}>
+                <label>Tags (tùy chọn)</label>
+                <div style={{
+                  minHeight: '42px',
+                  padding: '8px 12px',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  backgroundColor: '#fff',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '6px',
+                  alignItems: 'center',
+                  marginBottom: '8px'
+                }}>
+                  {similarTags.length === 0 ? (
+                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>Chưa có tags</span>
+                  ) : (
+                    similarTags.map((tag) => (
+                      <span key={tag} className={styles.similarTagChip}>
+                        #{tag}
+                        <button
+                          type="button"
+                          className={styles.similarTagChipRemove}
+                          onClick={() => setSimilarTags(similarTags.filter((t) => t !== tag))}
+                        >
+                          <X size={14} />
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+                <div className={styles.tagInputWrapper}>
+                  <div className={styles.tagChipList}>
+                    <input
+                      type="text"
+                      placeholder="Thêm tag mới..."
+                      value={similarTagInputValue}
+                      onChange={(e) => setSimilarTagInputValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          const raw = similarTagInputValue.replace(',', '').trim();
+                          if (!raw) return;
+                          if (!similarTags.includes(raw)) setSimilarTags([...similarTags, raw]);
+                          setSimilarTagInputValue('');
+                        } else if (e.key === 'Backspace' && !similarTagInputValue && similarTags.length) {
+                          setSimilarTags(similarTags.slice(0, -1));
+                        }
+                      }}
+                      className={styles.tagInput}
+                    />
+                  </div>
+                  {!!similarTagInputValue.trim() && (
+                    <div className={styles.tagSuggestions}>
+                      {(() => {
+                        const query = similarTagInputValue.trim().toLowerCase();
+                        const matches = availableTags
+                          .filter((tag) => tag.toLowerCase().includes(query) && !similarTags.includes(tag))
+                          .slice(0, 6);
+                        if (!matches.length) return null;
+                        return (
+                          <div className={styles.tagSuggestionsList}>
+                            {matches.map((tag) => (
+                              <button
+                                type="button"
+                                key={tag}
+                                className={styles.similarTagSuggestionItem}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  if (!similarTags.includes(tag)) setSimilarTags([...similarTags, tag]);
+                                  setSimilarTagInputValue('');
+                                }}
+                              >
+                                #{tag}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {isGeneratingSimilar && (
                 <div style={{ textAlign: 'center', padding: '16px', color: '#059669' }}>
                   <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
@@ -1409,8 +1799,12 @@ export default function QuestionBankPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      const questionsWithTags = similarPreview.map(q => ({
+                        ...q,
+                        tags: similarTags.length > 0 ? [...similarTags] : (q.tags || []),
+                      }));
                       setPreviewMode('similar');
-                      setPreviewQuestions(similarPreview);
+                      setPreviewQuestions(questionsWithTags);
                       setIsPreviewDrawerOpen(true);
                     }}
                     style={{ padding: '8px 16px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
@@ -1453,7 +1847,11 @@ export default function QuestionBankPage() {
                         count: similarForm.count,
                         difficulty: similarForm.difficulty,
                       });
-                      setSimilarPreview(rawQuestions.map(toFrontendQuestion));
+                      const previewWithTags = rawQuestions.map(q => ({
+                        ...toFrontendQuestion(q),
+                        tags: similarTags.length > 0 ? [...similarTags] : (q.tags || []),
+                      }));
+                      setSimilarPreview(previewWithTags);
                       toast.success(`Created ${rawQuestions.length} similar questions!`);
                     } catch {
                       toast.error('Failed to generate similar questions');
@@ -1482,6 +1880,7 @@ export default function QuestionBankPage() {
                             difficulty: q.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
                             source: 'ai',
                             tags: q.tags,
+                            bankId: bankId,
                           });
                         } catch { /* individual error handled by store */ }
                       }
@@ -1490,7 +1889,7 @@ export default function QuestionBankPage() {
                       setSimilarPreview([]);
                       setSelectedQuestionIds(new Set());
                       setSimilarForm({ count: 3, difficulty: 'medium' });
-                      fetchQuestions({ page: 1, limit: 20 });
+                      if (bankId) fetchQuestions({ bankId, page: 1, limit: 20 });
                     }}
                   >
                     <CheckCircle size={14} />
@@ -1550,6 +1949,49 @@ export default function QuestionBankPage() {
                     <option value="Medium">Medium</option>
                     <option value="Hard">Hard</option>
                   </select>
+
+                  {/* Tags display */}
+                  <div className={styles.tagChipList} style={{ gap: '6px', padding: '0', minHeight: 'auto' }}>
+                    {(q.tags || []).map((tag) => (
+                      <span key={tag} className={styles.previewTag}>
+                        #{tag}
+                        <button
+                          type="button"
+                          className={styles.previewTagRemove}
+                          onClick={() => {
+                            const next = [...previewQuestions];
+                            next[idx] = { ...next[idx], tags: (next[idx].tags || []).filter((t) => t !== tag) };
+                            setPreviewQuestions(next);
+                            if (previewMode === 'ai') setAiPreview(next);
+                            else setSimilarPreview(next);
+                          }}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      type="text"
+                      className={styles.previewTagInput}
+                      placeholder="+ tag"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          const raw = (e.target as HTMLInputElement).value.replace(',', '').trim();
+                          if (!raw) return;
+                          const next = [...previewQuestions];
+                          const tags = [...(next[idx].tags || [])];
+                          if (!tags.includes(raw)) tags.push(raw);
+                          next[idx] = { ...next[idx], tags };
+                          setPreviewQuestions(next);
+                          if (previewMode === 'ai') setAiPreview(next);
+                          else setSimilarPreview(next);
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }}
+                    />
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -1662,6 +2104,7 @@ export default function QuestionBankPage() {
                       difficulty: q.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
                       source: 'ai',
                       tags: q.tags,
+                      bankId: bankId,
                     });
                   } catch { /* individual error handled by store */ }
                 }
@@ -1677,7 +2120,7 @@ export default function QuestionBankPage() {
                   setSimilarForm({ count: 3, difficulty: 'medium' });
                   setSelectedQuestionIds(new Set());
                 }
-                fetchQuestions({ page: 1, limit: 20 });
+                if (bankId) fetchQuestions({ bankId, page: 1, limit: 20 });
               }}
               style={{ padding: '10px 20px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
@@ -1686,6 +2129,243 @@ export default function QuestionBankPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* ─── Edit Question Modal ───────────────────────────────────────────────── */}
+      {editingQuestion && (
+        <div className={styles.modalOverlay} onClick={() => setEditingQuestion(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px', width: '100%' }}>
+            <div className={styles.modalHeader}>
+              <h2>
+                <Pencil size={20} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#7c3aed' }} />
+                Edit Question
+              </h2>
+              <button className={styles.closeBtn} onClick={() => setEditingQuestion(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className={styles.modalForm}>
+              <div className={styles.formGroup}>
+                <label>Question Text *</label>
+                <textarea
+                  value={editForm.text}
+                  onChange={(e) => setEditForm({ ...editForm, text: e.target.value })}
+                  className={styles.formInput}
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className={styles.formGroup}>
+                  <label>Difficulty</label>
+                  <select
+                    value={editForm.difficulty}
+                    onChange={(e) => setEditForm({ ...editForm, difficulty: e.target.value as 'Easy' | 'Medium' | 'Hard' })}
+                    className={styles.formInput}
+                  >
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Tags</label>
+                  <div className={styles.tagInputWrapper}>
+                    <div className={styles.tagChipList}>
+                      {editForm.tags.map((tag) => (
+                        <span key={tag} className={styles.tagChip}>
+                          #{tag}
+                          <button
+                            type="button"
+                            className={styles.tagChipRemove}
+                            onClick={() => setEditForm({ ...editForm, tags: editForm.tags.filter((t) => t !== tag) })}
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                      <input
+                        type="text"
+                        placeholder={editForm.tags.length ? 'Add tag...' : 'VD: Toán, Hình học'}
+                        value={editTagInput}
+                        onChange={(e) => setEditTagInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            const raw = editTagInput.replace(',', '').trim();
+                            if (raw && !editForm.tags.includes(raw)) {
+                              setEditForm({ ...editForm, tags: [...editForm.tags, raw] });
+                            }
+                            setEditTagInput('');
+                          } else if (e.key === 'Backspace' && !editTagInput && editForm.tags.length) {
+                            setEditForm({ ...editForm, tags: editForm.tags.slice(0, -1) });
+                          }
+                        }}
+                        className={styles.tagInput}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Answer Options</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {editForm.options.map((opt, idx) => (
+                    <div key={opt.letter} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = editForm.options.map((o, i) => ({
+                            ...o,
+                            isCorrect: i === idx,
+                          }));
+                          setEditForm({ ...editForm, options: updated });
+                        }}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          border: `3px solid ${opt.isCorrect ? '#16a34a' : '#cbd5e1'}`,
+                          backgroundColor: opt.isCorrect ? '#dcfce7' : 'transparent',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: opt.isCorrect ? '#16a34a' : '#64748b',
+                          padding: 0,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {opt.letter}
+                      </button>
+                      <input
+                        type="text"
+                        value={opt.text}
+                        onChange={(e) => {
+                          const updated = [...editForm.options];
+                          updated[idx] = { ...updated[idx], text: e.target.value };
+                          setEditForm({ ...editForm, options: updated });
+                        }}
+                        style={{ flex: 1, fontSize: '13.5px', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontFamily: 'inherit' }}
+                        placeholder={`Option ${opt.letter}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Explanation (tùy chọn)</label>
+                <textarea
+                  value={editForm.explanation}
+                  onChange={(e) => setEditForm({ ...editForm, explanation: e.target.value })}
+                  className={styles.formInput}
+                  rows={2}
+                  placeholder="Giải thích đáp án đúng..."
+                />
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.cancelBtn} onClick={() => setEditingQuestion(null)}>
+                Hủy
+              </button>
+              <button
+                type="button"
+                className={styles.submitBtn}
+                style={{ backgroundColor: '#7c3aed' }}
+                onClick={async () => {
+                  if (!editForm.text.trim()) {
+                    toast.error('Question text is required');
+                    return;
+                  }
+                  try {
+                    await updateQuestion(editingQuestion._id, {
+                      content: editForm.text,
+                      difficulty: editForm.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
+                      options: editForm.options.map(o => ({ id: o.letter as 'A' | 'B' | 'C' | 'D', content: o.text, isCorrect: !!o.isCorrect })),
+                      explanation: editForm.explanation,
+                      tags: editForm.tags,
+                    });
+                    toast.success('Question updated successfully!');
+                    setEditingQuestion(null);
+                    if (bankId) fetchQuestions({ bankId, page: 1, limit: 20 });
+                  } catch {
+                    toast.error('Failed to update question');
+                  }
+                }}
+              >
+                <CheckCircle size={14} />
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Delete Confirmation Modal ──────────────────────────────────────────── */}
+      {deletingQuestionId && (
+        <div className={styles.modalOverlay} onClick={() => setDeletingQuestionId(null)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '420px',
+              width: '90%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <Trash2 size={28} style={{ color: '#dc2626' }} />
+            </div>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: 700, color: '#0b2240' }}>Delete Question?</h3>
+            <p style={{ margin: '0 0 24px 0', fontSize: '14px', color: '#64748b', lineHeight: 1.5 }}>
+              This action cannot be undone. The question will be permanently removed from the bank.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setDeletingQuestionId(null)}
+                style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #cbd5e1', color: '#475569', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const idToDelete = deletingQuestionId;
+                    setDeletingQuestionId(null);
+                    await deleteQuestion(idToDelete);
+                    toast.success('Question deleted successfully!');
+                  } catch {
+                    toast.error('Failed to delete question');
+                  }
+                }}
+                style={{ padding: '10px 20px', background: '#dc2626', border: 'none', color: '#ffffff', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Bank Management Modal ─────────────────────────────────────────── */}
+      {bankId && (
+        <BankManagementModal
+          bankId={bankId}
+          open={isManagementOpen}
+          onClose={() => setIsManagementOpen(false)}
+          userRole={activeMembership?.role || currentMembership?.role}
+        />
       )}
 
       {/* ─── Global spinner keyframes ─────────────────────────────────────────── */}

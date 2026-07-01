@@ -11,6 +11,7 @@ interface Props {
   bankId: string;
   open: boolean;
   onClose: () => void;
+  userRole?: 'owner' | 'manager' | 'viewer';
 }
 
 interface UserInfo {
@@ -23,8 +24,8 @@ interface MemberWithUser extends BankMember {
   userId: UserInfo;
 }
 
-export default function BankManagementModal({ bankId, open, onClose }: Props) {
-  const { currentMembership } = useBankStore();
+export default function BankManagementModal({ bankId, open, onClose, userRole }: Props) {
+  const { currentMembership: storeMembership } = useBankStore();
   const [managers, setManagers] = useState<MemberWithUser[]>([]);
   const [viewers, setViewers] = useState<MemberWithUser[]>([]);
   const [pending, setPending] = useState<MemberWithUser[]>([]);
@@ -32,8 +33,10 @@ export default function BankManagementModal({ bankId, open, onClose }: Props) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<{ userId: string; name: string } | null>(null);
 
-  const isOwner = currentMembership?.role === 'owner';
-  const isManager = currentMembership?.role === 'manager' || isOwner;
+  // Use prop role if provided, otherwise fallback to store
+  const effectiveRole = userRole || storeMembership?.role;
+  const isOwner = effectiveRole === 'owner';
+  const isManager = effectiveRole === 'manager' || isOwner;
 
   useEffect(() => {
     if (open && bankId) {
