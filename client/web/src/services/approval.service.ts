@@ -85,6 +85,33 @@ const approvalService = {
     const response = await apiService.post<User>(`/users/${userId}/reject`, { reason });
     return response;
   },
+
+  // ── Admin Teachers (for system admin in SchoolDetailModal) ─────────────────────
+
+  getAdminPendingTeachers: async (params: {
+    schoolId: string;
+    page?: number;
+    limit?: number;
+  }): Promise<ApprovalResponse<PendingTeacher>> => {
+    const response = await apiService.get<ApprovalResponse<PendingTeacher>>(
+      '/users/admin/teachers/pending',
+      { params }
+    );
+    return response;
+  },
+
+  adminApproveTeacher: async (userId: string): Promise<User> => {
+    const response = await apiService.post<User>(`/users/admin/teachers/${userId}/approve`);
+    return response;
+  },
+
+  adminRejectTeacher: async (userId: string, reason?: string): Promise<User> => {
+    const response = await apiService.post<User>(
+      `/users/admin/teachers/${userId}/reject`,
+      { reason }
+    );
+    return response;
+  },
 };
 
 export default approvalService;
