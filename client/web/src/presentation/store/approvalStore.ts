@@ -40,6 +40,11 @@ interface ApprovalState {
   pendingQuestionsCount: number;
   pendingTeachersCount: number;
 
+  // Admin teacher approval state (NEW)
+  adminPendingTeachers: PendingTeacher[];
+  adminPendingTeachersCount: number;
+  isLoadingAdminTeachers: boolean;
+
   // Actions
   fetchPendingQuestions: () => Promise<void>;
   fetchPendingTeachers: () => Promise<void>;
@@ -47,6 +52,12 @@ interface ApprovalState {
   rejectQuestion: (questionId: string, reason?: string) => Promise<void>;
   approveTeacher: (userId: string) => Promise<void>;
   rejectTeacher: (userId: string, reason?: string) => Promise<void>;
+
+  // Admin teacher approval actions (NEW)
+  fetchAdminPendingTeachers: (schoolId: string) => Promise<void>;
+  adminApproveTeacher: (userId: string) => Promise<void>;
+  adminRejectTeacher: (userId: string, reason?: string) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -58,6 +69,62 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
   error: null,
   pendingQuestionsCount: 0,
   pendingTeachersCount: 0,
+
+  // Admin teacher approval state (NEW)
+  adminPendingTeachers: [],
+  adminPendingTeachersCount: 0,
+  isLoadingAdminTeachers: false,
+
+  // Admin teacher approval actions (NEW) ─────────────────────────────────────────
+
+  fetchAdminPendingTeachers: async (schoolId: string) => {
+    set({ isLoadingAdminTeachers: true, error: null });
+    try {
+      const data = await approvalService.getAdminPendingTeachers({ schoolId, limit: 100 });
+      set({
+        adminPendingTeachers: data.results,
+        adminPendingTeachersCount: data.total,
+        isLoadingAdminTeachers: false,
+      });
+    } catch (err: any) {
+      set({
+        error: err?.message || 'Failed to fetch pending teachers for school',
+        isLoadingAdminTeachers: false,
+      });
+    }
+  },
+
+  adminApproveTeacher: async (userId: string) => {
+    try {
+      await approvalService.adminApproveTeacher(userId);
+      const filtered = get().adminPendingTeachers.filter(
+        (t) => t.id !== userId && t._id !== userId
+      );
+      set({
+        adminPendingTeachers: filtered,
+        adminPendingTeachersCount: get().adminPendingTeachersCount - 1,
+      });
+    } catch (err: any) {
+      set({ error: err?.message || 'Failed to approve teacher' });
+      throw err;
+    }
+  },
+
+  adminRejectTeacher: async (userId: string, reason?: string) => {
+    try {
+      await approvalService.adminRejectTeacher(userId, reason);
+      const filtered = get().adminPendingTeachers.filter(
+        (t) => t.id !== userId && t._id !== userId
+      );
+      set({
+        adminPendingTeachers: filtered,
+        adminPendingTeachersCount: get().adminPendingTeachersCount - 1,
+      });
+    } catch (err: any) {
+      set({ error: err?.message || 'Failed to reject teacher' });
+      throw err;
+    }
+  },
 
   fetchPendingQuestions: async () => {
     set({ isLoadingQuestions: true, error: null });
