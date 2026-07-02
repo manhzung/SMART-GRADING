@@ -38,7 +38,6 @@ import 'presentation/pages/submissions_page.dart';
 import 'presentation/pages/submission_detail_page.dart';
 import 'presentation/pages/analytics_page.dart';
 import 'presentation/pages/appeals_page.dart';
-import 'presentation/pages/question_bank_page.dart';
 import 'presentation/pages/settings_page.dart';
 import 'presentation/pages/help_page.dart';
 import 'presentation/pages/create_edit_class_page.dart';
@@ -239,7 +238,6 @@ class SmartGradingApp extends StatelessWidget {
           },
           '/analytics': (context) => const AnalyticsPage(),
           '/appeals': (context) => const AppealsPage(),
-          '/question-bank': (context) => const QuestionBankPage(),
           '/banks': (context) => const BanksPage(),
           '/banks/detail': (context) {
             final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;

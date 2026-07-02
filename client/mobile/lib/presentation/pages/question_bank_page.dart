@@ -1,3 +1,5 @@
+// DEPRECATED: This page is no longer used. Use BanksPage (/banks) instead.
+// This file is kept for reference until full migration is complete.
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/network/question_service.dart';
