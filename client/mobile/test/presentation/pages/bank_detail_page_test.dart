@@ -66,20 +66,10 @@ void main() {
         ),
       );
 
-      // Wait for async operations - multiple pumps
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100));
 
-      // Debug: Print all text on screen
-      final allText = find.byType(Text);
-      print('Text widgets found: ${allText.evaluate().length}');
-      for (final element in allText.evaluate()) {
-        final widget = element.widget as Text;
-        print('Text: "${widget.data}"');
-      }
-
-      // Should display bank name
       expect(find.text('Math Bank'), findsOneWidget);
     });
 
