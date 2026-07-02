@@ -1003,7 +1003,10 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
       _pendingScanResult = null;
     });
 
-    // Submit immediately
+    // Submit the grading result
     context.read<OMRScannerBloc>().add(OMRScannerSubmit());
+
+    // Reset camera back to live preview so user can scan the next paper
+    _cameraBloc.add(CameraRetake());
   }
 }
