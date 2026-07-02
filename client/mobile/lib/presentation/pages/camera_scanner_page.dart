@@ -196,62 +196,71 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         BlocProvider.value(value: context.read<OMRScannerBloc>()),
         BlocProvider.value(value: _cameraBloc),
       ],
-      child: BlocConsumer<OMRScannerBloc, OMRScannerState>(
-        listener: (context, state) {
-          if (state is OMRScannerSuccess) {
-            // Store result and show confirmation popup
-            setState(() {
-              _pendingScanResult = _ScanResultData(
-                imageBytes: state.imageBytes,
-                gradingResult: state.gradingResult,
-                processingResult: state.processingResult,
-                studentCode: state.studentCode,
-                versionCode: state.versionCode,
-                matchedStudent: state.matchedStudent,
-              );
-            });
-          } else if (state is OMRScannerSubmitted) {
-            // Submitted successfully - show success and return
-            _showSubmittedSnackbar(context, state);
-          } else if (state is OMRScannerError) {
-            _showErrorSnackbar(context, state);
+      child: BlocListener<CameraBloc, CameraBlocState>(
+        listener: (context, cameraState) {
+          if (cameraState is CameraImageReady) {
+            _processImage(cameraState.imageBytes);
           }
         },
-        builder: (context, omrState) {
-          return Scaffold(
-            backgroundColor: const Color(0xFF0F172A),
-            appBar: AppBar(
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              title: Text(
-                widget.studentName != null
-                    ? widget.studentName!
-                    : (widget.examName ?? 'OMR Scanner'),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.photo_library_outlined),
-                  onPressed: _pickFromGallery,
-                  tooltip: 'Pick from gallery',
-                ),
-              ],
-            ),
-            body: BlocBuilder<CameraBloc, CameraBlocState>(
-              builder: (context, cameraState) {
-                return Stack(
-                  children: [
-                    _buildBody(omrState, cameraState),
-                    // Scan result confirmation popup
-                    if (_pendingScanResult != null)
-                      _buildConfirmPopup(_pendingScanResult!),
-                  ],
+        child: BlocConsumer<OMRScannerBloc, OMRScannerState>(
+          listener: (context, state) {
+            if (state is OMRScannerSuccess) {
+              // Store result and show confirmation popup
+              setState(() {
+                _pendingScanResult = _ScanResultData(
+                  imageBytes: state.imageBytes,
+                  gradingResult: state.gradingResult,
+                  processingResult: state.processingResult,
+                  studentCode: state.studentCode,
+                  versionCode: state.versionCode,
+                  matchedStudent: state.matchedStudent,
                 );
-              },
-            ),
-          );
-        },
+              });
+            } else if (state is OMRScannerImageReady) {
+              _processImage(state.imageBytes);
+            } else if (state is OMRScannerSubmitted) {
+              // Submitted successfully - show success and return
+              _showSubmittedSnackbar(context, state);
+            } else if (state is OMRScannerError) {
+              _showErrorSnackbar(context, state);
+            }
+          },
+          builder: (context, omrState) {
+            return Scaffold(
+              backgroundColor: const Color(0xFF0F172A),
+              appBar: AppBar(
+                backgroundColor: const Color(0xFF0F172A),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                title: Text(
+                  widget.studentName != null
+                      ? widget.studentName!
+                      : (widget.examName ?? 'OMR Scanner'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.photo_library_outlined),
+                    onPressed: _pickFromGallery,
+                    tooltip: 'Pick from gallery',
+                  ),
+                ],
+              ),
+              body: BlocBuilder<CameraBloc, CameraBlocState>(
+                builder: (context, cameraState) {
+                  return Stack(
+                    children: [
+                      _buildBody(omrState, cameraState),
+                      // Scan result confirmation popup
+                      if (_pendingScanResult != null)
+                        _buildConfirmPopup(_pendingScanResult!),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
