@@ -735,39 +735,6 @@ export default function AppealsPage() {
                 </div>
               </div>
 
-              {/* Question Detail */}
-              <div className={styles.section}>
-                <h3 className={styles.sectionTitle}>
-                  <FileQuestion size={16} />
-                  Chi tiết câu hỏi
-                </h3>
-                <div className={styles.questionCard}>
-                  <div className={styles.questionContent}>
-                    <span className={styles.questionLabel}>Nội dung câu hỏi:</span>
-                    <p className={styles.questionText}>{selectedAppeal.questionContent || `Câu hỏi số ${selectedAppeal.questionPosition}`}</p>
-                  </div>
-                  {(selectedAppeal.currentAnswer || selectedAppeal.expectedAnswer) && (
-                    <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div style={{ backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', padding: '10px' }}>
-                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#c2410c', marginBottom: '4px', textTransform: 'uppercase' }}>Đáp án học sinh đã chọn</div>
-                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#ea580c' }}>
-                          {selectedAppeal.currentAnswer
-                            ? `${selectedAppeal.currentAnswer} ${selectedAppeal.expectedAnswer && selectedAppeal.currentAnswer !== selectedAppeal.expectedAnswer ? '✗' : '✓'}`
-                            : <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#9ca3af' }}>Không trả lời</span>
-                          }
-                        </div>
-                      </div>
-                      <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '10px' }}>
-                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#15803d', marginBottom: '4px', textTransform: 'uppercase' }}>Đáp án đúng</div>
-                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#16a34a' }}>
-                          {selectedAppeal.expectedAnswer || '—'}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
               {/* Appeal Reason */}
               <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>
