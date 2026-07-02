@@ -14,9 +14,10 @@ class BanksPage extends StatefulWidget {
 class _BanksPageState extends State<BanksPage> {
   final TextEditingController _searchController = TextEditingController();
   
-  List<QuestionBank> _allBanks = [];
-  List<QuestionBank> _filteredBanks = [];
-  bool _isLoading = true;
+  List<QuestionBank> _yourBanks = [];
+  List<QuestionBank> _allSystemBanks = [];
+  bool _isLoading = false;
+  bool _isSearching = false;
   String? _errorMessage;
   String _searchQuery = '';
 
@@ -25,7 +26,7 @@ class _BanksPageState extends State<BanksPage> {
   @override
   void initState() {
     super.initState();
-    _loadBanks();
+    _loadYourBanks();
   }
 
   @override
@@ -34,7 +35,7 @@ class _BanksPageState extends State<BanksPage> {
     super.dispose();
   }
 
-  Future<void> _loadBanks() async {
+  Future<void> _loadYourBanks() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -43,8 +44,7 @@ class _BanksPageState extends State<BanksPage> {
       final banks = await _bankService.listBanks();
       if (mounted) {
         setState(() {
-          _allBanks = banks;
-          _applySearch();
+          _yourBanks = banks;
           _isLoading = false;
         });
       }
@@ -62,46 +62,60 @@ class _BanksPageState extends State<BanksPage> {
     if (query.isEmpty) {
       setState(() {
         _searchQuery = '';
-        _applySearch();
+        _allSystemBanks = [];
       });
       return;
     }
 
     setState(() {
-      _isLoading = true;
+      _isSearching = true;
       _searchQuery = query;
+      _errorMessage = null;
     });
 
     try {
       final result = await _bankService.searchBanks(query);
       if (mounted) {
         setState(() {
-          _filteredBanks = result.results;
-          _isLoading = false;
+          _allSystemBanks = result.results;
+          _isSearching = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isSearching = false;
           _errorMessage = e.toString();
         });
       }
     }
   }
 
-  void _applySearch() {
-    if (_searchQuery.isEmpty) {
-      _filteredBanks = List.from(_allBanks);
+  Future<void> _requestAccess(String bankId) async {
+    try {
+      await _bankService.requestAccess(bankId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Access request sent successfully'),
+            backgroundColor: Color(0xFF16A34A),
+          ),
+        );
+        // Remove from "All Banks" and refresh "Your Banks"
+        setState(() {
+          _allSystemBanks.removeWhere((b) => b.id == bankId);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to request access: ${e.toString()}'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
     }
-  }
-
-  List<QuestionBank> get _personalBanks {
-    return _filteredBanks.where((b) => b.type == 'personal').toList();
-  }
-
-  List<QuestionBank> get _schoolBanks {
-    return _filteredBanks.where((b) => b.type == 'school').toList();
   }
 
   void _showCreateBankSheet() {
@@ -112,8 +126,7 @@ class _BanksPageState extends State<BanksPage> {
       builder: (_) => CreateBankSheet(
         onCreated: (bank) {
           setState(() {
-            _allBanks.insert(0, bank);
-            _applySearch();
+            _yourBanks.insert(0, bank);
           });
         },
       ),
@@ -127,6 +140,16 @@ class _BanksPageState extends State<BanksPage> {
       arguments: {'bankId': bank.id},
     );
   }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+      _allSystemBanks = [];
+    });
+  }
+
+  bool get _isDisplayingSearchResults => _searchQuery.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +188,7 @@ class _BanksPageState extends State<BanksPage> {
                 controller: _searchController,
                 onChanged: (value) {
                   if (value.isEmpty) {
-                    _applySearch();
+                    _clearSearch();
                   }
                 },
                 onSubmitted: _searchBanks,
@@ -191,90 +214,110 @@ class _BanksPageState extends State<BanksPage> {
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear, color: Color(0xFF64748B)),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                              _applySearch();
-                            });
-                          },
+                          onPressed: _clearSearch,
                         )
                       : null,
                 ),
               ),
             ),
             Expanded(
-              child: _isLoading && _allBanks.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : _errorMessage != null && _allBanks.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.error_outline, size: 48, color: Color(0xFFDC2626)),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Unable to load banks',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton(
-                                onPressed: _loadBanks,
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ),
-                        )
-                      : _filteredBanks.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.account_balance_outlined, size: 64, color: Colors.grey.shade300),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'No banks found',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    'Create your first bank to get started',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: _loadBanks,
-                              child: ListView(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                children: [
-                                  if (_personalBanks.isNotEmpty) ...[
-                                    _buildSectionHeader('Your Banks', _personalBanks.length),
-                                    ..._personalBanks.map((bank) => _buildBankCard(bank)),
-                                  ],
-                                  if (_schoolBanks.isNotEmpty) ...[
-                                    const SizedBox(height: 16),
-                                    _buildSectionHeader('All Banks in System', _schoolBanks.length),
-                                    ..._schoolBanks.map((bank) => _buildBankCard(bank)),
-                                  ],
-                                  const SizedBox(height: 80),
-                                ],
-                              ),
-                            ),
+              child: _buildBody(),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    // Loading state during initial load
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Error state
+    if (_errorMessage != null && _yourBanks.isEmpty && _allSystemBanks.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Color(0xFFDC2626)),
+            const SizedBox(height: 16),
+            const Text(
+              'Unable to load banks',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _loadYourBanks,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Search loading state
+    if (_isSearching) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Empty state checks
+    final hasYourBanks = _yourBanks.isNotEmpty;
+    final hasSearchResults = _allSystemBanks.isNotEmpty;
+
+    if (!hasYourBanks && !hasSearchResults) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.account_balance_outlined, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(
+              _isDisplayingSearchResults ? 'No banks found' : 'No banks found',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _isDisplayingSearchResults
+                  ? 'Try a different search term'
+                  : 'Create your first bank to get started',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF94A3B8),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Main list content
+    return RefreshIndicator(
+      onRefresh: _loadYourBanks,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          // "Your Banks" section - shown when not searching
+          if (hasYourBanks && !_isDisplayingSearchResults) ...[
+            _buildSectionHeader('Your Banks', _yourBanks.length),
+            ..._yourBanks.map((bank) => _buildBankCard(bank, isMember: true)),
+          ],
+          // "All Banks in System" section - shown when searching
+          if (hasSearchResults) ...[
+            if (hasYourBanks && !_isDisplayingSearchResults) const SizedBox(height: 16),
+            _buildSectionHeader('All Banks in System', _allSystemBanks.length),
+            ..._allSystemBanks.map((bank) => _buildBankCard(bank, isMember: false)),
+          ],
+          const SizedBox(height: 80),
+        ],
       ),
     );
   }
@@ -313,7 +356,7 @@ class _BanksPageState extends State<BanksPage> {
     );
   }
 
-  Widget _buildBankCard(QuestionBank bank) {
+  Widget _buildBankCard(QuestionBank bank, {required bool isMember}) {
     return GestureDetector(
       onTap: () => _navigateToDetail(bank),
       child: Container(
@@ -370,12 +413,27 @@ class _BanksPageState extends State<BanksPage> {
                     color: Color(0xFF94A3B8),
                   ),
                 ),
-                const Spacer(),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: Color(0xFF94A3B8),
-                ),
+                if (!isMember) ...[
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => _requestAccess(bank.id),
+                    icon: const Icon(Icons.person_add_outlined, size: 16),
+                    label: const Text('Request Access'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF081C43),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ] else ...[
+                  const Spacer(),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ],
               ],
             ),
           ],
