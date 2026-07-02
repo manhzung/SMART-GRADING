@@ -196,41 +196,39 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         BlocProvider.value(value: context.read<OMRScannerBloc>()),
         BlocProvider.value(value: _cameraBloc),
       ],
-      child: BlocListener<CameraBloc, CameraBlocState>(
-        listener: (context, cameraState) {
-          if (cameraState is CameraImageReady) {
-            _processImage(cameraState.imageBytes);
-          }
-        },
-        child: BlocConsumer<OMRScannerBloc, OMRScannerState>(
-          listener: (context, state) {
-            if (state is OMRScannerSuccess) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider.value(
-                    value: context.read<OMRScannerBloc>(),
-                    child: OMRResultPage(
-                      imageBytes: state.imageBytes,
-                      gradingResult: state.gradingResult,
-                      processingResult: state.processingResult,
-                      examId: widget.examId,
-                      examName: widget.examName,
-                      student: state.matchedStudent,
-                      studentCode: state.studentCode,
-                      versionCode: state.versionCode,
-                    ),
-                  ),
-                ),
-              );
-            } else if (state is OMRScannerImageReady) {
-              _processImage(state.imageBytes);
-            } else if (state is OMRScannerSubmitted) {
-              // Submitted successfully - show success and return
-              _showSubmittedSnackbar(context, state);
-            } else if (state is OMRScannerError) {
-              _showErrorSnackbar(context, state);
-            }
-          },
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<CameraBloc, CameraBlocState>(
+            listener: (context, cameraState) {
+              if (cameraState is CameraImageReady) {
+                _processImage(cameraState.imageBytes);
+              }
+            },
+          ),
+          BlocListener<OMRScannerBloc, OMRScannerState>(
+            listener: (context, state) {
+              if (state is OMRScannerSuccess) {
+                // Store result and show confirmation popup
+                setState(() {
+                  _pendingScanResult = _ScanResultData(
+                    imageBytes: state.imageBytes,
+                    gradingResult: state.gradingResult,
+                    processingResult: state.processingResult,
+                    studentCode: state.studentCode,
+                    versionCode: state.versionCode,
+                    matchedStudent: state.matchedStudent,
+                  );
+                });
+              } else if (state is OMRScannerSubmitted) {
+                // Submitted successfully - show success and return
+                _showSubmittedSnackbar(context, state);
+              } else if (state is OMRScannerError) {
+                _showErrorSnackbar(context, state);
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<OMRScannerBloc, OMRScannerState>(
           builder: (context, omrState) {
             return Scaffold(
               backgroundColor: const Color(0xFF0F172A),
@@ -338,6 +336,14 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
       return _buildLoadingState('Loading template...');
     }
 
+    if (omrState is OMRScannerProcessing) {
+      return _buildProcessingState(omrState);
+    }
+
+    if (omrState is OMRScannerError) {
+      return _buildErrorState(omrState, cameraState);
+    }
+
     if (cameraState is CameraInitializing) {
       return _buildLoadingState('Initializing camera...');
     }
@@ -352,14 +358,6 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
 
     if (cameraState is CameraCapturing) {
       return _buildCapturingState();
-    }
-
-    if (omrState is OMRScannerProcessing) {
-      return _buildProcessingState(omrState);
-    }
-
-    if (omrState is OMRScannerError) {
-      return _buildErrorState(omrState, cameraState);
     }
 
     if (omrState is OMRScannerImageReady) {
