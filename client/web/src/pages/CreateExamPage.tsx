@@ -110,13 +110,10 @@ export default function CreateExamPage() {
   const [assignedQuestionIds, setAssignedQuestionIds] = useState<string[]>([]);
   const [assignedQuestionsLocalSearch, setAssignedQuestionsLocalSearch] = useState('');
 
-  // Derived count for UI display
-  const selectedQuestionsCount = assignedQuestionIds.length;
-
   // ─── Question Bank Modal Selector ──────────────────────────────────────────
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [bankSearchText, setBankSearchText] = useState('');
-  const [bankDifficultyFilter, setBankDifficultyFilter] = useState('');
+  const [bankDifficultyFilter] = useState('');
   const [bankPage, setBankPage] = useState(1);
   const [selectedBankId, setSelectedBankId] = useState<string>('');
 

@@ -556,9 +556,7 @@ export const useExamStore = create<ExamState>((set) => ({
     if (contentType.includes('application/json')) {
       // Backend returns JSON with submissions array for non-PDF formats
       const data = await response.json();
-      await import('../../features/reports/examReportExport').then(m => {
-        const XLSX = (window as any).XLSX || {};
-        const wb = { SheetNames: [], Sheets: {} };
+      await import('../../features/reports/examReportExport').then(() => {
         const rows = [
           ['STT', 'Ho ten', 'Ma HS', 'Diem', 'Trang thai', 'Ngay nop'],
         ];

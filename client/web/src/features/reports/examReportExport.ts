@@ -453,7 +453,7 @@ export function prepareStudentScores(
       const score = s.score || 0;
       const status: StudentScore['status'] = isPassing(score, passingScore) ? 'pass' : 'fail';
       return {
-        name: s.studentId?.name || 'Unknown',
+        name: (typeof s.studentId === 'object' && s.studentId ? s.studentId.name : '') || 'Unknown',
         score,
         grade: calculateGrade(score),
         status,

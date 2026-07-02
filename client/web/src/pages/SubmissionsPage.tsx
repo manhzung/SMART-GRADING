@@ -127,7 +127,7 @@ export default function SubmissionsPage() {
         studentName: (submission.studentId as any)?.name || 'Unknown',
         studentEmail: (submission.studentId as any)?.email || '',
         examTitle: exam?.title || 'Unknown',
-        className: cls?.name || submission.classId || 'Unknown',
+        className: cls?.name || (typeof submission.classId === 'object' && submission.classId ? submission.classId.name : submission.classId) || 'Unknown',
         maxScore,
         totalQuestions,
         correctCount,
@@ -156,7 +156,7 @@ export default function SubmissionsPage() {
 
       // Date range filter
       if (startDate || endDate) {
-        const submittedDate = new Date(submission.submittedAt);
+        const submittedDate = new Date(submission.submittedAt || submission.createdAt);
         if (startDate && submittedDate < new Date(startDate)) {
           return false;
         }
@@ -609,7 +609,7 @@ export default function SubmissionsPage() {
                       {(submission.totalScore ?? submission.score) !== undefined ? (
                         <>
                           <span className={styles.scoreValue}>
-                            {(submission.totalScore ?? submission.score).toFixed(1)}/{submission.maxScore}
+                            {(submission.totalScore ?? submission.score ?? 0).toFixed(1)}/{submission.maxScore}
                           </span>
                           <span className={styles.scorePercentage}>{submission.percentage}%</span>
                         </>
@@ -620,7 +620,7 @@ export default function SubmissionsPage() {
                   </td>
                   <td>{getStatusBadge(submission.status)}</td>
                   <td>
-                    <span className={styles.dateCell}>{formatDate(submission.submittedAt)}</span>
+                    <span className={styles.dateCell}>{formatDate(submission.submittedAt || submission.createdAt)}</span>
                   </td>
                 </tr>
               ))
@@ -727,7 +727,7 @@ export default function SubmissionsPage() {
                   </div>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Submitted At</span>
-                    <span className={styles.infoValue}>{formatDate(selectedSubmission.submittedAt)}</span>
+                    <span className={styles.infoValue}>{formatDate(selectedSubmission.submittedAt || selectedSubmission.createdAt)}</span>
                   </div>
                 </div>
               </div>
@@ -951,7 +951,10 @@ export default function SubmissionsPage() {
                     });
                     toast.success('Score overridden successfully');
                     setShowOverrideModal(false);
-                    fetchByExam(selectedSubmission.examId);
+                    const examIdStr = typeof selectedSubmission.examId === 'object' && selectedSubmission.examId
+                      ? selectedSubmission.examId._id
+                      : selectedSubmission.examId;
+                    fetchByExam(examIdStr);
                     setSelectedSubmission(null);
                   } catch {
                     toast.error('Failed to override score');

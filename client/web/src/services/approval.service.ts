@@ -49,7 +49,7 @@ const approvalService = {
     schoolId?: string;
   }): Promise<ApprovalResponse<PendingQuestion>> => {
     const response = await apiService.get<ApprovalResponse<PendingQuestion>>('/questions', {
-      params: { ...params, isApproved: false } as Record<string, string | number>,
+      params: { ...params, isApproved: false } as Record<string, any>,
     });
     return response;
   },

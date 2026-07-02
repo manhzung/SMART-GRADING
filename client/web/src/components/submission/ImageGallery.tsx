@@ -4,6 +4,7 @@ export type GalleryImageType = 'original' | 'annotated';
 
 interface ImageGalleryProps {
   originalUrl?: string;
+  preprocessedUrl?: string;
   annotatedUrl?: string;
 }
 

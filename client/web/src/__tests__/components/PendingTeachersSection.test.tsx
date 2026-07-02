@@ -15,7 +15,7 @@ vi.mock('../../presentation/store/approvalStore', () => ({
 describe('PendingTeachersSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useApprovalStore as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useApprovalStore as any).mockReturnValue({
       adminPendingTeachers: [],
       adminPendingTeachersCount: 0,
       isLoadingAdminTeachers: false,
@@ -26,7 +26,7 @@ describe('PendingTeachersSection', () => {
   });
 
   it('renders loading state when isLoadingAdminTeachers is true', () => {
-    (useApprovalStore as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useApprovalStore as any).mockReturnValue({
       adminPendingTeachers: [],
       adminPendingTeachersCount: 0,
       isLoadingAdminTeachers: true,
@@ -51,7 +51,7 @@ describe('PendingTeachersSection', () => {
       { _id: 't1', id: 't1', name: 'Nguyễn Văn A', email: 'a@example.com', createdAt: '2026-01-01' },
       { _id: 't2', id: 't2', name: 'Trần Thị B', email: 'b@example.com', createdAt: '2026-01-02' },
     ];
-    (useApprovalStore as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useApprovalStore as any).mockReturnValue({
       adminPendingTeachers: teachers,
       adminPendingTeachersCount: 2,
       isLoadingAdminTeachers: false,
@@ -72,7 +72,7 @@ describe('PendingTeachersSection', () => {
     const teachers = [
       { _id: 't1', id: 't1', name: 'Teacher A', email: 'a@example.com', createdAt: '2026-01-01' },
     ];
-    (useApprovalStore as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useApprovalStore as any).mockReturnValue({
       adminPendingTeachers: teachers,
       adminPendingTeachersCount: 3,
       isLoadingAdminTeachers: false,
@@ -87,7 +87,7 @@ describe('PendingTeachersSection', () => {
   });
 
   it('does not display badge when count is zero', () => {
-    (useApprovalStore as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useApprovalStore as any).mockReturnValue({
       adminPendingTeachers: [],
       adminPendingTeachersCount: 0,
       isLoadingAdminTeachers: false,
@@ -121,7 +121,7 @@ describe('PendingTeachersSection', () => {
     const teachers = [
       { _id: 't1', id: 't1', name: 'Teacher A', email: 'a@example.com', createdAt: '2026-01-01' },
     ];
-    (useApprovalStore as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useApprovalStore as any).mockReturnValue({
       adminPendingTeachers: teachers,
       adminPendingTeachersCount: 1,
       isLoadingAdminTeachers: false,
@@ -144,7 +144,7 @@ describe('PendingTeachersSection', () => {
     const teachers = [
       { _id: 't1', id: 't1', name: 'Teacher A', email: 'a@example.com', createdAt: '2026-01-01' },
     ];
-    (useApprovalStore as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useApprovalStore as any).mockReturnValue({
       adminPendingTeachers: teachers,
       adminPendingTeachersCount: 1,
       isLoadingAdminTeachers: false,

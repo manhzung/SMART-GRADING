@@ -310,7 +310,7 @@ interface QuestionState {
   updateQuestion: (id: string, data: Partial<CreateQuestionPayload>) => Promise<void>;
   deleteQuestion: (id: string) => Promise<void>;
   approveQuestion: (id: string) => Promise<void>;
-  fetchTags: () => Promise<void>;
+  fetchTags: (bankId?: string) => Promise<void>;
   setFilters: (filters: Partial<Omit<QuestionState['filters'], 'bankId'>>) => void;
   clearError: () => void;
   clearCreateError: () => void;

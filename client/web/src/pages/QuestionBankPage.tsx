@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
   Search,
   Plus,
@@ -29,11 +29,9 @@ import { toast } from 'sonner';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import styles from './QuestionBankPage.module.css';
-import { useQuestionStore, questionService, toFrontendQuestion, type BackendQuestion, type Question } from '../presentation/store/questionStore';
+import { useQuestionStore, questionService, toFrontendQuestion, type Question } from '../presentation/store/questionStore';
 import { useBankStore } from '../presentation/store/bankStore';
 import { useQuestionPermissions } from '../hooks/useQuestionPermissions';
-import EntityListPage, { type Column } from '../presentation/components/shared/EntityListPage';
-import EntityPageHeader from '../presentation/components/shared/EntityPageHeader';
 import BankManagementModal from '../presentation/components/BankManagementModal';
 
 // ─── LaTeX renderer ────────────────────────────────────────────────────────────
@@ -111,7 +109,6 @@ const difficultyBg: Record<string, string> = {
 
 export default function QuestionBankPage() {
   const { bankId } = useParams<{ bankId: string }>();
-  const navigate = useNavigate();
   const {
     questions,
     availableTags,
@@ -137,12 +134,7 @@ export default function QuestionBankPage() {
   const permissions = useQuestionPermissions();
   const canManage = permissions.canCreate;
 
-  // Bank: read from URL, sync to store
-  const activeBankId = banks.find(
-    (b) => b.bank._id === bankId && b.membership?.status === 'active',
-  )
-    ? bankId
-    : null;
+
   const bankInfo = banks.find((b) => b.bank._id === bankId);
 
   useEffect(() => {
@@ -201,14 +193,7 @@ export default function QuestionBankPage() {
     });
   };
 
-  const selectAllVisible = () => {
-    // Use 'id' field from the question object
-    if (selectedQuestionIds.size === filteredQuestions.length) {
-      setSelectedQuestionIds(new Set());
-    } else {
-      setSelectedQuestionIds(new Set(filteredQuestions.map((q: any) => q.id || q._id)));
-    }
-  };
+
 
   // Explanation modal - use a flexible type since Question from store has `text` not `content`
   const [activeExplanation, setActiveExplanation] = useState<{
@@ -363,7 +348,7 @@ export default function QuestionBankPage() {
         setIsAddModalOpen(false);
         setSubmitSuccess(false);
         setNewQuestionForm({
-          tags: '',
+          tags: [],
           difficulty: 'Medium',
           text: '',
           formula: '',
@@ -976,7 +961,11 @@ export default function QuestionBankPage() {
                           setEditForm({
                             text: q.text,
                             difficulty: q.difficulty,
-                            options: q.options.map(o => ({ ...o })),
+                            options: q.options.map(o => ({
+                              letter: o.letter,
+                              text: o.text,
+                              isCorrect: !!o.isCorrect,
+                            })),
                             explanation: q.explanation || '',
                             tags: q.tags ? [...q.tags] : [],
                           });
@@ -1595,7 +1584,7 @@ export default function QuestionBankPage() {
                         requirements: aiForm.requirements,
                       });
                       const previewWithTags = rawQuestions.map(q => ({
-                        ...toFrontendQuestion(q),
+                        ...toFrontendQuestion(q as any),
                         tags: aiTags.length > 0 ? [...aiTags] : (q.tags || []),
                       }));
                       setAiPreview(previewWithTags);
@@ -1854,7 +1843,7 @@ export default function QuestionBankPage() {
                         difficulty: similarForm.difficulty,
                       });
                       const previewWithTags = rawQuestions.map(q => ({
-                        ...toFrontendQuestion(q),
+                        ...toFrontendQuestion(q as any),
                         tags: similarTags.length > 0 ? [...similarTags] : (q.tags || []),
                       }));
                       setSimilarPreview(previewWithTags);

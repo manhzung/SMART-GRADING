@@ -56,7 +56,7 @@ export default function EntityListPage<T>({
   const [confirmDelete, setConfirmDelete] = useState<T | null>(null);
   const [submittingDelete, setSubmittingDelete] = useState(false);
   const [confirmBulk, setConfirmBulk] = useState(false);
-  const searchRef = useRef<ReturnType<typeof setTimeout>>();
+  const searchRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const visibleColumns = mode === 'admin'
     ? columns

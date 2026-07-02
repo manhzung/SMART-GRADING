@@ -86,6 +86,7 @@ export interface School {
   registrationStatus?: 'pending' | 'approved' | 'rejected';
   approvedBy?: string;
   rejectedReason?: string | null;
+  isActive?: boolean;
 }
 
 export interface Subject {

@@ -135,6 +135,7 @@ export default function ClassDetailPage() {
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditingStudent | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  void isEditing;
 
   // Password reset states
   const [resettingPasswordStudentId, setResettingPasswordStudentId] = useState<string | null>(null);

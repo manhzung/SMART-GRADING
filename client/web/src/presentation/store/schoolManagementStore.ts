@@ -124,7 +124,7 @@ export const useSchoolManagementStore = create<SchoolManagementState>((set, get)
   deleteSchool: async (schoolId: string) => {
     try {
       await schoolManagementService.deleteSchool(schoolId);
-      set({ schools: get().schools.filter((s) => s._id !== schoolId && s.id !== schoolId) });
+      set({ schools: get().schools.filter((s) => s._id !== schoolId) });
     } catch (err: any) {
       set({ error: err?.message || 'Failed to delete school' });
       throw err;

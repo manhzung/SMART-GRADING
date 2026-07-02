@@ -21,7 +21,7 @@ interface UserInfo {
   email?: string;
 }
 
-interface MemberWithUser extends BankMember {
+interface MemberWithUser extends Omit<BankMember, 'userId'> {
   userId: UserInfo;
 }
 
@@ -333,7 +333,7 @@ export default function BankManagementModal({ bankId, open, onClose, userRole }:
         confirmVariant="danger"
         onConfirm={handleRemove}
         onCancel={() => setConfirmRemove(null)}
-        loading={!!actionLoading}
+        submitting={!!actionLoading}
       />
     </>
   );

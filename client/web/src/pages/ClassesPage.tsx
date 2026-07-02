@@ -166,12 +166,12 @@ export default function ClassesPage() {
       let created;
       if (editingClass) {
         const { homeroomTeacherId, ...rest } = formData;
-        await updateClass(editingClass._id, { ...rest, homeroomTeacherId: homeroomTeacherId || undefined, gradeLevel: null });
+        await updateClass(editingClass._id, { ...rest, homeroomTeacherId: homeroomTeacherId || undefined, gradeLevel: undefined });
       } else {
         const payload = {
           ...formData,
           homeroomTeacherId: formData.homeroomTeacherId || user?.id || undefined,
-          gradeLevel: null,
+          gradeLevel: undefined,
         };
         created = await createClass(payload);
       }

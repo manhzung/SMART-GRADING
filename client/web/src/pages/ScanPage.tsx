@@ -72,9 +72,6 @@ export default function ScanPage() {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // OMR Template state
-  const [selectedOMRTemplate, setSelectedOMRTemplate] = useState<{ id: string; name: string } | null>(null);
-
   // Camera state
   const [showCamera, setShowCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
@@ -108,14 +105,6 @@ export default function ScanPage() {
     fetchExams();
     fetchClasses({ limit: 100 });
 
-    // Fetch OMR templates
-    omrService.getTemplates()
-      .then(templates => {
-        if (templates.length > 0) {
-          setSelectedOMRTemplate({ id: templates[0]._id, name: templates[0].name });
-        }
-      })
-      .catch(console.error);
   }, [fetchExams, fetchClasses]);
 
   // Auto-select first exam when exams load

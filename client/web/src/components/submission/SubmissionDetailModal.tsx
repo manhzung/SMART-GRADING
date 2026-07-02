@@ -66,8 +66,8 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
   }, [open, onClose]);
 
   const answersAsRows: AnswerRow[] = useMemo(() => {
-    if (!currentSubmission?.answers) return [];
-    return currentSubmission.answers.map((a) => ({
+    if (!currentSubmission?.answers || !Array.isArray(currentSubmission.answers)) return [];
+    return currentSubmission.answers.map((a: any) => ({
       position: a.position,
       selectedAnswer: a.selectedAnswer,
       correctAnswer: (a as { correctAnswer?: string | null }).correctAnswer ?? null,

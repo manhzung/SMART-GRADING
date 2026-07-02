@@ -40,7 +40,7 @@ describe('RoleDashboard', () => {
     vi.clearAllMocks();
     queryClient.clear();
     useAuthStore.setState({
-      user: { _id: 'u1', name: 'A', email: 'a@x', role: 'admin', isEmailVerified: true },
+      user: { _id: 'u1', id: 'u1', name: 'A', email: 'a@x', role: 'admin', isEmailVerified: true } as any,
       token: 't',
       refreshToken: null,
       isAuthenticated: true,

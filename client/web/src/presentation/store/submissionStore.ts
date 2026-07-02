@@ -32,19 +32,20 @@ export interface BackendSubmission {
   examId: BackendExam | string;
   studentId: BackendStudent | string;
   classId: BackendClass | string;
-  versionId: BackendVersion | string;
+  versionId?: BackendVersion | string;
+  versionCode?: string;
   answers: Array<{
     position: number;
     selectedAnswer: string | null;
     isCorrect: boolean;
     score: number;
     maxScore: number;
-  }>;
+  }> | Record<string, string | null>;
   score?: number;
-  totalScore: number;
-  maxScore: number;
+  totalScore?: number;
+  maxScore?: number;
   percentage?: number;
-  status: 'scanned' | 'completed' | 'manual_review' | 'appealed' | 'pending';
+  status: 'scanned' | 'completed' | 'manual_review' | 'appealed' | 'pending' | 'graded' | 'reviewed' | 'submitted';
   submittedAt?: string;
   createdAt: string;
   gradedAt?: string;

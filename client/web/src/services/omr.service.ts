@@ -226,6 +226,50 @@ export class OMRService {
     });
     return this.handleResponse<Record<string, unknown>>(response);
   }
+
+  async uploadAndProcess(file: File, templateId: string): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('templateId', templateId);
+    const response = await fetch(`${API_BASE}/omr/upload`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: formData,
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async matchSheetToExam(sheetId: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/omr/match`, {
+      method: 'POST',
+      headers: {
+        ...this.getHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sheetId }),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async submitSheet(sheetId: string, answers: Record<string, string>, examId: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/omr/submit`, {
+      method: 'POST',
+      headers: {
+        ...this.getHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sheetId, answers, examId }),
+    });
+    return this.handleResponse<any>(response);
+  }
+
+  async getProcessingStatus(sheetId: string): Promise<any> {
+    const response = await fetch(`${API_BASE}/omr/status/${sheetId}`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+    return this.handleResponse<any>(response);
+  }
 }
 
 export const omrService = new OMRService();

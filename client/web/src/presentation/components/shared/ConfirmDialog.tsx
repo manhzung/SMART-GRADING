@@ -11,6 +11,8 @@ interface ConfirmDialogProps {
   submitting?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  confirmVariant?: string;
+  children?: React.ReactNode;
 }
 
 export default function ConfirmDialog({
@@ -23,6 +25,7 @@ export default function ConfirmDialog({
   submitting = false,
   onConfirm,
   onCancel,
+  children,
 }: ConfirmDialogProps) {
   if (!open) return null;
   return (
@@ -33,6 +36,7 @@ export default function ConfirmDialog({
           <button className={styles.closeBtn} onClick={onCancel} aria-label="Close"><X size={18} /></button>
         </div>
         <p className={styles.message}>{message}</p>
+        {children}
         <div className={styles.footer}>
           <button className={styles.cancelBtn} onClick={onCancel} disabled={submitting}>{cancelLabel}</button>
           <button

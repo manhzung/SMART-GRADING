@@ -138,8 +138,8 @@ export default function SchoolDetailModal({ open, school, onClose }: SchoolDetai
   if (!school) return null;
 
   const addr =
-    typeof school.address === 'object' && school.address !== null
-      ? school.address
+    typeof (school.address as any) === 'object' && school.address !== null
+      ? (school.address as any)
       : null;
   const addrText = addr
     ? [addr.street, addr.ward, addr.district, addr.city].filter(Boolean).join(', ')

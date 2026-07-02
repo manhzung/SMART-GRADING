@@ -58,7 +58,6 @@ export default function ExamDetailPage() {
     generatePapers,
     isCompiling,
     fetchExamTemplate,
-    downloadExamTemplateJson,
     examTemplate,
   } = useExamStore();
 
@@ -155,14 +154,6 @@ export default function ExamDetailPage() {
     }
   };
 
-  const getEngineBadge = () => {
-    return (
-      <span className={`${styles.engineBadge} ${styles.engineBadgeAMC}`}>
-        <Cpu size={9} />
-        AMC
-      </span>
-    );
-  };
 
   const getVersionStatusBadge = (status: string) => {
     switch (status) {
@@ -330,18 +321,6 @@ export default function ExamDetailPage() {
     }
   };
 
-  const handleDownloadOmrTemplateJson = async () => {
-    if (!id) return;
-    if (!examData.omrTemplateReady) {
-      alert('OMR template not ready. Please compile AMC first.');
-      return;
-    }
-    try {
-      await downloadExamTemplateJson(id);
-    } catch (err: any) {
-      alert(err.message || 'Error downloading OMR template');
-    }
-  };
 
   const handleDelete = async () => {
     if (window.confirm('WARNING: Are you sure you want to delete this exam? This action will archive the exam.')) {
@@ -1080,6 +1059,7 @@ function CompileModal({
   onCompile,
   isCompiling,
 }: {
+  examId?: string;
   onClose: () => void;
   onCompile: (force: boolean) => void;
   isCompiling: boolean;
