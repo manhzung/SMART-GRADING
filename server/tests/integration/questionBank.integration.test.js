@@ -9,11 +9,15 @@ const {
   Question: QuestionModel,
   User,
 } = require('../../src/models');
-const { teacherOne, teacherTwo, insertUsers } = require('../fixtures/user.fixture');
+const { teacherOne, teacherTwo, userOne, userTwo, admin, insertUsers } = require('../fixtures/user.fixture');
 const {
   teacherOneAccessToken,
   teacherTwoAccessToken,
+  adminAccessToken,
 } = require('../fixtures/token.fixture');
+const tokenService = require('../../src/services/token.service');
+const { tokenTypes } = require('../../src/config/tokens');
+const moment = require('moment');
 
 setupTestDB();
 
@@ -51,7 +55,7 @@ describe('QuestionBank API', () => {
       .get(`/api/v1/banks/${bankId}`)
       .set('Authorization', `Bearer ${teacherOneAccessToken}`);
     expect(res.status).toBe(httpStatus.OK);
-    expect(res.body._id).toBe(bankId);
+    expect(res.body.bank._id).toBe(bankId);
   });
 
   it('returns 401 without token', async () => {
@@ -231,15 +235,151 @@ describe('QuestionBank API', () => {
 
   describe('list my banks', () => {
     it('lists banks for the authenticated user', async () => {
-      await createBank(teacherOneAccessToken, 'Bank A');
-      await createBank(teacherOneAccessToken, 'Bank B');
+      // teacherOne is school-admin; use teacherTwo (pure teacher with schoolIdB) for this test
+      await createBank(teacherTwoAccessToken, 'Bank A');
+      await createBank(teacherTwoAccessToken, 'Bank B');
+
+      const res = await request(app)
+        .get('/api/v1/banks')
+        .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
+
+      expect(res.status).toBe(httpStatus.OK);
+      expect(res.body.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('list banks by role (bank approval requirement)', () => {
+    beforeEach(async () => {
+      // Inline token generation per test to avoid fixture pollution
+    });
+
+    it('teacher only sees approved membership banks from GET /api/v1/banks', async () => {
+      // Teacher has NO membership in BankA (just created by school-admin)
+      const bankIdA = await createBank(teacherOneAccessToken, 'SchoolAdminBank');
+
+      // Teacher gets approved membership in BankB
+      const bankIdB = await createBank(teacherOneAccessToken, 'SharedBank');
+      await QuestionBankMember.create({
+        bankId: bankIdB,
+        userId: require('mongoose').Types.ObjectId(),
+        role: 'viewer',
+        status: 'active',
+      });
+
+      // Use pureTeacherToken as the teacher user (schoolIdA but role=teacher)
+      const teacherUser = {
+        _id: require('mongoose').Types.ObjectId(),
+        name: 'Pure Teacher',
+        email: 'pureteacher3@test.com',
+        password: require('../fixtures/user.fixture').hashedPassword,
+        role: 'teacher',
+        isEmailVerified: false,
+        schoolId: teacherOne.schoolId,
+      };
+      await require('../fixtures/user.fixture').insertUsers([teacherUser]);
+      const expires = moment().add(9999, 'minutes');
+      const teacherT = tokenService.generateToken(teacherUser._id, expires, tokenTypes.ACCESS);
+
+      // Teacher sends request for BankA but not yet approved
+      await request(app)
+        .post(`/api/v1/banks/${bankIdA}/request-access`)
+        .set('Authorization', `Bearer ${teacherT}`);
+
+      // Teacher gets approved membership in BankB
+      const bankIdC = await createBank(teacherOneAccessToken, 'ApprovedBank');
+      await request(app)
+        .post(`/api/v1/banks/${bankIdC}/request-access`)
+        .set('Authorization', `Bearer ${teacherT}`);
+      await request(app)
+        .post(`/api/v1/banks/${bankIdC}/requests/${teacherUser._id.toString()}/respond`)
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ decision: 'approve' });
+
+      // Teacher's own bank is visible (they are owner)
+      const ownBankId = await createBank(teacherT, 'TeacherOwnBank');
+
+      const res = await request(app)
+        .get('/api/v1/banks')
+        .set('Authorization', `Bearer ${teacherT}`);
+
+      expect(res.status).toBe(httpStatus.OK);
+      const bankNames = res.body.map((b) => b.name);
+      expect(bankNames).toContain('ApprovedBank');
+      expect(bankNames).toContain('TeacherOwnBank');
+      expect(bankNames).not.toContain('SchoolAdminBank');
+    });
+
+    it('teacher does not see pending banks from GET /api/v1/banks', async () => {
+      // Create a bank owned by school-admin
+      const bankIdA = await createBank(teacherOneAccessToken, 'PendingBank');
+
+      // Create another bank and make teacherTwo an approved member
+      const bankIdB = await createBank(teacherOneAccessToken, 'VisibleBank');
+      await request(app)
+        .post(`/api/v1/banks/${bankIdB}/request-access`)
+        .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
+      await request(app)
+        .post(`/api/v1/banks/${bankIdB}/requests/${teacherTwo._id.toString()}/respond`)
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ decision: 'approve' });
+
+      // Teacher sends request for BankA but stays pending
+      await request(app)
+        .post(`/api/v1/banks/${bankIdA}/request-access`)
+        .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
+
+      const res = await request(app)
+        .get('/api/v1/banks')
+        .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
+
+      expect(res.status).toBe(httpStatus.OK);
+      const bankNames = res.body.map((b) => b.name);
+      expect(bankNames).toContain('VisibleBank');
+      expect(bankNames).not.toContain('PendingBank');
+    });
+
+    it('school-admin still sees all school banks from GET /api/v1/banks', async () => {
+      // Create school banks owned by this school-admin (schoolIdA)
+      const bank1 = await request(app)
+        .post('/api/v1/banks')
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ name: 'SchoolBank1', type: 'school', schoolId: teacherOne.schoolId });
+      const bank2 = await request(app)
+        .post('/api/v1/banks')
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ name: 'SchoolBank2', type: 'school', schoolId: teacherOne.schoolId });
 
       const res = await request(app)
         .get('/api/v1/banks')
         .set('Authorization', `Bearer ${teacherOneAccessToken}`);
 
       expect(res.status).toBe(httpStatus.OK);
-      expect(res.body.length).toBeGreaterThanOrEqual(2);
+      const bankNames = res.body.map((b) => b.name);
+      expect(bankNames).toContain('SchoolBank1');
+      expect(bankNames).toContain('SchoolBank2');
+    });
+
+    it('admin still sees all banks from GET /api/v1/banks', async () => {
+      // Insert admin user so the adminAccessToken resolves to a real user
+      await insertUsers([admin]);
+
+      const bank1 = await request(app)
+        .post('/api/v1/banks')
+        .set('Authorization', `Bearer ${teacherOneAccessToken}`)
+        .send({ name: 'SchoolBankByAdmin', type: 'school', schoolId: teacherOne.schoolId });
+      const bank2 = await request(app)
+        .post('/api/v1/banks')
+        .set('Authorization', `Bearer ${teacherTwoAccessToken}`)
+        .send({ name: 'PersonalByTeacher' });
+
+      const res = await request(app)
+        .get('/api/v1/banks')
+        .set('Authorization', `Bearer ${adminAccessToken}`);
+
+      expect(res.status).toBe(httpStatus.OK);
+      const bankNames = res.body.map((b) => b.name);
+      expect(bankNames).toContain('SchoolBankByAdmin');
+      expect(bankNames).toContain('PersonalByTeacher');
     });
   });
 });
