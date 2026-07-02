@@ -3,18 +3,9 @@ const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const app = require('../../src/app');
 const setupTestDB = require('../utils/setupTestDB');
-const {
-  QuestionBank,
-  QuestionBankMember,
-  Question: QuestionModel,
-  User,
-} = require('../../src/models');
+const { QuestionBank, QuestionBankMember, Question: QuestionModel, User } = require('../../src/models');
 const { teacherOne, teacherTwo, userOne, userTwo, admin, insertUsers } = require('../fixtures/user.fixture');
-const {
-  teacherOneAccessToken,
-  teacherTwoAccessToken,
-  adminAccessToken,
-} = require('../fixtures/token.fixture');
+const { teacherOneAccessToken, teacherTwoAccessToken, adminAccessToken } = require('../fixtures/token.fixture');
 const tokenService = require('../../src/services/token.service');
 const { tokenTypes } = require('../../src/config/tokens');
 const moment = require('moment');
@@ -29,10 +20,7 @@ describe('QuestionBank API', () => {
   });
 
   async function createBank(token = teacherOneAccessToken, name = 'Personal') {
-    const res = await request(app)
-      .post('/api/v1/banks')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name });
+    const res = await request(app).post('/api/v1/banks').set('Authorization', `Bearer ${token}`).send({ name });
     return res.body._id;
   }
 
@@ -51,9 +39,7 @@ describe('QuestionBank API', () => {
   it('returns created bank by id', async () => {
     bankId = await createBank(teacherOneAccessToken, 'Personal2');
 
-    const res = await request(app)
-      .get(`/api/v1/banks/${bankId}`)
-      .set('Authorization', `Bearer ${teacherOneAccessToken}`);
+    const res = await request(app).get(`/api/v1/banks/${bankId}`).set('Authorization', `Bearer ${teacherOneAccessToken}`);
     expect(res.status).toBe(httpStatus.OK);
     expect(res.body.bank._id).toBe(bankId);
   });
@@ -198,9 +184,7 @@ describe('QuestionBank API', () => {
         .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
 
       const res = await request(app)
-        .post(
-          `/api/v1/banks/${bankId}/requests/${teacherTwo._id.toString()}/respond`
-        )
+        .post(`/api/v1/banks/${bankId}/requests/${teacherTwo._id.toString()}/respond`)
         .set('Authorization', `Bearer ${teacherOneAccessToken}`)
         .send({ decision: 'approve' });
 
@@ -218,9 +202,7 @@ describe('QuestionBank API', () => {
       });
 
       const res = await request(app)
-        .post(
-          `/api/v1/banks/${bankId}/requests/${teacherTwo._id.toString()}/respond`
-        )
+        .post(`/api/v1/banks/${bankId}/requests/${teacherTwo._id.toString()}/respond`)
         .set('Authorization', `Bearer ${teacherOneAccessToken}`)
         .send({ decision: 'reject' });
 
@@ -239,9 +221,7 @@ describe('QuestionBank API', () => {
       await createBank(teacherTwoAccessToken, 'Bank A');
       await createBank(teacherTwoAccessToken, 'Bank B');
 
-      const res = await request(app)
-        .get('/api/v1/banks')
-        .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
+      const res = await request(app).get('/api/v1/banks').set('Authorization', `Bearer ${teacherTwoAccessToken}`);
 
       expect(res.status).toBe(httpStatus.OK);
       expect(res.body.length).toBeGreaterThanOrEqual(2);
@@ -281,15 +261,11 @@ describe('QuestionBank API', () => {
       const teacherT = tokenService.generateToken(teacherUser._id, expires, tokenTypes.ACCESS);
 
       // Teacher sends request for BankA but not yet approved
-      await request(app)
-        .post(`/api/v1/banks/${bankIdA}/request-access`)
-        .set('Authorization', `Bearer ${teacherT}`);
+      await request(app).post(`/api/v1/banks/${bankIdA}/request-access`).set('Authorization', `Bearer ${teacherT}`);
 
       // Teacher gets approved membership in BankB
       const bankIdC = await createBank(teacherOneAccessToken, 'ApprovedBank');
-      await request(app)
-        .post(`/api/v1/banks/${bankIdC}/request-access`)
-        .set('Authorization', `Bearer ${teacherT}`);
+      await request(app).post(`/api/v1/banks/${bankIdC}/request-access`).set('Authorization', `Bearer ${teacherT}`);
       await request(app)
         .post(`/api/v1/banks/${bankIdC}/requests/${teacherUser._id.toString()}/respond`)
         .set('Authorization', `Bearer ${teacherOneAccessToken}`)
@@ -298,9 +274,7 @@ describe('QuestionBank API', () => {
       // Teacher's own bank is visible (they are owner)
       const ownBankId = await createBank(teacherT, 'TeacherOwnBank');
 
-      const res = await request(app)
-        .get('/api/v1/banks')
-        .set('Authorization', `Bearer ${teacherT}`);
+      const res = await request(app).get('/api/v1/banks').set('Authorization', `Bearer ${teacherT}`);
 
       expect(res.status).toBe(httpStatus.OK);
       const bankNames = res.body.map((b) => b.name);
@@ -328,9 +302,7 @@ describe('QuestionBank API', () => {
         .post(`/api/v1/banks/${bankIdA}/request-access`)
         .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
 
-      const res = await request(app)
-        .get('/api/v1/banks')
-        .set('Authorization', `Bearer ${teacherTwoAccessToken}`);
+      const res = await request(app).get('/api/v1/banks').set('Authorization', `Bearer ${teacherTwoAccessToken}`);
 
       expect(res.status).toBe(httpStatus.OK);
       const bankNames = res.body.map((b) => b.name);
@@ -349,9 +321,7 @@ describe('QuestionBank API', () => {
         .set('Authorization', `Bearer ${teacherOneAccessToken}`)
         .send({ name: 'SchoolBank2', type: 'school', schoolId: teacherOne.schoolId });
 
-      const res = await request(app)
-        .get('/api/v1/banks')
-        .set('Authorization', `Bearer ${teacherOneAccessToken}`);
+      const res = await request(app).get('/api/v1/banks').set('Authorization', `Bearer ${teacherOneAccessToken}`);
 
       expect(res.status).toBe(httpStatus.OK);
       const bankNames = res.body.map((b) => b.name);
@@ -372,9 +342,7 @@ describe('QuestionBank API', () => {
         .set('Authorization', `Bearer ${teacherTwoAccessToken}`)
         .send({ name: 'PersonalByTeacher' });
 
-      const res = await request(app)
-        .get('/api/v1/banks')
-        .set('Authorization', `Bearer ${adminAccessToken}`);
+      const res = await request(app).get('/api/v1/banks').set('Authorization', `Bearer ${adminAccessToken}`);
 
       expect(res.status).toBe(httpStatus.OK);
       const bankNames = res.body.map((b) => b.name);

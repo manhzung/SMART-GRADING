@@ -53,9 +53,7 @@ const listBanks = catchAsync(async (req, res) => {
 
   const bankMap = new Map();
   [...approvedBanks, ...ownedBanks].forEach((b) => bankMap.set(b._id.toString(), b));
-  const banks = Array.from(bankMap.values()).sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-  );
+  const banks = Array.from(bankMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return res.send(banks);
 });
 
@@ -75,10 +73,7 @@ const listAllBanks = catchAsync(async (req, res) => {
   if (search) {
     filter.$and = filter.$and || [];
     filter.$and.push({
-      $or: [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ],
+      $or: [{ name: { $regex: search, $options: 'i' } }, { description: { $regex: search, $options: 'i' } }],
     });
   }
 
@@ -133,20 +128,12 @@ const inviteMember = catchAsync(async (req, res) => {
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
-  const member = await QuestionBankService.inviteMember(
-    req.params.bankId,
-    userId,
-    req.user.id
-  );
+  const member = await QuestionBankService.inviteMember(req.params.bankId, userId, req.user.id);
   res.status(httpStatus.CREATED).send(member);
 });
 
 const updateMember = catchAsync(async (req, res) => {
-  const member = await QuestionBankService.setMemberRole(
-    req.params.bankId,
-    req.params.userId,
-    req.body.role
-  );
+  const member = await QuestionBankService.setMemberRole(req.params.bankId, req.params.userId, req.body.role);
   res.send(member);
 });
 
@@ -161,10 +148,7 @@ const leaveBank = catchAsync(async (req, res) => {
 });
 
 const requestAccess = catchAsync(async (req, res) => {
-  const member = await QuestionBankService.requestAccess(
-    req.params.bankId,
-    req.user.id
-  );
+  const member = await QuestionBankService.requestAccess(req.params.bankId, req.user.id);
   res.status(httpStatus.CREATED).send(member);
 });
 
@@ -187,11 +171,7 @@ const respondRequest = catchAsync(async (req, res) => {
 });
 
 const transferOwnership = catchAsync(async (req, res) => {
-  await QuestionBankService.transferOwnership(
-    req.params.bankId,
-    req.user.id,
-    req.body.toUserId
-  );
+  await QuestionBankService.transferOwnership(req.params.bankId, req.user.id, req.body.toUserId);
   res.status(httpStatus.OK).send({ success: true });
 });
 
