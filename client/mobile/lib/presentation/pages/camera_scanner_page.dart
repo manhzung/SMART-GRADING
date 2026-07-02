@@ -205,17 +205,23 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
         child: BlocConsumer<OMRScannerBloc, OMRScannerState>(
           listener: (context, state) {
             if (state is OMRScannerSuccess) {
-              // Store result and show confirmation popup
-              setState(() {
-                _pendingScanResult = _ScanResultData(
-                  imageBytes: state.imageBytes,
-                  gradingResult: state.gradingResult,
-                  processingResult: state.processingResult,
-                  studentCode: state.studentCode,
-                  versionCode: state.versionCode,
-                  matchedStudent: state.matchedStudent,
-                );
-              });
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<OMRScannerBloc>(),
+                    child: OMRResultPage(
+                      imageBytes: state.imageBytes,
+                      gradingResult: state.gradingResult,
+                      processingResult: state.processingResult,
+                      examId: widget.examId,
+                      examName: widget.examName,
+                      student: state.matchedStudent,
+                      studentCode: state.studentCode,
+                      versionCode: state.versionCode,
+                    ),
+                  ),
+                ),
+              );
             } else if (state is OMRScannerImageReady) {
               _processImage(state.imageBytes);
             } else if (state is OMRScannerSubmitted) {
