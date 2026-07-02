@@ -25,6 +25,16 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
   OMRLocalStorage? _localStorage;
   List<ClassStudent>? _cachedClassStudents;
 
+  /// Cached template data — persists across scans so we never reload between shots
+  Map<String, dynamic>? _cachedTemplateJson;
+  String? _cachedExamId;
+  String? _cachedExamName;
+  String? _cachedClassId;
+  String? _cachedClassName;
+
+  /// Cached answer keys keyed by versionCode — avoids re-fetching from server each scan
+  final Map<String, Map<String, String>> _cachedAnswerKeys = {};
+
   OMRScannerBloc({Connectivity? connectivity})
       : _connectivity = connectivity ?? Connectivity(),
         super(OMRScannerInitial()) {
@@ -43,6 +53,13 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerTemplateSet event,
     Emitter<OMRScannerState> emit,
   ) async {
+    // Cache template data for reuse across multiple scans
+    _cachedTemplateJson = event.templateJson;
+    _cachedExamId = event.examId;
+    _cachedExamName = event.examName;
+    _cachedClassId = event.classId;
+    _cachedClassName = event.className;
+
     emit(OMRScannerTemplateReady(
       templateJson: event.templateJson,
       examId: event.examId,
@@ -98,32 +115,26 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImageCaptured event,
     Emitter<OMRScannerState> emit,
   ) async {
-    final current = state;
-    final hasTemplate = current is OMRScannerTemplateReady;
-    
-    if (hasTemplate) {
-      final templateState = current;
-      
-      // Emit processing state directly with template info
+    // Use cached template (survives across scans even when state changes)
+    if (_cachedTemplateJson != null) {
       emit(OMRScannerProcessing(
         imageBytes: event.imageBytes,
         steps: const ['Starting OMR processing with Engine v2...'],
       ));
-      
-      // Process directly since we have the template
+
       await _processWithTemplate(
         imageBytes: event.imageBytes,
-        templateJson: templateState.templateJson,
-        examId: templateState.examId,
-        examName: templateState.examName,
-        classId: templateState.classId,
-        className: templateState.className,
+        templateJson: _cachedTemplateJson!,
+        examId: _cachedExamId,
+        examName: _cachedExamName,
+        classId: _cachedClassId,
+        className: _cachedClassName,
         emit: emit,
       );
     } else {
       emit(OMRScannerImageReady(imageBytes: event.imageBytes));
       developer.log(
-        '[OMRScanner] ERROR: Template not ready. State: ${current.runtimeType}',
+        '[OMRScanner] ERROR: Template not cached. State: ${state.runtimeType}',
         name: 'OMRScanner',
         error: 'Template not ready',
       );
@@ -162,34 +173,46 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
       developer.log('  - versionCode (MADE): $versionCode', name: 'OMRScanner');
       developer.log('  - answers: ${initialResult.scanResult.answers}', name: 'OMRScanner');
 
-      // ═══ STEP 2: Get answerKey from server ═══
+      // ═══ STEP 2: Get answerKey (from cache or server) ═══
       Map<String, String>? serverAnswerKey;
       if (examId != null && versionCode != null && versionCode.isNotEmpty) {
-        developer.log('╔═══ STEP 2: Fetching answerKey from server ═══', name: 'OMRScanner');
-        emit(OMRScannerProcessing(
-          imageBytes: imageBytes,
-          steps: const ['[2/3] Fetching answer key from server...'],
-        ));
+        final cacheKey = '$examId:$versionCode';
 
-        try {
-          final examService = GetIt.instance<ExamService>();
-          developer.log('[STEP2] Calling API: examId=$examId, versionCode=$versionCode', name: 'OMRScanner');
+        if (_cachedAnswerKeys.containsKey(cacheKey)) {
+          // Use cached answer key — instant, no network call needed
+          serverAnswerKey = _cachedAnswerKeys[cacheKey];
+          developer.log('[STEP2] Using cached answerKey for $cacheKey (${serverAnswerKey?.length} entries)', name: 'OMRScanner');
+        } else {
+          developer.log('╔═══ STEP 2: Fetching answerKey from server ═══', name: 'OMRScanner');
+          emit(OMRScannerProcessing(
+            imageBytes: imageBytes,
+            steps: const ['[2/3] Fetching answer key from server...'],
+          ));
 
-          final answerKeyResponse = await examService.getVersionAnswerKey(examId, versionCode);
-          serverAnswerKey = answerKeyResponse.answerKey;
+          try {
+            final examService = GetIt.instance<ExamService>();
+            developer.log('[STEP2] Calling API: examId=$examId, versionCode=$versionCode', name: 'OMRScanner');
 
-          developer.log('[STEP2] Received answerKeyResponse:', name: 'OMRScanner');
-          developer.log('  - versionCode: ${answerKeyResponse.versionCode}', name: 'OMRScanner');
-          developer.log('  - numberOfQuestions: ${answerKeyResponse.numberOfQuestions}', name: 'OMRScanner');
-          developer.log('  - answerKey entries: ${answerKeyResponse.answerKey.length}', name: 'OMRScanner');
-          developer.log('  - answerKey full: ${answerKeyResponse.answerKey}', name: 'OMRScanner');
+            final answerKeyResponse = await examService.getVersionAnswerKey(examId, versionCode);
+            serverAnswerKey = answerKeyResponse.answerKey;
 
-          if (serverAnswerKey.isEmpty) {
-            developer.log('[STEP2] WARNING: answerKey is empty!', name: 'OMRScanner');
+            // Store in cache so next scan for same version is instant
+            _cachedAnswerKeys[cacheKey] = answerKeyResponse.answerKey;
+
+            developer.log('[STEP2] Received answerKeyResponse:', name: 'OMRScanner');
+            developer.log('  - versionCode: ${answerKeyResponse.versionCode}', name: 'OMRScanner');
+            developer.log('  - numberOfQuestions: ${answerKeyResponse.numberOfQuestions}', name: 'OMRScanner');
+            developer.log('  - answerKey entries: ${answerKeyResponse.answerKey.length}', name: 'OMRScanner');
+            developer.log('  - answerKey full: ${answerKeyResponse.answerKey}', name: 'OMRScanner');
+            developer.log('[STEP2] Cached answerKey for $cacheKey', name: 'OMRScanner');
+
+            if (serverAnswerKey.isEmpty) {
+              developer.log('[STEP2] WARNING: answerKey is empty!', name: 'OMRScanner');
+            }
+          } catch (e) {
+            developer.log('[STEP2] ERROR: Failed to fetch answerKey: $e', name: 'OMRScanner', error: e);
+            // Continue without server answerKey
           }
-        } catch (e) {
-          developer.log('[STEP2] ERROR: Failed to fetch answerKey: $e', name: 'OMRScanner', error: e);
-          // Continue without server answerKey
         }
       } else {
         developer.log('[STEP2] SKIP: examId=$examId, versionCode=$versionCode', name: 'OMRScanner');
@@ -263,30 +286,26 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerImagePicked event,
     Emitter<OMRScannerState> emit,
   ) async {
-    final current = state;
-    final hasTemplate = current is OMRScannerTemplateReady;
-    
-    if (hasTemplate) {
-      final templateState = current;
-      
+    // Use cached template (survives across scans even when state changes)
+    if (_cachedTemplateJson != null) {
       emit(OMRScannerProcessing(
         imageBytes: event.imageBytes,
         steps: const ['Starting OMR processing with Engine v2...'],
       ));
-      
+
       await _processWithTemplate(
         imageBytes: event.imageBytes,
-        templateJson: templateState.templateJson,
-        examId: templateState.examId,
-        examName: templateState.examName,
-        classId: templateState.classId,
-        className: templateState.className,
+        templateJson: _cachedTemplateJson!,
+        examId: _cachedExamId,
+        examName: _cachedExamName,
+        classId: _cachedClassId,
+        className: _cachedClassName,
         emit: emit,
       );
     } else {
       emit(OMRScannerImageReady(imageBytes: event.imageBytes));
       developer.log(
-        '[OMRScanner] ERROR: Template not ready. State: ${current.runtimeType}',
+        '[OMRScanner] ERROR: Template not cached. State: ${state.runtimeType}',
         name: 'OMRScanner',
         error: 'Template not ready',
       );
@@ -297,15 +316,14 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
     OMRScannerProcessStarted event,
     Emitter<OMRScannerState> emit,
   ) async {
-    // Get template from the state - state should be OMRScannerTemplateReady
-    final current = state;
-    if (current is! OMRScannerTemplateReady) {
+    // Use cached template — available regardless of current state
+    if (_cachedTemplateJson == null) {
       developer.log(
-        '[OMRScanner] ERROR: No template. State: ${current.runtimeType}',
+        '[OMRScanner] ERROR: No cached template. State: ${state.runtimeType}',
         name: 'OMRScanner',
       );
       emit(OMRScannerError(
-        message: 'No template loaded. Current state: ${current.runtimeType}',
+        message: 'No template loaded. Please restart the scanner.',
       ));
       return;
     }
@@ -317,11 +335,11 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
 
     await _processWithTemplate(
       imageBytes: event.imageBytes,
-      templateJson: current.templateJson,
-      examId: current.examId,
-      examName: current.examName,
-      classId: current.classId,
-      className: current.className,
+      templateJson: _cachedTemplateJson!,
+      examId: _cachedExamId,
+      examName: _cachedExamName,
+      classId: _cachedClassId,
+      className: _cachedClassName,
       emit: emit,
     );
   }
@@ -556,7 +574,19 @@ class OMRScannerBloc extends Bloc<OMRScannerEvent, OMRScannerState> {
   }
 
   void _onReset(OMRScannerReset event, Emitter<OMRScannerState> emit) {
-    emit(OMRScannerInitial());
+    // If we have a cached template, restore to TemplateReady so next scan
+    // is instant without needing to reload the template
+    if (_cachedTemplateJson != null) {
+      emit(OMRScannerTemplateReady(
+        templateJson: _cachedTemplateJson!,
+        examId: _cachedExamId,
+        examName: _cachedExamName,
+        classId: _cachedClassId,
+        className: _cachedClassName,
+      ));
+    } else {
+      emit(OMRScannerInitial());
+    }
   }
 
   Future<OMRLocalStorage> _getLocalStorage() async {
