@@ -42,21 +42,27 @@ const listBanks = catchAsync(async (req, res) => {
     return res.send(banks);
   }
 
-  if (req.user.role === 'school-admin' && req.user.schoolId) {
-    const banks = await QuestionBank.find({ schoolId: req.user.schoolId })
-      .select('name description type schoolId createdAt')
-      .sort({ createdAt: -1 })
-      .lean();
-    return res.send(banks);
-  }
-
-  const [approvedBanks, ownedBanks] = await Promise.all([
+  const queries = [
     QuestionBankService.listApprovedBanksForUser(req.user.id),
     QuestionBank.find({ createdBy: req.user.id }).lean(),
-  ]);
+  ];
+
+  if (req.user.role === 'school-admin' && req.user.schoolId) {
+    queries.push(QuestionBank.find({ schoolId: req.user.schoolId }).lean());
+  }
+
+  const results = await Promise.all(queries);
+  const approvedBanks = results[0];
+  const ownedBanks = results[1];
+  const schoolBanks = results[2] || [];
 
   const bankMap = new Map();
-  [...approvedBanks, ...ownedBanks].forEach((b) => bankMap.set(b._id.toString(), b));
+  [...approvedBanks, ...ownedBanks, ...schoolBanks].forEach((b) => {
+    if (b && b._id) {
+      bankMap.set(b._id.toString(), b);
+    }
+  });
+
   const banks = Array.from(bankMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return res.send(banks);
 });

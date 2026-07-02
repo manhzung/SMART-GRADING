@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const { QuestionBankMember } = require('../models');
+const { QuestionBankMember, QuestionBank } = require('../models');
 const ApiError = require('../utils/ApiError');
 
 const checkBankAccess = async (req, res, next) => {
@@ -13,6 +13,18 @@ const checkBankAccess = async (req, res, next) => {
 
     // Admin has access to all banks
     if (req.user.role === 'admin') {
+      return next();
+    }
+
+    const bank = await QuestionBank.findById(bankId);
+    if (
+      bank &&
+      req.user.role === 'school-admin' &&
+      bank.schoolId &&
+      req.user.schoolId &&
+      bank.schoolId.toString() === req.user.schoolId.toString()
+    ) {
+      req.membership = { role: 'owner', status: 'active' };
       return next();
     }
 
