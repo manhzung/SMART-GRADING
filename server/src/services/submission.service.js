@@ -578,15 +578,46 @@ class SubmissionService {
       .populate('answers.questionId', 'content type options');
   }
 
-  async getByExam(examId, query = {}) {
+  async getByExam(examId, query = {}, user = null) {
+    const filter = { examId: new mongoose.Types.ObjectId(examId), ...query };
+
+    // Apply role-based filters
+    if (user && user.role !== 'admin') {
+      const { Exam, Class } = require('../models');
+      if (user.role === 'school-admin' && user.schoolId) {
+        const hasAccess = await Exam.findOne({ _id: examId, schoolId: user.schoolId });
+        if (!hasAccess) {
+          throw new ApiError(403, 'You do not have access to this exam');
+        }
+      } else if (user.role === 'teacher') {
+        const teacherId = user._id || user.id;
+        const teacherClasses = await Class.find({
+          $or: [{ homeroomTeacherId: teacherId }, { 'subjectTeachers.teacherId': teacherId }],
+        }).select('_id');
+        const teacherClassIds = teacherClasses.map((c) => c._id);
+        const hasAccess = await Exam.findOne({
+          _id: examId,
+          $or: [
+            { createdBy: teacherId },
+            { primaryClassId: { $in: teacherClassIds } },
+          ],
+        });
+        if (!hasAccess) {
+          throw new ApiError(403, 'You do not have access to this exam');
+        }
+      } else if (user.role === 'student') {
+        filter.studentId = new mongoose.Types.ObjectId(user.id);
+      }
+    }
+
     const [results, total] = await Promise.all([
-      Submission.find({ examId: new mongoose.Types.ObjectId(examId), ...query })
+      Submission.find(filter)
         .populate('examId', 'title examDate duration')
         .populate('versionId', 'versionCode')
         .populate('studentId', 'name email studentCode classIds')
         .populate('classId', 'name')
         .sort({ createdAt: -1 }),
-      Submission.countDocuments({ examId: new mongoose.Types.ObjectId(examId) }),
+      Submission.countDocuments(filter),
     ]);
 
     return { results, total };
@@ -631,7 +662,7 @@ class SubmissionService {
     };
   }
 
-  async getAll(query = {}) {
+  async getAll(query = {}, user = null) {
     const {
       examId,
       studentId,
@@ -656,6 +687,49 @@ class SubmissionService {
       filter.createdAt = {};
       if (fromDate) filter.createdAt.$gte = new Date(fromDate);
       if (toDate) filter.createdAt.$lte = new Date(toDate);
+    }
+
+    // Role-based filters
+    if (user && user.role !== 'admin') {
+      const { Exam, Class } = require('../models');
+      if (user.role === 'school-admin' && user.schoolId) {
+        if (examId) {
+          const hasAccess = await Exam.findOne({ _id: examId, schoolId: user.schoolId });
+          if (!hasAccess) {
+            throw new ApiError(403, 'You do not have access to this exam');
+          }
+          filter.examId = new mongoose.Types.ObjectId(examId);
+        } else {
+          const schoolExams = await Exam.find({ schoolId: user.schoolId }).select('_id');
+          filter.examId = { $in: schoolExams.map((e) => e._id) };
+        }
+      } else if (user.role === 'teacher') {
+        const teacherId = user._id || user.id;
+        const teacherClasses = await Class.find({
+          $or: [{ homeroomTeacherId: teacherId }, { 'subjectTeachers.teacherId': teacherId }],
+        }).select('_id');
+        const teacherClassIds = teacherClasses.map((c) => c._id);
+
+        const teacherExams = await Exam.find({
+          $or: [
+            { createdBy: teacherId },
+            { primaryClassId: { $in: teacherClassIds } },
+          ],
+        }).select('_id');
+        const teacherExamIds = teacherExams.map((e) => e._id);
+
+        if (examId) {
+          const hasAccess = teacherExamIds.some((id) => id.toString() === examId.toString());
+          if (!hasAccess) {
+            throw new ApiError(403, 'You do not have access to this exam');
+          }
+          filter.examId = new mongoose.Types.ObjectId(examId);
+        } else {
+          filter.examId = { $in: teacherExamIds };
+        }
+      } else if (user.role === 'student') {
+        filter.studentId = new mongoose.Types.ObjectId(user.id);
+      }
     }
 
     const [results, total] = await Promise.all([

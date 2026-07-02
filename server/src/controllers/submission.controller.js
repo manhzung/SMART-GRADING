@@ -39,13 +39,13 @@ const getById = catchAsync(async (req, res) => {
 });
 
 const getAll = catchAsync(async (req, res) => {
-  const result = await submissionService.getAll(req.query);
+  const result = await submissionService.getAll(req.query, req.user);
   res.send(result);
 });
 
 const getByExam = catchAsync(async (req, res) => {
   const { examId, id } = req.params;
-  const result = await submissionService.getByExam(examId || id, req.query);
+  const result = await submissionService.getByExam(examId || id, req.query, req.user);
   res.send(result);
 });
 
