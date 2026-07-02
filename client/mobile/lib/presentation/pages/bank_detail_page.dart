@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smart_grading_mobile/core/network/bank_service.dart';
@@ -15,14 +16,17 @@ class BankDetailPage extends StatefulWidget {
 }
 
 class _BankDetailPageState extends State<BankDetailPage> {
-  final BankService _bankService = GetIt.instance<BankService>();
-  final QuestionService _questionService = GetIt.instance<QuestionService>();
+  Timer? _debounce;
+
+  BankService get _bankService => GetIt.instance<BankService>();
+  QuestionService get _questionService => GetIt.instance<QuestionService>();
 
   QuestionBank? _bank;
   List<QuestionModel> _questions = [];
   bool _isLoadingBank = true;
   bool _isLoadingQuestions = false;
   String? _error;
+  String? _questionError;
   String _searchQuery = '';
   String? _selectedDifficulty;
 
@@ -32,6 +36,12 @@ class _BankDetailPageState extends State<BankDetailPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadBank();
     });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
   }
 
   String? get _effectiveBankId {
@@ -82,6 +92,7 @@ class _BankDetailPageState extends State<BankDetailPage> {
     if (mounted) {
       setState(() {
         _isLoadingQuestions = true;
+        _questionError = null;
       });
     }
 
@@ -100,6 +111,7 @@ class _BankDetailPageState extends State<BankDetailPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
+          _questionError = 'Unable to load questions';
           _isLoadingQuestions = false;
         });
       }
@@ -110,9 +122,12 @@ class _BankDetailPageState extends State<BankDetailPage> {
     setState(() {
       _searchQuery = query;
     });
-    if (_bank != null) {
-      _loadQuestions(_bank!.id);
-    }
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted && _bank != null) {
+        _loadQuestions(_bank!.id);
+      }
+    });
   }
 
   void _onDifficultyChanged(String? difficulty) {
@@ -158,7 +173,7 @@ class _BankDetailPageState extends State<BankDetailPage> {
           ),
         ),
       ),
-      body: _buildBody(),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
@@ -365,6 +380,30 @@ class _BankDetailPageState extends State<BankDetailPage> {
             child: Padding(
               padding: EdgeInsets.all(32),
               child: CircularProgressIndicator(),
+            ),
+          )
+        else if (_questionError != null)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: Column(
+                children: [
+                  const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 32),
+                  const SizedBox(height: 8),
+                  Text(
+                    _questionError!,
+                    style: const TextStyle(
+                      color: Color(0xFFEF4444),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => _bank != null ? _loadQuestions(_bank!.id) : null,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
           )
         else if (_questions.isEmpty)
