@@ -67,15 +67,19 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
 
   const answersAsRows: AnswerRow[] = useMemo(() => {
     if (!currentSubmission?.answers || !Array.isArray(currentSubmission.answers)) return [];
-    return currentSubmission.answers.map((a: any) => ({
-      position: a.position,
-      selectedAnswer: a.selectedAnswer,
-      correctAnswer: (a as { correctAnswer?: string | null }).correctAnswer ?? null,
-      isCorrect: a.isCorrect,
-      score: a.score,
-      maxScore: a.maxScore,
-    }));
-  }, [currentSubmission]);
+    return currentSubmission.answers.map((a: any) => {
+      const posStr = String(a.position);
+      const isEdited = Object.prototype.hasOwnProperty.call(editedAnswers, posStr);
+      return {
+        position: a.position,
+        selectedAnswer: isEdited ? editedAnswers[posStr] : a.selectedAnswer,
+        correctAnswer: (a as { correctAnswer?: string | null }).correctAnswer ?? null,
+        isCorrect: a.isCorrect,
+        score: a.score,
+        maxScore: a.maxScore,
+      };
+    });
+  }, [currentSubmission, editedAnswers]);
 
   const hasChanges = Object.keys(editedAnswers).length > 0;
 
