@@ -233,7 +233,9 @@ export default function RoleDashboard() {
 
       <div className={isTeacher ? styles.rowTeacher : styles.row}>
         <div className={styles.listCard}>
-          <h3 className={styles.listTitle}>Recent Submissions</h3>
+          <h3 className={styles.listTitle}>
+            {isAdmin ? 'Recent Submissions (System)' : isSchoolAdmin ? 'Recent Submissions (School)' : 'Recent Submissions (My Classes)'}
+          </h3>
           {(stats?.recentSubmissions ?? []).length === 0 && (
             <div className={styles.empty}>No data available</div>
           )}

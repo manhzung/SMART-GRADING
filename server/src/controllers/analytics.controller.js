@@ -30,7 +30,9 @@ const getDashboardStats = catchAsync(async (req, res) => {
   ]);
 
   const scopedClassIds = scopedClasses.map((c) => c._id);
-  const effectiveClassIds = userRole === 'admin' ? null : schoolId ? scopedClassIds : null;
+  // Teachers always scope to their own classes; admin sees everything; school-admin scopes by school
+  const effectiveClassIds =
+    userRole === 'admin' ? null : userRole === 'teacher' ? scopedClassIds : schoolId ? scopedClassIds : null;
 
   const schoolExamIds =
     effectiveClassIds &&
@@ -154,7 +156,9 @@ const getAnalytics = catchAsync(async (req, res) => {
 
   const scopedClasses = await Class.find(classFilter).select('_id').lean();
   const scopedClassIds = scopedClasses.map((c) => c._id);
-  const effectiveClassIds = userRole === 'admin' ? null : schoolId ? scopedClassIds : null;
+  // Teachers always scope to their own classes; admin sees everything; school-admin scopes by school
+  const effectiveClassIds =
+    userRole === 'admin' ? null : userRole === 'teacher' ? scopedClassIds : schoolId ? scopedClassIds : null;
 
   const baseFilter = effectiveClassIds ? { classIds: { $in: effectiveClassIds } } : schoolId ? { schoolId } : {};
   const dateFilter = { createdAt: { $gte: startDate } };
