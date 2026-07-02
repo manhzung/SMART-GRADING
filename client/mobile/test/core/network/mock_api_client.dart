@@ -48,6 +48,9 @@ class MockApiClient implements ApiClient {
   String? _token;
 
   @override
+  String? getToken() => _token;
+
+  @override
   void setToken(String? token) {
     _token = token;
   }
