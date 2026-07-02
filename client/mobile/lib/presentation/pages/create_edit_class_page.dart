@@ -38,7 +38,8 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
     _nameController = TextEditingController(text: cls?.name ?? '');
     _codeController = TextEditingController(text: cls?.code ?? '');
     _academicYearController = TextEditingController(text: cls?.academicYear ?? '');
-    _selectedGradeLevel = cls?.gradeLevel;
+    _selectedGradeLevel = cls?.gradeLevel ?? 12;
+    _selectedTeacherId = cls?.homeroomTeacherId;
 
     // Auto-set academic year for new classes
     if (cls == null) {
@@ -67,10 +68,12 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
       setState(() {
         _teachers = result.results;
         _isLoadingTeachers = false;
-        // Default homeroom teacher = current user
-        final authState = context.read<AuthBloc>().state;
-        if (authState is AuthAuthenticated) {
-          _selectedTeacherId = authState.user.id;
+        // Default homeroom teacher = current user (only if not editing and no teacher selected yet)
+        if (widget.cls == null && (_selectedTeacherId == null || _selectedTeacherId!.isEmpty)) {
+          final authState = context.read<AuthBloc>().state;
+          if (authState is AuthAuthenticated) {
+            _selectedTeacherId = authState.user.id;
+          }
         }
       });
     } catch (e) {
@@ -340,38 +343,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Grade Level (dropdown)
-                        const Text(
-                          'Grade Level',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF334155),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        DropdownButtonFormField<int>(
-                          initialValue: _selectedGradeLevel,
-                          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
-                          decoration: _buildInputDecoration('Select grade level'),
-                          items: const [
-                            DropdownMenuItem(value: 10, child: Text('Grade 10')),
-                            DropdownMenuItem(value: 11, child: Text('Grade 11')),
-                            DropdownMenuItem(value: 12, child: Text('Grade 12')),
-                          ],
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedGradeLevel = val;
-                            });
-                          },
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Please select a grade level';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
+
 
                         // Academic Year
                         const Text(
@@ -410,7 +382,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                         ),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          initialValue: _selectedTeacherId,
+                          value: _selectedTeacherId ?? '',
                           icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
                           decoration: _buildInputDecoration(
                             _isLoadingTeachers ? 'Loading...' : 'Select homeroom teacher',
@@ -425,6 +397,17 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                               value: '',
                               child: Text('-- Select Teacher --'),
                             ),
+                            if (_selectedTeacherId != null &&
+                                _selectedTeacherId!.isNotEmpty &&
+                                !_teachers.any((t) => t.id == _selectedTeacherId))
+                              DropdownMenuItem<String>(
+                                value: _selectedTeacherId,
+                                child: Text(
+                                  _selectedTeacherId == widget.cls?.homeroomTeacherId
+                                      ? (widget.cls!.homeroomTeacherName ?? 'Current Homeroom Teacher')
+                                      : 'Selected Teacher',
+                                ),
+                              ),
                             ..._teachers.map((t) => DropdownMenuItem<String>(
                                   value: t.id,
                                   child: Text('${t.name} (${t.email})'),

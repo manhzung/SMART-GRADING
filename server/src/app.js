@@ -47,18 +47,13 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      console.log(`[CORS Log] Request Origin: ${origin}`);
-      console.log(`[CORS Log] Allowed Origins:`, allowedOrigins);
       if (!origin) {
-        console.log(`[CORS Log] Access allowed (no origin)`);
         return callback(null, true);
       }
       const isAllowed = allowedOrigins.includes(origin) || origin.includes('vercel.app');
       if (isAllowed) {
-        console.log(`[CORS Log] Access allowed for origin: ${origin}`);
         return callback(null, true);
       }
-      console.warn(`[CORS Log] Access BLOCKED for origin: ${origin}`);
       return callback(null, false);
     },
     credentials: true,

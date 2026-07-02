@@ -353,27 +353,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget? _buildFab(String role) {
-    if (role == 'student') return null;
-    if (role == 'admin') {
-      if (_selectedIndex == 0) {
-        return FloatingActionButton(
-          onPressed: () => Navigator.pushNamed(context, '/create-exam'),
-          backgroundColor: const Color(0xFF0F172A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: const Icon(Icons.add, color: Colors.white, size: 28),
-        );
-      }
-      return null;
-    }
-    // teacher
-    if (_selectedIndex == 0 || _selectedIndex == 1) {
-      return FloatingActionButton(
-        onPressed: () => Navigator.pushNamed(context, '/create-exam'),
-        backgroundColor: const Color(0xFF0F172A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      );
-    }
     return null;
   }
 }

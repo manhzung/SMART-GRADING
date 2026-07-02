@@ -5,6 +5,7 @@ import 'package:smart_grading_mobile/domain/entities/exam.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/submission/submission_bloc.dart';
 import 'package:smart_grading_mobile/presentation/pages/exam_selection_page.dart';
 import 'package:smart_grading_mobile/presentation/pages/omr_test_lab_page.dart';
+import 'submission_detail_page.dart';
 
 export 'package:smart_grading_mobile/domain/entities/exam.entity.dart' show Submission;
 
@@ -394,7 +395,13 @@ class SubmissionRow extends StatelessWidget {
     );
 
     return InkWell(
-      onTap: null,
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => SubmissionDetailPage(submission: submission),
+          ),
+        );
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -546,8 +553,31 @@ class _DashedRectPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _ReviewSubmissionsPage extends StatelessWidget {
+class _ReviewSubmissionsPage extends StatefulWidget {
   const _ReviewSubmissionsPage();
+
+  @override
+  State<_ReviewSubmissionsPage> createState() => _ReviewSubmissionsPageState();
+}
+
+class _ReviewSubmissionsPageState extends State<_ReviewSubmissionsPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String _selectedFilter = 'ALL'; // 'ALL', 'REVIEW', 'COMPLETED'
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -562,30 +592,237 @@ class _ReviewSubmissionsPage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.fact_check_outlined, size: 64, color: Color(0xFFCBD5E1)),
-            SizedBox(height: 16),
-            Text(
-              'Manual Review',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
+      body: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search by student name or code...',
+                    prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B)),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, color: Color(0xFF64748B)),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: const Color(0xFFF1F5F9),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _buildFilterChip('ALL', 'All'),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('REVIEW', 'Needs Review'),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('COMPLETED', 'Completed'),
+                  ],
+                ),
+              ],
             ),
-            SizedBox(height: 8),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 48),
-              child: Text(
-                'Review submissions flagged for manual review due to multiple marks or low confidence.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF64748B)),
-              ),
+          ),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Expanded(
+            child: BlocBuilder<SubmissionBloc, SubmissionState>(
+              builder: (context, state) {
+                if (state is SubmissionLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is SubmissionError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
+                        const SizedBox(height: 16),
+                        Text(state.message, style: const TextStyle(color: Color(0xFF64748B))),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F172A),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                List<Submission> submissions = [];
+                if (state is SubmissionLoaded) {
+                  submissions = state.submissions;
+                }
+
+                final filtered = submissions.where((item) {
+                  final itemStatus = item.statusUppercase;
+                  if (_selectedFilter == 'REVIEW') {
+                    if (itemStatus != 'REVIEW' && item.status != 'manual_review') {
+                      return false;
+                    }
+                  } else if (_selectedFilter == 'COMPLETED') {
+                    if (itemStatus != 'COMPLETED') {
+                      return false;
+                    }
+                  }
+
+                  if (_searchQuery.isNotEmpty) {
+                    final query = _searchQuery.toLowerCase();
+                    final name = item.displayName.toLowerCase();
+                    final code = (item.studentCode ?? '').toLowerCase();
+                    final exam = (item.examTitle ?? '').toLowerCase();
+                    final cls = (item.className ?? '').toLowerCase();
+
+                    return name.contains(query) ||
+                        code.contains(query) ||
+                        exam.contains(query) ||
+                        cls.contains(query);
+                  }
+                  return true;
+                }).toList();
+
+                if (filtered.isEmpty) {
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+                    },
+                    child: ListView(
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                        const Icon(Icons.fact_check_outlined, size: 64, color: Color(0xFFCBD5E1)),
+                        const SizedBox(height: 16),
+                        const Center(
+                          child: Text(
+                            'No submissions found',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Center(
+                          child: Text(
+                            'Try adjusting your search or filters',
+                            style: TextStyle(color: Color(0xFF64748B)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
+                  },
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    itemCount: filtered.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                    itemBuilder: (context, index) {
+                      final item = filtered[index];
+                      final status = item.statusUppercase;
+                      Color statusBgColor;
+                      Color statusTextColor;
+                      IconData icon;
+                      Color iconColor;
+                      Color iconBgColor;
+
+                      switch (status) {
+                        case 'COMPLETED':
+                          statusBgColor = const Color(0xFFE6F4EA);
+                          statusTextColor = const Color(0xFF137333);
+                          icon = Icons.check_circle_outline;
+                          iconColor = const Color(0xFF137333);
+                          iconBgColor = const Color(0xFFE6F4EA);
+                          break;
+                        case 'PROCESSING':
+                          statusBgColor = const Color(0xFFE8F0FE);
+                          statusTextColor = const Color(0xFF1A73E8);
+                          icon = Icons.sync;
+                          iconColor = const Color(0xFF1A73E8);
+                          iconBgColor = const Color(0xFFE8F0FE);
+                          break;
+                        case 'REVIEW':
+                          statusBgColor = const Color(0xFFFEF3C7);
+                          statusTextColor = const Color(0xFFD97706);
+                          icon = Icons.assignment_late_outlined;
+                          iconColor = const Color(0xFFD97706);
+                          iconBgColor = const Color(0xFFFEF3C7);
+                          break;
+                        default:
+                          statusBgColor = const Color(0xFFFCE8E6);
+                          statusTextColor = const Color(0xFFC5221F);
+                          icon = Icons.error_outline;
+                          iconColor = const Color(0xFFC5221F);
+                          iconBgColor = const Color(0xFFFFF2EC);
+                      }
+
+                      return SubmissionRow(
+                        submission: item,
+                        statusBgColor: statusBgColor,
+                        statusTextColor: statusTextColor,
+                        icon: icon,
+                        iconColor: iconColor,
+                        iconBgColor: iconBgColor,
+                      );
+                    },
+                  ),
+                );
+              },
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String filter, String label) {
+    final bool isSelected = _selectedFilter == filter;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedFilter = filter;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF475569),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
         ),
       ),
     );

@@ -318,27 +318,11 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
             ],
           ),
           const SizedBox(height: 24),
-          // Info Grid: NIÊN KHÓA & KHỐI LỚP
-          Row(
-            children: [
-              Expanded(
-                child: _buildInfoGridItem(
-                  icon: Icons.calendar_today_outlined,
-                  title: 'ACADEMIC YEAR',
-                  value: _currentClass.academicYear ?? '2023 - 2024',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildInfoGridItem(
-                  icon: Icons.school_outlined,
-                  title: 'GRADE LEVEL',
-                  value: _currentClass.gradeDisplay.isNotEmpty
-                      ? _currentClass.gradeDisplay
-                      : 'Grade 12',
-                ),
-              ),
-            ],
+          // Info Grid: NIÊN KHÓA
+          _buildInfoGridItem(
+            icon: Icons.calendar_today_outlined,
+            title: 'ACADEMIC YEAR',
+            value: _currentClass.academicYear ?? '2023 - 2024',
           ),
           const SizedBox(height: 16),
         ],

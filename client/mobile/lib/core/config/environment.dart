@@ -1,7 +1,7 @@
 enum Environment { development, production }
 
 class EnvironmentConfig {
-  static Environment current = Environment.development;
+  static Environment current = Environment.production;
 
   // For physical device: change this to your computer's local IP address
   // Run 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux) to find your IP
@@ -13,7 +13,7 @@ class EnvironmentConfig {
       case Environment.development:
         return 'http://$_localIp:$_port/api/v1';
       case Environment.production:
-        return 'https://api.smartgrading.com/api/v1';
+        return 'https://smart-grading.duckdns.org/api/v1';
     }
   }
 
@@ -22,7 +22,7 @@ class EnvironmentConfig {
       case Environment.development:
         return 'ws://$_localIp:$_port';
       case Environment.production:
-        return 'wss://api.smartgrading.com';
+        return 'wss://smart-grading.duckdns.org';
     }
   }
 

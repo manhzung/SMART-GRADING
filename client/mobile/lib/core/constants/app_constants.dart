@@ -42,4 +42,10 @@ class AppConstants {
   static const String roleTeacher = 'teacher';
   static const String roleStudent = 'student';
   static const String roleParent = 'parent';
+
+  // Support & Legal
+  static const String termsUrl = 'https://smartgrading.edu.vn/terms';
+  static const String privacyUrl = 'https://smartgrading.edu.vn/privacy';
+  static const String supportEmail = 'support@smartgrading.edu.vn';
+  static const String supportPhone = '1900 1234';
 }

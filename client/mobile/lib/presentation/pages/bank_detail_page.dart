@@ -29,6 +29,7 @@ class _BankDetailPageState extends State<BankDetailPage> {
   String? _questionError;
   String _searchQuery = '';
   String? _selectedDifficulty;
+  final Set<String> _expandedQuestionIds = {};
 
   @override
   void initState() {
@@ -442,6 +443,7 @@ class _BankDetailPageState extends State<BankDetailPage> {
   }
 
   Widget _buildQuestionCard(QuestionModel question) {
+    final isExpanded = _expandedQuestionIds.contains(question.id);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       color: Colors.white,
@@ -449,53 +451,151 @@ class _BankDetailPageState extends State<BankDetailPage> {
         borderRadius: BorderRadius.circular(12),
         side: const BorderSide(color: Color(0xFFE2E8F0)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    question.content,
-                    style: const TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          setState(() {
+            if (isExpanded) {
+              _expandedQuestionIds.remove(question.id);
+            } else {
+              _expandedQuestionIds.add(question.id);
+            }
+          });
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      question.content,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: isExpanded ? null : 2,
+                      overflow: isExpanded ? null : TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildDifficultyBadge(question.difficulty),
+                ],
+              ),
+              if (question.tags.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: question.tags.take(3).map((tag) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        tag,
+                        style: const TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 10,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              if (isExpanded) ...[
+                const SizedBox(height: 16),
+                const Divider(color: Color(0xFFE2E8F0), height: 1),
+                const SizedBox(height: 12),
+                const Text(
+                  'Options:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
                   ),
                 ),
-                const SizedBox(width: 8),
-                _buildDifficultyBadge(question.difficulty),
-              ],
-            ),
-            if (question.tags.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: question.tags.take(3).map((tag) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      tag,
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 10,
-                      ),
+                const SizedBox(height: 8),
+                ...question.options.asMap().entries.map((entry) {
+                  final optIndex = entry.key;
+                  final option = entry.value;
+                  final isCorrect = option.isCorrect;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          isCorrect ? Icons.check_circle : Icons.circle_outlined,
+                          size: 20,
+                          color: isCorrect ? const Color(0xFF16A34A) : const Color(0xFFE2E8F0),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${String.fromCharCode(65 + optIndex)}. ${option.text}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isCorrect ? const Color(0xFF16A34A) : const Color(0xFF64748B),
+                              fontWeight: isCorrect ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   );
-                }).toList(),
-              ),
+                }),
+                if (question.explanation != null && question.explanation!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F9FF),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBAE6FD)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFF0284C7)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Explanation:',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0284C7),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                question.explanation!,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF0F172A),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

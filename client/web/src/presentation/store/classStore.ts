@@ -72,6 +72,8 @@ interface ClassState {
   fetchClassExams: (classId: string) => Promise<void>;
   assignExamsToClass: (classId: string, examIds: string[]) => Promise<{ assigned: string[]; failed: { examId: string; error: string }[] }>;
   removeExamFromClass: (classId: string, examId: string) => Promise<void>;
+  addExistingStudents: (classId: string, studentIds: string[]) => Promise<any>;
+  getAvailableStudents: (classId: string, params?: { search?: string; page?: number; limit?: number }) => Promise<{ results: any[]; page: number; limit: number; total: number; pages: number }>;
   clearError: () => void;
 }
 
@@ -354,6 +356,40 @@ export const useClassStore = create<ClassState>((set, get) => ({
       set({
         error: (error as Error).message || 'Failed to remove exam from class',
         isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  addExistingStudents: async (classId, studentIds) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await apiService.post(`/classes/${classId}/students`, { studentIds });
+      await get().fetchClassById(classId);
+      set({ isLoading: false });
+      return result;
+    } catch (error) {
+      set({
+        error: (error as Error).message || 'Failed to add existing students to class',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  getAvailableStudents: async (classId, params) => {
+    try {
+      const response = await apiService.get<{
+        results: any[];
+        page: number;
+        limit: number;
+        total: number;
+        pages: number;
+      }>(`/classes/${classId}/available-students`, { params });
+      return response;
+    } catch (error) {
+      set({
+        error: (error as Error).message || 'Failed to fetch available students',
       });
       throw error;
     }

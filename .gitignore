@@ -74,7 +74,6 @@ yarn-error.log*
 lerna-debug.log*
 
 # Environment
-.env
 .env.local
 .env.*.local
 .envrc

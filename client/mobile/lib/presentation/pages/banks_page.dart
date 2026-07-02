@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/network/bank_service.dart';
 import '../../domain/entities/question_bank.entity.dart';
-import '../widgets/create_bank_sheet.dart';
 
 class BanksPage extends StatefulWidget {
   const BanksPage({super.key});
@@ -118,20 +117,6 @@ class _BanksPageState extends State<BanksPage> {
     }
   }
 
-  void _showCreateBankSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => CreateBankSheet(
-        onCreated: (bank) {
-          setState(() {
-            _yourBanks.insert(0, bank);
-          });
-        },
-      ),
-    );
-  }
 
   void _navigateToDetail(QuestionBank bank) {
     Navigator.pushNamed(
@@ -172,13 +157,7 @@ class _BanksPageState extends State<BanksPage> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateBankSheet,
-        backgroundColor: const Color(0xFF081C43),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('New Bank'),
-      ),
+
       body: SafeArea(
         child: Column(
           children: [

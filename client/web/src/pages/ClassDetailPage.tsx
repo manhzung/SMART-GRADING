@@ -71,6 +71,8 @@ export default function ClassDetailPage() {
     teachers,
     fetchTeachers,
     getClassStatistics,
+    addExistingStudents,
+    getAvailableStudents,
   } = useClassStore();
   const user = useAuthStore((s) => s.user);
 
@@ -105,8 +107,18 @@ export default function ClassDetailPage() {
   // Dropdowns & Modals
   const [activeMenuStudentId, setActiveMenuStudentId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddExistingModalOpen, setIsAddExistingModalOpen] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+
+  // Available Students for Add Existing Modal
+  const [availableStudents, setAvailableStudents] = useState<any[]>([]);
+  const [isLoadingAvailable, setIsLoadingAvailable] = useState(false);
+  const [availableSearchQuery, setAvailableSearchQuery] = useState('');
+  const [selectedAvailableIds, setSelectedAvailableIds] = useState<Set<string>>(new Set());
+  const [availablePage, setAvailablePage] = useState(1);
+  const [availableTotalPages, setAvailableTotalPages] = useState(1);
+  const [availableTotal, setAvailableTotal] = useState(0);
 
   // Excel/CSV Import Modal States
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -164,6 +176,90 @@ export default function ClassDetailPage() {
       fetchTeachers();
     }
   }, [id, fetchClassById, fetchTeachers]);
+
+  // Fetch available students when the modal is open or query/page changes
+  const fetchAvailableStudents = async () => {
+    if (!id || !isAddExistingModalOpen) return;
+    setIsLoadingAvailable(true);
+    try {
+      const data = await getAvailableStudents(id, {
+        search: availableSearchQuery,
+        page: availablePage,
+        limit: 5,
+      });
+      setAvailableStudents(data.results || []);
+      setAvailableTotalPages(data.pages || 1);
+      setAvailableTotal(data.total || 0);
+    } catch (err) {
+      console.error('Failed to fetch available students:', err);
+    } finally {
+      setIsLoadingAvailable(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAvailableStudents();
+  }, [id, isAddExistingModalOpen, availableSearchQuery, availablePage]);
+
+  const openAddExistingModal = () => {
+    setSelectedAvailableIds(new Set());
+    setAvailableSearchQuery('');
+    setAvailablePage(1);
+    setIsAddExistingModalOpen(true);
+  };
+
+  const handleAddExistingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || selectedAvailableIds.size === 0) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    setActionSuccess(null);
+
+    try {
+      await addExistingStudents(id, Array.from(selectedAvailableIds));
+      setActionSuccess('Students added successfully.');
+      setIsAddExistingModalOpen(false);
+      fetchClassById(id);
+    } catch (err) {
+      setActionError((err as Error).message || 'Unable to add students.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSelectAllAvailable = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const pageIds = availableStudents.map(s => s._id);
+      setSelectedAvailableIds(prev => {
+        const next = new Set(prev);
+        pageIds.forEach(id => next.add(id));
+        return next;
+      });
+    } else {
+      const pageIds = availableStudents.map(s => s._id);
+      setSelectedAvailableIds(prev => {
+        const next = new Set(prev);
+        pageIds.forEach(id => next.delete(id));
+        return next;
+      });
+    }
+  };
+
+  const handleSelectRowAvailable = (studentId: string, checked: boolean) => {
+    setSelectedAvailableIds(prev => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(studentId);
+      } else {
+        next.delete(studentId);
+      }
+      return next;
+    });
+  };
+
+  const isAllAvailablePageSelected =
+    availableStudents.length > 0 &&
+    availableStudents.every(s => selectedAvailableIds.has(s._id));
 
   // Fetch class statistics from API
   const { data: classStats } = useQuery({
@@ -838,6 +934,10 @@ export default function ClassDetailPage() {
             <FileText size={16} />
             <span>Export Report</span>
           </button>
+          <button className={styles.addExistingBtn} onClick={openAddExistingModal}>
+            <UserPlus size={16} />
+            <span>Add Existing Student</span>
+          </button>
           <button className={styles.addManualBtn} onClick={() => setIsAddModalOpen(true)}>
             <Plus size={16} />
             <span>Add Student</span>
@@ -1471,6 +1571,141 @@ export default function ClassDetailPage() {
                 <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
                   {isSubmitting ? 'Saving...' : 'Add Student'}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Existing Student Modal */}
+      {isAddExistingModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h2>Add Existing Student</h2>
+              <button className={styles.closeBtn} onClick={() => setIsAddExistingModalOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddExistingSubmit} className={styles.modalForm}>
+              <div className={styles.modalSearchGroup} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', marginBottom: '16px' }}>
+                <Search size={16} className={styles.modalSearchIcon} style={{ color: '#9ca3af' }} />
+                <input
+                  type="text"
+                  placeholder="Search students by name, email or code..."
+                  className={styles.modalSearchInput}
+                  style={{ border: 'none', outline: 'none', width: '100%', fontSize: '14px' }}
+                  value={availableSearchQuery}
+                  onChange={(e) => {
+                    setAvailableSearchQuery(e.target.value);
+                    setAvailablePage(1);
+                  }}
+                />
+              </div>
+
+              {isLoadingAvailable ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 0', gap: '8px', color: '#6b7280' }}>
+                  <Loader2 className="animate-spin" size={24} />
+                  <span>Loading available students...</span>
+                </div>
+              ) : availableStudents.length === 0 ? (
+                <div style={{ padding: '32px 0', textAlign: 'center', color: '#6b7280' }}>
+                  <span>No students found in the school pool.</span>
+                </div>
+              ) : (
+                <>
+                  <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px', marginBottom: '16px' }}>
+                    <table className={styles.studentTable} style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>
+                          <th style={{ width: '40px', textAlign: 'center', padding: '10px 8px' }}>
+                            <input
+                              type="checkbox"
+                              checked={isAllAvailablePageSelected}
+                              onChange={handleSelectAllAvailable}
+                              className={styles.checkbox}
+                            />
+                          </th>
+                          <th style={{ padding: '10px 8px', fontSize: '13px', fontWeight: 600, color: '#4b5563' }}>Student ID</th>
+                          <th style={{ padding: '10px 8px', fontSize: '13px', fontWeight: 600, color: '#4b5563' }}>Name</th>
+                          <th style={{ padding: '10px 8px', fontSize: '13px', fontWeight: 600, color: '#4b5563' }}>Email</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {availableStudents.map((student) => {
+                          const isSelected = selectedAvailableIds.has(student._id);
+                          const studentCode = student.studentCode || `STU-${student._id.slice(-5).toUpperCase()}`;
+                          return (
+                            <tr
+                              key={student._id}
+                              className={isSelected ? styles.rowSelected : ''}
+                              style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                              onClick={() => handleSelectRowAvailable(student._id, !isSelected)}
+                            >
+                              <td style={{ textAlign: 'center', padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={(e) => handleSelectRowAvailable(student._id, e.target.checked)}
+                                  className={styles.checkbox}
+                                />
+                              </td>
+                              <td style={{ padding: '10px 8px', fontSize: '13px' }} className={styles.studentIdCell}>{studentCode}</td>
+                              <td style={{ padding: '10px 8px', fontSize: '13px', fontWeight: 500 }}>{student.name}</td>
+                              <td style={{ padding: '10px 8px', fontSize: '13px', color: '#6b7280' }}>{student.email}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination inside Modal */}
+                  {availableTotalPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', fontSize: '13px', color: '#4b5563' }}>
+                      <button
+                        type="button"
+                        className={styles.pageBtn}
+                        onClick={() => setAvailablePage(prev => Math.max(prev - 1, 1))}
+                        disabled={availablePage === 1}
+                        style={{ display: 'inline-flex', padding: '4px', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <span>
+                        Page {availablePage} of {availableTotalPages} ({availableTotal} available)
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.pageBtn}
+                        onClick={() => setAvailablePage(prev => Math.min(prev + 1, availableTotalPages))}
+                        disabled={availablePage === availableTotalPages}
+                        style={{ display: 'inline-flex', padding: '4px', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        <ChevronLeft style={{ transform: 'rotate(180deg)' }} size={16} />
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className={styles.modalActions} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: '13px', color: '#4b5563', fontWeight: 500 }}>
+                  {selectedAvailableIds.size} students selected
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" className={styles.cancelBtn} onClick={() => setIsAddExistingModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className={styles.submitBtn}
+                    disabled={isSubmitting || selectedAvailableIds.size === 0}
+                  >
+                    {isSubmitting ? 'Adding...' : 'Add Selected'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

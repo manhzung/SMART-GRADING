@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:smart_grading_mobile/core/constants/app_constants.dart';
 import 'package:smart_grading_mobile/core/network/user_service.dart';
 import 'package:smart_grading_mobile/domain/entities/user.entity.dart';
 import 'package:smart_grading_mobile/presentation/blocs/auth/auth_bloc.dart';
@@ -381,14 +382,14 @@ class _ProfileViewState extends State<ProfileView> {
                   icon: Icons.article_outlined,
                   title: 'Terms of Service',
                   trailingIcon: Icons.open_in_new,
-                  onTap: () => _openUrl('https://smartgrading.edu.vn/terms'),
+                  onTap: () => _openUrl(AppConstants.termsUrl),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
                 _buildRowTile(
                   icon: Icons.verified_user_outlined,
                   title: 'Privacy Policy',
                   trailingIcon: Icons.open_in_new,
-                  onTap: () => _openUrl('https://smartgrading.edu.vn/privacy'),
+                  onTap: () => _openUrl(AppConstants.privacyUrl),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
                 _buildRowTile(
@@ -542,10 +543,10 @@ class _ProfileViewState extends State<ProfileView> {
             const SizedBox(height: 20),
             const Text('Contact Support', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            const Text(
-              'If you need support, please contact via email: support@smartgrading.edu.vn',
+            Text(
+              'If you need support, please contact via email: ${AppConstants.supportEmail}',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -553,7 +554,7 @@ class _ProfileViewState extends State<ProfileView> {
               child: ElevatedButton.icon(
                 onPressed: () async {
                   Navigator.pop(context);
-                  await _openEmail('support@smartgrading.edu.vn');
+                  await _openEmail(AppConstants.supportEmail);
                 },
                 icon: const Icon(Icons.email_outlined),
                 label: const Text('Send Support Email'),

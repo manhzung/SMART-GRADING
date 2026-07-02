@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_grading_mobile/core/constants/app_constants.dart';
 
 class HelpPage extends StatefulWidget {
   const HelpPage({super.key});
@@ -269,12 +270,12 @@ class _HelpPageState extends State<HelpPage> {
                         const SizedBox(height: 16),
                         _buildContactRow(
                           icon: Icons.email_outlined,
-                          text: 'support@smartgrading.edu.vn',
+                          text: AppConstants.supportEmail,
                         ),
                         const SizedBox(height: 12),
                         _buildContactRow(
                           icon: Icons.phone_outlined,
-                          text: '1900 1234',
+                          text: AppConstants.supportPhone,
                         ),
                         const SizedBox(height: 12),
                         _buildContactRow(

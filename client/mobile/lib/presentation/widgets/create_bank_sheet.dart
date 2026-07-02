@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/network/bank_service.dart';
 import '../../domain/entities/question_bank.entity.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
-import '../blocs/auth/auth_state.dart';
 
 class CreateBankSheet extends StatefulWidget {
   final void Function(QuestionBank bank)? onCreated;

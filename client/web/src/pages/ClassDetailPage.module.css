@@ -92,7 +92,7 @@
 }
 
 /* Header Buttons */
-.importBtn, .exportBtn, .addManualBtn {
+.importBtn, .exportBtn, .addManualBtn, .addExistingBtn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -144,6 +144,17 @@
 
 .addManualBtn:hover {
   background-color: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.addExistingBtn {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.addExistingBtn:hover {
+  background-color: #dcfce7;
   transform: translateY(-1px);
 }
 
