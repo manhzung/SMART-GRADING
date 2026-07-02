@@ -141,7 +141,7 @@ export default function CreateExamPage() {
   useEffect(() => {
     fetchClasses({ limit: 100 });
     fetchBanks();
-    fetchQuestions({ limit: 100, page: 1 });
+    fetchQuestions({ limit: 100, page: 1, isApproved: true });
     fetchTags(); // Load available tags for filtering
 
     // Preset today's date formatted for html input (yyyy-mm-dd)
@@ -172,14 +172,14 @@ export default function CreateExamPage() {
     setIsBankModalOpen(true);
     setBankPage(1);
     setSelectedBankId(''); // reset bank filter
-    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: undefined });
+    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: undefined, isApproved: true });
     fetchTags(); // load all tags
   };
 
   const handleBankChange = (bankId: string) => {
     setSelectedBankId(bankId);
     setBankPage(1);
-    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: bankId || undefined });
+    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: bankId || undefined, isApproved: true });
     if (bankId) {
       fetchTags(bankId); // load tags from selected bank
     } else {
@@ -189,7 +189,7 @@ export default function CreateExamPage() {
 
   const handleBankSearch = () => {
     setBankPage(1);
-    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: selectedBankId || undefined });
+    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: selectedBankId || undefined, isApproved: true });
   };
 
   const handleBankPageChange = (newPage: number) => {
@@ -201,6 +201,7 @@ export default function CreateExamPage() {
         search: bankSearchText, 
         difficulty: bankDifficultyFilter,
         bankId: selectedBankId || undefined,
+        isApproved: true,
       });
     }
   };
