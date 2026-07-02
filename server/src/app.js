@@ -38,9 +38,17 @@ app.use(mongoSanitize());
 app.use(compression());
 
 // enable cors
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://159.223.169.35:5173',
+  'http://159.223.169.35',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+];
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://159.223.169.35:5173', 'http://159.223.169.35'],
+    origin: (origin, callback) => {
+      callback(null, true);
+    },
     credentials: true,
   })
 );
