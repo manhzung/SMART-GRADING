@@ -216,7 +216,13 @@ export default function ClassDetailPage() {
     setActionSuccess(null);
 
     try {
-      await addExistingStudents(id, Array.from(selectedAvailableIds));
+      const validStudentIds = Array.from(selectedAvailableIds).filter(
+        (sid) => typeof sid === 'string' && /^[0-9a-fA-F]{24}$/.test(sid)
+      );
+      if (validStudentIds.length === 0) {
+        throw new Error('No valid students selected');
+      }
+      await addExistingStudents(id, validStudentIds);
       setActionSuccess('Students added successfully.');
       setIsAddExistingModalOpen(false);
       fetchClassById(id);
