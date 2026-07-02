@@ -8,7 +8,8 @@ const create = catchAsync(async (req, res) => {
 });
 
 const getAll = catchAsync(async (req, res) => {
-  const schoolId = req.query.schoolId || req.params.schoolId || (req.user && req.user.schoolId);
+  const isAdmin = req.user && req.user.role === 'admin';
+  const schoolId = req.query.schoolId || req.params.schoolId || (!isAdmin && req.user && req.user.schoolId);
   const { schoolId: _, ...query } = req.query;
   const result = await classService.getBySchool(schoolId, query, req.user);
   res.send(result);

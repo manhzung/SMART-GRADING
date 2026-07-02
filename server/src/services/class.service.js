@@ -90,17 +90,20 @@ class ClassService {
       }
     }
 
-    // Build filter: use targetSchoolId if provided, otherwise fall back to user's school
+    // Build filter: use targetSchoolId if provided, otherwise fall back to user's school (if not admin)
     const filter = { isActive: true, ...rest };
+    const isAdmin = requestingUser?.role === 'admin';
     if (targetSchoolId) {
       filter.schoolId = targetSchoolId;
-    } else if (userSchoolId) {
+    } else if (userSchoolId && !isAdmin) {
       filter.schoolId = userSchoolId;
     } else if (requestingUser && requestingUser.role === 'teacher') {
       // School-less teacher: only see classes they are homeroom teacher of.
       const teacherId = requestingUser._id || requestingUser.id;
       filter.schoolId = null;
       filter.homeroomTeacherId = teacherId;
+    } else if (isAdmin) {
+      // Admin with no school target: fetch all active classes
     } else {
       // No school context at all — return empty result instead of error
       return { results: [], page: parsedPage, limit: parsedLimit, total: 0, pages: 0 };
