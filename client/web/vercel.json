@@ -6,11 +6,15 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://159.223.169.35:3000/api/:path*"
+      "destination": "https://smart-grading.duckdns.org/api/:path*"
     },
     {
       "source": "/health",
-      "destination": "http://159.223.169.35:3000/health"
+      "destination": "https://smart-grading.duckdns.org/health"
+    },
+    {
+      "source": "/((?!api|health).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
