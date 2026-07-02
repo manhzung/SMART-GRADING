@@ -133,7 +133,7 @@ function buildHeaderLines(exam, config) {
   lines.push('\\usepackage{amsmath,amssymb}');
   lines.push('\\usepackage{geometry}');
   lines.push('\\geometry{top=1.5cm,bottom=1.5cm,left=1.5cm,right=1.5cm}');
-  lines.push('\\usepackage{automultiplechoice}');
+  lines.push('\\usepackage[separateanswersheet]{automultiplechoice}');
   lines.push('');
 
   // Begin document - AMC commands must come AFTER \begin{document}
