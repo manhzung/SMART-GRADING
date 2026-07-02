@@ -24,7 +24,7 @@ class QuestionBank {
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       description: json['description']?.toString(),
-      type: (json['type'] ?? 'public').toString(),
+      type: (json['type'] ?? 'personal').toString(),
       schoolId: json['schoolId']?.toString(),
       isActive: json['isActive'] as bool? ?? true,
       createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()) ?? DateTime.now(),
@@ -32,7 +32,7 @@ class QuestionBank {
     );
   }
 
-  Map<String, dynamic>? toJson() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,

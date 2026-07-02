@@ -38,5 +38,38 @@ void main() {
       expect(membership.role, equals('member'));
       expect(membership.status, equals('active'));
     });
+
+    test('should default role to viewer when missing', () {
+      final json = {
+        'bankId': 'bank_456',
+        'userId': 'user_789',
+        'status': 'active',
+      };
+
+      final membership = BankMembership.fromJson(json);
+
+      expect(membership.bankId, equals('bank_456'));
+      expect(membership.userId, equals('user_789'));
+      expect(membership.role, equals('viewer'));
+      expect(membership.status, equals('active'));
+    });
+
+    test('should parse when bankId is an object with _id fallback', () {
+      final json = {
+        'bankId': {
+          '_id': 'bank_object_123',
+          'name': 'Test Bank',
+        },
+        'userId': 'user_456',
+        'role': 'admin',
+        'status': 'active',
+      };
+
+      final membership = BankMembership.fromJson(json);
+
+      expect(membership.bankId, equals('bank_object_123'));
+      expect(membership.userId, equals('user_456'));
+      expect(membership.role, equals('admin'));
+    });
   });
 }

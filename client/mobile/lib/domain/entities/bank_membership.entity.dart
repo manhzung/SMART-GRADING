@@ -19,11 +19,27 @@ class BankMembership {
       parsedUserId = json['userId']?.toString() ?? '';
     }
 
+    String parsedBankId;
+    if (json['bankId'] is Map<String, dynamic>) {
+      parsedBankId = (json['bankId']['_id'] ?? json['bankId']['id'] ?? '').toString();
+    } else {
+      parsedBankId = json['bankId']?.toString() ?? '';
+    }
+
     return BankMembership(
-      bankId: (json['bankId'] ?? '').toString(),
+      bankId: parsedBankId,
       userId: parsedUserId,
-      role: (json['role'] ?? 'member').toString(),
+      role: (json['role'] ?? 'viewer').toString(),
       status: (json['status'] ?? 'active').toString(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'bankId': bankId,
+      'userId': userId,
+      'role': role,
+      'status': status,
+    };
   }
 }
