@@ -155,18 +155,44 @@ const generateSimilar = catchAsync(async (req, res) => {
 });
 
 const getTags = catchAsync(async (req, res) => {
-  const { Question } = require('../models');
+  const { Question, QuestionBank } = require('../models');
+  const QuestionBankService = require('../services/questionBank.service');
   const user = req.user;
 
-  // Lọc theo bank nếu có bankId, không thì áp dụng role-based filter
   const filter = {};
   if (req.query.bankId) {
     filter.bankId = req.query.bankId;
-  } else {
-    if (user?.role === 'teacher' && user?.schoolId) {
+  } else if (user?.role !== 'admin') {
+    // If not admin, find all bank IDs this user has access to
+    const queries = [
+      QuestionBankService.listApprovedBanksForUser(user.id),
+      QuestionBank.find({ createdBy: user.id }).select('_id').lean(),
+    ];
+
+    if (user?.role === 'school-admin' && user?.schoolId) {
+      queries.push(QuestionBank.find({ schoolId: user.schoolId }).select('_id').lean());
+    }
+
+    const [approvedBanks, ownedBanks, schoolBanks = []] = await Promise.all(queries);
+
+    const bankIds = new Set();
+    approvedBanks.forEach(b => {
+      if (b && b._id) bankIds.add(b._id.toString());
+    });
+    ownedBanks.forEach(b => {
+      if (b && b._id) bankIds.add(b._id.toString());
+    });
+    schoolBanks.forEach(b => {
+      if (b && b._id) bankIds.add(b._id.toString());
+    });
+
+    const bankIdList = Array.from(bankIds);
+    filter.bankId = { $in: bankIdList };
+
+    if (user?.schoolId) {
       filter.schoolId = user.schoolId;
-    } else if (user?.role === 'student') {
-      filter.schoolId = user.schoolId;
+    }
+    if (user?.role === 'student') {
       filter.isApproved = true;
     }
   }
