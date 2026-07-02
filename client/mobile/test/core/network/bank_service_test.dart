@@ -10,49 +10,39 @@ void main() {
 
     setUp(() {
       mockClient = MockApiClient();
+      mockClient.reset();
       service = BankService(apiClient: mockClient);
     });
 
     group('listBanks', () {
-      test('returns summaries from /banks endpoint', () async {
+      test('returns flat QuestionBank[] from /banks endpoint', () async {
         mockClient.mockResponse = [
           {
-            'bank': {
-              '_id': 'bank-1',
-              'name': 'Math Bank',
-              'type': 'school',
-            },
-            'membership': {
-              'bankId': 'bank-1',
-              'userId': 'user-1',
-              'role': 'admin',
-              'status': 'active',
-            },
+            '_id': 'bank-1',
+            'name': 'Math Bank',
+            'type': 'school',
           },
           {
-            'bank': {
-              '_id': 'bank-2',
-              'name': 'Science Bank',
-              'type': 'personal',
-            },
-            'membership': null,
+            '_id': 'bank-2',
+            'name': 'Science Bank',
+            'type': 'personal',
           },
         ];
 
         final result = await service.listBanks();
 
         expect(result.length, 2);
-        expect(result[0].bank.name, 'Math Bank');
-        expect(result[0].bank.id, 'bank-1');
-        expect(result[0].membership?.role, 'admin');
-        expect(result[1].bank.name, 'Science Bank');
-        expect(result[1].membership, isNull);
+        expect(result[0].id, 'bank-1');
+        expect(result[0].name, 'Math Bank');
+        expect(result[0].type, 'school');
+        expect(result[1].id, 'bank-2');
+        expect(result[1].name, 'Science Bank');
         expect(mockClient.lastPath, '/banks');
       });
     });
 
     group('getBank', () {
-      test('returns detail from /banks/:bankId endpoint', () async {
+      test('returns BankDetail from /banks/:bankId endpoint', () async {
         mockClient.mockResponse = {
           'bank': {
             '_id': 'bank-1',
@@ -75,6 +65,23 @@ void main() {
         expect(result.bank.description, 'Math questions for grade 10');
         expect(result.membership?.role, 'admin');
         expect(mockClient.lastPath, '/banks/bank-1');
+      });
+
+      test('returns null membership when not a member', () async {
+        mockClient.mockResponse = {
+          'bank': {
+            '_id': 'bank-2',
+            'name': 'Public Bank',
+            'type': 'school',
+          },
+          'membership': null,
+        };
+
+        final result = await service.getBank('bank-2');
+
+        expect(result.bank.id, 'bank-2');
+        expect(result.bank.name, 'Public Bank');
+        expect(result.membership, isNull);
       });
     });
 
@@ -128,32 +135,62 @@ void main() {
     });
 
     group('searchBanks', () {
-      test('returns list from /banks/search endpoint', () async {
-        mockClient.mockResponse = [
-          {
-            '_id': 'bank-1',
-            'name': 'Math Bank',
-            'type': 'school',
-          },
-        ];
+      test('returns PaginatedBanks from /banks/search endpoint', () async {
+        mockClient.mockResponse = {
+          'results': [
+            {
+              '_id': 'bank-1',
+              'name': 'Math Bank',
+              'type': 'school',
+            },
+          ],
+          'total': 1,
+          'page': 1,
+          'pages': 1,
+        };
 
         final result = await service.searchBanks('math');
 
-        expect(result.length, 1);
-        expect(result[0].name, 'Math Bank');
+        expect(result.results.length, 1);
+        expect(result.results[0].name, 'Math Bank');
+        expect(result.total, 1);
+        expect(result.page, 1);
+        expect(result.pages, 1);
         expect(mockClient.lastPath, '/banks/search');
         expect(mockClient.lastQuery?['q'], 'math');
+      });
+
+      test('handles empty search results', () async {
+        mockClient.mockResponse = {
+          'results': [],
+          'total': 0,
+          'page': 1,
+          'pages': 0,
+        };
+
+        final result = await service.searchBanks('nonexistent');
+
+        expect(result.results, isEmpty);
+        expect(result.total, 0);
       });
     });
 
     group('requestAccess', () {
-      test('posts to /banks/:bankId/request-access endpoint', () async {
-        mockClient.mockResponse = {'success': true};
+      test('posts to /banks/:bankId/request-access and returns BankMembership', () async {
+        mockClient.mockResponse = {
+          'bankId': 'bank-1',
+          'userId': 'user-1',
+          'role': 'viewer',
+          'status': 'pending',
+        };
 
-        await service.requestAccess('bank-1');
+        final result = await service.requestAccess('bank-1');
 
         expect(mockClient.lastPath, '/banks/bank-1/request-access');
-        expect(mockClient.lastBody, isNull);
+        expect(result.bankId, 'bank-1');
+        expect(result.userId, 'user-1');
+        expect(result.role, 'viewer');
+        expect(result.status, 'pending');
       });
     });
 
@@ -162,7 +199,7 @@ void main() {
         mockClient.shouldThrow = true;
         mockClient.errorType = 'auth';
 
-        expect(
+        expectLater(
           () => service.listBanks(),
           throwsA(isA<AuthException>()),
         );
@@ -172,7 +209,7 @@ void main() {
         mockClient.shouldThrow = true;
         mockClient.errorType = 'network';
 
-        expect(
+        expectLater(
           () => service.getBank('bank-1'),
           throwsA(isA<NetworkException>()),
         );
@@ -182,7 +219,7 @@ void main() {
         mockClient.shouldThrow = true;
         mockClient.errorType = 'api';
 
-        expect(
+        expectLater(
           () => service.searchBanks('test'),
           throwsA(isA<ApiException>()),
         );

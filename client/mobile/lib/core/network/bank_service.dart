@@ -3,25 +3,6 @@ import '../../core/constants/app_constants.dart';
 import '../../domain/entities/question_bank.entity.dart';
 import '../../domain/entities/bank_membership.entity.dart';
 
-class BankSummary {
-  final QuestionBank bank;
-  final BankMembership? membership;
-
-  BankSummary({
-    required this.bank,
-    this.membership,
-  });
-
-  factory BankSummary.fromJson(Map<String, dynamic> json) {
-    return BankSummary(
-      bank: QuestionBank.fromJson(json['bank'] as Map<String, dynamic>),
-      membership: json['membership'] != null
-          ? BankMembership.fromJson(json['membership'] as Map<String, dynamic>)
-          : null,
-    );
-  }
-}
-
 class BankDetail {
   final QuestionBank bank;
   final BankMembership? membership;
@@ -41,23 +22,50 @@ class BankDetail {
   }
 }
 
+class PaginatedBanks {
+  final List<QuestionBank> results;
+  final int total;
+  final int page;
+  final int pages;
+
+  PaginatedBanks({
+    required this.results,
+    required this.total,
+    required this.page,
+    required this.pages,
+  });
+
+  factory PaginatedBanks.fromJson(Map<String, dynamic> json) {
+    return PaginatedBanks(
+      results: (json['results'] as List<dynamic>)
+          .map((e) => QuestionBank.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: json['total'] as int? ?? 0,
+      page: json['page'] as int? ?? 1,
+      pages: json['pages'] as int? ?? 1,
+    );
+  }
+}
+
 class BankService {
   BankService({required ApiClient apiClient}) : _apiClient = apiClient;
 
   final ApiClient _apiClient;
 
-  Future<List<BankSummary>> listBanks() {
-    return _apiClient.get<List<BankSummary>>(
+  /// GET /banks → returns flat QuestionBank[]
+  Future<List<QuestionBank>> listBanks() {
+    return _apiClient.get<List<QuestionBank>>(
       ApiConstants.banks,
       parser: (data) {
         final list = data as List<dynamic>;
         return list
-            .map((e) => BankSummary.fromJson(e as Map<String, dynamic>))
+            .map((e) => QuestionBank.fromJson(e as Map<String, dynamic>))
             .toList();
       },
     );
   }
 
+  /// GET /banks/:bankId → returns { bank, membership }
   Future<BankDetail> getBank(String bankId) {
     return _apiClient.get<BankDetail>(
       '${ApiConstants.banks}/$bankId',
@@ -65,6 +73,7 @@ class BankService {
     );
   }
 
+  /// POST /banks → returns flat QuestionBank
   Future<QuestionBank> createBank({
     required String name,
     String? description,
@@ -81,22 +90,20 @@ class BankService {
     );
   }
 
-  Future<List<QuestionBank>> searchBanks(String query) {
-    return _apiClient.get<List<QuestionBank>>(
+  /// GET /banks/search → returns { results, total, page, pages }
+  Future<PaginatedBanks> searchBanks(String query) {
+    return _apiClient.get<PaginatedBanks>(
       '${ApiConstants.banks}/search',
       queryParameters: {'q': query},
-      parser: (data) {
-        final list = data as List<dynamic>;
-        return list
-            .map((e) => QuestionBank.fromJson(e as Map<String, dynamic>))
-            .toList();
-      },
+      parser: (data) => PaginatedBanks.fromJson(data as Map<String, dynamic>),
     );
   }
 
-  Future<void> requestAccess(String bankId) {
-    return _apiClient.post<void>(
+  /// POST /banks/:bankId/request-access → returns flat BankMembership
+  Future<BankMembership> requestAccess(String bankId) {
+    return _apiClient.post<BankMembership>(
       '${ApiConstants.banks}/$bankId/request-access',
+      parser: (data) => BankMembership.fromJson(data as Map<String, dynamic>),
     );
   }
 }
