@@ -6,11 +6,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://YOUR_SERVER_IP:5000/api/:path*"
+      "destination": "http://159.223.169.35:3000/api/:path*"
     },
     {
       "source": "/health",
-      "destination": "https://YOUR_SERVER_IP:5000/health"
+      "destination": "http://159.223.169.35:3000/health"
     }
   ],
   "headers": [
@@ -33,7 +33,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://YOUR_SERVER_IP:5000",
+    "VITE_API_URL": "/api/v1",
     "VITE_APP_NAME": "SMART GRADING"
   }
 }
