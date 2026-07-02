@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   GraduationCap,
   FileText,
-  Send,
   Database,
   CheckSquare,
   Building2,
@@ -44,7 +43,6 @@ const NAV: Array<{ group: string; items: NavItem[] }> = [
     items: [
       { to: '/classes', label: 'Classes', roles: ['admin', 'school-admin', 'teacher'], icon: <GraduationCap size={iconSize} /> },
       { to: '/exams', label: 'Exams', roles: ['admin', 'school-admin', 'teacher'], icon: <FileText size={iconSize} /> },
-      { to: '/submissions', label: 'Submissions', roles: ['admin', 'school-admin', 'teacher'], icon: <Send size={iconSize} /> },
       { to: '/question-bank', label: 'Question Bank', roles: ['admin', 'school-admin', 'teacher'], icon: <Database size={iconSize} /> },
       { to: '/approval', label: 'Approval', roles: ['school-admin'], icon: <CheckSquare size={iconSize} /> },
       { to: '/admin/schools', label: 'Schools', roles: ['admin'], icon: <Building2 size={iconSize} /> },

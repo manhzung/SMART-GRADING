@@ -18,8 +18,7 @@ import ExamsPage from '../../pages/ExamsPage';
 import ExamDetailPage from '../../pages/ExamDetailPage';
 import CreateExamPage from '../../pages/CreateExamPage';
 import EditExamPage from '../../pages/EditExamPage';
-import SubmissionsPage from '../../pages/SubmissionsPage';
-import { SubmissionDetailRoute } from '../../components/submission/SubmissionDetailRoute';
+
 import ScanPage from '../../pages/ScanPage';
 import ProfilePage from '../../pages/ProfilePage';
 import QuestionBankPage from '../../pages/QuestionBankPage';
@@ -138,8 +137,7 @@ export default function AppRoutes() {
           <Route path="exams/new" element={<CreateExamPage />} />
           <Route path="exams/:id" element={<ExamDetailPage />} />
           <Route path="exams/:id/edit" element={<EditExamPage />} />
-          <Route path="submissions" element={<SubmissionsPage />} />
-          <Route path="submissions/:id" element={<SubmissionDetailRoute />} />
+
           <Route path="question-bank" element={<BankLandingPage />} />
           <Route path="question-bank/:bankId" element={<QuestionBankPage />} />
           <Route path="banks/:bankId/members" element={<BankMembersPage />} />
