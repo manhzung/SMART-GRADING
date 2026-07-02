@@ -27,7 +27,7 @@ const FEW_SHOT_EXAMPLES = [
       { id: 'D', content: '7', isCorrect: false },
     ],
     correctAnswer: 'B',
-    explanation: 'Đạo hàm của y = 2x + 1 là y\' = 2. Vậy tại x = 3, đạo hàm bằng 2.',
+    explanation: "Đạo hàm của y = 2x + 1 là y' = 2. Vậy tại x = 3, đạo hàm bằng 2.",
   },
 ];
 
@@ -35,12 +35,22 @@ class QuestionGenService {
   /**
    * Generate multiple-choice questions using GenAI with retry and caching
    */
-  async generateQuestions({ topicId, topicName, count, difficulty, requirements, gradeLevel, subjectId, createdBy, schoolId }) {
+  async generateQuestions({
+    topicId,
+    topicName,
+    count,
+    difficulty,
+    requirements,
+    gradeLevel,
+    subjectId,
+    createdBy,
+    schoolId,
+  }) {
     // Check cache first
     const cacheKey = this._getCacheKey(topicId, topicName, difficulty, requirements, count);
     const cached = this._getFromCache(cacheKey);
     if (cached) {
-      return cached.map(q => ({ ...q, createdBy, schoolId }));
+      return cached.map((q) => ({ ...q, createdBy, schoolId }));
     }
 
     const maxRetries = 3;
@@ -70,7 +80,7 @@ class QuestionGenService {
         lastError = new ApiError(500, 'AI returned empty questions list');
       } catch (error) {
         lastError = error;
-        
+
         // Don't retry on certain errors
         if (error.message?.includes('API_KEY') || error.message?.includes('quota')) {
           throw error;
@@ -89,7 +99,17 @@ class QuestionGenService {
   /**
    * Internal generation with structured prompt
    */
-  async _generateWithPrompt({ topicId, topicName, subjectId, schoolId, count, difficulty, requirements, gradeLevel, createdBy }) {
+  async _generateWithPrompt({
+    topicId,
+    topicName,
+    subjectId,
+    schoolId,
+    count,
+    difficulty,
+    requirements,
+    gradeLevel,
+    createdBy,
+  }) {
     const prompt = this.buildQuestionPrompt({
       count,
       difficulty,
@@ -317,7 +337,7 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
   parseQuestionsFromResponse(responseText) {
     // Clean up response - remove markdown code blocks if present
     let cleanText = responseText.trim();
-    
+
     // Strategy 1: Direct JSON parse
     try {
       const parsed = JSON.parse(cleanText);
@@ -325,7 +345,9 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
         const validated = this._validateAndNormalize(parsed);
         if (validated.length > 0) return validated;
       }
-    } catch { /* continue to next strategy */ }
+    } catch {
+      /* continue to next strategy */
+    }
 
     // Strategy 2: Extract from markdown code blocks
     const codeBlockMatch = cleanText.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -336,7 +358,9 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
           const validated = this._validateAndNormalize(parsed);
           if (validated.length > 0) return validated;
         }
-      } catch { /* continue */ }
+      } catch {
+        /* continue */
+      }
     }
 
     // Strategy 3: Find JSON array pattern anywhere
@@ -348,7 +372,9 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
           const validated = this._validateAndNormalize(parsed);
           if (validated.length > 0) return validated;
         }
-      } catch { /* continue */ }
+      } catch {
+        /* continue */
+      }
     }
 
     // Strategy 4: Try to extract questions from text format
@@ -365,15 +391,15 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
     if (!Array.isArray(questions)) return [];
 
     return questions
-      .filter(q => q && typeof q.content === 'string' && q.content.length > 0)
-      .filter(q => Array.isArray(q.options) && q.options.length === 4)
-      .map(q => {
+      .filter((q) => q && typeof q.content === 'string' && q.content.length > 0)
+      .filter((q) => Array.isArray(q.options) && q.options.length === 4)
+      .map((q) => {
         // Normalize options to always have A, B, C, D
         const normalizedOptions = this._normalizeOptions(q.options, q.correctAnswer);
-        
+
         // Find correct answer
         const correctId = this._getCorrectAnswerId(q, normalizedOptions);
-        
+
         return {
           content: q.content?.trim() || '',
           options: normalizedOptions,
@@ -381,7 +407,7 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
           explanation: q.explanation?.trim() || '',
         };
       })
-      .filter(q => q.content.length > 0 && q.correctAnswer);
+      .filter((q) => q.content.length > 0 && q.correctAnswer);
   }
 
   /**
@@ -389,8 +415,8 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
    */
   _normalizeOptions(options, correctAnswer) {
     const optionMap = new Map();
-    
-    options.forEach(opt => {
+
+    options.forEach((opt) => {
       const id = (opt.id || opt.letter || opt.key || '').toUpperCase();
       if (['A', 'B', 'C', 'D'].includes(id)) {
         optionMap.set(id, {
@@ -430,9 +456,7 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
     }
 
     // Find option marked as correct
-    const correctOption = question.options?.find(
-      o => o.isCorrect || o.isCorrectAnswer || o.correct
-    );
+    const correctOption = question.options?.find((o) => o.isCorrect || o.isCorrectAnswer || o.correct);
     if (correctOption) {
       const id = (correctOption.id || correctOption.letter || '').toUpperCase();
       if (['A', 'B', 'C', 'D'].includes(id)) {
@@ -449,7 +473,7 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
    */
   _extractFromText(text) {
     const questions = [];
-    
+
     // Pattern: Question content followed by options
     const questionPatterns = [
       /Câu\s*(\d+)[.):]\s*(.+?)(?=\s*[A-D][.):]\s|\s*$)/gi,
@@ -463,7 +487,7 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
 
     for (const line of lines) {
       const trimmed = line.trim();
-      
+
       // Check if this is an option
       const optionMatch = trimmed.match(/^([A-D])[.):]\s*(.+)/i);
       if (optionMatch) {
@@ -507,12 +531,9 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
    * Cache key generation
    */
   _getCacheKey(topicId, topicName, difficulty, requirements, count) {
-    const key = [
-      topicId || '',
-      (topicName || requirements || '').toLowerCase().trim(),
-      difficulty || '',
-      count || 5,
-    ].join('|');
+    const key = [topicId || '', (topicName || requirements || '').toLowerCase().trim(), difficulty || '', count || 5].join(
+      '|'
+    );
     return key;
   }
 
@@ -542,7 +563,7 @@ Hãy tạo ${count} câu hỏi và trả lời đúng định dạng JSON ở tr
    * Sleep helper for retry delay
    */
   _sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

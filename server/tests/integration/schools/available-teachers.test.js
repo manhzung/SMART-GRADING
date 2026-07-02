@@ -5,10 +5,7 @@ const app = require('../../../src/app');
 const setupTestDB = require('../../utils/setupTestDB');
 const { admin, teacherOne, teacherTwo, studentOne, insertUsers } = require('../../fixtures/user.fixture');
 const { schoolA, schoolB, insertSchools } = require('../../fixtures/school.fixture');
-const {
-  adminAccessToken,
-  teacherOneAccessToken,
-} = require('../../fixtures/token.fixture');
+const { adminAccessToken, teacherOneAccessToken } = require('../../fixtures/token.fixture');
 
 setupTestDB();
 
@@ -24,9 +21,7 @@ describe('GET /api/v1/schools/:schoolId/available-teachers', () => {
   });
 
   test('should return 401 if no access token', async () => {
-    await request(app)
-      .get(`/api/v1/schools/${schoolA._id.toString()}/available-teachers`)
-      .expect(httpStatus.UNAUTHORIZED);
+    await request(app).get(`/api/v1/schools/${schoolA._id.toString()}/available-teachers`).expect(httpStatus.UNAUTHORIZED);
   });
 
   test('should return 200 with all teachers in school for admin', async () => {
@@ -55,7 +50,11 @@ describe('GET /api/v1/schools/:schoolId/available-teachers', () => {
   test('should respect search query (search by email)', async () => {
     // Email is the deterministic field; faker name is random
     const res = await request(app)
-      .get(`/api/v1/schools/${schoolA._id.toString()}/available-teachers?search=${encodeURIComponent(teacherOne.email.split('@')[0])}`)
+      .get(
+        `/api/v1/schools/${schoolA._id.toString()}/available-teachers?search=${encodeURIComponent(
+          teacherOne.email.split('@')[0]
+        )}`
+      )
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .expect(httpStatus.OK);
 

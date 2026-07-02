@@ -34,19 +34,17 @@ const getDashboardStats = catchAsync(async (req, res) => {
 
   const schoolExamIds =
     effectiveClassIds &&
-      (await Exam.find({ classIds: { $in: effectiveClassIds } }).select('_id').lean()).map((e) => e._id);
+    (
+      await Exam.find({ classIds: { $in: effectiveClassIds } })
+        .select('_id')
+        .lean()
+    ).map((e) => e._id);
 
   const examFilter = effectiveClassIds ? { classIds: { $in: effectiveClassIds } } : {};
   const submissionFilter = effectiveClassIds ? { examId: { $in: schoolExamIds } } : {};
   const appealFilter = effectiveClassIds ? { examId: { $in: schoolExamIds } } : {};
 
-  const [
-    totalExams,
-    totalStudents,
-    totalSubmissions,
-    pendingAppeals,
-    publishedExams,
-  ] = await Promise.all([
+  const [totalExams, totalStudents, totalSubmissions, pendingAppeals, publishedExams] = await Promise.all([
     Exam.countDocuments(examFilter),
     User.countDocuments({
       role: 'student',
@@ -93,19 +91,14 @@ const getDashboardStats = catchAsync(async (req, res) => {
     {
       $addFields: {
         isPass: {
-          $gte: [
-            { $multiply: [{ $divide: ['$finalScore', '$totalScore'] }, 10] },
-            '$exam.passingScore',
-          ],
+          $gte: [{ $multiply: [{ $divide: ['$finalScore', '$totalScore'] }, 10] }, '$exam.passingScore'],
         },
       },
     },
     { $group: { _id: null, passCount: { $sum: { $cond: ['$isPass', 1, 0] } }, total: { $sum: 1 } } },
   ]);
 
-  const passRate = passRateResult[0]
-    ? Math.round((passRateResult[0].passCount / passRateResult[0].total) * 100)
-    : 0;
+  const passRate = passRateResult[0] ? Math.round((passRateResult[0].passCount / passRateResult[0].total) * 100) : 0;
 
   res.send({
     totalClasses,
@@ -191,10 +184,7 @@ const getAnalytics = catchAsync(async (req, res) => {
           $cond: {
             if: { $gt: [{ $size: '$submissions' }, 0] },
             then: {
-              $divide: [
-                { $sum: '$submissions.finalScore' },
-                { $sum: '$submissions.totalScore' },
-              ],
+              $divide: [{ $sum: '$submissions.finalScore' }, { $sum: '$submissions.totalScore' }],
             },
             else: 0,
           },
@@ -229,14 +219,7 @@ const getAnalytics = catchAsync(async (req, res) => {
     },
     {
       $addFields: {
-        grade:
-          '$scorePercent' >= 8.5
-            ? 'A'
-            : '$scorePercent' >= 7.0
-            ? 'B'
-            : '$scorePercent' >= 5.0
-            ? 'C'
-            : 'D',
+        grade: '$scorePercent' >= 8.5 ? 'A' : '$scorePercent' >= 7.0 ? 'B' : '$scorePercent' >= 5.0 ? 'C' : 'D',
       },
     },
     { $group: { _id: '$grade', count: { $sum: 1 } } },

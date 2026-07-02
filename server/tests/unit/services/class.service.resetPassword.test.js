@@ -2,16 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const ClassService = require('../../../src/services/class.service');
 const User = require('../../../src/models/user.model');
-const {
-  classA,
-  classIdA,
-  insertClasses,
-} = require('../../fixtures/class.fixture');
-const {
-  admin,
-  teacherOne,
-  insertUsers,
-} = require('../../fixtures/user.fixture');
+const { classA, classIdA, insertClasses } = require('../../fixtures/class.fixture');
+const { admin, teacherOne, insertUsers } = require('../../fixtures/user.fixture');
 const { schoolA, insertSchools } = require('../../fixtures/school.fixture');
 const setupTestDB = require('../../utils/setupTestDB');
 

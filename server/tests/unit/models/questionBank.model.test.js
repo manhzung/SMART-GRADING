@@ -16,9 +16,7 @@ describe('QuestionBank Model', () => {
 
   it('should enforce required name', async () => {
     const QuestionBank = require('../../../src/models/questionBank.model');
-    await expect(
-      QuestionBank.create({ type: 'personal', createdBy: new mongoose.Types.ObjectId() })
-    ).rejects.toThrow();
+    await expect(QuestionBank.create({ type: 'personal', createdBy: new mongoose.Types.ObjectId() })).rejects.toThrow();
   });
 
   it('should default type to personal and isActive to true', async () => {

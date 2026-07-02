@@ -96,7 +96,7 @@ describe('AMC Source Generator - Shuffle Logic', () => {
     it('should produce deterministic order for same version code', () => {
       const r1 = shuffleQuestionsForVersion(sampleQuestions, '101');
       const r2 = shuffleQuestionsForVersion(sampleQuestions, '101');
-      expect(r1.map(q => q._id)).toEqual(r2.map(q => q._id));
+      expect(r1.map((q) => q._id)).toEqual(r2.map((q) => q._id));
     });
 
     it('should produce different orders for different version codes', () => {
@@ -116,7 +116,7 @@ describe('AMC Source Generator - Shuffle Logic', () => {
       const r103 = shuffleQuestionsForVersion(largeSample, '103');
       const r104 = shuffleQuestionsForVersion(largeSample, '104');
 
-      const orders = [r101, r102, r103, r104].map(r => r.map(q => q._id).join(','));
+      const orders = [r101, r102, r103, r104].map((r) => r.map((q) => q._id).join(','));
       const uniqueOrders = new Set(orders);
       // With 10 questions, 4 versions should all be different
       expect(uniqueOrders.size).toBe(4);
@@ -131,8 +131,8 @@ describe('AMC Source Generator - Shuffle Logic', () => {
       // For each question, options should be shuffled but content preserved
       result.forEach((sq, idx) => {
         const origOpts = sampleQuestions[idx].options;
-        const shuffledContents = sq.options.map(o => o.content).sort();
-        const origContents = origOpts.map(o => o.content).sort();
+        const shuffledContents = sq.options.map((o) => o.content).sort();
+        const origContents = origOpts.map((o) => o.content).sort();
         expect(shuffledContents).toEqual(origContents);
       });
     });
@@ -142,9 +142,9 @@ describe('AMC Source Generator - Shuffle Logic', () => {
 
       // For each question, exactly one option should be isCorrect: true
       result.forEach((sq, idx) => {
-        const origQ = sampleQuestions.find(q => q._id === sq._id);
-        const origCorrectContent = origQ.options.find(o => o.isCorrect).content;
-        const newCorrect = sq.options.find(o => o.isCorrect);
+        const origQ = sampleQuestions.find((q) => q._id === sq._id);
+        const origCorrectContent = origQ.options.find((o) => o.isCorrect).content;
+        const newCorrect = sq.options.find((o) => o.isCorrect);
         expect(newCorrect).toBeDefined();
         expect(newCorrect.content).toBe(origCorrectContent);
       });
@@ -157,7 +157,7 @@ describe('AMC Source Generator - Shuffle Logic', () => {
       });
 
       // Order should match input
-      expect(result.map(q => q._id)).toEqual(['q1', 'q2', 'q3']);
+      expect(result.map((q) => q._id)).toEqual(['q1', 'q2', 'q3']);
     });
 
     it('should respect shuffleOptions: false', () => {
@@ -167,10 +167,8 @@ describe('AMC Source Generator - Shuffle Logic', () => {
       });
 
       result.forEach((sq, idx) => {
-        const origQ = sampleQuestions.find(q => q._id === sq._id);
-        expect(sq.options.map(o => o.id)).toEqual(
-          origQ.options.map(o => o.id)
-        );
+        const origQ = sampleQuestions.find((q) => q._id === sq._id);
+        expect(sq.options.map((o) => o.id)).toEqual(origQ.options.map((o) => o.id));
       });
     });
   });

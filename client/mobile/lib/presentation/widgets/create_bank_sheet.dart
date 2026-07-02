@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/network/bank_service.dart';
 import '../../domain/entities/question_bank.entity.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_state.dart';
 
 class CreateBankSheet extends StatefulWidget {
   final void Function(QuestionBank bank)? onCreated;
@@ -20,6 +22,22 @@ class _CreateBankSheetState extends State<CreateBankSheet> {
   bool _isSubmitting = false;
 
   BankService get _bankService => GetIt.instance<BankService>();
+
+  bool get _isTeacher {
+    final authState = context.watch<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      return authState.user.role == 'teacher';
+    }
+    return false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isTeacher) {
+      _selectedType = 'personal';
+    }
+  }
 
   @override
   void dispose() {
@@ -155,6 +173,7 @@ class _CreateBankSheetState extends State<CreateBankSheet> {
                       'personal',
                       'Personal',
                       Icons.person_outline,
+                      disabled: _isTeacher,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -163,10 +182,19 @@ class _CreateBankSheetState extends State<CreateBankSheet> {
                       'school',
                       'School',
                       Icons.school_outlined,
+                      disabled: _isTeacher,
                     ),
                   ),
                 ],
               ),
+              if (_isTeacher)
+                const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: Text(
+                    'Teachers can only create personal banks. School banks require a school-admin owner.',
+                    style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                  ),
+                ),
               const SizedBox(height: 24),
 
               Row(
@@ -222,10 +250,10 @@ class _CreateBankSheetState extends State<CreateBankSheet> {
     );
   }
 
-  Widget _buildTypeOption(String value, String label, IconData icon) {
+  Widget _buildTypeOption(String value, String label, IconData icon, {bool disabled = false}) {
     final isSelected = _selectedType == value;
     return GestureDetector(
-      onTap: () => setState(() => _selectedType = value),
+      onTap: disabled ? null : () => setState(() => _selectedType = value),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -245,9 +273,11 @@ class _CreateBankSheetState extends State<CreateBankSheet> {
             Icon(
               icon,
               size: 28,
-              color: isSelected
-                  ? const Color(0xFF1D4ED8)
-                  : const Color(0xFF64748B),
+              color: disabled
+                  ? const Color(0xFFCBD5E1)
+                  : isSelected
+                      ? const Color(0xFF1D4ED8)
+                      : const Color(0xFF64748B),
             ),
             const SizedBox(height: 8),
             Text(
@@ -255,9 +285,11 @@ class _CreateBankSheetState extends State<CreateBankSheet> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected
-                    ? const Color(0xFF1D4ED8)
-                    : const Color(0xFF64748B),
+                color: disabled
+                    ? const Color(0xFFCBD5E1)
+                    : isSelected
+                        ? const Color(0xFF1D4ED8)
+                        : const Color(0xFF64748B),
               ),
             ),
           ],

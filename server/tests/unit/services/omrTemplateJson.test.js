@@ -7,9 +7,26 @@ describe('omrTemplateJson.service - snapshot tests', () => {
       pageConfig: { paperSize: 'A4', margins: { top: 15, bottom: 15, left: 15, right: 15 } },
       zones: {
         header: { enabled: true, height: 40 },
-        studentCode: { enabled: true, digits: 3, digitConfig: { bubbleSize: { width: 2.5, height: 2.5 }, bubbleSpacing: { horizontal: 1, vertical: 1 } } },
-        versionCode: { enabled: true, digits: 3, digitConfig: { bubbleSize: { width: 2, height: 2 }, bubbleSpacing: { horizontal: 0.5, vertical: 0.5 } } },
-        answerArea: { enabled: true, startPosition: { x: 20, y: 90 }, gridConfig: { totalQuestions: 30, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8, betweenQuestions: 3 } }, questionNumberConfig: { enabled: true, width: 8 } } },
+        studentCode: {
+          enabled: true,
+          digits: 3,
+          digitConfig: { bubbleSize: { width: 2.5, height: 2.5 }, bubbleSpacing: { horizontal: 1, vertical: 1 } },
+        },
+        versionCode: {
+          enabled: true,
+          digits: 3,
+          digitConfig: { bubbleSize: { width: 2, height: 2 }, bubbleSpacing: { horizontal: 0.5, vertical: 0.5 } },
+        },
+        answerArea: {
+          enabled: true,
+          startPosition: { x: 20, y: 90 },
+          gridConfig: {
+            totalQuestions: 30,
+            questionsPerRow: 5,
+            bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8, betweenQuestions: 3 } },
+            questionNumberConfig: { enabled: true, width: 8 },
+          },
+        },
         footer: { enabled: true, height: 12 },
       },
     };
@@ -26,9 +43,26 @@ describe('omrTemplateJson.service - snapshot tests', () => {
       pageConfig: { paperSize: 'A5' },
       zones: {
         header: { enabled: false },
-        studentCode: { enabled: true, digits: 2, digitConfig: { bubbleSize: { width: 3, height: 3 }, bubbleSpacing: { horizontal: 1, vertical: 1 } } },
-        versionCode: { enabled: true, digits: 2, digitConfig: { bubbleSize: { width: 3, height: 3 }, bubbleSpacing: { horizontal: 1, vertical: 1 } } },
-        answerArea: { enabled: true, startPosition: { x: 20, y: 50 }, gridConfig: { totalQuestions: 15, questionsPerRow: 5, bubbleConfig: { width: 3, height: 3, spacing: { betweenOptions: 1, betweenRows: 4, betweenQuestions: 2 } }, questionNumberConfig: { enabled: false } } },
+        studentCode: {
+          enabled: true,
+          digits: 2,
+          digitConfig: { bubbleSize: { width: 3, height: 3 }, bubbleSpacing: { horizontal: 1, vertical: 1 } },
+        },
+        versionCode: {
+          enabled: true,
+          digits: 2,
+          digitConfig: { bubbleSize: { width: 3, height: 3 }, bubbleSpacing: { horizontal: 1, vertical: 1 } },
+        },
+        answerArea: {
+          enabled: true,
+          startPosition: { x: 20, y: 50 },
+          gridConfig: {
+            totalQuestions: 15,
+            questionsPerRow: 5,
+            bubbleConfig: { width: 3, height: 3, spacing: { betweenOptions: 1, betweenRows: 4, betweenQuestions: 2 } },
+            questionNumberConfig: { enabled: false },
+          },
+        },
         footer: { enabled: false },
       },
     };
@@ -46,7 +80,16 @@ describe('Layout computation - Y flow', () => {
         header: { enabled: true, height: 40 },
         studentCode: { enabled: false },
         versionCode: { enabled: false },
-        answerArea: { enabled: true, startPosition: { x: 20, y: 60 }, gridConfig: { totalQuestions: 5, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } }, questionNumberConfig: { enabled: false } } },
+        answerArea: {
+          enabled: true,
+          startPosition: { x: 20, y: 60 },
+          gridConfig: {
+            totalQuestions: 5,
+            questionsPerRow: 5,
+            bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } },
+            questionNumberConfig: { enabled: false },
+          },
+        },
       },
     };
     const result = convertTemplate(template);
@@ -62,9 +105,22 @@ describe('Layout computation - Y flow', () => {
       pageConfig: { paperSize: 'A4', margins: { top: 15 } },
       zones: {
         header: { enabled: true, height: 40 },
-        studentCode: { enabled: true, digits: 3, digitConfig: { bubbleSize: { width: 2.5, height: 2.5 }, bubbleSpacing: { horizontal: 1, vertical: 1 } } },
+        studentCode: {
+          enabled: true,
+          digits: 3,
+          digitConfig: { bubbleSize: { width: 2.5, height: 2.5 }, bubbleSpacing: { horizontal: 1, vertical: 1 } },
+        },
         versionCode: { enabled: false },
-        answerArea: { enabled: true, startPosition: { x: 20, y: 90 }, gridConfig: { totalQuestions: 5, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } }, questionNumberConfig: { enabled: false } } },
+        answerArea: {
+          enabled: true,
+          startPosition: { x: 20, y: 90 },
+          gridConfig: {
+            totalQuestions: 5,
+            questionsPerRow: 5,
+            bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } },
+            questionNumberConfig: { enabled: false },
+          },
+        },
       },
     };
     const result = convertTemplate(template);
@@ -118,7 +174,16 @@ describe('Answer area - field block generation', () => {
         header: { enabled: false },
         studentCode: { enabled: false },
         versionCode: { enabled: false },
-        answerArea: { enabled: true, startPosition: { x: 20 }, gridConfig: { totalQuestions: 50, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8, betweenQuestions: 3 } }, questionNumberConfig: { width: 8 } } },
+        answerArea: {
+          enabled: true,
+          startPosition: { x: 20 },
+          gridConfig: {
+            totalQuestions: 50,
+            questionsPerRow: 5,
+            bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8, betweenQuestions: 3 } },
+            questionNumberConfig: { width: 8 },
+          },
+        },
       },
     };
     const result = convertTemplate(template);
@@ -136,7 +201,15 @@ describe('Answer area - field block generation', () => {
       pageConfig: { paperSize: 'A4' },
       zones: {
         header: { enabled: false },
-        answerArea: { enabled: true, gridConfig: { totalQuestions: 5, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8, betweenQuestions: 3 } }, questionNumberConfig: { width: 8 } } },
+        answerArea: {
+          enabled: true,
+          gridConfig: {
+            totalQuestions: 5,
+            questionsPerRow: 5,
+            bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8, betweenQuestions: 3 } },
+            questionNumberConfig: { width: 8 },
+          },
+        },
       },
     };
     const result = convertTemplate(template);
@@ -150,7 +223,15 @@ describe('Answer area - field block generation', () => {
       pageConfig: { paperSize: 'A4' },
       zones: {
         header: { enabled: false },
-        answerArea: { enabled: true, gridConfig: { totalQuestions: 5, questionsPerRow: 5, bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } }, questionNumberConfig: { enabled: false } } },
+        answerArea: {
+          enabled: true,
+          gridConfig: {
+            totalQuestions: 5,
+            questionsPerRow: 5,
+            bubbleConfig: { width: 4, height: 4, spacing: { betweenOptions: 1, betweenRows: 8 } },
+            questionNumberConfig: { enabled: false },
+          },
+        },
       },
     };
     const result = convertTemplate(template);

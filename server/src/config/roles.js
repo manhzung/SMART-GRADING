@@ -31,13 +31,7 @@ const allRoles = {
     'viewReports',
     'getUsers',
   ],
-  student: [
-    'viewExams',
-    'submitAppeals',
-    'viewScores',
-    'viewAIReports',
-    'chatWithAI',
-  ],
+  student: ['viewExams', 'submitAppeals', 'viewScores', 'viewAIReports', 'chatWithAI'],
 };
 
 const roles = Object.keys(allRoles);

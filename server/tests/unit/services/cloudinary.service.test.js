@@ -65,7 +65,9 @@ describe('CloudinaryService.generateUploadSignature', () => {
     try {
       expect(() =>
         CloudinaryService.generateUploadSignature({
-          userId: 'u1', examId: 'e1', type: 'original',
+          userId: 'u1',
+          examId: 'e1',
+          type: 'original',
         })
       ).toThrow(/Cloudinary/);
     } finally {
@@ -122,15 +124,19 @@ describe('CloudinaryService.uploadBuffer', () => {
   });
 
   it('retries on transient failure then succeeds', async () => {
-    mockUploader.upload
-      .mockRejectedValueOnce({ http_code: 500, message: 'boom' })
-      .mockResolvedValueOnce({
-        public_id: 'p', secure_url: 'https://x/y', url: 'http://x/y',
-        width: 1, height: 1, bytes: 1, format: 'jpg',
-      });
+    mockUploader.upload.mockRejectedValueOnce({ http_code: 500, message: 'boom' }).mockResolvedValueOnce({
+      public_id: 'p',
+      secure_url: 'https://x/y',
+      url: 'http://x/y',
+      width: 1,
+      height: 1,
+      bytes: 1,
+      format: 'jpg',
+    });
 
     const result = await CloudinaryService.uploadBuffer(Buffer.from('x'), {
-      folder: 'f', publicId: 'p',
+      folder: 'f',
+      publicId: 'p',
     });
     expect(result.publicId).toBe('p');
     expect(mockUploader.upload).toHaveBeenCalledTimes(2);
@@ -138,9 +144,9 @@ describe('CloudinaryService.uploadBuffer', () => {
 
   it('throws CloudinaryError after exhausting retries', async () => {
     mockUploader.upload.mockRejectedValue({ http_code: 500, message: 'dead' });
-    await expect(
-      CloudinaryService.uploadBuffer(Buffer.from('x'), { folder: 'f', publicId: 'p' })
-    ).rejects.toThrow(/Cloudinary/);
+    await expect(CloudinaryService.uploadBuffer(Buffer.from('x'), { folder: 'f', publicId: 'p' })).rejects.toThrow(
+      /Cloudinary/
+    );
     expect(mockUploader.upload).toHaveBeenCalledTimes(3);
   });
 });
@@ -160,12 +166,18 @@ describe('CloudinaryService.uploadBase64', () => {
   it('strips data URI prefix and uploads', async () => {
     mockUploader.upload.mockReset();
     mockUploader.upload.mockResolvedValueOnce({
-      public_id: 'p', secure_url: 'https://x/y', url: 'http://x/y',
-      width: 1, height: 1, bytes: 1, format: 'jpg',
+      public_id: 'p',
+      secure_url: 'https://x/y',
+      url: 'http://x/y',
+      width: 1,
+      height: 1,
+      bytes: 1,
+      format: 'jpg',
     });
     const dataUri = 'data:image/jpeg;base64,/9j/abc';
     const result = await CloudinaryService.uploadBase64(dataUri, {
-      folder: 'f', publicId: 'p',
+      folder: 'f',
+      publicId: 'p',
     });
     expect(result.publicId).toBe('p');
     const callArg = mockUploader.upload.mock.calls[0][0];

@@ -93,17 +93,13 @@ const remove = catchAsync(async (req, res) => {
 
 const attachImage = catchAsync(async (req, res) => {
   const auditContext = { ip: req.ip, userAgent: req.headers['user-agent'] };
-  const submission = await submissionService.attachImage(
-    req.params.id, req.user.id, req.body, auditContext
-  );
+  const submission = await submissionService.attachImage(req.params.id, req.user.id, req.body, auditContext);
   res.send(submission);
 });
 
 const deleteImage = catchAsync(async (req, res) => {
   const auditContext = { ip: req.ip, userAgent: req.headers['user-agent'] };
-  const { submission } = await submissionService.deleteImage(
-    req.params.id, req.user.id, req.params.type, auditContext
-  );
+  const { submission } = await submissionService.deleteImage(req.params.id, req.user.id, req.params.type, auditContext);
   res.send(submission);
 });
 

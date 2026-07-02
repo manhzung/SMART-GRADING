@@ -10,14 +10,7 @@ const uploadAuditLogSchema = mongoose.Schema(
     },
     action: {
       type: String,
-      enum: [
-        'signature_request',
-        'upload_success',
-        'upload_failed',
-        'attach_image',
-        'delete_image',
-        'auto_cleanup',
-      ],
+      enum: ['signature_request', 'upload_success', 'upload_failed', 'attach_image', 'delete_image', 'auto_cleanup'],
       required: true,
     },
     submissionId: {

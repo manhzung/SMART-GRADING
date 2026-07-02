@@ -83,39 +83,48 @@ const submissionAnswerSchema = new mongoose.Schema({
   omrData: omrDataSchema,
 });
 
-const imageEntrySchema = new mongoose.Schema({
-  publicId: { type: String, index: true },
-  url: String,
-  width: Number,
-  height: Number,
-  bytes: Number,
-  format: {
-    type: String,
-    enum: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
+const imageEntrySchema = new mongoose.Schema(
+  {
+    publicId: { type: String, index: true },
+    url: String,
+    width: Number,
+    height: Number,
+    bytes: Number,
+    format: {
+      type: String,
+      enum: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
+    },
+    dpi: Number,
+    uploadedAt: { type: Date, default: Date.now },
   },
-  dpi: Number,
-  uploadedAt: { type: Date, default: Date.now },
-}, { _id: false });
+  { _id: false }
+);
 
-const annotatedMarkerSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ['correct', 'incorrect', 'double_fill', 'empty'],
+const annotatedMarkerSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ['correct', 'incorrect', 'double_fill', 'empty'],
+    },
+    x: Number,
+    y: Number,
+    radius: Number,
+    color: String,
   },
-  x: Number,
-  y: Number,
-  radius: Number,
-  color: String,
-}, { _id: false });
+  { _id: false }
+);
 
-const imageSchema = new mongoose.Schema({
-  original: imageEntrySchema,
-  preprocessed: imageEntrySchema,
-  annotated: {
-    ...imageEntrySchema.obj,
-    markers: [annotatedMarkerSchema],
+const imageSchema = new mongoose.Schema(
+  {
+    original: imageEntrySchema,
+    preprocessed: imageEntrySchema,
+    annotated: {
+      ...imageEntrySchema.obj,
+      markers: [annotatedMarkerSchema],
+    },
   },
-}, { _id: false });
+  { _id: false }
+);
 
 const scanMetadataSchema = new mongoose.Schema({
   deviceInfo: {
@@ -215,14 +224,7 @@ const submissionSchema = mongoose.Schema(
     scanMetadata: scanMetadataSchema,
     status: {
       type: String,
-      enum: [
-        'pending',
-        'scanning',
-        'scanned',
-        'manual_review',
-        'completed',
-        'appealed',
-      ],
+      enum: ['pending', 'scanning', 'scanned', 'manual_review', 'completed', 'appealed'],
       default: 'pending',
     },
     omrSummary: omrSummarySchema,

@@ -1,19 +1,19 @@
 /**
  * AMC Coordinate Calculator
- * 
+ *
  * Calculates bubble positions based on AMC TeX layout.
  * AMC uses specific positioning formulas for bubbles.
- * 
+ *
  * Format output: calage.xy format
- * 
+ *
  * Coordinate system:
  * - PDF points (pt) - 72 points per inch
  * - Y increases from top to bottom (PDF convention)
  * - sp (scaled points) = 1/65536 pt
  */
 
-const PAGE_WIDTH_PT = 597.50787;  // A4 width in points
-const PAGE_HEIGHT_PT = 845.04684;  // A4 height in points
+const PAGE_WIDTH_PT = 597.50787; // A4 width in points
+const PAGE_HEIGHT_PT = 845.04684; // A4 height in points
 
 /**
  * Convert points to scaled points (sp)
@@ -32,7 +32,7 @@ function spToPt(sp) {
 /**
  * AMC bubble sizing (standard)
  */
-const BUBBLE_SIZE_PT = 15;  // Standard bubble size
+const BUBBLE_SIZE_PT = 15; // Standard bubble size
 
 /**
  * Calculate student ID bubble positions
@@ -40,15 +40,15 @@ const BUBBLE_SIZE_PT = 15;  // Standard bubble size
  */
 function calculateStudentIdPositions(config = {}) {
   const {
-    startX = 80,      // Starting X position in pt
-    startY = 80,      // Starting Y position in pt (from top)
-    numDigits = 7,    // Number of student ID digits
+    startX = 80, // Starting X position in pt
+    startY = 80, // Starting Y position in pt (from top)
+    numDigits = 7, // Number of student ID digits
     digitSpacing = 20, // Spacing between digits
-    digitWidth = 15,  // Width of each digit bubble
+    digitWidth = 15, // Width of each digit bubble
   } = config;
 
   const positions = [];
-  
+
   for (let digit = 1; digit <= numDigits; digit++) {
     const x = startX + (digit - 1) * digitSpacing;
     // Each digit bubble has 2 tracepos entries (top-left and bottom-right)
@@ -60,7 +60,7 @@ function calculateStudentIdPositions(config = {}) {
       y2: ptToSp(startY + BUBBLE_SIZE_PT),
     });
   }
-  
+
   return positions;
 }
 
@@ -69,15 +69,15 @@ function calculateStudentIdPositions(config = {}) {
  */
 function calculateVersionPositions(config = {}) {
   const {
-    startX = 220,     // Starting X position in pt
-    startY = 80,      // Starting Y position in pt (from top)
-    numDigits = 2,    // Number of version digits
+    startX = 220, // Starting X position in pt
+    startY = 80, // Starting Y position in pt (from top)
+    numDigits = 2, // Number of version digits
     digitSpacing = 20,
     digitWidth = 15,
   } = config;
 
   const positions = [];
-  
+
   for (let digit = 1; digit <= numDigits; digit++) {
     const x = startX + (digit - 1) * digitSpacing;
     positions.push({
@@ -88,36 +88,36 @@ function calculateVersionPositions(config = {}) {
       y2: ptToSp(startY + BUBBLE_SIZE_PT),
     });
   }
-  
+
   return positions;
 }
 
 /**
  * Calculate question bubble positions
- * 
+ *
  * IMPORTANT: The .calage.xy format stores Y ALREADY FLIPPED (from PDF origin to image origin)
  * So when generating calage.xy, we should store y_flipped = pageHeight - y_physical
- * 
+ *
  * For \AMCcodeGrid (grid horizontal): A, B, C, D are on the SAME ROW
  * Layout: [Q#] [A] [B] [C] [D]
  * Each question takes ~1 row height vertically
  */
 function calculateQuestionPositions(config = {}) {
   const {
-    startX = 80,       // Left margin
-    startY = 200,       // Starting Y physical position (top of page area)
-    numColumns = 3,    // Number of columns (AMC multicols)
-    columnWidth = 170,   // Width of each column
-    optionsSpacing = 25,  // Horizontal spacing between A-B-C-D bubbles
+    startX = 80, // Left margin
+    startY = 200, // Starting Y physical position (top of page area)
+    numColumns = 3, // Number of columns (AMC multicols)
+    columnWidth = 170, // Width of each column
+    optionsSpacing = 25, // Horizontal spacing between A-B-C-D bubbles
     numQuestions = 10,
-    numOptions = 4,      // A, B, C, D options
+    numOptions = 4, // A, B, C, D options
     questionSpacing = 20, // Vertical spacing between questions (1 row per question for grid layout)
     questionsPerColumn = 5, // Questions per column (controlled by \columnbreak)
-    pageHeight = PAGE_HEIGHT_PT,  // A4 page height
+    pageHeight = PAGE_HEIGHT_PT, // A4 page height
   } = config;
 
   const positions = [];
-  
+
   // With \AMCcodeGrid (horizontal grid): A, B, C, D on same row
   // Layout: [Q#] [A] [B] [C] [D]
   // With \columnbreak every 5 questions:
@@ -131,20 +131,20 @@ function calculateQuestionPositions(config = {}) {
     const col = Math.floor((q - 1) / questionsPerColumn);
     // Row within column (0-indexed)
     const rowInCol = (q - 1) % questionsPerColumn;
-    
+
     // Base X for this question
     const baseX = startX + col * columnWidth;
     // Y position for this row
     const rowY = startY + rowInCol * questionSpacing;
-    
+
     for (let optIdx = 0; optIdx < numOptions; optIdx++) {
       const option = options[optIdx];
       // A (optIdx=0) at left, D (optIdx=3) at right
       const bubbleX = baseX + optIdx * optionsSpacing;
-      
+
       // Flip Y for calage.xy: y_flipped = pageHeight - physicalY - bubbleHeight
       const flippedY = pageHeight - rowY - BUBBLE_SIZE_PT;
-      
+
       positions.push({
         label: `1/1:case:q${q}:1,${optIdx + 1}`,
         x1: ptToSp(bubbleX),
@@ -154,7 +154,7 @@ function calculateQuestionPositions(config = {}) {
       });
     }
   }
-  
+
   return positions;
 }
 
@@ -163,7 +163,7 @@ function calculateQuestionPositions(config = {}) {
  */
 function calculateCornerMarkers(config = {}) {
   const {
-    margin = 20,  // Margin from page edge
+    margin = 20, // Margin from page edge
   } = config;
 
   return [
@@ -174,7 +174,13 @@ function calculateCornerMarkers(config = {}) {
     // Bottom-left
     { label: '1/1:positionBG', x1: 0, y1: ptToSp(PAGE_HEIGHT_PT - margin), x2: ptToSp(margin), y2: ptToSp(PAGE_HEIGHT_PT) },
     // Bottom-right
-    { label: '1/1:positionBD', x1: ptToSp(PAGE_WIDTH_PT - margin), y1: ptToSp(PAGE_HEIGHT_PT - margin), x2: ptToSp(PAGE_WIDTH_PT), y2: ptToSp(PAGE_HEIGHT_PT) },
+    {
+      label: '1/1:positionBD',
+      x1: ptToSp(PAGE_WIDTH_PT - margin),
+      y1: ptToSp(PAGE_HEIGHT_PT - margin),
+      x2: ptToSp(PAGE_WIDTH_PT),
+      y2: ptToSp(PAGE_HEIGHT_PT),
+    },
   ];
 }
 

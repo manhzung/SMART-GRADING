@@ -10,9 +10,7 @@ router
   .route('/exam/:examId/generate')
   .post(auth('manageExams'), validate(reportValidation.generateExamReport), reportController.generateExamReport);
 
-router
-  .route('/exam/:examId')
-  .get(auth(), validate(reportValidation.getExamReport), reportController.getExamReport);
+router.route('/exam/:examId').get(auth(), validate(reportValidation.getExamReport), reportController.getExamReport);
 
 router
   .route('/exam/:examId/export')

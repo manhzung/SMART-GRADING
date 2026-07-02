@@ -398,7 +398,10 @@ describe('Auth routes', () => {
       const resetPasswordToken = tokenService.generateToken(userOne._id, expires, tokenTypes.RESET_PASSWORD);
       await tokenService.saveToken(resetPasswordToken, userOne._id, expires, tokenTypes.RESET_PASSWORD);
 
-      await request(app).post('/api/v1/auth/reset-password').query({ token: resetPasswordToken }).expect(httpStatus.BAD_REQUEST);
+      await request(app)
+        .post('/api/v1/auth/reset-password')
+        .query({ token: resetPasswordToken })
+        .expect(httpStatus.BAD_REQUEST);
 
       await request(app)
         .post('/api/v1/auth/reset-password')
@@ -455,10 +458,7 @@ describe('Auth routes', () => {
       const verifyEmailToken = tokenService.generateToken(userOne._id, expires);
       await tokenService.saveToken(verifyEmailToken, userOne._id, expires, tokenTypes.VERIFY_EMAIL);
 
-      await request(app)
-        .get('/api/v1/auth/verify-email')
-        .query({ token: verifyEmailToken })
-        .expect(httpStatus.OK);
+      await request(app).get('/api/v1/auth/verify-email').query({ token: verifyEmailToken }).expect(httpStatus.OK);
 
       const dbUser = await User.findById(userOne._id);
 
@@ -483,11 +483,7 @@ describe('Auth routes', () => {
       const verifyEmailToken = tokenService.generateToken(userOne._id, expires);
       await tokenService.saveToken(verifyEmailToken, userOne._id, expires, tokenTypes.VERIFY_EMAIL, true);
 
-      await request(app)
-        .get('/api/v1/auth/verify-email')
-        .query({ token: verifyEmailToken })
-        .send()
-        .expect(httpStatus.OK);
+      await request(app).get('/api/v1/auth/verify-email').query({ token: verifyEmailToken }).send().expect(httpStatus.OK);
     });
 
     test('should return 200 if verify email token is expired (fallback decodes JWT)', async () => {
@@ -496,11 +492,7 @@ describe('Auth routes', () => {
       const verifyEmailToken = tokenService.generateToken(userOne._id, expires);
       await tokenService.saveToken(verifyEmailToken, userOne._id, expires, tokenTypes.VERIFY_EMAIL);
 
-      await request(app)
-        .get('/api/v1/auth/verify-email')
-        .query({ token: verifyEmailToken })
-        .send()
-        .expect(httpStatus.OK);
+      await request(app).get('/api/v1/auth/verify-email').query({ token: verifyEmailToken }).send().expect(httpStatus.OK);
     });
 
     test('should return 401 if user is not found', async () => {

@@ -85,12 +85,7 @@ describe('AIReportService', () => {
     });
 
     it('should distribute scores into ranges', () => {
-      const scores = [
-        { percentage: 30 },
-        { percentage: 50 },
-        { percentage: 70 },
-        { percentage: 90 },
-      ];
+      const scores = [{ percentage: 30 }, { percentage: 50 }, { percentage: 70 }, { percentage: 90 }];
       const dist = aiReportService.getScoreDistribution(scores);
       expect(dist).toHaveLength(4);
       expect(dist.find((d) => d.range === '0-4').count).toBe(1);

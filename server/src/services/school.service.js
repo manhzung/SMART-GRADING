@@ -93,7 +93,9 @@ class SchoolService {
 
     // 5. Add search filter (case-insensitive, partial match on name/email/teacherCode)
     if (query.search && String(query.search).trim().length > 0) {
-      const escaped = String(query.search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escaped = String(query.search)
+        .trim()
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
         { name: { $regex: escaped, $options: 'i' } },
         { teacherCode: { $regex: escaped, $options: 'i' } },
@@ -103,11 +105,7 @@ class SchoolService {
 
     // 6. Query with select to limit fields
     const [results, total] = await Promise.all([
-      User.find(filter)
-        .select('name email teacherCode avatarUrl isActive')
-        .sort({ name: 1 })
-        .skip(skip)
-        .limit(limit),
+      User.find(filter).select('name email teacherCode avatarUrl isActive').sort({ name: 1 }).skip(skip).limit(limit),
       User.countDocuments(filter),
     ]);
 

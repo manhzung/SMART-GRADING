@@ -95,12 +95,7 @@ const updateStudent = catchAsync(async (req, res) => {
 
 const resetStudentPassword = catchAsync(async (req, res) => {
   const { password } = req.body;
-  const result = await classService.resetStudentPassword(
-    req.params.id,
-    req.params.studentId,
-    password,
-    req.user
-  );
+  const result = await classService.resetStudentPassword(req.params.id, req.params.studentId, password, req.user);
   res.send(result);
 });
 

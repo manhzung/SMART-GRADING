@@ -33,18 +33,14 @@ class AmcService {
     const envCheck = await amcRunner.validateEnvironment();
     if (!envCheck.isValid) {
       throw new Error(
-        `AMC environment not ready. Missing: ${
-          Object.entries(envCheck.tools)
-            .filter(([, v]) => !v)
-            .map(([k]) => k)
-            .join(', ')
-        }`
+        `AMC environment not ready. Missing: ${Object.entries(envCheck.tools)
+          .filter(([, v]) => !v)
+          .map(([k]) => k)
+          .join(', ')}`
       );
     }
 
-    const exam = await Exam.findById(examId)
-      .populate('primaryClassId', 'name')
-      .populate('questionIds');
+    const exam = await Exam.findById(examId).populate('primaryClassId', 'name').populate('questionIds');
 
     if (!exam) {
       throw new Error(`Exam ${examId} not found`);

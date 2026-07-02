@@ -1,18 +1,7 @@
 const mongoose = require('mongoose');
 const ClassService = require('../../../src/services/class.service');
-const {
-  classA,
-  classB,
-  classIdA,
-  insertClasses,
-} = require('../../fixtures/class.fixture');
-const {
-  admin,
-  teacherOne,
-  teacherTwo,
-  studentOne,
-  insertUsers,
-} = require('../../fixtures/user.fixture');
+const { classA, classB, classIdA, insertClasses } = require('../../fixtures/class.fixture');
+const { admin, teacherOne, teacherTwo, studentOne, insertUsers } = require('../../fixtures/user.fixture');
 const { schoolA, insertSchools } = require('../../fixtures/school.fixture');
 const setupTestDB = require('../../utils/setupTestDB');
 
@@ -75,9 +64,9 @@ describe('Class Service - getAvailableStudents', () => {
     teacherTwo.schoolId = new mongoose.Types.ObjectId();
     await mongoose.model('User').updateOne({ _id: teacherTwo._id }, { $set: { schoolId: teacherTwo.schoolId } });
 
-    await expect(
-      classService.getAvailableStudents(classIdA.toString(), {}, teacherTwo)
-    ).rejects.toMatchObject({ statusCode: 403 });
+    await expect(classService.getAvailableStudents(classIdA.toString(), {}, teacherTwo)).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 
   it('should NOT throw 403 for teacher in same school but not homeroom (view-only access)', async () => {
@@ -89,9 +78,7 @@ describe('Class Service - getAvailableStudents', () => {
 
   it('should throw 404 when class does not exist', async () => {
     const nonExistentId = mongoose.Types.ObjectId().toString();
-    await expect(
-      classService.getAvailableStudents(nonExistentId, {}, admin)
-    ).rejects.toMatchObject({ statusCode: 404 });
+    await expect(classService.getAvailableStudents(nonExistentId, {}, admin)).rejects.toMatchObject({ statusCode: 404 });
   });
 
   it('should filter by search keyword (case-insensitive, partial match)', async () => {
@@ -101,11 +88,7 @@ describe('Class Service - getAvailableStudents', () => {
   });
 
   it('should respect limit and page query params (limit=1, page=1)', async () => {
-    const result = await classService.getAvailableStudents(
-      classIdA.toString(),
-      { page: 1, limit: 1 },
-      admin
-    );
+    const result = await classService.getAvailableStudents(classIdA.toString(), { page: 1, limit: 1 }, admin);
     expect(result.results).toHaveLength(1);
     expect(result.page).toBe(1);
     expect(result.limit).toBe(1);
@@ -115,11 +98,7 @@ describe('Class Service - getAvailableStudents', () => {
 
   it('should escape regex special characters in search', async () => {
     // Search with regex special chars should not throw
-    const result = await classService.getAvailableStudents(
-      classIdA.toString(),
-      { search: '.*+?^${}()|' },
-      admin
-    );
+    const result = await classService.getAvailableStudents(classIdA.toString(), { search: '.*+?^${}()|' }, admin);
     expect(result.results).toHaveLength(0);
   });
 });
@@ -190,10 +169,7 @@ describe('Class Service - create with optional schoolId', () => {
   it('should reject a teacher from a different school creating a class for their target school', async () => {
     await insertSchools([schoolA]);
     teacherOne.schoolId = new mongoose.Types.ObjectId();
-    await mongoose.model('User').updateOne(
-      { _id: teacherOne._id },
-      { $set: { schoolId: teacherOne.schoolId } }
-    );
+    await mongoose.model('User').updateOne({ _id: teacherOne._id }, { $set: { schoolId: teacherOne.schoolId } });
 
     const data = {
       name: '10A1',

@@ -66,7 +66,7 @@ function computeBubbleCoordinates(numQuestions, opts = {}) {
     const baseY = gridStartY + rowIndex * rowSpacing;
 
     coords[qId] = {
-      A: { x: baseX,                        y: baseY },
+      A: { x: baseX, y: baseY },
       B: { x: baseX + bubbleRadius * 2 + colSpacing, y: baseY },
       C: { x: baseX + (bubbleRadius * 2 + colSpacing) * 2, y: baseY },
       D: { x: baseX + (bubbleRadius * 2 + colSpacing) * 3, y: baseY },
@@ -129,18 +129,26 @@ async function generateAnswerSheet({ exam, numQuestions, versionCodes = ['101', 
       let y = margin;
 
       if (exam.schoolHeader) {
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#000')
+        doc
+          .font('Helvetica-Bold')
+          .fontSize(10)
+          .fillColor('#000')
           .text(exam.schoolHeader, margin, y, { align: 'center', width: pageW - 2 * margin });
         y += 14;
         y += 4; // moveDown(0.2) ~4pt
       }
 
-      doc.font('Helvetica-Bold').fontSize(14).fillColor('#000')
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(14)
+        .fillColor('#000')
         .text('PHIEU TRA LOI', margin, y, { align: 'center', width: pageW - 2 * margin });
       y += 18;
       y += 3; // moveDown(0.15)
 
-      doc.font('Helvetica-Bold').fontSize(11)
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(11)
         .text(exam.title || 'Bai kiem tra', margin, y, { align: 'center', width: pageW - 2 * margin });
       y += 15;
       y += 6; // moveDown(0.3)
@@ -161,7 +169,9 @@ async function generateAnswerSheet({ exam, numQuestions, versionCodes = ['101', 
 
       if (exam.examDate) {
         const date = new Date(exam.examDate);
-        const dateStr = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+        const dateStr = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1)
+          .toString()
+          .padStart(2, '0')}/${date.getFullYear()}`;
         doc.text(`Ngay thi: ${dateStr}`, leftCol, y, { width: colW });
       }
       if (exam.duration) {
@@ -179,21 +189,32 @@ async function generateAnswerSheet({ exam, numQuestions, versionCodes = ['101', 
 
       // Row 1: Ho va ten (left) | MSSV (right)
       doc.text('Ho va ten:', margin, y);
-      doc.moveTo(margin + 62, lineY).lineTo(margin + 265, lineY).stroke();
+      doc
+        .moveTo(margin + 62, lineY)
+        .lineTo(margin + 265, lineY)
+        .stroke();
       doc.text('MSSV:', margin + 285, y);
-      doc.moveTo(margin + 325, lineY).lineTo(lineEndX, lineY).stroke();
+      doc
+        .moveTo(margin + 325, lineY)
+        .lineTo(lineEndX, lineY)
+        .stroke();
       y += rowH;
 
       // Row 2: Lop (left) | So bao danh (right)
       doc.text('Lop:', margin, y);
-      doc.moveTo(margin + 24, y + 8).lineTo(margin + 265, y + 8).stroke();
+      doc
+        .moveTo(margin + 24, y + 8)
+        .lineTo(margin + 265, y + 8)
+        .stroke();
       doc.text('So bao danh:', margin + 285, y);
-      doc.moveTo(margin + 355, y + 8).lineTo(lineEndX, y + 8).stroke();
+      doc
+        .moveTo(margin + 355, y + 8)
+        .lineTo(lineEndX, y + 8)
+        .stroke();
       y += rowH + 6;
 
       // ===== VERSION CODE BOX =====
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#000')
-        .text('MA DE (to vao mot o duy nhat):', margin, y);
+      doc.font('Helvetica-Bold').fontSize(9).fillColor('#000').text('MA DE (to vao mot o duy nhat):', margin, y);
       y += 13;
 
       const versionBoxSize = 20;
@@ -205,18 +226,22 @@ async function generateAnswerSheet({ exam, numQuestions, versionCodes = ['101', 
       versionCodes.forEach((vCode, idx) => {
         const boxX = margin + idx * (versionBoxSize + versionBoxGap + 30);
         doc.rect(boxX, versionBoxY, versionBoxSize, versionBoxSize).stroke('#000');
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#000')
+        doc
+          .font('Helvetica-Bold')
+          .fontSize(10)
+          .fillColor('#000')
           .text(vCode, boxX, versionLabelY, { width: versionBoxSize, align: 'center' });
       });
       y = versionLabelY + 12;
 
       // ===== INSTRUCTIONS =====
-      doc.font('Helvetica-Oblique').fontSize(8).fillColor('#555')
-        .text(
-          'Huong dan: To den vao mot o duy nhat moi cau. Dung but chi (HB). Khong to hai o cung mot cau.',
-          margin, y,
-          { width: pageW - 2 * margin }
-        );
+      doc
+        .font('Helvetica-Oblique')
+        .fontSize(8)
+        .fillColor('#555')
+        .text('Huong dan: To den vao mot o duy nhat moi cau. Dung but chi (HB). Khong to hai o cung mot cau.', margin, y, {
+          width: pageW - 2 * margin,
+        });
       y += 14;
 
       // ===== COLUMN HEADERS (A B C D) =====
@@ -241,7 +266,10 @@ async function generateAnswerSheet({ exam, numQuestions, versionCodes = ['101', 
         doc.text(label, lx - 4, headerY, { width: 12, align: 'center' });
       });
       // Separator line under headers
-      doc.moveTo(margin, headerY + 12).lineTo(pageW - margin, headerY + 12).stroke();
+      doc
+        .moveTo(margin, headerY + 12)
+        .lineTo(pageW - margin, headerY + 12)
+        .stroke();
       y = headerY + 16;
 
       // ===== BUBBLE GRID =====
@@ -262,7 +290,10 @@ async function generateAnswerSheet({ exam, numQuestions, versionCodes = ['101', 
         const labelX = A.x - bubbleRadius * 4 - 10;
 
         // Question number
-        doc.font('Helvetica').fontSize(9).fillColor('#000')
+        doc
+          .font('Helvetica')
+          .fontSize(9)
+          .fillColor('#000')
           .text(`${idx + 1}.`, labelX - 18, A.y - 4, { width: 18, align: 'right' });
 
         // Bubbles
@@ -273,9 +304,13 @@ async function generateAnswerSheet({ exam, numQuestions, versionCodes = ['101', 
       });
 
       // ===== FOOTER =====
-      doc.font('Helvetica-Oblique').fontSize(7).fillColor('#888')
+      doc
+        .font('Helvetica-Oblique')
+        .fontSize(7)
+        .fillColor('#888')
         .text('Smart Grading System', margin, pageH - margin / 2, {
-          align: 'center', width: pageW - 2 * margin,
+          align: 'center',
+          width: pageW - 2 * margin,
         });
 
       doc.end();
@@ -298,7 +333,7 @@ function generateAnswerKey(versionCode, versionData) {
     versionCode,
     generatedAt: new Date().toISOString(),
     questions: questions.map((q) => {
-      const correctOption = (q.shuffledOptions || []).find(o => o.isCorrect);
+      const correctOption = (q.shuffledOptions || []).find((o) => o.isCorrect);
       return {
         position: q.position,
         questionId: q.questionId,

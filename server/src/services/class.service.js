@@ -23,10 +23,7 @@ class ClassService {
         }
         // Teacher without a school cannot create a class tied to a specific school
         if (!userSchoolId && dataSchoolId) {
-          throw new ApiError(
-            403,
-            'You cannot create a class for a school you do not belong to. Leave schoolId empty.'
-          );
+          throw new ApiError(403, 'You cannot create a class for a school you do not belong to. Leave schoolId empty.');
         }
       }
       if (requestingUser.role !== 'admin' && requestingUser.role !== 'teacher') {
@@ -66,8 +63,7 @@ class ClassService {
         // Class has no school: only visible to its creator (homeroom teacher) or admin
         const isAdmin = requestingUser.role === 'admin';
         const isHomeroom =
-          classData.homeroomTeacherId &&
-          classData.homeroomTeacherId.toString() === requestingUser._id?.toString();
+          classData.homeroomTeacherId && classData.homeroomTeacherId.toString() === requestingUser._id?.toString();
         if (!isAdmin && !isHomeroom) {
           throw new ApiError(403, 'You can only view classes in your own school');
         }
@@ -115,10 +111,7 @@ class ClassService {
 
     if (requestingUser && requestingUser.role === 'teacher' && userSchoolId) {
       const teacherId = requestingUser._id || requestingUser.id;
-      filter.$or = [
-        { homeroomTeacherId: teacherId },
-        { 'subjectTeachers.teacherId': teacherId },
-      ];
+      filter.$or = [{ homeroomTeacherId: teacherId }, { 'subjectTeachers.teacherId': teacherId }];
     }
 
     const [classes, total] = await Promise.all([
@@ -162,8 +155,7 @@ class ClassService {
     // School-less class: only the homeroom teacher (creator) can access it
     if (!classSchoolId) {
       const isHomeroom =
-        classData.homeroomTeacherId &&
-        classData.homeroomTeacherId.toString() === requestingUser?._id?.toString();
+        classData.homeroomTeacherId && classData.homeroomTeacherId.toString() === requestingUser?._id?.toString();
       if (!isHomeroom) {
         throw new ApiError(403, `You can only ${action} classes in your own school`);
       }
@@ -179,9 +171,7 @@ class ClassService {
     if (requestingUser?.role === 'teacher' && action !== 'view') {
       const teacherId = requestingUser._id?.toString() || requestingUser.id?.toString();
       const isHomeroom = classData.homeroomTeacherId?.toString() === teacherId;
-      const isSubjectTeacher = classData.subjectTeachers.some(
-        (st) => st.teacherId?.toString() === teacherId
-      );
+      const isSubjectTeacher = classData.subjectTeachers.some((st) => st.teacherId?.toString() === teacherId);
       if (!isHomeroom && !isSubjectTeacher) {
         throw new ApiError(403, 'Only the homeroom teacher or assigned subject teachers can modify this class');
       }
@@ -215,10 +205,7 @@ class ClassService {
     classData.studentIds.push(...newStudents);
     await classData.save();
 
-    await User.updateMany(
-      { _id: { $in: newStudents } },
-      { $addToSet: { classIds: classId } }
-    );
+    await User.updateMany({ _id: { $in: newStudents } }, { $addToSet: { classIds: classId } });
 
     return this.getById(classId);
   }
@@ -226,15 +213,10 @@ class ClassService {
   async removeStudents(classId, studentIds, requestingUser = null) {
     const classData = await this._authorizeClassAccess(classId, requestingUser, 'modify');
 
-    classData.studentIds = classData.studentIds.filter(
-      (id) => !studentIds.includes(id.toString())
-    );
+    classData.studentIds = classData.studentIds.filter((id) => !studentIds.includes(id.toString()));
     await classData.save();
 
-    await User.updateMany(
-      { _id: { $in: studentIds } },
-      { $pull: { classIds: classId } }
-    );
+    await User.updateMany({ _id: { $in: studentIds } }, { $pull: { classIds: classId } });
 
     return this.getById(classId);
   }
@@ -301,7 +283,9 @@ class ClassService {
 
     // 4. Add search filter (case-insensitive, partial match on name/studentCode/email)
     if (query.search && String(query.search).trim().length > 0) {
-      const escaped = String(query.search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escaped = String(query.search)
+        .trim()
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
         { name: { $regex: escaped, $options: 'i' } },
         { studentCode: { $regex: escaped, $options: 'i' } },
@@ -311,11 +295,7 @@ class ClassService {
 
     // 5. Query with select to limit fields
     const [results, total] = await Promise.all([
-      User.find(filter)
-        .select('name email studentCode avatarUrl isActive')
-        .sort({ name: 1 })
-        .skip(skip)
-        .limit(limit),
+      User.find(filter).select('name email studentCode avatarUrl isActive').sort({ name: 1 }).skip(skip).limit(limit),
       User.countDocuments(filter),
     ]);
 
@@ -390,8 +370,8 @@ class ClassService {
       role: 'student',
     }).select('name email studentCode isActive dateOfBirth');
 
-    const result = students.map(s => ({
-      _id: (s._id && s._id.toString) ? s._id.toString() : s._id,
+    const result = students.map((s) => ({
+      _id: s._id && s._id.toString ? s._id.toString() : s._id,
       name: s.name,
       email: s.email,
       studentCode: s.studentCode,
@@ -414,7 +394,7 @@ class ClassService {
     }
 
     const classData = await Class.findById(classId).select('homeroomTeacherId studentIds schoolId');
-    if (!classData.studentIds.some(id => id.toString() === studentId)) {
+    if (!classData.studentIds.some((id) => id.toString() === studentId)) {
       throw new ApiError(404, 'Student not found in this class');
     }
 
@@ -434,8 +414,9 @@ class ClassService {
       }
     }
 
-    const updated = await User.findByIdAndUpdate(studentId, sanitizedData, { new: true, runValidators: true })
-      .select('name email studentCode isActive dateOfBirth');
+    const updated = await User.findByIdAndUpdate(studentId, sanitizedData, { new: true, runValidators: true }).select(
+      'name email studentCode isActive dateOfBirth'
+    );
 
     if (!updated) {
       throw new ApiError(404, 'Student not found');
@@ -451,7 +432,7 @@ class ClassService {
     }
 
     const classData = await Class.findById(classId).select('homeroomTeacherId studentIds schoolId');
-    if (!classData || !classData.studentIds.some(id => id.toString() === studentId)) {
+    if (!classData || !classData.studentIds.some((id) => id.toString() === studentId)) {
       throw new ApiError(404, 'Student not found in this class');
     }
 
@@ -549,14 +530,14 @@ class ClassService {
     const now = new Date();
     const totalStudents = studentIds.length;
 
-    const upcomingExams = exams.filter(e => e.examDate && new Date(e.examDate) > now);
-    const nextExam = upcomingExams.length > 0
-      ? upcomingExams
-          .sort((a, b) => new Date(a.examDate).getTime() - new Date(b.examDate).getTime())[0]
-      : null;
+    const upcomingExams = exams.filter((e) => e.examDate && new Date(e.examDate) > now);
+    const nextExam =
+      upcomingExams.length > 0
+        ? upcomingExams.sort((a, b) => new Date(a.examDate).getTime() - new Date(b.examDate).getTime())[0]
+        : null;
 
     const { Submission } = require('../models');
-    const examIds = exams.map(e => e._id);
+    const examIds = exams.map((e) => e._id);
 
     let averageScore = 0;
     if (examIds.length > 0) {
@@ -581,8 +562,8 @@ class ClassService {
       totalStudents,
       attendanceRate: 95,
       averageScore: Math.round(averageScore * 10) / 10,
-      activeExams: exams.filter(e => e.status === 'published' || e.status === 'in_progress').length,
-      completedAssignments: exams.filter(e => e.status === 'completed').length,
+      activeExams: exams.filter((e) => e.status === 'published' || e.status === 'in_progress').length,
+      completedAssignments: exams.filter((e) => e.status === 'completed').length,
       totalAssignments: exams.length,
       upcomingExams: upcomingExams.length,
       nextExam: nextExam
@@ -618,7 +599,7 @@ class ClassService {
           results.failed.push({ examId, error: 'Cannot assign an exam that is in progress' });
           continue;
         }
-        if (!exam.classIds.some(cid => cid.toString() === classId)) {
+        if (!exam.classIds.some((cid) => cid.toString() === classId)) {
           exam.classIds.push(classId);
           await exam.save();
         }
@@ -639,7 +620,7 @@ class ClassService {
     if (exam.status === 'in_progress') {
       throw new ApiError(409, 'Cannot remove class from an exam that is in progress');
     }
-    exam.classIds = exam.classIds.filter(id => id.toString() !== classId.toString());
+    exam.classIds = exam.classIds.filter((id) => id.toString() !== classId.toString());
     await exam.save();
   }
 }

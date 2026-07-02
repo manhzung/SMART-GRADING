@@ -6,11 +6,20 @@ const id = Joi.object().keys({
 
 const createNotification = {
   body: Joi.object().keys({
-    userId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    type: Joi.string().valid(
-      'exam_published', 'exam_reminder', 'score_available',
-      'appeal_submitted', 'appeal_resolved', 'ai_report_ready', 'system'
-    ).required(),
+    userId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
+    type: Joi.string()
+      .valid(
+        'exam_published',
+        'exam_reminder',
+        'score_available',
+        'appeal_submitted',
+        'appeal_resolved',
+        'ai_report_ready',
+        'system'
+      )
+      .required(),
     title: Joi.string().min(1).max(200).required(),
     body: Joi.string().max(1000),
     data: Joi.object(),

@@ -38,8 +38,9 @@ export default function BankLandingPage() {
   const user = useAuthStore((s) => s.user);
   const userSchoolId = user?.schoolId;
   const isSchoolAdmin = user?.role === 'admin' || user?.role === 'school-admin';
+  const isTeacher = user?.role === 'teacher';
   const canCreateSchoolBank = !!userSchoolId && isSchoolAdmin;
-  const isBankTypeLocked = isSchoolAdmin; // School-admin can only create school banks
+  const isBankTypeLocked = isSchoolAdmin || isTeacher; // Teachers can only create personal banks
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -47,8 +48,14 @@ export default function BankLandingPage() {
   const [newBank, setNewBank] = useState({
     name: '',
     description: '',
-    type: 'school' as 'personal' | 'school', // Default to school for school-admin
+    type: 'personal' as 'personal' | 'school',
   });
+
+  useEffect(() => {
+    if (isTeacher) {
+      setNewBank((prev) => ({ ...prev, type: 'personal' }));
+    }
+  }, [isTeacher]);
 
   useEffect(() => {
     fetchBanks();
@@ -411,7 +418,7 @@ export default function BankLandingPage() {
                 {isBankTypeLocked ? (
                   <input
                     type="text"
-                    value="School"
+                    value={isTeacher ? 'Personal' : 'School'}
                     className={styles.input}
                     disabled
                   />
@@ -429,7 +436,13 @@ export default function BankLandingPage() {
                 )}
               </label>
 
-              {!canCreateSchoolBank && (
+              {isTeacher && (
+                <p className={styles.notice}>
+                  Teachers can only create personal banks. School banks require a school-admin owner.
+                </p>
+              )}
+
+              {!canCreateSchoolBank && !isTeacher && (
                 <p className={styles.warning}>
                   <AlertCircle size={12} />
                   You are not linked to a school, so only personal banks are available.

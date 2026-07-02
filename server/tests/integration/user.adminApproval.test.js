@@ -7,13 +7,7 @@ const setupTestDB = require('../utils/setupTestDB');
 const { User } = require('../../src/models');
 const { tokenTypes } = require('../../src/config/tokens');
 const tokenService = require('../../src/services/token.service');
-const {
-  admin,
-  teacherOne,
-  schoolIdA,
-  schoolIdB,
-  insertUsers,
-} = require('../fixtures/user.fixture');
+const { admin, teacherOne, schoolIdA, schoolIdB, insertUsers } = require('../fixtures/user.fixture');
 
 setupTestDB();
 
@@ -118,9 +112,7 @@ describe('User Admin Approval routes', () => {
     });
 
     it('should return 401 when no token provided', async () => {
-      await request(app)
-        .post(`/api/v1/users/admin/teachers/${pendingTeacherId}/approve`)
-        .expect(httpStatus.UNAUTHORIZED);
+      await request(app).post(`/api/v1/users/admin/teachers/${pendingTeacherId}/approve`).expect(httpStatus.UNAUTHORIZED);
     });
 
     it('should return 403 when user is not admin', async () => {

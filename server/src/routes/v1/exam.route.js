@@ -26,13 +26,9 @@ router
   .patch(auth('manageExams'), validate(examValidation.updateExam), examController.update)
   .delete(auth('manageExams'), validate(examValidation.getExam), examController.remove);
 
-router
-  .route('/:id/publish')
-  .post(auth('manageExams'), validate(examValidation.publishExam), examController.publish);
+router.route('/:id/publish').post(auth('manageExams'), validate(examValidation.publishExam), examController.publish);
 
-router
-  .route('/:id/complete')
-  .post(auth('manageExams'), examController.complete);
+router.route('/:id/complete').post(auth('manageExams'), examController.complete);
 
 router
   .route('/:id/classes')
@@ -44,60 +40,28 @@ router
   .get(auth(), validate(examValidation.getExamVersions), examController.getVersions)
   .post(auth('manageExams'), validate(examValidation.generateVersions), examController.generateVersions);
 
-router
-  .route('/:id/versions/full')
-  .get(auth(), examController.getVersionsWithQuestions);
+router.route('/:id/versions/full').get(auth(), examController.getVersionsWithQuestions);
 
-router
-  .route('/:id/versions/:versionCode')
-  .delete(auth('manageExams'), examController.deleteVersion);
+router.route('/:id/versions/:versionCode').delete(auth('manageExams'), examController.deleteVersion);
 
-router
-  .route('/:id/versions/:versionCode/answer-key')
-  .get(auth(), examController.getVersionAnswerKey);
+router.route('/:id/versions/:versionCode/answer-key').get(auth(), examController.getVersionAnswerKey);
 
-router
-  .route('/:id/export')
-  .get(auth(), validate(examValidation.exportExam), examController.exportExamPDF);
+router.route('/:id/export').get(auth(), validate(examValidation.exportExam), examController.exportExamPDF);
 
-router
-  .route('/:id/versions/:versionCode/pdf')
-  .get(auth(), examController.exportVersionPDF);
+router.route('/:id/versions/:versionCode/pdf').get(auth(), examController.exportVersionPDF);
 
-router
-  .route('/:id/versions/export')
-  .get(auth(), examController.exportVersionsZip);
+router.route('/:id/versions/export').get(auth(), examController.exportVersionsZip);
 
-router
-  .route('/:id/results/export')
-  .get(auth(), examController.exportResults);
+router.route('/:id/results/export').get(auth(), examController.exportResults);
 
-router
-  .route('/:id/submissions')
-  .get(auth(), submissionController.getByExam);
+router.route('/:id/submissions').get(auth(), submissionController.getByExam);
 
-router
-  .route('/:id/submissions/statistics')
-  .get(auth(), submissionController.getStatistics);
+router.route('/:id/submissions/statistics').get(auth(), submissionController.getStatistics);
 
-router.post(
-  '/:id/generate-papers',
-  auth(),
-  validate(validateGeneratePapers),
-  examController.generatePapers
-);
+router.post('/:id/generate-papers', auth(), validate(validateGeneratePapers), examController.generatePapers);
 
-router.get(
-  '/:id/template',
-  auth(),
-  validate(examValidation.getExamTemplate),
-  examController.getExamTemplate
-);
+router.get('/:id/template', auth(), validate(examValidation.getExamTemplate), examController.getExamTemplate);
 
-router.get(
-  '/:id/answer-sheet',
-  auth(),
-  examController.getAnswerSheet
-);
+router.get('/:id/answer-sheet', auth(), examController.getAnswerSheet);
 
 module.exports = router;

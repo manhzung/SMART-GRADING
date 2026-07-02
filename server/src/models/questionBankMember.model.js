@@ -50,9 +50,6 @@ const questionBankMemberSchema = new mongoose.Schema(
 
 questionBankMemberSchema.index({ bankId: 1, userId: 1 }, { unique: true });
 
-const QuestionBankMember = mongoose.model(
-  'QuestionBankMember',
-  questionBankMemberSchema
-);
+const QuestionBankMember = mongoose.model('QuestionBankMember', questionBankMemberSchema);
 
 module.exports = QuestionBankMember;

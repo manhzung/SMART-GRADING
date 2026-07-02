@@ -40,11 +40,18 @@ class ExportService {
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 
-      doc.fontSize(16).font('Helvetica-Bold').text(title || 'Report', { align: 'center' });
+      doc
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .text(title || 'Report', { align: 'center' });
       doc.moveDown(1);
 
       if (headers && rows) {
-        this.drawTable(doc, headers, rows, [[50, 200], [200, 350], [350, 500]]);
+        this.drawTable(doc, headers, rows, [
+          [50, 200],
+          [200, 350],
+          [350, 500],
+        ]);
       }
 
       doc.end();
@@ -80,9 +87,7 @@ class ExportService {
   }
 
   async generateExamReportPdf(examId) {
-    const report = await ExamReport.findOne({ examId })
-      .populate('examId', 'title examDate')
-      .lean();
+    const report = await ExamReport.findOne({ examId }).populate('examId', 'title examDate').lean();
 
     if (!report) {
       throw new Error('Report not found');
@@ -115,11 +120,12 @@ class ExportService {
       // ─── Header ───────────────────────────────────────────────────────────────
       doc.fontSize(18).font(fontBoldName).text('BÁO CÁO KẾT QUẢ BÀI THI', { align: 'center' });
       doc.moveDown(0.5);
-      doc.fontSize(14).font(fontBoldName).text(exam?.title || 'Báo cáo kết quả thi', { align: 'center' });
+      doc
+        .fontSize(14)
+        .font(fontBoldName)
+        .text(exam?.title || 'Báo cáo kết quả thi', { align: 'center' });
       doc.moveDown(0.3);
-      const examDateStr = exam?.examDate
-        ? new Date(exam.examDate).toLocaleDateString('vi-VN')
-        : 'N/A';
+      const examDateStr = exam?.examDate ? new Date(exam.examDate).toLocaleDateString('vi-VN') : 'N/A';
       doc.fontSize(10).font(fontName).text(`Ngày thi: ${examDateStr}`, { align: 'center' });
       doc.moveDown(1);
 
@@ -130,7 +136,11 @@ class ExportService {
       doc.fontSize(10).font(fontName);
       doc.text(`Tổng học sinh: ${stats.totalStudents || 0}`);
       doc.text(`Số bài nộp: ${stats.submittedCount || 0}`);
-      doc.text(`Điểm trung bình: ${(stats.averagePercentage || 0).toFixed(1)}% (${(stats.averageScore || 0).toFixed(2)}/${exam?.totalScore || 10})`);
+      doc.text(
+        `Điểm trung bình: ${(stats.averagePercentage || 0).toFixed(1)}% (${(stats.averageScore || 0).toFixed(2)}/${
+          exam?.totalScore || 10
+        })`
+      );
       doc.text(`Điểm cao nhất: ${(stats.highestScore || 0).toFixed(2)}`);
       doc.text(`Điểm thấp nhất: ${(stats.lowestScore || 0).toFixed(2)}`);
       doc.text(`Độ lệch chuẩn: ${(stats.standardDeviation || 0).toFixed(2)}`);
@@ -148,7 +158,18 @@ class ExportService {
         ['Yếu (<5.0)', gradeDist.poor?.count || 0, `${(gradeDist.poor?.percentage || 0).toFixed(1)}%`],
       ];
 
-      this.drawTable(doc, ['Xếp loại', 'Số lượng', 'Tỷ lệ'], gradeRows, [[50, 220], [220, 300], [300, 400]], fontName, fontBoldName);
+      this.drawTable(
+        doc,
+        ['Xếp loại', 'Số lượng', 'Tỷ lệ'],
+        gradeRows,
+        [
+          [50, 220],
+          [220, 300],
+          [300, 400],
+        ],
+        fontName,
+        fontBoldName
+      );
       doc.moveDown(1);
 
       // ─── Score Distribution ───────────────────────────────────────────────────
@@ -171,14 +192,29 @@ class ExportService {
         doc.addPage();
         doc.fontSize(12).font(fontBoldName).text('TOP 10 HỌC SINH', { underline: true });
         doc.moveDown(0.5);
-        const topRows = report.topStudents.slice(0, 10).map((s, i) => [
-          String(s.rank || i + 1),
-          s.studentName || 'N/A',
-          s.studentCode || 'N/A',
-          `${(s.score || 0).toFixed(2)}`,
-          `${(s.percentage || 0).toFixed(1)}%`,
-        ]);
-        this.drawTable(doc, ['Hạng', 'Họ tên', 'MSSV', 'Điểm', 'Phần trăm'], topRows, [[30, 60], [60, 200], [200, 260], [260, 310], [310, 370]], fontName, fontBoldName);
+        const topRows = report.topStudents
+          .slice(0, 10)
+          .map((s, i) => [
+            String(s.rank || i + 1),
+            s.studentName || 'N/A',
+            s.studentCode || 'N/A',
+            `${(s.score || 0).toFixed(2)}`,
+            `${(s.percentage || 0).toFixed(1)}%`,
+          ]);
+        this.drawTable(
+          doc,
+          ['Hạng', 'Họ tên', 'MSSV', 'Điểm', 'Phần trăm'],
+          topRows,
+          [
+            [30, 60],
+            [60, 200],
+            [200, 260],
+            [260, 310],
+            [310, 370],
+          ],
+          fontName,
+          fontBoldName
+        );
         doc.moveDown(1);
       }
 
@@ -186,18 +222,36 @@ class ExportService {
       if (report.bottomStudents && report.bottomStudents.length > 0) {
         doc.fontSize(12).font(fontBoldName).text('BOTTOM 10 HỌC SINH', { underline: true });
         doc.moveDown(0.5);
-        const bottomRows = report.bottomStudents.slice(0, 10).map((s, i) => [
-          String(s.rank || i + 1),
-          s.studentName || 'N/A',
-          s.studentCode || 'N/A',
-          `${(s.score || 0).toFixed(2)}`,
-          `${(s.percentage || 0).toFixed(1)}%`,
-        ]);
-        this.drawTable(doc, ['Hạng', 'Họ tên', 'MSSV', 'Điểm', 'Phần trăm'], bottomRows, [[30, 60], [60, 200], [200, 260], [260, 310], [310, 370]], fontName, fontBoldName);
+        const bottomRows = report.bottomStudents
+          .slice(0, 10)
+          .map((s, i) => [
+            String(s.rank || i + 1),
+            s.studentName || 'N/A',
+            s.studentCode || 'N/A',
+            `${(s.score || 0).toFixed(2)}`,
+            `${(s.percentage || 0).toFixed(1)}%`,
+          ]);
+        this.drawTable(
+          doc,
+          ['Hạng', 'Họ tên', 'MSSV', 'Điểm', 'Phần trăm'],
+          bottomRows,
+          [
+            [30, 60],
+            [60, 200],
+            [200, 260],
+            [260, 310],
+            [310, 370],
+          ],
+          fontName,
+          fontBoldName
+        );
       }
 
       // ─── AI Insights ──────────────────────────────────────────────────────────
-      if (report.insights && (report.insights.overallAnalysis || (report.insights.recommendations && report.insights.recommendations.length > 0))) {
+      if (
+        report.insights &&
+        (report.insights.overallAnalysis || (report.insights.recommendations && report.insights.recommendations.length > 0))
+      ) {
         doc.addPage();
         doc.fontSize(12).font(fontBoldName).text('PHÂN TÍCH TỪ AI', { underline: true });
         doc.moveDown(0.5);
@@ -211,17 +265,20 @@ class ExportService {
         if (report.insights.recommendations && report.insights.recommendations.length > 0) {
           doc.fontSize(10).font(fontBoldName).text('Khuyến nghị:');
           report.insights.recommendations.forEach((rec, i) => {
-            doc.fontSize(10).font(fontName).text(`${i + 1}. ${rec}`);
+            doc
+              .fontSize(10)
+              .font(fontName)
+              .text(`${i + 1}. ${rec}`);
           });
         }
       }
 
       // ─── Footer ───────────────────────────────────────────────────────────────
       doc.moveDown(2);
-      doc.fontSize(8).font(fontName).text(
-        `Generated on ${new Date().toLocaleString('vi-VN')} | Smart Grading System`,
-        { align: 'center' }
-      );
+      doc
+        .fontSize(8)
+        .font(fontName)
+        .text(`Generated on ${new Date().toLocaleString('vi-VN')} | Smart Grading System`, { align: 'center' });
 
       doc.end();
       stream.on('finish', () => resolve(filePath));
@@ -230,9 +287,7 @@ class ExportService {
   }
 
   async generateExamReportExcel(examId) {
-    const report = await ExamReport.findOne({ examId })
-      .populate('examId', 'title examDate')
-      .lean();
+    const report = await ExamReport.findOne({ examId }).populate('examId', 'title examDate').lean();
 
     if (!report) {
       throw new Error('Report not found');
@@ -263,7 +318,10 @@ class ExportService {
       { label: 'Điểm cao nhất', value: (stats.highestScore || 0).toFixed(2) },
       { label: 'Điểm thấp nhất', value: (stats.lowestScore || 0).toFixed(2) },
       { label: 'Độ lệch chuẩn', value: (stats.standardDeviation || 0).toFixed(2) },
-      { label: 'Xuất sắc', value: `${gradeDist.excellent?.count || 0} (${(gradeDist.excellent?.percentage || 0).toFixed(1)}%)` },
+      {
+        label: 'Xuất sắc',
+        value: `${gradeDist.excellent?.count || 0} (${(gradeDist.excellent?.percentage || 0).toFixed(1)}%)`,
+      },
       { label: 'Giỏi', value: `${gradeDist.good?.count || 0} (${(gradeDist.good?.percentage || 0).toFixed(1)}%)` },
       { label: 'Khá', value: `${gradeDist.average?.count || 0} (${(gradeDist.average?.percentage || 0).toFixed(1)}%)` },
       { label: 'Yếu', value: `${gradeDist.poor?.count || 0} (${(gradeDist.poor?.percentage || 0).toFixed(1)}%)` },
@@ -376,9 +434,7 @@ class ExportService {
   async exportExamResultsExcel(examId, user) {
     const { Exam, Submission } = require('../models');
 
-    const exam = await Exam.findById(examId)
-      .populate('classIds', 'name')
-      .lean();
+    const exam = await Exam.findById(examId).populate('classIds', 'name').lean();
     if (!exam) {
       throw new ApiError(404, 'Exam not found');
     }
@@ -386,7 +442,9 @@ class ExportService {
     const submissions = await Submission.find({
       examId,
       status: 'completed',
-    }).populate('studentId', 'name studentCode').lean();
+    })
+      .populate('studentId', 'name studentCode')
+      .lean();
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Smart Grading System';
@@ -397,9 +455,8 @@ class ExportService {
       { header: 'Chỉ tiêu', key: 'label', width: 25 },
       { header: 'Giá trị', key: 'value', width: 20 },
     ];
-    const avgScore = submissions.length > 0
-      ? submissions.reduce((sum, sub) => sum + sub.totalScore, 0) / submissions.length
-      : 0;
+    const avgScore =
+      submissions.length > 0 ? submissions.reduce((sum, sub) => sum + sub.totalScore, 0) / submissions.length : 0;
     summarySheet.addRows([
       { label: 'Tên bài thi', value: exam.title },
       { label: 'Tổng bài nộp', value: submissions.length },
@@ -424,11 +481,15 @@ class ExportService {
     scoresSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E40AF' } };
 
     submissions.forEach((sub, idx) => {
-      const pct = sub.maxScore > 0 ? ((sub.totalScore / sub.maxScore) * 100) : 0;
-      const statusLabel = sub.status === 'completed' ? 'Hoàn thành'
-        : sub.status === 'scanned' ? 'Đã quét'
-        : sub.status === 'appealed' ? 'Phúc tra'
-        : sub.status;
+      const pct = sub.maxScore > 0 ? (sub.totalScore / sub.maxScore) * 100 : 0;
+      const statusLabel =
+        sub.status === 'completed'
+          ? 'Hoàn thành'
+          : sub.status === 'scanned'
+          ? 'Đã quét'
+          : sub.status === 'appealed'
+          ? 'Phúc tra'
+          : sub.status;
       scoresSheet.addRow({
         stt: idx + 1,
         name: sub.studentId?.name || 'Unknown',

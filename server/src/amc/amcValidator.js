@@ -97,9 +97,7 @@ class AmcValidator {
    * @returns {string}
    */
   toWslPath(winPath) {
-    return winPath
-      .replace(/^([A-Za-z]):/, (m) => `/mnt/${m[0].toLowerCase()}`)
-      .replace(/\\/g, '/');
+    return winPath.replace(/^([A-Za-z]):/, (m) => `/mnt/${m[0].toLowerCase()}`).replace(/\\/g, '/');
   }
 }
 

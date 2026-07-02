@@ -1,6 +1,7 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const httpStatus = require('http-status');
+const moment = require('moment');
 const app = require('../../src/app');
 const setupTestDB = require('../utils/setupTestDB');
 const { QuestionBank, QuestionBankMember, Question: QuestionModel, User } = require('../../src/models');
@@ -8,7 +9,6 @@ const { teacherOne, teacherTwo, userOne, userTwo, admin, insertUsers } = require
 const { teacherOneAccessToken, teacherTwoAccessToken, adminAccessToken } = require('../fixtures/token.fixture');
 const tokenService = require('../../src/services/token.service');
 const { tokenTypes } = require('../../src/config/tokens');
-const moment = require('moment');
 
 setupTestDB();
 

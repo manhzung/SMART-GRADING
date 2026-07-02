@@ -52,7 +52,7 @@ class QuestionService {
   async create(data, userId = null, userSchoolId = null, userRole = 'teacher') {
     // Auto-set correctAnswer for single choice
     if (data.type === 'single_choice') {
-      const correctOption = data.options.find(opt => opt.isCorrect);
+      const correctOption = data.options.find((opt) => opt.isCorrect);
       data.correctAnswer = correctOption?.id || null;
     }
 
@@ -133,7 +133,10 @@ class QuestionService {
 
     // Case-insensitive difficulty filter (accepts single "easy" or comma-separated "easy,medium,hard")
     if (difficulty) {
-      const levels = difficulty.split(',').map((d) => d.trim().toLowerCase()).filter(Boolean);
+      const levels = difficulty
+        .split(',')
+        .map((d) => d.trim().toLowerCase())
+        .filter(Boolean);
       if (levels.length === 1) {
         filter.difficulty = new RegExp(`^${levels[0]}$`, 'i');
       } else if (levels.length > 1) {
@@ -159,9 +162,7 @@ class QuestionService {
     }
 
     const sortOrder = order === 'asc' ? 1 : -1;
-    const sort = sortBy === 'score'
-      ? { difficulty: sortOrder === 1 ? 1 : -1 }
-      : { [sortBy]: sortOrder };
+    const sort = sortBy === 'score' ? { difficulty: sortOrder === 1 ? 1 : -1 } : { [sortBy]: sortOrder };
 
     const [results, total] = await Promise.all([
       Question.find(filter)
@@ -201,7 +202,7 @@ class QuestionService {
     // Auto-update correctAnswer if options changed
     if (data.options) {
       if (data.type === 'single_choice' || !data.type) {
-        const correctOption = data.options.find(opt => opt.isCorrect);
+        const correctOption = data.options.find((opt) => opt.isCorrect);
         data.correctAnswer = correctOption?.id || null;
       }
     }
@@ -236,11 +237,9 @@ class QuestionService {
 
       if (membership) {
         // OK - là owner/manager của bank
-      }
-      else if (approverSchoolId && String(question.schoolId || '') === String(approverSchoolId)) {
+      } else if (approverSchoolId && String(question.schoolId || '') === String(approverSchoolId)) {
         // OK - cùng trường
-      }
-      else {
+      } else {
         throw new ApiError(403, 'Bạn không có quyền duyệt câu hỏi này');
       }
     }
@@ -276,11 +275,9 @@ class QuestionService {
 
       if (membership) {
         // OK - là owner/manager của bank
-      }
-      else if (rejecterSchoolId && String(question.schoolId || '') === String(rejecterSchoolId)) {
+      } else if (rejecterSchoolId && String(question.schoolId || '') === String(rejecterSchoolId)) {
         // OK - cùng trường
-      }
-      else {
+      } else {
         throw new ApiError(403, 'Bạn không có quyền từ chối câu hỏi này');
       }
     }
@@ -336,7 +333,7 @@ class QuestionService {
 
     await Question.findByIdAndUpdate(id, {
       usageCount: newUsageCount,
-      correctRate: Math.round(newCorrectRate * 100) / 100
+      correctRate: Math.round(newCorrectRate * 100) / 100,
     });
   }
 
@@ -400,7 +397,10 @@ class QuestionService {
 
     // Case-insensitive difficulty filter
     if (difficulty) {
-      const levels = difficulty.split(',').map((d) => d.trim().toLowerCase()).filter(Boolean);
+      const levels = difficulty
+        .split(',')
+        .map((d) => d.trim().toLowerCase())
+        .filter(Boolean);
       if (levels.length === 1) {
         filter.difficulty = new RegExp(`^${levels[0]}$`, 'i');
       } else if (levels.length > 1) {
@@ -426,9 +426,7 @@ class QuestionService {
     }
 
     const sortOrder = order === 'asc' ? 1 : -1;
-    const sort = sortBy === 'score'
-      ? { difficulty: sortOrder === 1 ? 1 : -1 }
-      : { [sortBy]: sortOrder };
+    const sort = sortBy === 'score' ? { difficulty: sortOrder === 1 ? 1 : -1 } : { [sortBy]: sortOrder };
 
     const [results, total] = await Promise.all([
       Question.find(filter)

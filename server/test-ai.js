@@ -29,15 +29,17 @@ async function testGeminiAPI() {
   console.log('📋 Test 2: Simple Chat');
   try {
     const response = await axios.post(`${API_URL}?key=${GEMINI_API_KEY}`, {
-      contents: [{
-        parts: [{ text: 'Xin chào! Bạn là ai?' }]
-      }],
+      contents: [
+        {
+          parts: [{ text: 'Xin chào! Bạn là ai?' }],
+        },
+      ],
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 256,
-      }
+      },
     });
-    
+
     const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (text) {
       console.log('   ✅ PASS');
@@ -53,17 +55,21 @@ async function testGeminiAPI() {
   console.log('📋 Test 3: Vietnamese Math Problem');
   try {
     const response = await axios.post(`${API_URL}?key=${GEMINI_API_KEY}`, {
-      contents: [{
-        parts: [{
-          text: 'Giải bài toán: Một hình chữ nhật có chiều dài 15cm, chiều rộng 8cm. Tính chu vi và diện tích.'
-        }]
-      }],
+      contents: [
+        {
+          parts: [
+            {
+              text: 'Giải bài toán: Một hình chữ nhật có chiều dài 15cm, chiều rộng 8cm. Tính chu vi và diện tích.',
+            },
+          ],
+        },
+      ],
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 512,
-      }
+      },
     });
-    
+
     const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (text) {
       console.log('   ✅ PASS');
@@ -77,17 +83,21 @@ async function testGeminiAPI() {
   console.log('📋 Test 4: JSON Structured Output');
   try {
     const response = await axios.post(`${API_URL}?key=${GEMINI_API_KEY}`, {
-      contents: [{
-        parts: [{
-          text: 'Trả lời JSON: {"greeting": "lời chào", "question": "câu hỏi đã hỏi gì"}'
-        }]
-      }],
+      contents: [
+        {
+          parts: [
+            {
+              text: 'Trả lời JSON: {"greeting": "lời chào", "question": "câu hỏi đã hỏi gì"}',
+            },
+          ],
+        },
+      ],
       generationConfig: {
         temperature: 0.1,
         maxOutputTokens: 256,
-      }
+      },
     });
-    
+
     const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (text) {
       try {
@@ -106,9 +116,11 @@ async function testGeminiAPI() {
   console.log('📋 Test 5: Question Generation');
   try {
     const response = await axios.post(`${API_URL}?key=${GEMINI_API_KEY}`, {
-      contents: [{
-        parts: [{
-          text: `Tạo 3 câu hỏi trắc nghiệm về chủ đề "Phương trình bậc 2". 
+      contents: [
+        {
+          parts: [
+            {
+              text: `Tạo 3 câu hỏi trắc nghiệm về chủ đề "Phương trình bậc 2". 
 Format JSON:
 [
   {
@@ -117,15 +129,17 @@ Format JSON:
     "correctAnswer": "A",
     "explanation": "giải thích"
   }
-]`
-        }]
-      }],
+]`,
+            },
+          ],
+        },
+      ],
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 2048,
-      }
+      },
     });
-    
+
     const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (text) {
       console.log('   ✅ PASS');
@@ -139,12 +153,12 @@ Format JSON:
   console.log('📋 Test 6: Safety Settings');
   try {
     const response = await axios.post(`${API_URL}?key=${GEMINI_API_KEY}`, {
-      contents: [{
-        parts: [{ text: 'Hello, how are you?' }]
-      }],
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      ]
+      contents: [
+        {
+          parts: [{ text: 'Hello, how are you?' }],
+        },
+      ],
+      safetySettings: [{ category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }],
     });
     console.log('   ✅ PASS - Safety settings working\n');
   } catch (error) {
@@ -156,15 +170,17 @@ Format JSON:
   const promises = [];
   for (let i = 0; i < 3; i++) {
     promises.push(
-      axios.post(`${API_URL}?key=${GEMINI_API_KEY}`, {
-        contents: [{ parts: [{ text: `Request ${i + 1}` }] }],
-        generationConfig: { maxOutputTokens: 50 }
-      }).catch(err => ({ error: true, message: err.message }))
+      axios
+        .post(`${API_URL}?key=${GEMINI_API_KEY}`, {
+          contents: [{ parts: [{ text: `Request ${i + 1}` }] }],
+          generationConfig: { maxOutputTokens: 50 },
+        })
+        .catch((err) => ({ error: true, message: err.message }))
     );
   }
-  
+
   const results = await Promise.all(promises);
-  const successCount = results.filter(r => !r.error).length;
+  const successCount = results.filter((r) => !r.error).length;
   console.log(`   Results: ${successCount}/3 successful`);
   console.log(successCount === 3 ? '   ✅ PASS\n' : '   ⚠️ Some rate limiting occurred\n');
 

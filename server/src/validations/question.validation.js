@@ -23,7 +23,9 @@ const createQuestion = {
     tags: Joi.array().items(Joi.string()),
     source: Joi.string().valid('ai', 'manual', 'imported').default('manual'),
     aiPrompt: Joi.string().allow(null, ''),
-    bankId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    bankId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
   }),
 };
 
@@ -40,7 +42,9 @@ const updateQuestion = {
     imageUrl: Joi.string().uri().allow(null, ''),
     tags: Joi.array().items(Joi.string()),
     isApproved: Joi.boolean(),
-    bankId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    bankId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
   }),
 };
 
@@ -76,7 +80,11 @@ const generateQuestions = {
 
 const generateSimilarQuestions = {
   body: Joi.object().keys({
-    sourceQuestionIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).max(10).required(),
+    sourceQuestionIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .max(10)
+      .required(),
     count: Joi.number().min(1).max(50).default(5),
     difficulty: Joi.string().valid('easy', 'medium', 'hard'),
   }),
@@ -93,9 +101,15 @@ const getQuestionsByTags = {
 
 const selectQuestionsForExam = {
   body: Joi.object().keys({
-    questionIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+    questionIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
     title: Joi.string().min(1).required(),
-    classIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+    classIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
     subjectName: Joi.string().required(),
     examDate: Joi.date().required(),
     duration: Joi.number().min(5).max(300).default(45),

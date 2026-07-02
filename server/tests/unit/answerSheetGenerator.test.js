@@ -46,7 +46,7 @@ describe('Answer Sheet Generator', () => {
       const coords = computeBubbleCoordinates(60);
       // Each question should have a column assignment
       const columnSet = new Set();
-      Object.values(coords).forEach(c => columnSet.add(c.column));
+      Object.values(coords).forEach((c) => columnSet.add(c.column));
       // Should have multiple columns for 60 questions
       expect(columnSet.size).toBeGreaterThan(1);
     });
@@ -153,7 +153,10 @@ describe('Answer Sheet Generator', () => {
             ],
           },
         ],
-        answerKey: new Map([['1', 'B'], ['2', 'A']]),
+        answerKey: new Map([
+          ['1', 'B'],
+          ['2', 'A'],
+        ]),
       };
 
       const result = generateAnswerKey('101', versionData);

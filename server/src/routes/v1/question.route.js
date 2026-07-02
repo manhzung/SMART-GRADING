@@ -6,9 +6,7 @@ const auth = require('../../middlewares/auth');
 
 const router = express.Router();
 
-router
-  .route('/tags')
-  .get(auth(), questionController.getTags);
+router.route('/tags').get(auth(), questionController.getTags);
 
 router
   .route('/')
@@ -23,17 +21,11 @@ router
   .route('/generate-similar')
   .post(auth('manageQuestions'), validate(questionValidation.generateSimilarQuestions), questionController.generateSimilar);
 
-router
-  .route('/by-tags')
-  .get(auth(), validate(questionValidation.getQuestionsByTags), questionController.getByTags);
+router.route('/by-tags').get(auth(), validate(questionValidation.getQuestionsByTags), questionController.getByTags);
 
-router
-  .route('/stats')
-  .get(auth(), questionController.getBankStats);
+router.route('/stats').get(auth(), questionController.getBankStats);
 
-router
-  .route('/school-search')
-  .get(auth(), validate(questionValidation.getQuestions), questionController.searchAllBanks);
+router.route('/school-search').get(auth(), validate(questionValidation.getQuestions), questionController.searchAllBanks);
 
 router
   .route('/:id')

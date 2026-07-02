@@ -52,7 +52,7 @@ function parseCalage(content) {
 
   const lines = content.split(/\r?\n/);
   let traceposCount = 0;
-  
+
   for (const rawLine of lines) {
     const line = rawLine.trim();
     if (!line) continue;
@@ -91,7 +91,9 @@ function parseCalage(content) {
     traceposCount++;
   }
 
-  console.log(`[calageToTemplate] Found ${traceposCount} tracepos entries, ${Object.keys(traceposByLabel).length} unique labels`);
+  console.log(
+    `[calageToTemplate] Found ${traceposCount} tracepos entries, ${Object.keys(traceposByLabel).length} unique labels`
+  );
 
   // Parse boxchar entries to build label → option letter mapping
   // Format: \boxchar{0/1:case:q1[4]:10,1}{A}
@@ -99,16 +101,21 @@ function parseCalage(content) {
   for (const rawLine of lines) {
     const line = rawLine.trim();
     if (!line.startsWith('\\boxchar{')) continue;
-    
+
     const boxMatch = line.match(/^\\boxchar\{([^}]+)\}\{([^}]+)\}/);
     if (!boxMatch) continue;
-    
+
     const [, label, optionChar] = boxMatch;
     const actualLabel = label.replace(/^\d+\/\d+:/, '');
     labelToOption[actualLabel] = optionChar;
   }
-  console.log(`[calageToTemplate] Boxchar entries: ${Object.keys(labelToOption).length}, sample:`, 
-    Object.entries(labelToOption).slice(0, 3).map(([k,v]) => `${k}=${v}`).join(', '));
+  console.log(
+    `[calageToTemplate] Boxchar entries: ${Object.keys(labelToOption).length}, sample:`,
+    Object.entries(labelToOption)
+      .slice(0, 3)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(', ')
+  );
 
   // Process paired tracepos entries
   const studentIdBubbles = {};
@@ -121,12 +128,12 @@ function parseCalage(content) {
 
     // Remove page prefix: "0/1:" or "0/2:"
     const actualLabel = label.replace(/^\d+\/\d+:/, '');
-    
+
     // Sort points to identify corners (top-left vs bottom-right)
-    const sorted = [...points].sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    const sorted = [...points].sort((a, b) => a.x + a.y - (b.x + b.y));
     const topLeft = sorted[0];
     const bottomRight = sorted[sorted.length - 1];
-    
+
     const w = Math.abs(bottomRight.x - topLeft.x);
     const h = Math.abs(bottomRight.y - topLeft.y);
 
@@ -138,7 +145,7 @@ function parseCalage(content) {
     //   case:q1[1]:10,1
     //   chiffre:1,5 (legacy)
     const caseMatch = actualLabel.match(/^case:([^:[]+)(?:\[(\d+)\])?:(\d+),(\d+)$/);
-    
+
     if (caseMatch) {
       const [, name, indexStr, posStr, valueStr] = caseMatch;
       const position = parseInt(posStr, 10);
@@ -173,7 +180,7 @@ function parseCalage(content) {
         } else {
           verDigit = position;
         }
-        
+
         if (!versionCodeBubbles[verDigit]) versionCodeBubbles[verDigit] = {};
         versionCodeBubbles[verDigit][value] = {
           x: topLeft.x,
@@ -215,36 +222,36 @@ function parseCalage(content) {
         questions[qNum].slots[optionLetter] = bubble;
       }
     }
-    
-  // Legacy format: chiffre:DIGIT,VALUE
-  // NOTE: Skip legacy format if we already have case:student entries for this digit
-  // This prevents duplicate bubbles (both formats exist in some AMC files)
-  else if (actualLabel.startsWith('chiffre:')) {
-    // Check if this digit already has case:student entries
-    const chiffreMatch = actualLabel.match(/^chiffre:(\d+),(\d+)$/);
-    if (chiffreMatch) {
-      const legacyDigit = parseInt(chiffreMatch[1], 10);
-      
-      // If we already have case:student bubbles for this digit, skip legacy
-      if (studentIdBubbles[legacyDigit] && Object.keys(studentIdBubbles[legacyDigit]).length > 0) {
-        continue;
+
+    // Legacy format: chiffre:DIGIT,VALUE
+    // NOTE: Skip legacy format if we already have case:student entries for this digit
+    // This prevents duplicate bubbles (both formats exist in some AMC files)
+    else if (actualLabel.startsWith('chiffre:')) {
+      // Check if this digit already has case:student entries
+      const chiffreMatch = actualLabel.match(/^chiffre:(\d+),(\d+)$/);
+      if (chiffreMatch) {
+        const legacyDigit = parseInt(chiffreMatch[1], 10);
+
+        // If we already have case:student bubbles for this digit, skip legacy
+        if (studentIdBubbles[legacyDigit] && Object.keys(studentIdBubbles[legacyDigit]).length > 0) {
+          continue;
+        }
+
+        const digit = legacyDigit;
+        const value = parseInt(chiffreMatch[2], 10);
+
+        if (!studentIdBubbles[digit]) studentIdBubbles[digit] = {};
+        studentIdBubbles[digit][value] = {
+          x: topLeft.x,
+          y: topLeft.y,
+          w: Math.round(w),
+          h: Math.round(h),
+          digit,
+          value,
+        };
       }
-      
-      const digit = legacyDigit;
-      const value = parseInt(chiffreMatch[2], 10);
-      
-      if (!studentIdBubbles[digit]) studentIdBubbles[digit] = {};
-      studentIdBubbles[digit][value] = {
-        x: topLeft.x,
-        y: topLeft.y,
-        w: Math.round(w),
-        h: Math.round(h),
-        digit,
-        value,
-      };
     }
   }
-}
 
   return {
     bubbles: questionBubbles,
@@ -275,7 +282,7 @@ function scaleCalage(calageData, targetDpi = 300) {
   if (!calageData) {
     return { bubbles: [], questions: {}, meta: {} };
   }
-  
+
   const scale = targetDpi / PDF_PT_PER_INCH;
 
   const scaleCoords = (c) => ({
@@ -286,7 +293,7 @@ function scaleCalage(calageData, targetDpi = 300) {
   });
 
   const scaled = {
-    bubbles: calageData.bubbles.map(b => ({
+    bubbles: calageData.bubbles.map((b) => ({
       ...b,
       ...scaleCoords(b),
     })),
@@ -347,7 +354,7 @@ const PAPER_SIZES = {
 /**
  * Build the answers section: coordinates of all bubbles per question
  * Format: { 'q1': { A: {x,y,w,h}, B: {...}, ... }, 'q2': {...}, ... }
- * 
+ *
  * AMC exports only correct answer bubble (A) in calage.xy.
  * This function generates positions for B, C, D based on existing bubble + spacing.
  */
@@ -361,7 +368,7 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
 
   // IMPORTANT: Calculate ACTUAL spacing from all bubbles in calage
   let actualSpacing = Math.round(25 * scale); // ~104px at 300 DPI (default)
-  
+
   if (scaledCalage.bubbles && scaledCalage.bubbles.length >= 8) {
     const bubblesByQ = {};
     for (const bubble of scaledCalage.bubbles) {
@@ -369,20 +376,20 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
       if (!bubblesByQ[qNum]) bubblesByQ[qNum] = [];
       bubblesByQ[qNum].push(bubble);
     }
-    
+
     const spacings = [];
     for (const bubbles of Object.values(bubblesByQ)) {
       if (bubbles.length >= 2) {
         bubbles.sort((a, b) => a.x - b.x);
         for (let i = 1; i < bubbles.length; i++) {
-          const spacing = bubbles[i].x - bubbles[i-1].x;
+          const spacing = bubbles[i].x - bubbles[i - 1].x;
           if (spacing > 50 && spacing < 200) {
             spacings.push(spacing);
           }
         }
       }
     }
-    
+
     if (spacings.length > 0) {
       spacings.sort((a, b) => a - b);
       actualSpacing = spacings[Math.floor(spacings.length / 2)];
@@ -396,7 +403,7 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
 
     // Collect existing bubbles (usually just the correct answer = A)
     const existingSlots = qData.slots || {};
-    
+
     // Add existing bubbles (from AMC calage - typically only correct answer)
     for (const [letter, bubble] of Object.entries(existingSlots)) {
       answers[`q${qNum}`][letter] = {
@@ -409,9 +416,9 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
 
     // Generate missing option bubbles (B, C, D)
     // Find reference bubble (prefer A if exists, otherwise first available)
-    const referenceLetter = optionLetters.find(l => existingSlots[l]) || Object.keys(existingSlots)[0];
+    const referenceLetter = optionLetters.find((l) => existingSlots[l]) || Object.keys(existingSlots)[0];
     const referenceBubble = existingSlots[referenceLetter];
-    
+
     if (referenceBubble && optionsPerQuestion > 1) {
       const refIndex = optionLetters.indexOf(referenceLetter);
       const refX = referenceBubble.x;
@@ -424,8 +431,8 @@ function buildAnswersSection(scaledCalage, scale, csvData) {
         if (!answers[`q${qNum}`][letter]) {
           // Generate position for this option based on reference
           const offsetFromRef = i - refIndex;
-          const newX = refX + (offsetFromRef * actualSpacing);
-          
+          const newX = refX + offsetFromRef * actualSpacing;
+
           answers[`q${qNum}`][letter] = {
             x: newX,
             y: refY,
@@ -453,21 +460,21 @@ function buildStudentIdSection(existingCoords, options = {}) {
 
   const coords = [];
   const studentIdData = existingCoords;
-  
+
   // Sort digits numerically
   const sortedDigits = Object.keys(studentIdData)
     .map(Number)
     .sort((a, b) => a - b);
-  
+
   for (const digit of sortedDigits) {
     const values = studentIdData[digit];
     if (!values) continue;
-    
+
     // Sort values numerically
     const sortedValues = Object.keys(values)
       .map(Number)
       .sort((a, b) => a - b);
-    
+
     for (const value of sortedValues) {
       const c = values[value];
       if (!c) continue;
@@ -481,7 +488,7 @@ function buildStudentIdSection(existingCoords, options = {}) {
       });
     }
   }
-  
+
   return { digits, coords };
 }
 
@@ -528,14 +535,14 @@ function generateVersionCodeFromStudentId(studentIdCoords, digits = 2, scale = 1
   // Standard AMC spacing between version digits (horizontal)
   const DIGIT_SPACING_PT = 95; // in PDF points (~95 * 4.167 ≈ 396 pixels)
 
-  const startX = refX + (DIGIT_SPACING_PT * scale);
+  const startX = refX + DIGIT_SPACING_PT * scale;
   const coords = [];
 
   // Generate version code bubbles with VERTICAL stacking per digit
   // In PDF: larger y = top, smaller y = bottom
   // Value 1 at top (larger y), value 10 at bottom (smaller y)
   for (let digit = 1; digit <= digits; digit++) {
-    const digitStartX = startX + ((digit - 1) * DIGIT_SPACING_PT * scale);
+    const digitStartX = startX + (digit - 1) * DIGIT_SPACING_PT * scale;
     for (let value = 1; value <= 10; value++) {
       // Stack vertically: y decreases as value increases (moving down the page)
       coords.push({
@@ -549,7 +556,9 @@ function generateVersionCodeFromStudentId(studentIdCoords, digits = 2, scale = 1
     }
   }
 
-  console.log(`[generateVersionCodeFromStudentId] Generated ${coords.length} version code bubbles (vertical stack, spacing=${verticalSpacing})`);
+  console.log(
+    `[generateVersionCodeFromStudentId] Generated ${coords.length} version code bubbles (vertical stack, spacing=${verticalSpacing})`
+  );
   return coords;
 }
 
@@ -566,21 +575,21 @@ function buildVersionCodeSection(existingCoords, options = {}) {
 
   const coords = [];
   const versionData = existingCoords;
-  
+
   // Sort digits numerically
   const sortedDigits = Object.keys(versionData)
     .map(Number)
     .sort((a, b) => a - b);
-  
+
   for (const digit of sortedDigits) {
     const values = versionData[digit];
     if (!values) continue;
-    
+
     // Sort values numerically
     const sortedValues = Object.keys(values)
       .map(Number)
       .sort((a, b) => a - b);
-    
+
     for (const value of sortedValues) {
       const c = values[value];
       if (!c) continue;
@@ -594,7 +603,7 @@ function buildVersionCodeSection(existingCoords, options = {}) {
       });
     }
   }
-  
+
   return { digits: sortedDigits.length || digits, coords };
 }
 
@@ -622,7 +631,7 @@ function buildQuestionScores(numQuestions, totalScore = 10) {
 function buildAnswerKeySection(csvData) {
   const key = {};
   if (!csvData || !csvData.answers) return key;
-  
+
   for (const [qNumStr, data] of Object.entries(csvData.answers)) {
     const qNum = parseInt(qNumStr, 10);
     if (isNaN(qNum) || qNum <= 0) continue;
@@ -635,19 +644,9 @@ function buildAnswerKeySection(csvData) {
  * Main builder: construct templateJson from calage + CSV data
  */
 function buildTemplate(input) {
-  const {
-    calageData,
-    csvData,
-    exam,
-    options = {},
-  } = input;
+  const { calageData, csvData, exam, options = {} } = input;
 
-  const {
-    scanDpi = DEFAULT_SCAN_DPI,
-    paperSize = 'A4',
-    studentIdDigits = 7,
-    versionDigits = 2,
-  } = options;
+  const { scanDpi = DEFAULT_SCAN_DPI, paperSize = 'A4', studentIdDigits = 7, versionDigits = 2 } = options;
 
   // Parse calage if raw content provided
   let parsedCalage = calageData;
@@ -657,7 +656,7 @@ function buildTemplate(input) {
 
   const totalScore = exam?.totalScore || 10;
   const numQuestions = parsedCalage?.meta?.totalQuestions || csvData?.meta?.totalQuestions || 0;
-  
+
   // Scale calage from PDF points to target scan DPI
   const scaledCalage = scaleCalage(parsedCalage, scanDpi);
   const scale = scanDpi / PDF_PT_PER_INCH;
@@ -680,20 +679,16 @@ function buildTemplate(input) {
   const studentIdSection = buildStudentIdSection(scaledCalage.studentId, {
     digits: studentIdDigits,
   });
-  
+
   // Build version code section
   let versionCodeSection = buildVersionCodeSection(scaledCalage.versionCode, {
     digits: versionDigits,
   });
-  
+
   // Fallback: generate version code bubbles based on student ID position
   if (!versionCodeSection.coords || versionCodeSection.coords.length === 0) {
     console.log('[calageToTemplate] No versionCode in calage, generating from student ID position...');
-    const generatedCoords = generateVersionCodeFromStudentId(
-      studentIdSection.coords,
-      versionDigits,
-      scale
-    );
+    const generatedCoords = generateVersionCodeFromStudentId(studentIdSection.coords, versionDigits, scale);
     if (generatedCoords.length > 0) {
       versionCodeSection = {
         digits: versionDigits,
@@ -710,7 +705,9 @@ function buildTemplate(input) {
         console.warn(`[buildTemplate] WARNING: ${fieldName} x(${c.x}) + w(${c.w}) = ${c.x + c.w} > pageWidth(${pageWidth})`);
       }
       if (c.y + c.h > pageHeight) {
-        console.warn(`[buildTemplate] WARNING: ${fieldName} y(${c.y}) + h(${c.h}) = ${c.y + c.h} > pageHeight(${pageHeight})`);
+        console.warn(
+          `[buildTemplate] WARNING: ${fieldName} y(${c.y}) + h(${c.h}) = ${c.y + c.h} > pageHeight(${pageHeight})`
+        );
       }
     }
   };

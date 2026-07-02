@@ -39,9 +39,7 @@ const register = catchAsync(async (req, res) => {
     email,
     password,
     role: 'teacher',
-    ...(hasSchool
-      ? { registeredSchoolId: resolvedSchoolId, schoolId: resolvedSchoolId }
-      : {}),
+    ...(hasSchool ? { registeredSchoolId: resolvedSchoolId, schoolId: resolvedSchoolId } : {}),
     registrationStatus: hasSchool ? 'pending' : 'approved',
     isActive: hasSchool ? false : true,
   });

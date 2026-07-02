@@ -122,10 +122,7 @@ async function getRecentActivities(user, limit = 10) {
     }
 
     // Get recent classes created by user
-    const recentClasses = await Class.find({ createdBy: userId })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean();
+    const recentClasses = await Class.find({ createdBy: userId }).sort({ createdAt: -1 }).limit(5).lean();
 
     for (const cls of recentClasses) {
       activities.push({
@@ -146,7 +143,7 @@ async function getRecentActivities(user, limit = 10) {
     }
 
     // Get recent appeals for user's exams
-    const userExamIds = recentExams.map(e => e._id);
+    const userExamIds = recentExams.map((e) => e._id);
     if (userExamIds.length > 0) {
       const recentAppeals = await Appeal.find({ examId: { $in: userExamIds } })
         .sort({ createdAt: -1 })

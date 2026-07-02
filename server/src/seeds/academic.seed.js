@@ -112,11 +112,26 @@ const seedStudents = async (school, classes) => {
   console.log('Starting students seeding...');
 
   const vietnameseNames = [
-    'Nguyễn Văn An', 'Trần Thị Bình', 'Lê Hoàng Nam', 'Phạm Minh Tuấn',
-    'Đặng Thị Hương', 'Bùi Văn Đức', 'Hoàng Thị Mai', 'Vũ Văn Khoa',
-    'Đỗ Thị Lan', 'Ngô Văn Hùng', 'Trịnh Thị Ngọc', 'Phan Văn Lâm',
-    'Cao Thị Thu', 'Đinh Văn Hải', 'Bạch Thị Yến', 'Hà Văn Sơn',
-    'Đinh Thị Linh', 'Lý Văn Phong', 'Tạ Thị Vân', 'Võ Văn Tân',
+    'Nguyễn Văn An',
+    'Trần Thị Bình',
+    'Lê Hoàng Nam',
+    'Phạm Minh Tuấn',
+    'Đặng Thị Hương',
+    'Bùi Văn Đức',
+    'Hoàng Thị Mai',
+    'Vũ Văn Khoa',
+    'Đỗ Thị Lan',
+    'Ngô Văn Hùng',
+    'Trịnh Thị Ngọc',
+    'Phan Văn Lâm',
+    'Cao Thị Thu',
+    'Đinh Văn Hải',
+    'Bạch Thị Yến',
+    'Hà Văn Sơn',
+    'Đinh Thị Linh',
+    'Lý Văn Phong',
+    'Tạ Thị Vân',
+    'Võ Văn Tân',
   ];
 
   const createdStudents = [];

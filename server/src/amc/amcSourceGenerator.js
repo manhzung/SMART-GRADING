@@ -31,33 +31,35 @@ function escapeLatex(text) {
     QUOTE: '\x01QT\x01',
   };
 
-  return text
-    // Step 1: Convert special chars to placeholder tokens
-    .replace(/\\/g, TOKENS.BACKSLASH)
-    .replace(/~/g, TOKENS.TILDE)
-    .replace(/\^/g, TOKENS.CARET)
-    .replace(/&/g, TOKENS.AMP)
-    .replace(/%/g, TOKENS.PERCENT)
-    .replace(/\$/g, TOKENS.DOLLAR)
-    .replace(/#/g, TOKENS.HASH)
-    .replace(/_/g, TOKENS.UNDERSCORE)
-    .replace(/\{/g, TOKENS.LBRACE)
-    .replace(/\}/g, TOKENS.RBRACE)
-    .replace(/"/g, TOKENS.QUOTE)
-    // Step 2: Convert tokens to LaTeX escapes
-    .replace(new RegExp(TOKENS.BACKSLASH, 'g'), '\\textbackslash{}')
-    .replace(new RegExp(TOKENS.TILDE, 'g'), '\\textasciitilde{}')
-    .replace(new RegExp(TOKENS.CARET, 'g'), '\\textasciicircum{}')
-    .replace(new RegExp(TOKENS.AMP, 'g'), '\\&')
-    .replace(new RegExp(TOKENS.PERCENT, 'g'), '\\%')
-    .replace(new RegExp(TOKENS.DOLLAR, 'g'), '\\$')
-    .replace(new RegExp(TOKENS.HASH, 'g'), '\\#')
-    .replace(new RegExp(TOKENS.UNDERSCORE, 'g'), '\\_')
-    .replace(new RegExp(TOKENS.LBRACE, 'g'), '\\{')
-    .replace(new RegExp(TOKENS.RBRACE, 'g'), '\\}')
-    .replace(new RegExp(TOKENS.QUOTE, 'g'), '\\textquotedbl{}')
-    // Step 3: Keep single quotes as-is (LaTeX renders them OK)
-    .replace(/'/g, "'");
+  return (
+    text
+      // Step 1: Convert special chars to placeholder tokens
+      .replace(/\\/g, TOKENS.BACKSLASH)
+      .replace(/~/g, TOKENS.TILDE)
+      .replace(/\^/g, TOKENS.CARET)
+      .replace(/&/g, TOKENS.AMP)
+      .replace(/%/g, TOKENS.PERCENT)
+      .replace(/\$/g, TOKENS.DOLLAR)
+      .replace(/#/g, TOKENS.HASH)
+      .replace(/_/g, TOKENS.UNDERSCORE)
+      .replace(/\{/g, TOKENS.LBRACE)
+      .replace(/\}/g, TOKENS.RBRACE)
+      .replace(/"/g, TOKENS.QUOTE)
+      // Step 2: Convert tokens to LaTeX escapes
+      .replace(new RegExp(TOKENS.BACKSLASH, 'g'), '\\textbackslash{}')
+      .replace(new RegExp(TOKENS.TILDE, 'g'), '\\textasciitilde{}')
+      .replace(new RegExp(TOKENS.CARET, 'g'), '\\textasciicircum{}')
+      .replace(new RegExp(TOKENS.AMP, 'g'), '\\&')
+      .replace(new RegExp(TOKENS.PERCENT, 'g'), '\\%')
+      .replace(new RegExp(TOKENS.DOLLAR, 'g'), '\\$')
+      .replace(new RegExp(TOKENS.HASH, 'g'), '\\#')
+      .replace(new RegExp(TOKENS.UNDERSCORE, 'g'), '\\_')
+      .replace(new RegExp(TOKENS.LBRACE, 'g'), '\\{')
+      .replace(new RegExp(TOKENS.RBRACE, 'g'), '\\}')
+      .replace(new RegExp(TOKENS.QUOTE, 'g'), '\\textquotedbl{}')
+      // Step 3: Keep single quotes as-is (LaTeX renders them OK)
+      .replace(/'/g, "'")
+  );
 }
 
 function formatDate(date) {
@@ -83,7 +85,7 @@ function seededShuffle(array, seed) {
   let s = seed >>> 0;
   // mulberry32 PRNG
   const rand = () => {
-    s = (s + 0x6D2B79F5) >>> 0;
+    s = (s + 0x6d2b79f5) >>> 0;
     let t = s;
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
@@ -209,11 +211,7 @@ function buildQuestionLines(questions) {
  * @returns {string[]}
  */
 function buildFooterLines() {
-  return [
-    '}',
-    '',
-    '\\end{document}',
-  ];
+  return ['}', '', '\\end{document}'];
 }
 
 /**
@@ -229,11 +227,7 @@ function buildFooterLines() {
  */
 function generateAmcSourceForVersion(input) {
   const { exam, questions, config } = input;
-  const lines = [
-    ...buildHeaderLines(exam, config),
-    ...buildQuestionLines(questions),
-    ...buildFooterLines(),
-  ];
+  const lines = [...buildHeaderLines(exam, config), ...buildQuestionLines(questions), ...buildFooterLines()];
   return lines.join('\n');
 }
 
@@ -338,21 +332,19 @@ function shuffleQuestionsForVersion(questions, versionCode, options = {}) {
   // Step 2: shuffle options within each question
   // (use different seed offsets to avoid correlation with question order)
   return orderedQuestions.map((q, idx) => {
-    const optionsToShuffle = (q.options || []).map(opt => ({
+    const optionsToShuffle = (q.options || []).map((opt) => ({
       content: opt.content,
       isCorrect: opt.isCorrect,
       id: opt.id,
     }));
 
-    const shuffledOpts = shuffleOptions
-      ? seededShuffle(optionsToShuffle, seed + idx * 1000 + 7)
-      : optionsToShuffle;
+    const shuffledOpts = shuffleOptions ? seededShuffle(optionsToShuffle, seed + idx * 1000 + 7) : optionsToShuffle;
 
     return {
       _id: q._id, // Preserve ID for downstream lookup
       content: q.content,
       options: shuffledOpts,
-      originalIndex: questions.findIndex(orig => orig._id?.toString() === q._id?.toString()),
+      originalIndex: questions.findIndex((orig) => orig._id?.toString() === q._id?.toString()),
     };
   });
 }

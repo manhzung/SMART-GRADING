@@ -3,18 +3,8 @@ const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const app = require('../../src/app');
 const { Exam } = require('../../src/models');
-const {
-  teacherOne,
-  teacherTwo,
-  insertUsers,
-} = require('../fixtures/user.fixture');
-const {
-  examUpcoming1,
-  examUpcoming2,
-  examPast,
-  examOtherTeacher,
-  insertExams,
-} = require('../fixtures/exam.fixture');
+const { teacherOne, teacherTwo, insertUsers } = require('../fixtures/user.fixture');
+const { examUpcoming1, examUpcoming2, examPast, examOtherTeacher, insertExams } = require('../fixtures/exam.fixture');
 const { schoolA, insertSchools } = require('../fixtures/school.fixture');
 const setupTestDB = require('../utils/setupTestDB');
 const { teacherOneAccessToken, teacherTwoAccessToken } = require('../fixtures/token.fixture');

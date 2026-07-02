@@ -7,6 +7,10 @@ const { QuestionBank, QuestionBankMember, User } = require('../models');
 const createBank = catchAsync(async (req, res) => {
   const type = req.body.type || 'personal';
 
+  if (req.user.role === 'teacher' && type !== 'personal') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Teachers can only create personal banks');
+  }
+
   if (type === 'school' && req.user.role !== 'admin' && req.user.role !== 'school-admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Chỉ admin mới được tạo ngân hàng câu hỏi cho trường');
   }
@@ -60,7 +64,7 @@ const listBanks = catchAsync(async (req, res) => {
 const listAllBanks = catchAsync(async (req, res) => {
   const { search, type, limit = 50, page = 1 } = req.query;
 
-  let filter = {};
+  const filter = {};
 
   if (req.user.role === 'school-admin' && req.user.schoolId) {
     filter.schoolId = req.user.schoolId;

@@ -1,19 +1,8 @@
 const mongoose = require('mongoose');
 const QuestionService = require('../../../src/services/question.service');
 const ApiError = require('../../../src/utils/ApiError');
-const {
-  questionOne,
-  questionTwo,
-  questionUsedInExam,
-  insertQuestions,
-} = require('../../fixtures/question.fixture');
-const {
-  admin,
-  teacherOne,
-  teacherTwo,
-  studentOne,
-  insertUsers,
-} = require('../../fixtures/user.fixture');
+const { questionOne, questionTwo, questionUsedInExam, insertQuestions } = require('../../fixtures/question.fixture');
+const { admin, teacherOne, teacherTwo, studentOne, insertUsers } = require('../../fixtures/user.fixture');
 const setupTestDB = require('../../utils/setupTestDB');
 
 setupTestDB();
@@ -95,38 +84,27 @@ describe('Question Service', () => {
 
   describe('getById', () => {
     it('should return question with answers for teacher', async () => {
-      const question = await questionService.getById(
-        dbQuestions[0]._id.toString(),
-        teacherOne
-      );
+      const question = await questionService.getById(dbQuestions[0]._id.toString(), teacherOne);
       expect(question.options[0].isCorrect).toBe(false);
       expect(question.options[1].isCorrect).toBe(true);
       expect(question.correctAnswer).toBe('B');
     });
 
     it('should NOT return isCorrect for student', async () => {
-      const question = await questionService.getById(
-        dbQuestions[0]._id.toString(),
-        studentOne
-      );
+      const question = await questionService.getById(dbQuestions[0]._id.toString(), studentOne);
       expect(question.options[0].isCorrect).toBeUndefined();
       expect(question.options[1].isCorrect).toBeUndefined();
       expect(question.correctAnswer).toBeUndefined();
     });
 
     it('should return full question for admin', async () => {
-      const question = await questionService.getById(
-        dbQuestions[0]._id.toString(),
-        admin
-      );
+      const question = await questionService.getById(dbQuestions[0]._id.toString(), admin);
       expect(question.options[1].isCorrect).toBe(true);
       expect(question.correctAnswer).toBe('B');
     });
 
     it('should return null for non-existent question', async () => {
-      const question = await questionService.getById(
-        mongoose.Types.ObjectId().toString()
-      );
+      const question = await questionService.getById(mongoose.Types.ObjectId().toString());
       expect(question).toBeNull();
     });
   });
@@ -163,12 +141,7 @@ describe('Question Service', () => {
         ],
         difficulty: 'easy',
       };
-      const question = await questionService.create(
-        data,
-        admin._id.toString(),
-        admin.schoolId?.toString(),
-        'admin'
-      );
+      const question = await questionService.create(data, admin._id.toString(), admin.schoolId?.toString(), 'admin');
       expect(question.isApproved).toBe(true);
       expect(question.approvedAt).not.toBeNull();
     });
@@ -185,32 +158,20 @@ describe('Question Service', () => {
     });
 
     it('admin should be able to update any question', async () => {
-      const updated = await questionService.update(
-        dbQuestions[0]._id.toString(),
-        { content: 'Admin updated' },
-        admin
-      );
+      const updated = await questionService.update(dbQuestions[0]._id.toString(), { content: 'Admin updated' }, admin);
       expect(updated.content).toBe('Admin updated');
     });
 
     it('teacher from different school should NOT be able to update', async () => {
-      await expect(
-        questionService.update(
-          dbQuestions[0]._id.toString(),
-          { content: 'Hacked' },
-          teacherTwo
-        )
-      ).rejects.toThrow('Bạn không có quyền sửa câu hỏi này');
+      await expect(questionService.update(dbQuestions[0]._id.toString(), { content: 'Hacked' }, teacherTwo)).rejects.toThrow(
+        'Bạn không có quyền sửa câu hỏi này'
+      );
     });
 
     it('student should NOT be able to update', async () => {
-      await expect(
-        questionService.update(
-          dbQuestions[0]._id.toString(),
-          { content: 'Hacked' },
-          studentOne
-        )
-      ).rejects.toThrow('Bạn không có quyền sửa câu hỏi này');
+      await expect(questionService.update(dbQuestions[0]._id.toString(), { content: 'Hacked' }, studentOne)).rejects.toThrow(
+        'Bạn không có quyền sửa câu hỏi này'
+      );
     });
 
     it('should NOT allow changing schoolId', async () => {
@@ -223,64 +184,51 @@ describe('Question Service', () => {
     });
 
     it('should throw 404 for non-existent question', async () => {
-      await expect(
-        questionService.update(
-          mongoose.Types.ObjectId().toString(),
-          { content: 'Test' },
-          admin
-        )
-      ).rejects.toThrow('Question not found');
+      await expect(questionService.update(mongoose.Types.ObjectId().toString(), { content: 'Test' }, admin)).rejects.toThrow(
+        'Question not found'
+      );
     });
   });
 
   describe('delete', () => {
     it('owner teacher should be able to delete unused question', async () => {
-      const deleted = await questionService.delete(
-        dbQuestions[0]._id.toString(),
-        teacherOne
-      );
+      const deleted = await questionService.delete(dbQuestions[0]._id.toString(), teacherOne);
       expect(deleted.isActive).toBe(false);
     });
 
     it('admin should be able to delete any question', async () => {
-      const deleted = await questionService.delete(
-        dbQuestions[0]._id.toString(),
-        admin
-      );
+      const deleted = await questionService.delete(dbQuestions[0]._id.toString(), admin);
       expect(deleted.isActive).toBe(false);
     });
 
     it('teacher from different school should NOT be able to delete', async () => {
-      await expect(
-        questionService.delete(dbQuestions[0]._id.toString(), teacherTwo)
-      ).rejects.toThrow('Bạn không có quyền xóa câu hỏi này');
+      await expect(questionService.delete(dbQuestions[0]._id.toString(), teacherTwo)).rejects.toThrow(
+        'Bạn không có quyền xóa câu hỏi này'
+      );
     });
 
     it('student should NOT be able to delete', async () => {
-      await expect(
-        questionService.delete(dbQuestions[0]._id.toString(), studentOne)
-      ).rejects.toThrow('Bạn không có quyền xóa câu hỏi này');
+      await expect(questionService.delete(dbQuestions[0]._id.toString(), studentOne)).rejects.toThrow(
+        'Bạn không có quyền xóa câu hỏi này'
+      );
     });
 
     it('teacher should NOT be able to delete used question', async () => {
       // dbQuestions[2] is questionUsedInExam with usageCount=3
-      await expect(
-        questionService.delete(dbQuestions[2]._id.toString(), teacherOne)
-      ).rejects.toThrow('Không thể xóa câu hỏi đã được sử dụng trong đề thi');
+      await expect(questionService.delete(dbQuestions[2]._id.toString(), teacherOne)).rejects.toThrow(
+        'Không thể xóa câu hỏi đã được sử dụng trong đề thi'
+      );
     });
 
     it('admin should be able to delete used question', async () => {
-      const deleted = await questionService.delete(
-        dbQuestions[2]._id.toString(),
-        admin
-      );
+      const deleted = await questionService.delete(dbQuestions[2]._id.toString(), admin);
       expect(deleted.isActive).toBe(false);
     });
 
     it('should throw 404 for non-existent question', async () => {
-      await expect(
-        questionService.delete(mongoose.Types.ObjectId().toString(), admin)
-      ).rejects.toThrow('Question not found');
+      await expect(questionService.delete(mongoose.Types.ObjectId().toString(), admin)).rejects.toThrow(
+        'Question not found'
+      );
     });
   });
 
@@ -315,4 +263,3 @@ describe('Question Service', () => {
     });
   });
 });
-

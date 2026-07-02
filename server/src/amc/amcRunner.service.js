@@ -1,10 +1,10 @@
 /**
  * AMC Runner Service - Production Version
- * 
+ *
  * SUPPORTS BOTH WORKFLOWS:
  * 1. WSL2 (Development on Windows): Uses WSL distro for AMC commands
  * 2. Linux Native (Production on VPS): Runs AMC commands directly
- * 
+ *
  * Detection: Checks if RUNNING_IN_DOCKER environment variable is set
  * - If set: Use Linux native commands (production)
  * - If not set: Use WSL commands (development)
@@ -34,8 +34,8 @@ const { generateCalageXyFromTex, parseTexLayout } = require('./amcTexLayoutParse
 class AmcRunnerService {
   constructor() {
     this.env = { WSL_DISTRO, AMC_PROJECTS_DIR, RUNNING_IN_DOCKER };
-    this.isLinuxNative = RUNNING_IN_DOCKER || (!RUNNING_ON_WINDOWS);
-    
+    this.isLinuxNative = RUNNING_IN_DOCKER || !RUNNING_ON_WINDOWS;
+
     if (this.isLinuxNative) {
       console.log('[AMC Runner] Running in Linux native mode (production)');
     } else {
@@ -74,8 +74,12 @@ class AmcRunnerService {
       let stdout = '';
       let stderr = '';
 
-      proc.stdout.on('data', (data) => { stdout += data.toString(); });
-      proc.stderr.on('data', (data) => { stderr += data.toString(); });
+      proc.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      proc.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
 
       proc.on('error', (err) => {
         reject(new Error(`Linux spawn error: ${err.message}`));
@@ -102,8 +106,12 @@ class AmcRunnerService {
       let stdout = '';
       let stderr = '';
 
-      proc.stdout.on('data', (data) => { stdout += data.toString(); });
-      proc.stderr.on('data', (data) => { stderr += data.toString(); });
+      proc.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      proc.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
 
       proc.on('error', (err) => {
         reject(new Error(`WSL spawn error: ${err.message}`));
@@ -121,10 +129,8 @@ class AmcRunnerService {
   execWithTimeout(cmd, timeoutMs = 120000) {
     return new Promise((resolve, reject) => {
       const spawnCmd = this.isLinuxNative ? 'bash' : 'wsl';
-      const spawnArgs = this.isLinuxNative 
-        ? ['-c', cmd]
-        : ['-d', WSL_DISTRO, '--', 'bash', '-c', cmd];
-      
+      const spawnArgs = this.isLinuxNative ? ['-c', cmd] : ['-d', WSL_DISTRO, '--', 'bash', '-c', cmd];
+
       const proc = spawn(spawnCmd, spawnArgs, {
         windowsHide: true,
         maxBuffer: 50 * 1024 * 1024,
@@ -141,11 +147,17 @@ class AmcRunnerService {
       const timer = setTimeout(() => {
         killed = true;
         proc.kill('SIGTERM');
-        setTimeout(() => { if (!proc.killed) proc.kill('SIGKILL'); }, 5000);
+        setTimeout(() => {
+          if (!proc.killed) proc.kill('SIGKILL');
+        }, 5000);
       }, timeoutMs);
 
-      proc.stdout.on('data', (d) => { stdout += d.toString(); });
-      proc.stderr.on('data', (d) => { stderr += d.toString(); });
+      proc.stdout.on('data', (d) => {
+        stdout += d.toString();
+      });
+      proc.stderr.on('data', (d) => {
+        stderr += d.toString();
+      });
 
       proc.on('error', (err) => {
         clearTimeout(timer);
@@ -189,9 +201,7 @@ class AmcRunnerService {
   }
 
   _toWslPath(winPath) {
-    return winPath
-      .replace(/\\/g, '/')
-      .replace(/^([A-Za-z]):/, (m) => `/mnt/${m[0].toLowerCase()}`);
+    return winPath.replace(/\\/g, '/').replace(/^([A-Za-z]):/, (m) => `/mnt/${m[0].toLowerCase()}`);
   }
 
   _validateProjectPath(projectDir) {
@@ -216,10 +226,9 @@ class AmcRunnerService {
     // Use printf instead of echo for better portability
     const base64Source = Buffer.from(texSource, 'utf8').toString('base64');
 
-    const cmd = [
-      `mkdir -p '${projectDir}'`,
-      `printf '%s' '${base64Source}' | base64 -d > '${projectDir}/exam.tex'`
-    ].join(' && ');
+    const cmd = [`mkdir -p '${projectDir}'`, `printf '%s' '${base64Source}' | base64 -d > '${projectDir}/exam.tex'`].join(
+      ' && '
+    );
 
     const result = await this.exec(cmd);
     if (result.exitCode !== 0) {
@@ -231,7 +240,7 @@ class AmcRunnerService {
     if (verify.exitCode !== 0) {
       throw new Error(`LaTeX file verification failed: ${verify.stderr}`);
     }
-    
+
     const fileSize = parseInt(verify.stdout.trim(), 10);
     if (fileSize === 0) {
       throw new Error(`LaTeX file is empty after writing`);
@@ -245,9 +254,7 @@ class AmcRunnerService {
     this._validateProjectPath(projectDir);
     const dataDir = `${projectDir}/exam-data`;
 
-    await this.exec(
-      `mkdir -p '${dataDir}' && chmod -R 777 '${dataDir}' && rm -rf '${dataDir}'/*`
-    );
+    await this.exec(`mkdir -p '${dataDir}' && chmod -R 777 '${dataDir}' && rm -rf '${dataDir}'/*`);
 
     console.log('[AMC Runner] Running AMC prepare with calibration mode...');
 
@@ -272,19 +279,15 @@ class AmcRunnerService {
       console.warn(`[AMC Runner] Log excerpt: ${result.stdout.slice(-500)}`);
     }
 
-    const filesCheck = await this.exec(
-      `ls -la '${projectDir}' | grep -E '\\.xy|\\.pdf|\\.log'`
-    );
+    const filesCheck = await this.exec(`ls -la '${projectDir}' | grep -E '\\.xy|\\.pdf|\\.log'`);
     console.log(`[AMC Runner] Generated files:\n${filesCheck.stdout}`);
 
     const xyExists = await this.exec(
       `[ -f '${projectDir}/calage.xy' ] && echo 'XY_EXISTS' || ` +
-      `[ -f '${projectDir}/amc-compiled.xy' ] && echo 'AMC_XY_EXISTS' || echo 'XY_NOT_FOUND'`
+        `[ -f '${projectDir}/amc-compiled.xy' ] && echo 'AMC_XY_EXISTS' || echo 'XY_NOT_FOUND'`
     );
 
-    const sujetExists = await this.exec(
-      `[ -f '${projectDir}/sujet.pdf' ] && echo 'SUJET_EXISTS' || echo 'SUJET_NOT_FOUND'`
-    );
+    const sujetExists = await this.exec(`[ -f '${projectDir}/sujet.pdf' ] && echo 'SUJET_EXISTS' || echo 'SUJET_NOT_FOUND'`);
 
     const corrigeExists = await this.exec(
       `[ -f '${projectDir}/corrige.pdf' ] && echo 'CORRIGE_EXISTS' || echo 'CORRIGE_NOT_FOUND'`
@@ -297,12 +300,8 @@ class AmcRunnerService {
       success: hasCalage || hasAmcXy,
       calagePath: hasCalage ? `${projectDir}/calage.xy` : null,
       amcCompiledXyPath: hasAmcXy ? `${projectDir}/amc-compiled.xy` : null,
-      sujetPdf: sujetExists.stdout.includes('SUJET_EXISTS')
-        ? `${projectDir}/sujet.pdf`
-        : null,
-      corrigePdf: corrigeExists.stdout.includes('CORRIGE_EXISTS')
-        ? `${projectDir}/corrige.pdf`
-        : null,
+      sujetPdf: sujetExists.stdout.includes('SUJET_EXISTS') ? `${projectDir}/sujet.pdf` : null,
+      corrigePdf: corrigeExists.stdout.includes('CORRIGE_EXISTS') ? `${projectDir}/corrige.pdf` : null,
       logOutput: result.stdout,
     };
   }
@@ -328,9 +327,7 @@ class AmcRunnerService {
     for (const phase of phases) {
       console.log(`[AMC Runner] Phase ${phase.name}...`);
 
-      await this.exec(
-        `mkdir -p '${dataDir}' && chmod 777 '${dataDir}' && rm -f '${dataDir}'/*`
-      );
+      await this.exec(`mkdir -p '${dataDir}' && chmod 777 '${dataDir}' && rm -f '${dataDir}'/*`);
 
       for (let pass = 1; pass <= 2; pass++) {
         const logFile = `${projectDir}/xelatex-${phase.name.toLowerCase()}-pass${pass}.log`;
@@ -394,11 +391,17 @@ class AmcRunnerService {
     const texContent = texResult.stdout;
 
     const qMatches = texContent.match(/\\AMCcode(?:Grid)?(?:Int)?\{([^}]+)\}/g) || [];
-    const questionIds = [...new Set(qMatches.map(m => {
-      const match = m.match(/\\AMCcode(?:Grid)?(?:Int)?\{([^}]+)\}/);
-      const id = match ? match[1] : null;
-      return (id && id.startsWith('q')) ? id : null;
-    }).filter(Boolean))];
+    const questionIds = [
+      ...new Set(
+        qMatches
+          .map((m) => {
+            const match = m.match(/\\AMCcode(?:Grid)?(?:Int)?\{([^}]+)\}/);
+            const id = match ? match[1] : null;
+            return id && id.startsWith('q') ? id : null;
+          })
+          .filter(Boolean)
+      ),
+    ];
 
     const traceposRegex = /\\tracepos\{([^}]+)\}\{([^}]+)\}\{([^}]+)\}\{([^}]+)\}/g;
     const traceposEntries = [];
@@ -418,7 +421,7 @@ class AmcRunnerService {
     }
 
     let calageLines;
-    
+
     if (traceposEntries.length > 0) {
       calageLines = [
         '\\version{2023/02/06 v1.6.0 r:47896cea}',
@@ -446,15 +449,15 @@ class AmcRunnerService {
       for (const entry of boxcharEntries) {
         calageLines.push(`\\boxchar{${entry.label}}{${entry.char}}`);
       }
-      
+
       console.log(`[AMC Runner] Generated .calage.xy with ${traceposEntries.length} tracepos entries from .aux`);
     } else {
       console.log('[AMC Runner] No tracepos in .aux, using TeX layout parser for accurate coordinates');
-      
+
       const numQuestions = questionIds.length || layoutConfig.numQuestions || 16;
       const result = generateCalageXyFromTex(texContent, numQuestions);
       calageLines = result.content.split('\n');
-      
+
       console.log(`[AMC Runner] Generated .calage.xy with ${result.traceposCount} tracepos entries from TeX layout`);
     }
 
@@ -494,9 +497,7 @@ class AmcRunnerService {
       throw new Error(`AMC imprime failed: ${result.stderr}`);
     }
 
-    const findResult = await this.exec(
-      `find '${projectDir}' -name 'copy-*.pdf' -type f | sort`
-    );
+    const findResult = await this.exec(`find '${projectDir}' -name 'copy-*.pdf' -type f | sort`);
     return { outputFiles: findResult.stdout.trim().split('\n').filter(Boolean) };
   }
 
@@ -519,9 +520,7 @@ class AmcRunnerService {
     this._validateProjectPath(projectDir);
 
     const pdfPaths = [];
-    const findResult = await this.exec(
-      `find '${projectDir}' -name '*.pdf' -type f | sort`
-    );
+    const findResult = await this.exec(`find '${projectDir}' -name '*.pdf' -type f | sort`);
 
     const pdfFiles = findResult.stdout.trim().split('\n').filter(Boolean);
 
@@ -531,9 +530,7 @@ class AmcRunnerService {
       const winPdfPath = path.join(outputDir, pdfBasename);
       const wslWinPdfPath = this._toWslPath(winPdfPath);
 
-      const copyResult = await this.exec(
-        `cp '${srcPdfPath}' '${wslWinPdfPath}'`
-      );
+      const copyResult = await this.exec(`cp '${srcPdfPath}' '${wslWinPdfPath}'`);
 
       if (copyResult.exitCode === 0) {
         pdfPaths.push(winPdfPath);
@@ -559,7 +556,10 @@ class AmcRunnerService {
     for (const name of csvNames) {
       const p = `${projectDir}/${name}`;
       const r = await this.exec(`ls -la '${p}' 2>&1`);
-      if (r.exitCode === 0) { csvName = name; break; }
+      if (r.exitCode === 0) {
+        csvName = name;
+        break;
+      }
     }
 
     if (!csvName) {
@@ -588,7 +588,10 @@ class AmcRunnerService {
     for (const name of calageNames) {
       const p = `${projectDir}/${name}`;
       const r = await this.exec(`ls -la '${p}' 2>&1`);
-      if (r.exitCode === 0) { foundName = name; break; }
+      if (r.exitCode === 0) {
+        foundName = name;
+        break;
+      }
     }
 
     if (!foundName) {
@@ -636,9 +639,7 @@ class AmcRunnerService {
    */
   async backendScan(projectDir) {
     this._validateProjectPath(projectDir);
-    const result = await this.exec(
-      `${AMC_TOOLS.amc} check --backend '${projectDir}'`
-    );
+    const result = await this.exec(`${AMC_TOOLS.amc} check --backend '${projectDir}'`);
     if (result.exitCode !== 0) {
       throw new Error(`Backend scan failed: ${result.stderr}`);
     }

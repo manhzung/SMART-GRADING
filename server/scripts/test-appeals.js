@@ -8,20 +8,17 @@ const http = require('http');
 
 function req(opts, data) {
   return new Promise((resolve, reject) => {
-    const r = http.request(
-      { hostname: 'localhost', port: 3000, ...opts },
-      (res) => {
-        let b = '';
-        res.on('data', (c) => (b += c));
-        res.on('end', () => {
-          try {
-            resolve({ status: res.statusCode, body: JSON.parse(b) });
-          } catch {
-            resolve({ status: res.statusCode, body: b });
-          }
-        });
-      },
-    );
+    const r = http.request({ hostname: 'localhost', port: 3000, ...opts }, (res) => {
+      let b = '';
+      res.on('data', (c) => (b += c));
+      res.on('end', () => {
+        try {
+          resolve({ status: res.statusCode, body: JSON.parse(b) });
+        } catch {
+          resolve({ status: res.statusCode, body: b });
+        }
+      });
+    });
     r.on('error', reject);
     if (data) r.write(data);
     r.end();
@@ -36,7 +33,7 @@ function req(opts, data) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     },
-    JSON.stringify({ email: 'anh.nv@student.edu', password: 'admin123' }),
+    JSON.stringify({ email: 'anh.nv@student.edu', password: 'admin123' })
   );
   console.log('Login:', login.status, login.body?.user?.email);
   const token = login.body.tokens.access.token;

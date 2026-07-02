@@ -5,14 +5,20 @@ const { Exam, Submission, Question, OMRTemplate, Class, Subject, User } = requir
 const seedExams = async () => {
   console.log('Starting exams seeding...');
   const school = await require('../models').School.findOne({ code: 'CVA' });
-  if (!school) { console.log('No school found, skipping.'); return; }
+  if (!school) {
+    console.log('No school found, skipping.');
+    return;
+  }
 
   const subjects = await Subject.find({ schoolId: school._id });
   const classes = await Class.find({ schoolId: school._id });
   const teachers = await User.find({ role: 'teacher', schoolId: school._id });
   const students = await User.find({ role: 'student', schoolId: school._id });
   const omrTemplate = await OMRTemplate.findOne({ code: 'OMR_30_STD' });
-  if (!omrTemplate) { console.log('No OMR template found, skipping exams.'); return; }
+  if (!omrTemplate) {
+    console.log('No OMR template found, skipping exams.');
+    return;
+  }
 
   const examData = [
     {
@@ -20,35 +26,45 @@ const seedExams = async () => {
       description: 'Đề thi giữa kỳ môn Toán, thời gian 45 phút',
       status: 'completed',
       daysAgo: 15,
-      classIdx: 0, teacherIdx: 0, subjectCode: 'MATH',
+      classIdx: 0,
+      teacherIdx: 0,
+      subjectCode: 'MATH',
     },
     {
       title: 'Kiểm tra 15 phút - Vật lý',
       description: 'Bài kiểm tra ngắn chương Chuyển động',
       status: 'completed',
       daysAgo: 7,
-      classIdx: 0, teacherIdx: 1, subjectCode: 'PHYS',
+      classIdx: 0,
+      teacherIdx: 1,
+      subjectCode: 'PHYS',
     },
     {
       title: 'Thi cuối kỳ - Hóa học',
       description: 'Đề thi cuối kỳ môn Hóa học lớp 11',
       status: 'published',
       daysAgo: -3,
-      classIdx: 3, teacherIdx: 2, subjectCode: 'CHEM',
+      classIdx: 3,
+      teacherIdx: 2,
+      subjectCode: 'CHEM',
     },
     {
       title: 'Kiểm tra giữa kỳ - Ngữ văn',
       description: 'Đề thi giữa kỳ môn Ngữ văn',
       status: 'draft',
       daysAgo: 0,
-      classIdx: 4, teacherIdx: 3, subjectCode: 'LIT',
+      classIdx: 4,
+      teacherIdx: 3,
+      subjectCode: 'LIT',
     },
     {
       title: 'Kiểm tra tiếng Anh - Đề A',
       description: 'Bài kiểm tra 45 phút môn Tiếng Anh',
       status: 'completed',
       daysAgo: 20,
-      classIdx: 1, teacherIdx: 4, subjectCode: 'ENG',
+      classIdx: 1,
+      teacherIdx: 4,
+      subjectCode: 'ENG',
     },
   ];
 
@@ -105,8 +121,14 @@ const seedSubmissions = async () => {
   const students = await User.find({ role: 'student' });
   const questions = await Question.find({}).limit(30);
 
-  if (exams.length === 0) { console.log('No completed exams, skipping submissions.'); return; }
-  if (students.length === 0) { console.log('No students, skipping submissions.'); return; }
+  if (exams.length === 0) {
+    console.log('No completed exams, skipping submissions.');
+    return;
+  }
+  if (students.length === 0) {
+    console.log('No students, skipping submissions.');
+    return;
+  }
 
   let created = 0;
   for (const exam of exams) {
@@ -133,7 +155,7 @@ const seedSubmissions = async () => {
           selectedAnswer,
           correctAnswer: answerOptions[Math.floor(Math.random() * 4)],
           isCorrect: correct,
-          score: correct ? (exam.totalScore / numQuestions) : 0,
+          score: correct ? exam.totalScore / numQuestions : 0,
         });
       }
 
@@ -168,7 +190,10 @@ const seedQuestions = async () => {
   console.log('Starting questions seeding...');
   const school = await require('../models').School.findOne({ code: 'CVA' });
   const teachers = await User.find({ role: 'teacher' });
-  if (!school || teachers.length === 0) { console.log('No school/teachers, skipping questions.'); return; }
+  if (!school || teachers.length === 0) {
+    console.log('No school/teachers, skipping questions.');
+    return;
+  }
 
   const sampleQuestions = [
     { content: 'Tính đạo hàm của hàm số f(x) = x³ + 2x² - 5x + 1', difficulty: 'medium' },
@@ -178,7 +203,10 @@ const seedQuestions = async () => {
     { content: 'Chứng minh rằng tổng 3 góc trong tam giác bằng 180°', difficulty: 'hard' },
     { content: 'Vận tốc của một vật được cho bởi v(t) = 3t² - 2t + 1. Tính gia tốc tại t = 2s', difficulty: 'medium' },
     { content: 'Tìm giới hạn: lim(x→0) sin(x)/x', difficulty: 'medium' },
-    { content: 'Một hình chữ nhật có chiều dài gấp 3 lần chiều rộng. Tính chu vi biết diện tích = 48m²', difficulty: 'easy' },
+    {
+      content: 'Một hình chữ nhật có chiều dài gấp 3 lần chiều rộng. Tính chu vi biết diện tích = 48m²',
+      difficulty: 'easy',
+    },
     { content: 'Hạt nhân nguyên tử oxygen có bao nhiêu proton?', difficulty: 'easy' },
     { content: 'Nêu các bước phân tích một câu lệnh SQL SELECT', difficulty: 'medium' },
     { content: 'Viết chương trình Python tính tổng các số từ 1 đến n', difficulty: 'easy' },

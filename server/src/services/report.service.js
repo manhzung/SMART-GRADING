@@ -24,7 +24,7 @@ class ReportService {
       }
 
       const submissions = await Submission.find({ examId, status: 'completed' });
-      
+
       if (submissions.length === 0) {
         report.status = 'failed';
         await report.save();
@@ -32,7 +32,7 @@ class ReportService {
       }
 
       // Calculate statistics
-      const scores = submissions.map(s => ({
+      const scores = submissions.map((s) => ({
         score: s.totalScore,
         maxScore: s.maxScore,
         percentage: (s.totalScore / s.maxScore) * 100,
@@ -52,9 +52,9 @@ class ReportService {
         averageScore: avgScore,
         averagePercentage: avgPercentage,
         medianScore: medianPercentage,
-        highestScore: Math.max(...scores.map(s => s.score)),
-        lowestScore: Math.min(...scores.map(s => s.score)),
-        standardDeviation: this.calculateStdDev(scores.map(s => s.percentage)),
+        highestScore: Math.max(...scores.map((s) => s.score)),
+        lowestScore: Math.min(...scores.map((s) => s.score)),
+        standardDeviation: this.calculateStdDev(scores.map((s) => s.percentage)),
       };
 
       // Calculate grade distribution
@@ -74,7 +74,7 @@ class ReportService {
         failed: 0,
       };
 
-      scores.forEach(s => {
+      scores.forEach((s) => {
         const scoreOn10 = (s.percentage / 100) * 10;
         if (scoreOn10 >= gradingScale.excellent) gradeDist.excellent++;
         else if (scoreOn10 >= gradingScale.good) gradeDist.good++;
@@ -155,7 +155,7 @@ class ReportService {
       const sortedHardest = [...questionAnalysis]
         .sort((a, b) => a.accuracy - b.accuracy)
         .slice(0, 5)
-        .map(q => ({
+        .map((q) => ({
           questionId: q.questionId,
           position: q.position,
           accuracy: q.accuracy,
@@ -167,7 +167,7 @@ class ReportService {
       const sortedEasiest = [...questionAnalysis]
         .sort((a, b) => b.accuracy - a.accuracy)
         .slice(0, 5)
-        .map(q => ({
+        .map((q) => ({
           questionId: q.questionId,
           position: q.position,
           accuracy: q.accuracy,
@@ -181,19 +181,15 @@ class ReportService {
         const classDoc = await Class.findById(classId).select('name code studentIds').lean();
         if (!classDoc) continue;
 
-        const classSubmissions = submissions.filter(
-          s => s.classId && s.classId.toString() === classId.toString()
-        );
-        const classScores = classSubmissions.map(s => ({
+        const classSubmissions = submissions.filter((s) => s.classId && s.classId.toString() === classId.toString());
+        const classScores = classSubmissions.map((s) => ({
           score: s.totalScore,
           maxScore: s.maxScore,
           percentage: (s.totalScore / s.maxScore) * 100,
         }));
 
         const submittedCount = classSubmissions.length;
-        const avgScore = submittedCount > 0
-          ? classScores.reduce((sum, s) => sum + s.percentage, 0) / submittedCount
-          : 0;
+        const avgScore = submittedCount > 0 ? classScores.reduce((sum, s) => sum + s.percentage, 0) / submittedCount : 0;
 
         classSummaries.push({
           classId,
@@ -201,15 +197,15 @@ class ReportService {
           totalStudents: classDoc.studentIds?.length || 0,
           submittedCount,
           averageScore: Math.round((avgScore / 100) * (exam.totalScore || 10) * 10) / 10,
-          highestScore: submittedCount > 0 ? Math.max(...classScores.map(s => s.score)) : 0,
-          lowestScore: submittedCount > 0 ? Math.min(...classScores.map(s => s.score)) : 0,
+          highestScore: submittedCount > 0 ? Math.max(...classScores.map((s) => s.score)) : 0,
+          lowestScore: submittedCount > 0 ? Math.min(...classScores.map((s) => s.score)) : 0,
         });
       }
       report.classSummary = classSummaries;
 
       // Get top and bottom students
       const studentScores = submissions
-        .map(s => ({
+        .map((s) => ({
           studentId: s.studentId,
           studentName: s.studentId?.name,
           studentCode: s.studentCode,
@@ -219,10 +215,13 @@ class ReportService {
         .sort((a, b) => b.percentage - a.percentage);
 
       report.topStudents = studentScores.slice(0, 10).map((s, i) => ({ ...s, rank: i + 1 }));
-      report.bottomStudents = studentScores.slice(-10).reverse().map((s, i) => ({
-        ...s,
-        rank: totalStudents - i,
-      }));
+      report.bottomStudents = studentScores
+        .slice(-10)
+        .reverse()
+        .map((s, i) => ({
+          ...s,
+          rank: totalStudents - i,
+        }));
 
       report.status = 'completed';
       report.generatedAt = new Date();
@@ -237,8 +236,7 @@ class ReportService {
   }
 
   async getExamReport(examId) {
-    return ExamReport.findOne({ examId })
-      .populate('examId', 'title examDate');
+    return ExamReport.findOne({ examId }).populate('examId', 'title examDate');
   }
 
   async exportReport(examId, format) {
@@ -261,7 +259,11 @@ class ReportService {
 
       const downloadUrl = await exportService.uploadToCloudinary(filePath, 'exam-reports');
 
-      try { fs.unlinkSync(filePath); } catch (e) { /* ignore cleanup error */ }
+      try {
+        fs.unlinkSync(filePath);
+      } catch (e) {
+        /* ignore cleanup error */
+      }
 
       return {
         report,
@@ -276,7 +278,7 @@ class ReportService {
   calculateStdDev(values) {
     if (values.length === 0) return 0;
     const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
-    const squareDiffs = values.map(v => Math.pow(v - avg, 2));
+    const squareDiffs = values.map((v) => Math.pow(v - avg, 2));
     const avgSquareDiff = squareDiffs.reduce((sum, v) => sum + v, 0) / values.length;
     return Math.sqrt(avgSquareDiff);
   }
@@ -290,8 +292,8 @@ class ReportService {
       { range: '8-10', min: 80, max: 100 },
     ];
 
-    return ranges.map(r => {
-      const count = scores.filter(s => s.percentage >= r.min && s.percentage < r.max).length;
+    return ranges.map((r) => {
+      const count = scores.filter((s) => s.percentage >= r.min && s.percentage < r.max).length;
       return {
         range: r.range,
         minScore: r.min,
@@ -304,8 +306,7 @@ class ReportService {
 
   async getStudentProgress(studentId) {
     const { StudentProgress } = require('../models');
-    return StudentProgress.findOne({ studentId })
-      .populate('scoreHistory.examId', 'title examDate');
+    return StudentProgress.findOne({ studentId }).populate('scoreHistory.examId', 'title examDate');
   }
 
   async getProgressHistory(studentId, query = {}) {
@@ -317,10 +318,10 @@ class ReportService {
     let history = progress.scoreHistory || [];
 
     if (fromDate) {
-      history = history.filter(h => new Date(h.examDate) >= new Date(fromDate));
+      history = history.filter((h) => new Date(h.examDate) >= new Date(fromDate));
     }
     if (toDate) {
-      history = history.filter(h => new Date(h.examDate) <= new Date(toDate));
+      history = history.filter((h) => new Date(h.examDate) <= new Date(toDate));
     }
 
     return {
@@ -341,19 +342,17 @@ class ReportService {
       throw new ApiError(404, 'Class not found');
     }
 
-    const studentIds = classData.studentIds.map(s => s._id);
+    const studentIds = classData.studentIds.map((s) => s._id);
 
     // Get submissions for these students
     const filter = { studentId: { $in: studentIds } };
     if (examId) filter.examId = examId;
 
-    const submissions = await Submission.find(filter)
-      .populate('studentId', 'name studentCode')
-      .sort({ totalScore: -1 });
+    const submissions = await Submission.find(filter).populate('studentId', 'name studentCode').sort({ totalScore: -1 });
 
     // Group by student and calculate average
     const studentScores = {};
-    submissions.forEach(s => {
+    submissions.forEach((s) => {
       const sid = s.studentId._id.toString();
       if (!studentScores[sid]) {
         studentScores[sid] = {
@@ -369,7 +368,7 @@ class ReportService {
     });
 
     const leaderboard = Object.values(studentScores)
-      .map(s => ({
+      .map((s) => ({
         ...s,
         averageScore: s.totalScore / s.count,
       }))

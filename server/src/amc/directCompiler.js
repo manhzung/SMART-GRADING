@@ -23,21 +23,21 @@ const WSL_DISTRO = 'Ubuntu-24.04';
  */
 function wslSpawn(cmd, opts = {}) {
   return new Promise((resolve, reject) => {
-    const proc = spawn(
-      'wsl',
-      ['-d', WSL_DISTRO, '--', 'bash', '-c', cmd],
-      {
-        windowsHide: true,
-        maxBuffer: 50 * 1024 * 1024,
-        ...opts,
-      }
-    );
+    const proc = spawn('wsl', ['-d', WSL_DISTRO, '--', 'bash', '-c', cmd], {
+      windowsHide: true,
+      maxBuffer: 50 * 1024 * 1024,
+      ...opts,
+    });
     let stdout = '';
     let stderr = '';
-    proc.stdout.on('data', d => { stdout += d.toString(); });
-    proc.stderr.on('data', d => { stderr += d.toString(); });
+    proc.stdout.on('data', (d) => {
+      stdout += d.toString();
+    });
+    proc.stderr.on('data', (d) => {
+      stderr += d.toString();
+    });
     proc.on('error', reject);
-    proc.on('close', code => resolve({ exitCode: code, stdout, stderr }));
+    proc.on('close', (code) => resolve({ exitCode: code, stdout, stderr }));
   });
 }
 
@@ -46,11 +46,10 @@ function wslSpawn(cmd, opts = {}) {
  */
 function wslSpawnWithTimeout(cmd, timeoutMs = 120000) {
   return new Promise((resolve, reject) => {
-    const proc = spawn(
-      'wsl',
-      ['-d', WSL_DISTRO, '--', 'bash', '-c', cmd],
-      { windowsHide: true, maxBuffer: 50 * 1024 * 1024 }
-    );
+    const proc = spawn('wsl', ['-d', WSL_DISTRO, '--', 'bash', '-c', cmd], {
+      windowsHide: true,
+      maxBuffer: 50 * 1024 * 1024,
+    });
     let stdout = '';
     let stderr = '';
     let killed = false;
@@ -60,10 +59,17 @@ function wslSpawnWithTimeout(cmd, timeoutMs = 120000) {
       proc.kill('SIGTERM');
     }, timeoutMs);
 
-    proc.stdout.on('data', d => { stdout += d.toString(); });
-    proc.stderr.on('data', d => { stderr += d.toString(); });
-    proc.on('error', err => { clearTimeout(timer); reject(err); });
-    proc.on('close', code => {
+    proc.stdout.on('data', (d) => {
+      stdout += d.toString();
+    });
+    proc.stderr.on('data', (d) => {
+      stderr += d.toString();
+    });
+    proc.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    proc.on('close', (code) => {
       clearTimeout(timer);
       resolve({ exitCode: killed ? -1 : code, stdout, stderr, killed });
     });
@@ -95,9 +101,7 @@ class DirectAmcCompiler {
 
       // Create fresh data dir for each phase (AMC uses separate data per phase)
       const dataDir = `${projectDir}/exam-data`;
-      await wslSpawn(
-        `mkdir -p '${dataDir}' && chmod 777 '${dataDir}'`
-      );
+      await wslSpawn(`mkdir -p '${dataDir}' && chmod 777 '${dataDir}'`);
 
       // Each phase needs 2 pdflatex passes
       for (let pass = 1; pass <= 2; pass++) {

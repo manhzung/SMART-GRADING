@@ -17,13 +17,7 @@ class AmcCompilerService {
    * @returns {Promise<CompilationResult>}
    */
   async compile(options) {
-    const {
-      examId,
-      examData,
-      versionCodes,
-      outputDir,
-      timeoutSeconds = 120,
-    } = options;
+    const { examId, examData, versionCodes, outputDir, timeoutSeconds = 120 } = options;
 
     const numVersions = versionCodes.length;
 
@@ -65,26 +59,19 @@ class AmcCompilerService {
       await amcRunner.amcPrepare(projectDir);
 
       // Step 4: AMC print - generates N copy PDFs
-      const printResult = await amcRunner.amcPrint(
-        projectDir,
-        numVersions,
-        timeoutSeconds
-      );
+      const printResult = await amcRunner.amcPrint(projectDir, numVersions, timeoutSeconds);
 
-      // Step 5: Export PDFs from WSL to Windows output dir
+      // Step 5: Export PDFs from output dir
       const pdfPaths = [];
       for (let i = 0; i < printResult.outputFiles.length; i++) {
-        const wslPdfPath = printResult.outputFiles[i];
+        const srcPdfPath = printResult.outputFiles[i];
         const pdfBasename = `v${i + 1}.pdf`;
-        const winPdfPath = path.join(outputDir, pdfBasename);
-        const wslWinPdfPath = amcRunner._toWslPath(winPdfPath);
+        const dstPdfPath = path.join(outputDir, pdfBasename);
 
-        const copyResult = await amcRunner.wslExec(
-          `cp '${wslPdfPath}' '${wslWinPdfPath}'`
-        );
+        const copyResult = await amcRunner.exec(`cp '${srcPdfPath}' '${dstPdfPath}'`);
 
         if (copyResult.exitCode === 0) {
-          pdfPaths.push(winPdfPath);
+          pdfPaths.push(dstPdfPath);
         }
       }
 
@@ -92,12 +79,7 @@ class AmcCompilerService {
       await amcRunner.exportCsv(projectDir, outputDir);
 
       // Step 7: Parse output (zip with what we have)
-      const parseResult = amcOutputParser.parse(
-        `Generated ${pdfPaths.length} copies`,
-        '',
-        pdfPaths,
-        versionCodes
-      );
+      const parseResult = amcOutputParser.parse(`Generated ${pdfPaths.length} copies`, '', pdfPaths, versionCodes);
 
       // Apply actual version codes from request
       parseResult.versionPdfs.forEach((vp, i) => {
@@ -126,7 +108,6 @@ class AmcCompilerService {
       }
 
       return parseResult;
-
     } finally {
       // Cleanup WSL project dir (keep PDFs)
       try {

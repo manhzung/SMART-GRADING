@@ -112,7 +112,9 @@ const generateVersionSheetsPdf = catchAsync(async (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="omr-sheets-${req.params.id}.zip"`);
 
   const archive = archiver('zip', { zlib: { level: 9 } });
-  archive.on('error', err => { throw err; });
+  archive.on('error', (err) => {
+    throw err;
+  });
 
   const passthrough = new PassThrough();
   archive.pipe(passthrough);
@@ -157,13 +159,13 @@ const getScanJsonByExamId = catchAsync(async (req, res) => {
   if (!template) {
     return res.status(httpStatus.NOT_FOUND).send({ message: 'Template not found' });
   }
-  
+
   // Return templateJson (AMC format) if available
   // This contains bubble coordinates + answer keys for mobile scanning
   if (template.templateJson) {
     return res.send({ data: template.templateJson });
   }
-  
+
   // Fallback: convert from zones to FieldBlock format
   const flutterJson = convertTemplate(template);
   return res.send({ data: flutterJson });

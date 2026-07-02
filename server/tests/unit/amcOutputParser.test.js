@@ -3,12 +3,7 @@ const amcOutputParser = require('../../src/amc/amcOutputParser');
 describe('amcOutputParser', () => {
   describe('parse', () => {
     it('should map version indices to version codes starting at 101', () => {
-      const result = amcOutputParser.parse(
-        '',
-        '',
-        ['/path/001.pdf', '/path/002.pdf', '/path/003.pdf'],
-        3
-      );
+      const result = amcOutputParser.parse('', '', ['/path/001.pdf', '/path/002.pdf', '/path/003.pdf'], 3);
 
       expect(result.versionPdfs).toHaveLength(3);
       expect(result.versionPdfs[0].versionCode).toBe('101');

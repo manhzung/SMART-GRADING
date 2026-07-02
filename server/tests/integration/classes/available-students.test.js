@@ -6,11 +6,7 @@ const setupTestDB = require('../../utils/setupTestDB');
 const { classA, classB, classIdA, insertClasses } = require('../../fixtures/class.fixture');
 const { admin, teacherOne, teacherTwo, studentOne, insertUsers } = require('../../fixtures/user.fixture');
 const { schoolA, insertSchools } = require('../../fixtures/school.fixture');
-const {
-  adminAccessToken,
-  teacherOneAccessToken,
-  teacherTwoAccessToken,
-} = require('../../fixtures/token.fixture');
+const { adminAccessToken, teacherOneAccessToken, teacherTwoAccessToken } = require('../../fixtures/token.fixture');
 
 setupTestDB();
 
@@ -42,9 +38,7 @@ describe('GET /api/v1/classes/:id/available-students', () => {
   });
 
   test('should return 401 if no access token', async () => {
-    await request(app)
-      .get(`/api/v1/classes/${classIdA.toString()}/available-students`)
-      .expect(httpStatus.UNAUTHORIZED);
+    await request(app).get(`/api/v1/classes/${classIdA.toString()}/available-students`).expect(httpStatus.UNAUTHORIZED);
   });
 
   test('should return 403 if teacher is from a different school (school boundary)', async () => {

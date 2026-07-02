@@ -52,10 +52,7 @@ class ExamService {
         if (!isCreator) {
           const examClassIds = examForAuth.classIds || [];
           const teacherClasses = await Class.find({
-            $or: [
-              { homeroomTeacherId: teacherId },
-              { 'subjectTeachers.teacherId': teacherId },
-            ],
+            $or: [{ homeroomTeacherId: teacherId }, { 'subjectTeachers.teacherId': teacherId }],
             _id: { $in: examClassIds },
           }).countDocuments();
           if (teacherClasses === 0) {
@@ -140,10 +137,7 @@ class ExamService {
       } else if (user.role === 'school-admin' && user.schoolId) {
         const schoolClassIds = await Class.find({ schoolId: user.schoolId }).distinct('_id');
         if (schoolClassIds.length > 0) {
-          filter.$or = [
-            { classIds: { $in: schoolClassIds } },
-            { createdBy: user.id },
-          ];
+          filter.$or = [{ classIds: { $in: schoolClassIds } }, { createdBy: user.id }];
         } else {
           filter.createdBy = user.id;
         }
@@ -190,11 +184,7 @@ class ExamService {
       } else if (user.role === 'school-admin' && user.schoolId) {
         const schoolClassIds = await Class.find({ schoolId: user.schoolId }).distinct('_id');
         if (schoolClassIds.length > 0) {
-          baseFilter.$or = [
-            ...(baseFilter.$or || []),
-            { classIds: { $in: schoolClassIds } },
-            { createdBy: user.id },
-          ];
+          baseFilter.$or = [...(baseFilter.$or || []), { classIds: { $in: schoolClassIds } }, { createdBy: user.id }];
         } else {
           baseFilter.createdBy = user.id;
         }
@@ -253,19 +243,9 @@ class ExamService {
     }
 
     if (studentIds.length > 0) {
-      await notificationService.notifyExamPublished(
-        exam._id,
-        studentIds,
-        exam.title,
-        exam.examDate
-      );
+      await notificationService.notifyExamPublished(exam._id, studentIds, exam.title, exam.examDate);
       // Schedule reminder for 1 day before exam
-      await notificationService.scheduleExamReminder(
-        studentIds,
-        exam._id,
-        exam.title,
-        exam.examDate
-      );
+      await notificationService.scheduleExamReminder(studentIds, exam._id, exam.title, exam.examDate);
     }
 
     return exam;
@@ -320,7 +300,7 @@ class ExamService {
       throw new ApiError(409, 'Cannot remove classes from an exam that is in progress');
     }
 
-    exam.classIds = exam.classIds.filter(cid => !classIds.includes(cid.toString()));
+    exam.classIds = exam.classIds.filter((cid) => !classIds.includes(cid.toString()));
     await exam.save();
     return exam;
   }
@@ -333,33 +313,31 @@ class ExamService {
 
     const questions = exam.questionIds;
     const versionCodes = [];
-    
+
     for (let i = 0; i < count; i++) {
       const versionCode = (101 + i).toString();
-      
+
       // Check if version already exists
       let examVersion = await ExamVersion.findOne({
         examId: exam._id,
         versionCode,
       });
-      
+
       // Shuffle questions
       const shuffledQuestions = this.shuffleArray([...questions]);
-      
+
       // Create shuffled options for each question
       const questionsWithShuffledOptions = shuffledQuestions.map((q, idx) => ({
         position: idx + 1,
         questionId: q._id,
-        originalPosition: questions.findIndex(qq => qq._id.toString() === q._id.toString()) + 1,
-        shuffledOptions: exam.shuffleConfig?.shuffleOptions !== false 
-          ? this.shuffleOptions(q.options)
-          : q.options,
+        originalPosition: questions.findIndex((qq) => qq._id.toString() === q._id.toString()) + 1,
+        shuffledOptions: exam.shuffleConfig?.shuffleOptions !== false ? this.shuffleOptions(q.options) : q.options,
       }));
 
       // Build answer key
       const answerKey = new Map();
       questionsWithShuffledOptions.forEach((q, idx) => {
-        const correctOption = q.shuffledOptions.find(opt => opt.isCorrect);
+        const correctOption = q.shuffledOptions.find((opt) => opt.isCorrect);
         answerKey.set((idx + 1).toString(), correctOption?.id || null);
       });
 
@@ -395,8 +373,9 @@ class ExamService {
   }
 
   async getVersions(examId) {
-    return ExamVersion.find({ examId })
-      .select('versionCode numberOfQuestions submissionCount createdAt paperEngine pdfUrl answerSheetPdfUrl corrigePdfUrl generatedAt generationErrors');
+    return ExamVersion.find({ examId }).select(
+      'versionCode numberOfQuestions submissionCount createdAt paperEngine pdfUrl answerSheetPdfUrl corrigePdfUrl generatedAt generationErrors'
+    );
   }
 
   async getVersionByCode(examId, versionCode) {
@@ -404,8 +383,7 @@ class ExamService {
   }
 
   async getVersionsWithQuestions(examId) {
-    return ExamVersion.find({ examId })
-      .populate('questions.questionId', 'content options imageUrl');
+    return ExamVersion.find({ examId }).populate('questions.questionId', 'content options imageUrl');
   }
 
   async exportExamPdf(examId, user) {
@@ -420,8 +398,7 @@ class ExamService {
       throw new ApiError(404, 'Exam not found');
     }
 
-    const versions = await ExamVersion.find({ examId })
-      .select('versionCode numberOfQuestions createdAt');
+    const versions = await ExamVersion.find({ examId }).select('versionCode numberOfQuestions createdAt');
 
     return {
       exam: {
@@ -452,10 +429,7 @@ class ExamService {
     if (!exam) return null;
 
     // Cascade-delete dependent records so they don't reference a non-existent exam.
-    await Promise.all([
-      ExamVersion.deleteMany({ examId: id }),
-      Submission.deleteMany({ examId: id }),
-    ]);
+    await Promise.all([ExamVersion.deleteMany({ examId: id }), Submission.deleteMany({ examId: id })]);
 
     return exam;
   }
@@ -490,7 +464,7 @@ class ExamService {
     const questions = (exam.questionIds || []).map((q, i) => ({
       position: i + 1,
       content: q.content || '',
-      options: (q.options || []).map(opt => ({
+      options: (q.options || []).map((opt) => ({
         id: opt.id,
         content: opt.content || '',
         isCorrect: opt.isCorrect,
@@ -507,9 +481,7 @@ class ExamService {
         subjectName: exam.subjectId?.name || '',
         className,
         duration: exam.duration,
-        examDate: exam.examDate
-          ? new Date(exam.examDate).toLocaleDateString('vi-VN')
-          : '',
+        examDate: exam.examDate ? new Date(exam.examDate).toLocaleDateString('vi-VN') : '',
         totalScore: exam.totalScore,
         schoolName,
         schoolHeader: printConfig.schoolHeader !== false,
@@ -520,9 +492,10 @@ class ExamService {
   }
 
   async exportVersionPDF(examId, versionCode) {
-
-    const version = await ExamVersion.findOne({ examId, versionCode })
-      .populate('questions.questionId', 'content options difficulty score type');
+    const version = await ExamVersion.findOne({ examId, versionCode }).populate(
+      'questions.questionId',
+      'content options difficulty score type'
+    );
 
     if (!version) {
       throw new ApiError(404, 'Exam version not found');
@@ -552,7 +525,7 @@ class ExamService {
     const questions = (version.questions || []).map((vq, i) => ({
       position: i + 1,
       content: vq.questionId?.content || '',
-      options: (vq.shuffledOptions || []).map(opt => ({
+      options: (vq.shuffledOptions || []).map((opt) => ({
         id: opt.id,
         content: opt.content || '',
         isCorrect: opt.isCorrect,
@@ -568,9 +541,7 @@ class ExamService {
         subjectName: exam.subjectId?.name || '',
         className: classDoc?.name || '',
         duration: exam.duration,
-        examDate: exam.examDate
-          ? new Date(exam.examDate).toLocaleDateString('vi-VN')
-          : '',
+        examDate: exam.examDate ? new Date(exam.examDate).toLocaleDateString('vi-VN') : '',
         totalScore: exam.totalScore,
         schoolHeader: exam.printConfig?.schoolHeader !== false,
         questions,
@@ -590,7 +561,9 @@ class ExamService {
       throw new ApiError(404, 'Exam not found');
     }
 
-    const submissions = await Submission.find({ examId, status: 'completed' }).populate('studentId', 'name studentCode').lean();
+    const submissions = await Submission.find({ examId, status: 'completed' })
+      .populate('studentId', 'name studentCode')
+      .lean();
 
     const scores = submissions.map((sub) => ({
       studentName: sub.studentId?.name || 'Unknown',
@@ -600,9 +573,7 @@ class ExamService {
       status: sub.status,
     }));
 
-    const averageScore = scores.length > 0
-      ? scores.reduce((sum, s) => sum + s.percentage, 0) / scores.length
-      : 0;
+    const averageScore = scores.length > 0 ? scores.reduce((sum, s) => sum + s.percentage, 0) / scores.length : 0;
 
     const gradeDist = {
       excellent: scores.filter((s) => s.percentage >= 85).length,
@@ -624,8 +595,8 @@ class ExamService {
         statistics: {
           totalStudents: scores.length,
           averageScore: Math.round(averageScore * 100) / 100,
-          highestScore: scores.length > 0 ? Math.max(...scores.map(s => s.percentage)) : 0,
-          lowestScore: scores.length > 0 ? Math.min(...scores.map(s => s.percentage)) : 0,
+          highestScore: scores.length > 0 ? Math.max(...scores.map((s) => s.percentage)) : 0,
+          lowestScore: scores.length > 0 ? Math.min(...scores.map((s) => s.percentage)) : 0,
           gradeDistribution: gradeDist,
         },
         submissions: scores,
@@ -638,7 +609,7 @@ class ExamService {
     // Generate real PDF buffer
     const doc = new PDFDocument({ size: 'A4', margins: { top: 50, bottom: 50, left: 50, right: 50 } });
     const chunks = [];
-    doc.on('data', chunk => chunks.push(chunk));
+    doc.on('data', (chunk) => chunks.push(chunk));
 
     const pageW = doc.page.width;
     const pageH = doc.page.height;
@@ -646,11 +617,20 @@ class ExamService {
 
     // Header
     doc.rect(0, 0, pageW, 60).fill('#f0f4f8');
-    doc.font('Helvetica-Bold').fontSize(18).fillColor('#1e40af')
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(18)
+      .fillColor('#1e40af')
       .text('BÁO CÁO KẾT QUẢ BÀI THI', pageW / 2, 10, { align: 'center', width: usableW });
-    doc.font('Helvetica-Bold').fontSize(13).fillColor('#0f172a')
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(13)
+      .fillColor('#0f172a')
       .text(exam.title || 'Kết quả thi', pageW / 2, 32, { align: 'center', width: usableW });
-    doc.font('Helvetica').fontSize(9).fillColor('#64748b')
+    doc
+      .font('Helvetica')
+      .fontSize(9)
+      .fillColor('#64748b')
       .text(`Ngày tạo: ${new Date().toLocaleDateString('vi-VN')}`, pageW / 2, 48, { align: 'center', width: usableW });
 
     let y = 75;
@@ -670,8 +650,16 @@ class ExamService {
     ];
     stats.forEach(([label, value]) => {
       doc.rect(50, y, 200, 20).fill('#f8fafc').stroke('#e2e8f0');
-      doc.font('Helvetica').fontSize(9).fillColor('#64748b').text(label, 55, y + 4);
-      doc.font('Helvetica-Bold').fontSize(11).fillColor('#0f172a').text(value, 55, y + 10);
+      doc
+        .font('Helvetica')
+        .fontSize(9)
+        .fillColor('#64748b')
+        .text(label, 55, y + 4);
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(11)
+        .fillColor('#0f172a')
+        .text(value, 55, y + 10);
       y += 22;
     });
 
@@ -707,7 +695,10 @@ class ExamService {
     });
 
     // Footer
-    doc.font('Helvetica').fontSize(8).fillColor('#94a3b8')
+    doc
+      .font('Helvetica')
+      .fontSize(8)
+      .fillColor('#94a3b8')
       .text('Smart Grading System', 50, pageH - 40);
 
     doc.end();

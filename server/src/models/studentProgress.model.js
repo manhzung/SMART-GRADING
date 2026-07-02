@@ -151,9 +151,7 @@ studentProgressSchema.index({ 'scoreHistory.examDate': -1 });
 studentProgressSchema.index({ overallAverageScore: -1 });
 
 studentProgressSchema.methods.addExamResult = async function (examResult) {
-  const existingIndex = this.scoreHistory.findIndex(
-    (h) => h.examId.toString() === examResult.examId.toString()
-  );
+  const existingIndex = this.scoreHistory.findIndex((h) => h.examId.toString() === examResult.examId.toString());
 
   if (existingIndex >= 0) {
     this.scoreHistory[existingIndex] = examResult;
@@ -178,10 +176,7 @@ studentProgressSchema.methods.recalculateStats = function () {
   const totalPercentage = this.scoreHistory.reduce((sum, h) => sum + h.percentage, 0);
   this.overallPercentage = totalPercentage / this.scoreHistory.length;
 
-  const totalScoreSum = this.scoreHistory.reduce(
-    (sum, h) => sum + (h.score / h.maxScore) * 10,
-    0
-  );
+  const totalScoreSum = this.scoreHistory.reduce((sum, h) => sum + (h.score / h.maxScore) * 10, 0);
   this.overallAverageScore = totalScoreSum / this.scoreHistory.length;
 };
 

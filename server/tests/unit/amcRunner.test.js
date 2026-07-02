@@ -67,15 +67,11 @@ describe('amcRunnerService', () => {
         if (e === 'data') cb('Error: bad input');
       });
 
-      await expect(
-        amcRunner.backendScan(validProjectDir)
-      ).rejects.toThrow();
+      await expect(amcRunner.backendScan(validProjectDir)).rejects.toThrow();
     });
 
     it('should throw for invalid project path', async () => {
-      await expect(
-        amcRunner.backendScan('/etc/passwd')
-      ).rejects.toThrow('Invalid project path');
+      await expect(amcRunner.backendScan('/etc/passwd')).rejects.toThrow('Invalid project path');
     });
   });
 
@@ -113,9 +109,7 @@ describe('amcRunnerService', () => {
     });
 
     it('should throw for invalid project path', async () => {
-      await expect(
-        amcRunner.compileVersions('/etc/passwd', 1, 60)
-      ).rejects.toThrow('Invalid project path');
+      await expect(amcRunner.compileVersions('/etc/passwd', 1, 60)).rejects.toThrow('Invalid project path');
     });
   });
 
@@ -145,9 +139,7 @@ describe('amcRunnerService', () => {
     });
 
     it('should throw for invalid project path', async () => {
-      await expect(
-        amcRunner.cleanup('/etc/passwd')
-      ).rejects.toThrow('Invalid project path');
+      await expect(amcRunner.cleanup('/etc/passwd')).rejects.toThrow('Invalid project path');
     });
   });
 
@@ -259,7 +251,8 @@ describe('amcRunnerService', () => {
         actualProc.stdout.on = jest.fn((e, cb) => {
           if (e === 'data') {
             const cmdStr = args ? args.join(' ') : '';
-            if (cmdStr.includes('.aux')) cb(''); // Empty aux
+            if (cmdStr.includes('.aux')) cb('');
+            // Empty aux
             else if (cmdStr.includes('.log')) cb('');
             else if (cmdStr.includes('.tex')) cb('\\AMCcodeGrid{q1}{A,B,C,D}');
             else cb('CALAGE_OK');

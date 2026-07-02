@@ -108,8 +108,7 @@ aiChatSchema.statics.findOrCreateByStudent = async function (studentId, examId =
       messages: [
         {
           role: 'system',
-          content:
-            'Bạn là một gia sư thông minh. Hãy giúp học sinh hiểu bài và cải thiện kết quả học tập.',
+          content: 'Bạn là một gia sư thông minh. Hãy giúp học sinh hiểu bài và cải thiện kết quả học tập.',
           timestamp: new Date(),
         },
       ],

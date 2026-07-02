@@ -32,13 +32,7 @@ describe('Exam Service - getUpcomingExams', () => {
       { _id: classId1, name: '10A1', code: '10A1-2026', schoolId: teacherOneId, academicYear: '2026-2027', gradeLevel: 10 },
       { _id: classId2, name: '10A2', code: '10A2-2026', schoolId: teacherOneId, academicYear: '2026-2027', gradeLevel: 10 },
     ]);
-    await insertExams([
-      examUpcoming1,
-      examUpcoming2,
-      examPast,
-      examOtherTeacher,
-      examDraft,
-    ]);
+    await insertExams([examUpcoming1, examUpcoming2, examPast, examOtherTeacher, examDraft]);
   });
 
   it('should return only upcoming exams (examDate >= now) for the given teacher', async () => {
@@ -151,7 +145,7 @@ describe('Exam Service - delete (hard delete)', () => {
         versionCode: '101',
         numberOfQuestions: 20,
         questionIds: [],
-        answerKey: { '1': 'A' },
+        answerKey: { 1: 'A' },
         distribution: {},
         submissionCount: 0,
       },
@@ -160,7 +154,7 @@ describe('Exam Service - delete (hard delete)', () => {
         versionCode: '102',
         numberOfQuestions: 20,
         questionIds: [],
-        answerKey: { '1': 'B' },
+        answerKey: { 1: 'B' },
         distribution: {},
         submissionCount: 0,
       },
@@ -224,7 +218,14 @@ describe('Exam Service - role-based access (getAll/getById/getUpcomingExams)', (
     await Class.insertMany([
       { _id: classId1, name: '10A1', code: '10A1-2026', schoolId: schoolAdminId, academicYear: '2026-2027', gradeLevel: 10 },
       { _id: classId2, name: '10A2', code: '10A2-2026', schoolId: schoolAdminId, academicYear: '2026-2027', gradeLevel: 10 },
-      { _id: otherClassId, name: '10B1', code: '10B1-2026', schoolId: otherSchoolId, academicYear: '2026-2027', gradeLevel: 10 },
+      {
+        _id: otherClassId,
+        name: '10B1',
+        code: '10B1-2026',
+        schoolId: otherSchoolId,
+        academicYear: '2026-2027',
+        gradeLevel: 10,
+      },
     ]);
 
     examInSchoolAdminClass = {
@@ -272,11 +273,7 @@ describe('Exam Service - role-based access (getAll/getById/getUpcomingExams)', (
       status: 'published',
     };
 
-    await insertExams([
-      examInSchoolAdminClass,
-      examInOtherSchoolClass,
-      examByOtherTeacherInSameSchool,
-    ]);
+    await insertExams([examInSchoolAdminClass, examInOtherSchoolClass, examByOtherTeacherInSameSchool]);
   });
 
   describe('getAll - role scoping', () => {
@@ -290,10 +287,7 @@ describe('Exam Service - role-based access (getAll/getById/getUpcomingExams)', (
       const schoolAdmin = { id: schoolAdminId.toString(), role: 'school-admin', schoolId: schoolAdminId };
       const result = await examService.getAll({}, schoolAdmin);
       const titles = result.results.map((e) => e.title).sort();
-      expect(titles).toEqual([
-        'Other Teacher Same School Exam',
-        'School Admin Class Exam',
-      ]);
+      expect(titles).toEqual(['Other Teacher Same School Exam', 'School Admin Class Exam']);
     });
 
     it('returns only exams created by the teacher', async () => {
@@ -321,9 +315,9 @@ describe('Exam Service - role-based access (getAll/getById/getUpcomingExams)', (
 
     it('denies school-admin from viewing exam in another school', async () => {
       const schoolAdmin = { id: schoolAdminId.toString(), role: 'school-admin', schoolId: schoolAdminId };
-      await expect(
-        examService.getById(examInOtherSchoolClass._id.toString(), schoolAdmin)
-      ).rejects.toThrow('You can only view exams in your own school');
+      await expect(examService.getById(examInOtherSchoolClass._id.toString(), schoolAdmin)).rejects.toThrow(
+        'You can only view exams in your own school'
+      );
     });
 
     it('allows teacher to view their own exam', async () => {
@@ -335,9 +329,9 @@ describe('Exam Service - role-based access (getAll/getById/getUpcomingExams)', (
 
     it('denies teacher from viewing exam created by another teacher in same school', async () => {
       const teacher = { id: teacherOneId.toString(), role: 'teacher' };
-      await expect(
-        examService.getById(examByOtherTeacherInSameSchool._id.toString(), teacher)
-      ).rejects.toThrow('You can only view exams for your classes');
+      await expect(examService.getById(examByOtherTeacherInSameSchool._id.toString(), teacher)).rejects.toThrow(
+        'You can only view exams for your classes'
+      );
     });
 
     it('allows teacher to view exam for their homeroom class', async () => {
@@ -360,10 +354,7 @@ describe('Exam Service - role-based access (getAll/getById/getUpcomingExams)', (
       const schoolAdmin = { id: schoolAdminId.toString(), role: 'school-admin', schoolId: schoolAdminId };
       const results = await examService.getUpcomingExams(schoolAdmin, 10);
       const titles = results.map((e) => e.title).sort();
-      expect(titles).toEqual([
-        'Other Teacher Same School Exam',
-        'School Admin Class Exam',
-      ]);
+      expect(titles).toEqual(['Other Teacher Same School Exam', 'School Admin Class Exam']);
     });
 
     it('returns only own upcoming exams for teacher', async () => {

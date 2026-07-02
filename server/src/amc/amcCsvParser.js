@@ -58,7 +58,7 @@ function parseAmcCsv(content) {
     const letters = (answersStr || '')
       .replace(/["']/g, '')
       .split(';')
-      .map(s => s.trim().toUpperCase())
+      .map((s) => s.trim().toUpperCase())
       .filter(Boolean);
 
     answers[qNum] = {
@@ -163,7 +163,11 @@ function answerKeyToObject(answerKey) {
   if (typeof answerKey === 'object' && !(answerKey instanceof Map)) return answerKey;
   if (answerKey instanceof Map) return Object.fromEntries(answerKey);
   // If string (JSON), parse
-  try { return JSON.parse(answerKey); } catch { return {}; }
+  try {
+    return JSON.parse(answerKey);
+  } catch {
+    return {};
+  }
 }
 
 module.exports = {
