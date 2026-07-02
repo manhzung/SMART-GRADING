@@ -20,6 +20,7 @@ import 'core/network/exam_service.dart';
 import 'core/network/activity_service.dart';
 import 'core/network/submission_service.dart';
 import 'core/network/exam_submissions_service.dart';
+import 'core/network/bank_service.dart';
 import 'core/constants/app_constants.dart';
 import 'presentation/pages/splash_page.dart';
 import 'presentation/pages/login_page.dart';
@@ -61,6 +62,8 @@ import 'presentation/pages/my_appeals_page.dart';
 import 'presentation/pages/admin/admin_dashboard_page.dart';
 import 'presentation/pages/admin/schools_management_page.dart';
 import 'presentation/pages/admin/users_management_page.dart';
+import 'presentation/pages/banks_page.dart';
+import 'presentation/pages/bank_detail_page.dart';
 import 'domain/entities/exam.entity.dart';
 import 'domain/entities/user.entity.dart';
 import 'domain/omr/models/grading_result.dart';
@@ -119,6 +122,9 @@ void setupDependencies() {
   );
   getIt.registerLazySingleton<ExamSubmissionsService>(
     () => ExamSubmissionsService(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BankService>(
+    () => BankService(apiClient: getIt<ApiClient>()),
   );
 }
 
@@ -234,6 +240,13 @@ class SmartGradingApp extends StatelessWidget {
           '/analytics': (context) => const AnalyticsPage(),
           '/appeals': (context) => const AppealsPage(),
           '/question-bank': (context) => const QuestionBankPage(),
+          '/banks': (context) => const BanksPage(),
+          '/banks/detail': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            return BankDetailPage(
+              bankId: args?['bankId'] as String? ?? '',
+            );
+          },
           '/settings': (context) => const SettingsPage(),
           '/help': (context) => const HelpPage(),
           '/class-create': (context) => const CreateEditClassPage(),

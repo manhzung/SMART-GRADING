@@ -235,16 +235,8 @@ class _HomePageState extends State<HomePage> {
       );
       appBarActions = [
         IconButton(
-          icon: const Icon(Icons.search, color: Color(0xFF0F172A), size: 26),
-          onPressed: () async {
-            await SearchSheet.show(context: context, title: 'Exams', hint: 'Search exams...');
-            if (!mounted) return;
-            setState(() {});
-          },
-        ),
-        IconButton(
           icon: const Icon(Icons.quiz_outlined, color: Color(0xFF0F172A)),
-          onPressed: () => Navigator.pushNamed(context, '/question-bank'),
+          onPressed: () => Navigator.pushNamed(context, '/banks'),
         ),
         IconButton(
           icon: const Icon(Icons.notifications_none_outlined, color: Color(0xFF0F172A), size: 26),
