@@ -237,6 +237,10 @@ class QuestionBankService {
     return QuestionBank.find({ _id: { $in: bankIds } }).lean();
   }
 
+  async listApprovedBanksForUser(userId) {
+    return this.listBanksForUser(userId);
+  }
+
   async listSchoolBanks(schoolId) {
     return QuestionBank.find({ schoolId }).lean();
   }

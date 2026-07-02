@@ -53,6 +53,7 @@ module.exports = {
       useCreateIndex: true,
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      ...(envVars.NODE_ENV !== 'test' ? { w: 'majority' } : {}),
     },
   },
   jwt: {

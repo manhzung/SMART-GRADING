@@ -251,4 +251,40 @@ describe('QuestionBank Service', () => {
       expect(ids).toEqual([bankIdA.toString(), bankIdB.toString()].sort());
     });
   });
+
+  describe('listApprovedBanksForUser', () => {
+    it('returns only active membership banks and ignores pending', async () => {
+      const bankIdA = new mongoose.Types.ObjectId();
+      const bankIdB = new mongoose.Types.ObjectId();
+      const bankIdC = new mongoose.Types.ObjectId();
+      await QuestionBank.insertMany([
+        { _id: bankIdA, name: 'A', createdBy: ownerId },
+        { _id: bankIdB, name: 'B', createdBy: ownerId },
+        { _id: bankIdC, name: 'C', createdBy: ownerId },
+      ]);
+      await QuestionBankMember.insertMany([
+        { bankId: bankIdA, userId: ownerId, role: 'owner', status: 'active' },
+        { bankId: bankIdB, userId: ownerId, role: 'manager', status: 'active' },
+        { bankId: bankIdC, userId: ownerId, role: 'viewer', status: 'pending' },
+      ]);
+      const banks = await service.listApprovedBanksForUser(ownerId.toString());
+      const ids = banks.map((b) => b._id.toString()).sort();
+      expect(ids).toEqual([bankIdA.toString(), bankIdB.toString()].sort());
+    });
+
+    it('returns empty array when user has no active membership', async () => {
+      const bankIdA = new mongoose.Types.ObjectId();
+      const bankIdB = new mongoose.Types.ObjectId();
+      await QuestionBank.insertMany([
+        { _id: bankIdA, name: 'A', createdBy: ownerId },
+        { _id: bankIdB, name: 'B', createdBy: ownerId },
+      ]);
+      await QuestionBankMember.insertMany([
+        { bankId: bankIdA, userId: ownerId, role: 'viewer', status: 'pending' },
+        { bankId: bankIdB, userId: ownerId, role: 'viewer', status: 'pending' },
+      ]);
+      const banks = await service.listApprovedBanksForUser(ownerId.toString());
+      expect(banks).toEqual([]);
+    });
+  });
 });
