@@ -24,7 +24,7 @@ const reviewAppeal = {
   params: id,
   body: Joi.object().keys({
     decision: Joi.string().valid('approved', 'rejected').required(),
-    note: Joi.string().max(1000),
+    note: Joi.string().max(1000).allow(''),
   }),
 };
 

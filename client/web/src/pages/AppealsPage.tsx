@@ -199,7 +199,7 @@ export default function AppealsPage() {
     try {
       await reviewAppeal(appealId, {
         decision: newStatus,
-        note: note || resolutionNotes,
+        note: (note || resolutionNotes).trim() || undefined,
       });
       await fetchAppeals({
         status: selectedStatus !== 'all' ? selectedStatus : undefined,
