@@ -59,12 +59,8 @@ class AIReportService {
         },
         statistics: parsed.statistics || {
           totalQuestions: submission.answers ? submission.answers.length : 0,
-          correctCount: submission.answers
-            ? submission.answers.filter((a) => a.isCorrect).length
-            : 0,
-          incorrectCount: submission.answers
-            ? submission.answers.filter((a) => !a.isCorrect).length
-            : 0,
+          correctCount: submission.answers ? submission.answers.filter((a) => a.isCorrect).length : 0,
+          incorrectCount: submission.answers ? submission.answers.filter((a) => !a.isCorrect).length : 0,
           score: submission.totalScore || 0,
           weakAreas: [],
           strongAreas: [],
@@ -190,9 +186,7 @@ class AIReportService {
       examTitle: exam?.title || 'Unknown Exam',
       totalScore: submission.totalScore || 0,
       maxScore: submission.maxScore || (exam?.numberOfQuestions || answers.length) * 1,
-      percentage: submission.maxScore
-        ? ((submission.totalScore || 0) / submission.maxScore) * 100
-        : 0,
+      percentage: submission.maxScore ? ((submission.totalScore || 0) / submission.maxScore) * 100 : 0,
       totalQuestions: answers.length,
       correctCount: correctAnswers.length,
       incorrectCount: incorrectAnswers.length,
@@ -219,8 +213,7 @@ class AIReportService {
       percentage: s.maxScore ? ((s.totalScore || 0) / s.maxScore) * 100 : 0,
     }));
 
-    const avgScore =
-      scores.length > 0 ? scores.reduce((sum, s) => sum + s.percentage, 0) / scores.length : 0;
+    const avgScore = scores.length > 0 ? scores.reduce((sum, s) => sum + s.percentage, 0) / scores.length : 0;
 
     const questionStats = {};
     submissions.forEach((sub) => {
@@ -252,7 +245,10 @@ class AIReportService {
       topStudent: scores.sort((a, b) => b.percentage - a.percentage)[0],
       bottomStudent: scores.sort((a, b) => a.percentage - b.percentage)[0],
       hardestQuestions: sortedQuestions.slice(0, 5).map((q) => q.questionId),
-      easiestQuestions: sortedQuestions.slice(-5).reverse().map((q) => q.questionId),
+      easiestQuestions: sortedQuestions
+        .slice(-5)
+        .reverse()
+        .map((q) => q.questionId),
     };
   }
 

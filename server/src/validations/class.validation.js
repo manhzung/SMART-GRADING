@@ -9,9 +9,15 @@ const createClass = {
     name: Joi.string().min(2).max(50).trim().required(),
     code: Joi.string().min(2).max(20).trim().required(),
     gradeLevel: Joi.number().min(0).max(12).allow(null),
-    academicYear: Joi.string().pattern(/^\d{4}-\d{4}$/).required(),
-    schoolId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
-    homeroomTeacherId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    academicYear: Joi.string()
+      .pattern(/^\d{4}-\d{4}$/)
+      .required(),
+    schoolId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
+    homeroomTeacherId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
     studentIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)),
   }),
 };
@@ -22,21 +28,29 @@ const updateClass = {
     name: Joi.string().min(2).max(50).trim(),
     gradeLevel: Joi.number().min(0).max(12).allow(null),
     academicYear: Joi.string().pattern(/^\d{4}-\d{4}$/),
-    homeroomTeacherId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    homeroomTeacherId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
   }),
 };
 
 const addStudents = {
   params: id,
   body: Joi.object().keys({
-    studentIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+    studentIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
   }),
 };
 
 const removeStudents = {
   params: id,
   body: Joi.object().keys({
-    studentIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+    studentIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
   }),
 };
 
@@ -57,15 +71,18 @@ const getClassesBySchool = {
 const importStudents = {
   params: id,
   body: Joi.object().keys({
-    students: Joi.array().items(
-      Joi.object().keys({
-        name: Joi.string().min(2).max(100).required(),
-        email: Joi.string().email().required(),
-        studentCode: Joi.string().trim(),
-        phone: Joi.string().allow(null, ''),
-        dateOfBirth: Joi.string().allow(null, ''),
-      })
-    ).min(1).required(),
+    students: Joi.array()
+      .items(
+        Joi.object().keys({
+          name: Joi.string().min(2).max(100).required(),
+          email: Joi.string().email().required(),
+          studentCode: Joi.string().trim(),
+          phone: Joi.string().allow(null, ''),
+          dateOfBirth: Joi.string().allow(null, ''),
+        })
+      )
+      .min(1)
+      .required(),
   }),
 };
 
@@ -73,16 +90,24 @@ const manageSubjectTeachers = {
   params: id,
   body: Joi.object().keys({
     action: Joi.string().valid('add', 'remove').required(),
-    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
-    teacherId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    subjectId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
+    teacherId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
   }),
 };
 
 const transferHomeroomTeacher = {
   params: id,
   body: Joi.object().keys({
-    currentTeacherId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    newTeacherId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    currentTeacherId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
+    newTeacherId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
   }),
 };
 
@@ -93,7 +118,10 @@ const getClassExams = {
 const assignExamsToClass = {
   params: id,
   body: Joi.object().keys({
-    examIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+    examIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
   }),
 };
 

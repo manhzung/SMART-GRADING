@@ -8,7 +8,7 @@ class GeminiService {
     this.geminiModel = config.ai?.geminiModel || 'gemini-2.0-flash';
     this.openaiApiKey = config.ai?.openaiApiKey;
     this.claudeApiKey = config.ai?.claudeApiKey;
-    
+
     // Retry configuration
     this.maxRetries = 3;
     this.retryDelayMs = 1000;
@@ -62,7 +62,7 @@ class GeminiService {
       'unauthorized',
       'invalid key',
     ];
-    return nonRetryablePatterns.some(pattern => message.includes(pattern));
+    return nonRetryablePatterns.some((pattern) => message.includes(pattern));
   }
 
   async callGemini(prompt) {
@@ -71,7 +71,7 @@ class GeminiService {
     }
 
     const url = `https://generativelanguage.googleapis.com/v1/models/${this.geminiModel}:generateContent?key=${this.geminiApiKey}`;
-    
+
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
@@ -119,7 +119,7 @@ class GeminiService {
         model: 'gpt-4o-mini', // Using latest efficient model
         messages: [
           { role: 'system', content: 'Bạn là một giáo viên Việt Nam có kinh nghiệm. Trả lời bằng tiếng Việt.' },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: 0.7,
         max_tokens: 4096,
@@ -187,29 +187,40 @@ class GeminiService {
   }
 
   _sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
    * Generate questions using AI with robust JSON parsing
    */
   async generateQuestions({ subject, topic, grade, count = 5, options = {} }) {
-    const {
-      difficulty = 'mixed',
-      language = 'vietnamese',
-    } = options;
+    const { difficulty = 'mixed', language = 'vietnamese' } = options;
 
-    const languageInstruction = language === 'vietnamese'
-      ? 'Viết câu hỏi bằng tiếng Việt, các đáp án A, B, C, D bằng tiếng Việt.'
-      : 'Write questions in English with A, B, C, D options in English.';
+    const languageInstruction =
+      language === 'vietnamese'
+        ? 'Viết câu hỏi bằng tiếng Việt, các đáp án A, B, C, D bằng tiếng Việt.'
+        : 'Write questions in English with A, B, C, D options in English.';
 
-    const prompt = 'Bạn là một giáo viên có kinh nghiệm. Tạo ' + count + ' câu hỏi trắc nghiệm.\n\n' +
+    const prompt =
+      'Bạn là một giáo viên có kinh nghiệm. Tạo ' +
+      count +
+      ' câu hỏi trắc nghiệm.\n\n' +
       'YÊU CẦU:\n' +
-      '- Chủ đề: ' + (topic || 'chủ đề chung') + '\n' +
-      '- Môn: ' + subject + '\n' +
-      '- Lớp: ' + grade + '\n' +
-      '- Độ khó: ' + (difficulty === 'mixed' ? 'phân bố đều easy, medium, hard' : difficulty) + '\n' +
-      '- ' + languageInstruction + '\n\n' +
+      '- Chủ đề: ' +
+      (topic || 'chủ đề chung') +
+      '\n' +
+      '- Môn: ' +
+      subject +
+      '\n' +
+      '- Lớp: ' +
+      grade +
+      '\n' +
+      '- Độ khó: ' +
+      (difficulty === 'mixed' ? 'phân bố đều easy, medium, hard' : difficulty) +
+      '\n' +
+      '- ' +
+      languageInstruction +
+      '\n\n' +
       'MỖI CÂU HỎI PHẢI CÓ:\n' +
       '- question: Nội dung câu hỏi (rõ ràng, không mơ hồ)\n' +
       '- options: Array 4 đáp án ["A. ...", "B. ...", "C. ...", "D. ..."]\n' +

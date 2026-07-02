@@ -15,13 +15,13 @@ describe('Auth Service - loginUserWithEmailAndPassword', () => {
 
   it('should throw "Incorrect email or password" when email does not exist', async () => {
     await expect(authService.loginUserWithEmailAndPassword('nobody@example.com', password)).rejects.toThrow(
-      /Incorrect email or password/,
+      /Incorrect email or password/
     );
   });
 
   it('should throw "Incorrect email or password" when password is wrong', async () => {
     await expect(authService.loginUserWithEmailAndPassword(studentOne.email, 'wrongpass1')).rejects.toThrow(
-      /Incorrect email or password/,
+      /Incorrect email or password/
     );
   });
 
@@ -46,15 +46,13 @@ describe('Auth Service - loginUserWithEmailAndPassword', () => {
   it('should reject login when registrationStatus is "pending"', async () => {
     await User.updateOne({ _id: studentOne._id }, { $set: { registrationStatus: 'pending' } });
     await expect(authService.loginUserWithEmailAndPassword(studentOne.email, password)).rejects.toThrow(
-      /chờ Super Admin phê duyệt/,
+      /chờ Super Admin phê duyệt/
     );
   });
 
   it('should reject login when registrationStatus is "rejected"', async () => {
     await User.updateOne({ _id: studentOne._id }, { $set: { registrationStatus: 'rejected' } });
-    await expect(authService.loginUserWithEmailAndPassword(studentOne.email, password)).rejects.toThrow(
-      /bị từ chối/,
-    );
+    await expect(authService.loginUserWithEmailAndPassword(studentOne.email, password)).rejects.toThrow(/bị từ chối/);
   });
 
   it('should allow login when registrationStatus is "approved"', async () => {

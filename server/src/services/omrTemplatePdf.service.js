@@ -35,7 +35,6 @@ function estimateLabelWidth(label) {
   return width;
 }
 
-
 class OMRTemplatePdfService {
   async generateSheetPdf(templateId, options = {}) {
     const template = await OMRTemplate.findById(templateId);
@@ -97,8 +96,8 @@ class OMRTemplatePdfService {
 
       // ── Y flow positions in mm ─────────────────────────────────────
       const hdrOn = zones.header?.enabled !== false;
-      const hdrH = hdrOn ? (zones.header?.height || 40) : 0;
-      const hdrEndY = hdrOn ? (mTop + hdrH) : mTop;
+      const hdrH = hdrOn ? zones.header?.height || 40 : 0;
+      const hdrEndY = hdrOn ? mTop + hdrH : mTop;
 
       const sc = zones.studentCode;
       const vc = zones.versionCode;
@@ -108,12 +107,16 @@ class OMRTemplatePdfService {
       let cbY = hdrEndY;
       let codeRowH = 0;
       if (scOn || vcOn) {
-        cbY = hdrOn ? (hdrEndY + 5) : mTop;
-        const scH = scOn ? (10 * (sc.digitConfig?.bubbleSize?.height || 2.5) + 9 * (sc.digitConfig?.bubbleSpacing?.vertical || 1) + 6) : 0;
-        const vcH = vcOn ? (10 * (vc.digitConfig?.bubbleSize?.height || 2) + 9 * (vc.digitConfig?.bubbleSpacing?.vertical || 0.5) + 6) : 0;
+        cbY = hdrOn ? hdrEndY + 5 : mTop;
+        const scH = scOn
+          ? 10 * (sc.digitConfig?.bubbleSize?.height || 2.5) + 9 * (sc.digitConfig?.bubbleSpacing?.vertical || 1) + 6
+          : 0;
+        const vcH = vcOn
+          ? 10 * (vc.digitConfig?.bubbleSize?.height || 2) + 9 * (vc.digitConfig?.bubbleSpacing?.vertical || 0.5) + 6
+          : 0;
         codeRowH = Math.max(scH, vcH);
       }
-      const cbEndY = (scOn || vcOn) ? (cbY + codeRowH) : hdrEndY;
+      const cbEndY = scOn || vcOn ? cbY + codeRowH : hdrEndY;
 
       const doc = new PDFDocument({
         size: [pageW, pageH],
@@ -147,15 +150,7 @@ class OMRTemplatePdfService {
         }
         labelText = removeVietnameseTones(labelText);
 
-        this._drawCodeBlock(
-          doc,
-          mm(mLeft),
-          mm(cbY),
-          labelText,
-          sc.digits || 3,
-          sc.digitConfig,
-          null
-        );
+        this._drawCodeBlock(doc, mm(mLeft), mm(cbY), labelText, sc.digits || 3, sc.digitConfig, null);
       }
 
       if (vcOn) {
@@ -168,15 +163,7 @@ class OMRTemplatePdfService {
         }
         labelText = removeVietnameseTones(labelText);
 
-        this._drawCodeBlock(
-          doc,
-          mm(vx),
-          mm(cbY),
-          labelText,
-          vc.digits || 3,
-          vc.digitConfig,
-          versionCode
-        );
+        this._drawCodeBlock(doc, mm(vx), mm(cbY), labelText, vc.digits || 3, vc.digitConfig, versionCode);
       }
 
       // ═══════════════════════════════════════════════════════════════
@@ -188,7 +175,7 @@ class OMRTemplatePdfService {
       const qCfg = gridConfig.questionNumberConfig || {};
 
       if (answerArea.enabled !== false && gridConfig) {
-        const gridY = (scOn || vcOn) ? (cbEndY + 6) : (hdrOn ? (hdrEndY + 5) : mTop);
+        const gridY = scOn || vcOn ? cbEndY + 6 : hdrOn ? hdrEndY + 5 : mTop;
 
         this._drawAnswerGrid(doc, {
           startX: mm(answerArea.startPosition?.x || mLeft),
@@ -300,7 +287,7 @@ class OMRTemplatePdfService {
 
     const padX = mm(2);
     const padY = mm(2);
-    
+
     // Width adjustments to prevent title text overflow
     const labelW = estimateLabelWidth(label) + 4;
     let minBlockW = Math.max(20, labelW);
@@ -313,7 +300,11 @@ class OMRTemplatePdfService {
     const blockH = totalContentH + mm(6) + padY * 2; // +6mm offset for label space
 
     doc.roundedRect(x - padX, y, blockW, blockH, mm(1)).fill('#f8fafc');
-    doc.roundedRect(x - padX, y, blockW, blockH, mm(1)).strokeColor('#cbd5e1').lineWidth(0.4).stroke();
+    doc
+      .roundedRect(x - padX, y, blockW, blockH, mm(1))
+      .strokeColor('#cbd5e1')
+      .lineWidth(0.4)
+      .stroke();
 
     doc
       .font('Helvetica-Bold')
@@ -323,7 +314,7 @@ class OMRTemplatePdfService {
 
     const vals = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-    const startBubblesX = (x - padX) + (blockW - totalContentW) / 2;
+    const startBubblesX = x - padX + (blockW - totalContentW) / 2;
 
     for (let d = 0; d < digits; d += 1) {
       const colX = startBubblesX + d * stepX;
@@ -383,7 +374,11 @@ class OMRTemplatePdfService {
     const drawnRows = Math.ceil(totalQuestions / questionsPerRow);
 
     // Outer border
-    doc.rect(startX, startY, gridW, drawnRows * cellH).strokeColor('#1e40af').lineWidth(0.8).stroke();
+    doc
+      .rect(startX, startY, gridW, drawnRows * cellH)
+      .strokeColor('#1e40af')
+      .lineWidth(0.8)
+      .stroke();
 
     for (let q = 0; q < totalQuestions; q += 1) {
       const col = q % questionsPerRow;
@@ -448,7 +443,12 @@ class OMRTemplatePdfService {
     // Vertical column dividers
     for (let c = 0; c <= questionsPerRow; c += 1) {
       const dx = startX + c * cellW;
-      doc.moveTo(dx, startY).lineTo(dx, startY + drawnRows * cellH).strokeColor('#e2e8f0').lineWidth(0.3).stroke();
+      doc
+        .moveTo(dx, startY)
+        .lineTo(dx, startY + drawnRows * cellH)
+        .strokeColor('#e2e8f0')
+        .lineWidth(0.3)
+        .stroke();
     }
   }
 

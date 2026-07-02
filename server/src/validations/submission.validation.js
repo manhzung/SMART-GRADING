@@ -5,26 +5,32 @@ const id = Joi.object().keys({
 });
 
 const scanSubmission = {
-  body: Joi.object().keys({
-    examId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    classId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-    // Cloudinary flow
-    originalUrl: Joi.string().uri(),
-    originalPublicId: Joi.string(),
-    imageMeta: Joi.object().keys({
-      width: Joi.number().integer().min(1),
-      height: Joi.number().integer().min(1),
-      bytes: Joi.number().integer().min(1),
-      format: Joi.string().valid('jpg', 'jpeg', 'png', 'webp', 'heic'),
-    }),
-    // Legacy base64 flow (still allowed when UPLOAD_MODE=base64)
-    image: Joi.string(),
-    deviceInfo: Joi.object().keys({
-      platform: Joi.string().valid('ios', 'android', 'web'),
-      deviceModel: Joi.string(),
-      appVersion: Joi.string(),
-    }),
-  }).or('originalUrl', 'image'),
+  body: Joi.object()
+    .keys({
+      examId: Joi.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
+        .required(),
+      classId: Joi.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
+        .optional(),
+      // Cloudinary flow
+      originalUrl: Joi.string().uri(),
+      originalPublicId: Joi.string(),
+      imageMeta: Joi.object().keys({
+        width: Joi.number().integer().min(1),
+        height: Joi.number().integer().min(1),
+        bytes: Joi.number().integer().min(1),
+        format: Joi.string().valid('jpg', 'jpeg', 'png', 'webp', 'heic'),
+      }),
+      // Legacy base64 flow (still allowed when UPLOAD_MODE=base64)
+      image: Joi.string(),
+      deviceInfo: Joi.object().keys({
+        platform: Joi.string().valid('ios', 'android', 'web'),
+        deviceModel: Joi.string(),
+        appVersion: Joi.string(),
+      }),
+    })
+    .or('originalUrl', 'image'),
 };
 
 const attachImage = {
@@ -49,7 +55,9 @@ const deleteImage = {
 
 const getUploadSignature = {
   query: Joi.object().keys({
-    examId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    examId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
     submissionId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
     type: Joi.string().valid('original', 'preprocessed', 'annotated').required(),
   }),

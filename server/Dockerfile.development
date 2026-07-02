@@ -1,77 +1,61 @@
 # ============================================================
-# SMART GRADING - Production Dockerfile
-# Backend API + AMC (Auto-Multiple-Choice) Engine
+# SMART GRADING - Development Dockerfile
+# Same as production but installs devDependencies (nodemon)
 # ============================================================
 
 FROM ubuntu:24.04
 
-# Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 # ============================================================
-# INSTALL SYSTEM DEPENDENCIES
+# INSTALL SYSTEM DEPENDENCIES (same as production)
 # ============================================================
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Node.js 20 LTS
     curl \
-    # Build tools (for native Node.js modules)
     python3 \
     make \
     g++ \
-    # AMC (Auto-Multiple-Choice) dependencies
     texlive-full \
     ghostscript \
     imagemagick \
     auto-multiple-choice \
-    # Virtual display for xvfb (required for AMC without GUI)
     xvfb \
-    # Utilities
     git \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# ============================================================
-# INSTALL NODE.JS 20
-# ============================================================
+# Install Node.js 20
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Verify installations
 RUN node --version && npm --version
 RUN useradd -m -s /bin/bash node || true
 RUN pdflatex --version | head -1
 RUN auto-multiple-choice --version 2>&1 | head -3 || echo "AMC installed"
 RUN gs --version
 
-# ============================================================
-# CREATE USER FOR AMC
-# ============================================================
+# AMC user
 RUN useradd -m -s /bin/bash amc && \
     mkdir -p /home/amc/amc-projects && \
     chown -R amc:amc /home/amc
 
-# ============================================================
-# APP SETUP
-# ============================================================
 WORKDIR /app
 
 # Copy package files
 COPY --chown=root:root package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force && \
+# Install ALL dependencies (including nodemon)
+RUN npm ci && npm cache clean --force && \
     chown -R node:node /app/node_modules /app/package*.json
 
-# Copy source code
+# Copy source code (will be overridden by volume mount at runtime)
 COPY --chown=node:node . .
 
-# Create directories for AMC output
 RUN mkdir -p /app/amc-projects /app/logs /app/uploads && \
     chown -R node:node /app/amc-projects /app/logs /app/uploads
 
-# Create symlink to AMC projects directory
 RUN ln -sf /home/amc/amc-projects /app/amc-projects-linked && \
     chown amc:amc /home/amc/amc-projects && \
     chmod 755 /home/amc/amc-projects
@@ -83,24 +67,21 @@ ENV PORT=5000
 ENV AMC_PROJECTS_DIR=/home/amc/amc-projects
 ENV DISPLAY=:99
 ENV RUNNING_IN_DOCKER=true
+ENV CHOKIDAR_USEPOLLING=true
+ENV CHOKIDAR_INTERVAL=1000
 
-# ============================================================
-# PORTS
-# ============================================================
 EXPOSE 5000
 
-# ============================================================
-# HEALTHCHECK
-# ============================================================
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD node -e "require('http').get('http://localhost:5000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" || \
     curl -f http://localhost:5000/health || exit 1
 
-# ============================================================
-# STARTUP
-# ============================================================
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Start Xvfb and then the server
-CMD ["/start.sh"]
+# Use dev startup script if available (for hot reload)
+COPY start.dev.sh /start.dev.sh
+RUN chmod +x /start.dev.sh
+
+# Start Xvfb + nodemon for hot reload
+CMD ["/start.dev.sh"]

@@ -47,9 +47,20 @@ class SubmissionService {
    * This is a simplified wrapper for AMC exams where mobile has already graded.
    */
   async create(data, userId, auditContext = {}) {
-    let { examId, classId, versionCode, studentCode, answers,
-      totalScore, maxScore, originalUrl, originalPublicId,
-      annotatedUrl, annotatedPublicId, deviceInfo } = data;
+    let {
+      examId,
+      classId,
+      versionCode,
+      studentCode,
+      answers,
+      totalScore,
+      maxScore,
+      originalUrl,
+      originalPublicId,
+      annotatedUrl,
+      annotatedPublicId,
+      deviceInfo,
+    } = data;
 
     // Normalize: answers might be a JSON-encoded string
     if (typeof answers === 'string') {
@@ -70,12 +81,18 @@ class SubmissionService {
 
     // Use scanOmrSheet which handles AMC path internally
     return this.scanOmrSheet({
-      examId, classId,
-      originalUrl, originalPublicId,
-      annotatedUrl, annotatedPublicId,
-      versionCode, studentCode,
-      answers, totalScore, maxScore,
-      deviceInfo
+      examId,
+      classId,
+      originalUrl,
+      originalPublicId,
+      annotatedUrl,
+      annotatedPublicId,
+      versionCode,
+      studentCode,
+      answers,
+      totalScore,
+      maxScore,
+      deviceInfo,
     });
   }
 
@@ -92,11 +109,21 @@ class SubmissionService {
    *   Backend uses pythonBridge to scan + grade server-side.
    */
   async scanOmrSheet(data) {
-    const { examId, classId, originalUrl, originalPublicId,
-      annotatedUrl, annotatedPublicId, imageMeta, image, deviceInfo,
-      versionCode: clientVersionCode, studentCode: clientStudentCode,
-      answers: clientAnswers, totalScore: clientTotalScore,
-      maxScore: clientMaxScore
+    const {
+      examId,
+      classId,
+      originalUrl,
+      originalPublicId,
+      annotatedUrl,
+      annotatedPublicId,
+      imageMeta,
+      image,
+      deviceInfo,
+      versionCode: clientVersionCode,
+      studentCode: clientStudentCode,
+      answers: clientAnswers,
+      totalScore: clientTotalScore,
+      maxScore: clientMaxScore,
     } = data;
 
     const config = require('../config/config');
@@ -141,9 +168,7 @@ class SubmissionService {
       const pythonBridge = require('./pythonBridge.service');
       try {
         // Legacy flow: pass zones (mm config) for algorithmic bubble detection
-        const omrTemplate = exam.omrTemplateId
-          ? await (require('./omrTemplate.service')).getById(exam.omrTemplateId)
-          : null;
+        const omrTemplate = exam.omrTemplateId ? await require('./omrTemplate.service').getById(exam.omrTemplateId) : null;
         pythonResult = await pythonBridge.processImage({
           image: imageBase64,
           template: omrTemplate?.zones || {},
@@ -155,9 +180,7 @@ class SubmissionService {
       // base64 mode
       const pythonBridge = require('./pythonBridge.service');
       try {
-        const omrTemplate = exam.omrTemplateId
-          ? await (require('./omrTemplate.service')).getById(exam.omrTemplateId)
-          : null;
+        const omrTemplate = exam.omrTemplateId ? await require('./omrTemplate.service').getById(exam.omrTemplateId) : null;
         pythonResult = await pythonBridge.processImage({
           image,
           template: omrTemplate?.zones || {},
@@ -174,25 +197,27 @@ class SubmissionService {
     }
 
     // ── Parse python result ──────────────────────────────────────────
-    const {
-      answers: rawAnswers = [],
-      versionCode,
-      studentCode,
-      metadata: scanMeta = {},
-    } = pythonResult;
+    const { answers: rawAnswers = [], versionCode, studentCode, metadata: scanMeta = {} } = pythonResult;
 
     // ── Build graded answers ──────────────────────────────────────────
-    const { gradedAnswers, versionId } = await this._buildGradedAnswers(
-      exam, examId, rawAnswers, versionCode
-    );
+    const { gradedAnswers, versionId } = await this._buildGradedAnswers(exam, examId, rawAnswers, versionCode);
 
     // ── Resolve student ────────────────────────────────────────────────
     const studentId = await this._resolveStudent(classId, studentCode);
 
     // ── Save submission ───────────────────────────────────────────────
     const submission = await this._upsertSubmission({
-      exam, examId, versionId, studentId, studentCode, classId,
-      gradedAnswers, originalUrl, originalPublicId, deviceInfo, scanMeta,
+      exam,
+      examId,
+      versionId,
+      studentId,
+      studentCode,
+      classId,
+      gradedAnswers,
+      originalUrl,
+      originalPublicId,
+      deviceInfo,
+      scanMeta,
     });
 
     // ── Post-processing ──────────────────────────────────────────────
@@ -220,11 +245,20 @@ class SubmissionService {
    * Mobile submits: versionCode, studentCode, answers{}, totalScore.
    */
   async _createFromMobileGraded(exam, data) {
-    const { examId, classId, versionCode: clientVersionCode,
-      studentCode: clientStudentCode, answers: clientAnswers,
-      totalScore: clientTotalScore, maxScore: clientMaxScore,
-      originalUrl, originalPublicId, annotatedUrl, annotatedPublicId,
-      deviceInfo } = data;
+    const {
+      examId,
+      classId,
+      versionCode: clientVersionCode,
+      studentCode: clientStudentCode,
+      answers: clientAnswers,
+      totalScore: clientTotalScore,
+      maxScore: clientMaxScore,
+      originalUrl,
+      originalPublicId,
+      annotatedUrl,
+      annotatedPublicId,
+      deviceInfo,
+    } = data;
 
     if (!clientAnswers || typeof clientAnswers !== 'object') {
       throw new ApiError(400, 'AMC exam requires pre-graded answers from mobile scanner');
@@ -234,7 +268,8 @@ class SubmissionService {
     let versionId = null;
     if (clientVersionCode) {
       const version = await ExamVersion.findOne({
-        examId, versionCode: clientVersionCode.toString()
+        examId,
+        versionCode: clientVersionCode.toString(),
       });
       if (version) versionId = version._id;
     }
@@ -247,28 +282,30 @@ class SubmissionService {
     const answerKey = versionId ? await this._getAnswerKey(versionId) : {};
 
     // ── Build graded answers from mobile payload ───────────────────────
-    const gradedAnswers = Object.entries(clientAnswers).map(([key, selected]) => {
-      // Key format: "q1", "q2", etc. Extract position number
-      const posStr = key.replace(/^q/i, '');
-      const pos = parseInt(posStr, 10);
-      if (isNaN(pos)) return null;
-      
-      const selectedAnswer = selected || null;
-      const correct = answerKey[pos] || null;
-      // isCorrect can only be true if we have both selected and correct answer
-      const isCorrect = selectedAnswer !== null && correct !== null && selectedAnswer === correct;
-      const scorePerQuestion = exam.totalScore / exam.numberOfQuestions;
-      return {
-        position: pos,
-        questionId: null,
-        selectedAnswer,
-        correctAnswer: correct,
-        isCorrect,
-        score: isCorrect ? scorePerQuestion : 0,
-        maxScore: scorePerQuestion,
-        omrData: null,
-      };
-    }).filter(Boolean);
+    const gradedAnswers = Object.entries(clientAnswers)
+      .map(([key, selected]) => {
+        // Key format: "q1", "q2", etc. Extract position number
+        const posStr = key.replace(/^q/i, '');
+        const pos = parseInt(posStr, 10);
+        if (isNaN(pos)) return null;
+
+        const selectedAnswer = selected || null;
+        const correct = answerKey[pos] || null;
+        // isCorrect can only be true if we have both selected and correct answer
+        const isCorrect = selectedAnswer !== null && correct !== null && selectedAnswer === correct;
+        const scorePerQuestion = exam.totalScore / exam.numberOfQuestions;
+        return {
+          position: pos,
+          questionId: null,
+          selectedAnswer,
+          correctAnswer: correct,
+          isCorrect,
+          score: isCorrect ? scorePerQuestion : 0,
+          maxScore: scorePerQuestion,
+          omrData: null,
+        };
+      })
+      .filter(Boolean);
 
     // Sort by position
     gradedAnswers.sort((a, b) => a.position - b.position);
@@ -278,17 +315,25 @@ class SubmissionService {
 
     // ── Save submission ───────────────────────────────────────────────
     const submission = await this._upsertSubmission({
-      exam, examId, versionId, studentId, studentCode: clientStudentCode,
-      classId, gradedAnswers, originalUrl, originalPublicId,
-      annotatedUrl, annotatedPublicId,
-      deviceInfo, scanMeta: {},
+      exam,
+      examId,
+      versionId,
+      studentId,
+      studentCode: clientStudentCode,
+      classId,
+      gradedAnswers,
+      originalUrl,
+      originalPublicId,
+      annotatedUrl,
+      annotatedPublicId,
+      deviceInfo,
+      scanMeta: {},
     });
 
     // ── Post-processing ───────────────────────────────────────────────
     await this._postScanProcessing(exam, gradedAnswers, submission);
 
-    const totalScore = clientTotalScore
-      ?? gradedAnswers.reduce((sum, a) => sum + a.score, 0);
+    const totalScore = clientTotalScore ?? gradedAnswers.reduce((sum, a) => sum + a.score, 0);
 
     return {
       status: 'scanned',
@@ -311,7 +356,8 @@ class SubmissionService {
     let versionId = null;
     if (versionCode) {
       const version = await ExamVersion.findOne({
-        examId, versionCode: versionCode.toString()
+        examId,
+        versionCode: versionCode.toString(),
       });
       if (version) versionId = version._id;
     }
@@ -328,7 +374,7 @@ class SubmissionService {
     const gradedAnswers = rawAnswers.map((raw, idx) => {
       const pos = idx + 1;
       const selected = raw.optionId || null;
-      const versionQ = versionQuestions.find(vq => vq.position === pos);
+      const versionQ = versionQuestions.find((vq) => vq.position === pos);
       const questionId = versionQ?.questionId || null;
       const correct = answerKey[pos] || null;
       const isCorrect = selected !== null && selected === correct;
@@ -352,8 +398,7 @@ class SubmissionService {
    */
   async _resolveStudent(classId, studentCode) {
     if (!studentCode || !classId) return null;
-    const classDoc = await (require('../models')).Class
-      .findById(classId).select('studentIds').lean();
+    const classDoc = await require('../models').Class.findById(classId).select('studentIds').lean();
     if (!classDoc?.studentIds) return null;
     const students = await User.find({
       _id: { $in: classDoc.studentIds },
@@ -365,10 +410,21 @@ class SubmissionService {
   /**
    * Upsert submission (update if exists, create if new).
    */
-  async _upsertSubmission({ exam, examId, versionId, studentId, studentCode,
-    classId, gradedAnswers, originalUrl, originalPublicId,
-    annotatedUrl, annotatedPublicId,
-    deviceInfo, scanMeta }) {
+  async _upsertSubmission({
+    exam,
+    examId,
+    versionId,
+    studentId,
+    studentCode,
+    classId,
+    gradedAnswers,
+    originalUrl,
+    originalPublicId,
+    annotatedUrl,
+    annotatedPublicId,
+    deviceInfo,
+    scanMeta,
+  }) {
     const existingFilter = studentId
       ? { examId: new mongoose.Types.ObjectId(examId), studentId }
       : { examId: new mongoose.Types.ObjectId(examId), studentCode: studentCode?.toString() };
@@ -461,11 +517,9 @@ class SubmissionService {
   }
 
   async _getVersionQuestions(versionId) {
-    const version = await ExamVersion.findById(versionId)
-      .select('questions')
-      .lean();
+    const version = await ExamVersion.findById(versionId).select('questions').lean();
     if (!version || !version.questions) return [];
-    return version.questions.map(vq => ({
+    return version.questions.map((vq) => ({
       position: vq.position,
       questionId: vq.questionId,
     }));
@@ -474,9 +528,7 @@ class SubmissionService {
   async _getAnswerKey(versionId) {
     const version = await ExamVersion.findById(versionId).lean();
     if (!version || !version.answerKey) return {};
-    const map = version.answerKey instanceof Map
-      ? version.answerKey
-      : new Map(Object.entries(version.answerKey || {}));
+    const map = version.answerKey instanceof Map ? version.answerKey : new Map(Object.entries(version.answerKey || {}));
     const result = {};
     for (const [pos, optId] of map.entries()) {
       result[parseInt(pos, 10)] = optId;
@@ -638,7 +690,7 @@ class SubmissionService {
 
     for (const [posStr, selectedAnswer] of Object.entries(answers)) {
       const position = parseInt(posStr, 10);
-      const answer = submission.answers.find(a => a.position === position);
+      const answer = submission.answers.find((a) => a.position === position);
       if (!answer) continue;
 
       answer.selectedAnswer = selectedAnswer;
@@ -672,7 +724,7 @@ class SubmissionService {
     }
 
     // Find and update the answer
-    const answer = submission.answers.find(a => a.position === position);
+    const answer = submission.answers.find((a) => a.position === position);
     if (!answer) {
       throw new ApiError(404, 'Answer at this position not found');
     }
@@ -921,9 +973,7 @@ class SubmissionService {
     const passGrade = gradeDistribution.slice(2).reduce((s, d) => s + d.count, 0);
     const passRate = totalGraded > 0 ? Math.round((passGrade / totalGraded) * 100) : 0;
 
-    const submissionRate = examTotalStudents > 0
-      ? Math.round((base.totalSubmissions / examTotalStudents) * 100)
-      : 0;
+    const submissionRate = examTotalStudents > 0 ? Math.round((base.totalSubmissions / examTotalStudents) * 100) : 0;
 
     const scoreHistogram = [
       { range: '0-2', count: gradeDistribution[0].count },
@@ -968,8 +1018,8 @@ class SubmissionService {
       score: scanResult.totalScore,
       maxScore: scanResult.maxScore,
       percentage: (scanResult.totalScore / scanResult.maxScore) * 100,
-      correctCount: scanResult.answers.filter(a => a.isCorrect).length,
-      incorrectCount: scanResult.answers.filter(a => !a.isCorrect).length,
+      correctCount: scanResult.answers.filter((a) => a.isCorrect).length,
+      incorrectCount: scanResult.answers.filter((a) => !a.isCorrect).length,
       totalQuestions: scanResult.answers.length,
       examDate: exam.examDate,
     };

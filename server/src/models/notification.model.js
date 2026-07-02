@@ -1,36 +1,39 @@
 const mongoose = require('mongoose');
 
-const notificationDataSchema = new mongoose.Schema({
-  examId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Exam',
+const notificationDataSchema = new mongoose.Schema(
+  {
+    examId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Exam',
+    },
+    submissionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Submission',
+    },
+    appealId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Appeal',
+    },
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Class',
+    },
+    questionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Question',
+    },
+    bankId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'QuestionBank',
+    },
+    requesterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    role: String,
   },
-  submissionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Submission',
-  },
-  appealId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Appeal',
-  },
-  classId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Class',
-  },
-  questionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Question',
-  },
-  bankId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'QuestionBank',
-  },
-  requesterId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  role: String,
-}, { strict: false });
+  { strict: false }
+);
 
 const notificationSchema = mongoose.Schema(
   {
@@ -120,14 +123,7 @@ notificationSchema.methods.sendPush = async function () {
   return this;
 };
 
-notificationSchema.statics.createForUser = async function (
-  userId,
-  type,
-  title,
-  body,
-  data = {},
-  options = {}
-) {
+notificationSchema.statics.createForUser = async function (userId, type, title, body, data = {}, options = {}) {
   const notification = new this({
     userId,
     type,
@@ -165,10 +161,7 @@ notificationSchema.statics.getUnreadCount = async function (userId) {
 };
 
 notificationSchema.statics.markAllAsRead = async function (userId) {
-  return this.updateMany(
-    { userId, isRead: false },
-    { $set: { isRead: true, readAt: new Date() } }
-  );
+  return this.updateMany({ userId, isRead: false }, { $set: { isRead: true, readAt: new Date() } });
 };
 
 notificationSchema.statics.cleanupOld = async function (daysOld = 30) {

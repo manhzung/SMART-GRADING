@@ -15,7 +15,11 @@ const verifyCallback = (req, resolve, reject, requiredRights) => async (err, use
       ? requiredRights.every((requiredRight) => userRights.includes(requiredRight))
       : false;
     if (!hasRequiredRights && req.params.userId !== user.id) {
-      console.error(`[AUTH DEBUG] Forbidden: user.role=${user.role}, user.id=${user.id}, requiredRights=${JSON.stringify(requiredRights)}, userRights=${JSON.stringify(userRights)}`);
+      console.error(
+        `[AUTH DEBUG] Forbidden: user.role=${user.role}, user.id=${user.id}, requiredRights=${JSON.stringify(
+          requiredRights
+        )}, userRights=${JSON.stringify(userRights)}`
+      );
       return reject(new ApiError(httpStatus.FORBIDDEN, 'Forbidden'));
     }
   }
@@ -23,12 +27,14 @@ const verifyCallback = (req, resolve, reject, requiredRights) => async (err, use
   resolve();
 };
 
-const auth = (...requiredRights) => async (req, res, next) => {
-  return new Promise((resolve, reject) => {
-    passport.authenticate('jwt', { session: false }, verifyCallback(req, resolve, reject, requiredRights))(req, res, next);
-  })
-    .then(() => next())
-    .catch((err) => next(err));
-};
+const auth =
+  (...requiredRights) =>
+  async (req, res, next) => {
+    return new Promise((resolve, reject) => {
+      passport.authenticate('jwt', { session: false }, verifyCallback(req, resolve, reject, requiredRights))(req, res, next);
+    })
+      .then(() => next())
+      .catch((err) => next(err));
+  };
 
 module.exports = auth;

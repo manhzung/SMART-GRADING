@@ -66,8 +66,8 @@ function computeLayout({ pageConfig = {}, zones = {} }) {
   const cW = paperW - mLeft - mRight;
 
   const hdrOn = zones.header?.enabled !== false;
-  const hdrH = hdrOn ? (zones.header?.height || 40) : 0;
-  const hdrEndY = hdrOn ? (mTop + hdrH) : mTop;
+  const hdrH = hdrOn ? zones.header?.height || 40 : 0;
+  const hdrEndY = hdrOn ? mTop + hdrH : mTop;
 
   const sc = zones.studentCode;
   const vc = zones.versionCode;
@@ -77,12 +77,16 @@ function computeLayout({ pageConfig = {}, zones = {} }) {
   let cbY = hdrEndY;
   let codeRowH = 0;
   if (scOn || vcOn) {
-    cbY = hdrOn ? (hdrEndY + 5) : mTop;
-    const scH = scOn ? (10 * (sc.digitConfig?.bubbleSize?.height || 2.5) + 9 * (sc.digitConfig?.bubbleSpacing?.vertical || 1) + 6) : 0;
-    const vcH = vcOn ? (10 * (vc.digitConfig?.bubbleSize?.height || 2) + 9 * (vc.digitConfig?.bubbleSpacing?.vertical || 0.5) + 6) : 0;
+    cbY = hdrOn ? hdrEndY + 5 : mTop;
+    const scH = scOn
+      ? 10 * (sc.digitConfig?.bubbleSize?.height || 2.5) + 9 * (sc.digitConfig?.bubbleSpacing?.vertical || 1) + 6
+      : 0;
+    const vcH = vcOn
+      ? 10 * (vc.digitConfig?.bubbleSize?.height || 2) + 9 * (vc.digitConfig?.bubbleSpacing?.vertical || 0.5) + 6
+      : 0;
     codeRowH = Math.max(scH, vcH);
   }
-  const cbEndY = (scOn || vcOn) ? (cbY + codeRowH) : hdrEndY;
+  const cbEndY = scOn || vcOn ? cbY + codeRowH : hdrEndY;
 
   return { hdrEndY, cbY, codeRowH, cbEndY, mTop, mLeft, cW, paperW };
 }
@@ -118,7 +122,7 @@ function buildStudentCodeBlock(sc, layout) {
     minBlockW = Math.max(minBlockW, 28);
   }
   const blockW = Math.max(totalContentW + padX * 2, minBlockW);
-  const startBubblesX = (mLeft - padX) + (blockW - totalContentW) / 2;
+  const startBubblesX = mLeft - padX + (blockW - totalContentW) / 2;
 
   const ox = mmToPx(startBubblesX);
   const oy = mmToPx(cbY + 6);
@@ -171,7 +175,7 @@ function buildVersionCodeBlock(vc, layout) {
     minBlockW = Math.max(minBlockW, 28);
   }
   const blockW = Math.max(totalContentW + padX * 2, minBlockW);
-  const startBubblesX = (vx - padX) + (blockW - totalContentW) / 2;
+  const startBubblesX = vx - padX + (blockW - totalContentW) / 2;
 
   const ox = mmToPx(startBubblesX);
   const oy = mmToPx(cbY + 6);
@@ -200,9 +204,7 @@ function buildAnswerAreaBlocks(aa, layout) {
   if (!aa || aa.enabled === false) return [];
 
   const { mLeft, cbEndY, hdrEndY } = layout;
-  const gridY = (cbEndY !== hdrEndY || (aa.startPosition && aa.startPosition.y !== undefined))
-    ? (cbEndY + 6)
-    : (hdrEndY + 5);
+  const gridY = cbEndY !== hdrEndY || (aa.startPosition && aa.startPosition.y !== undefined) ? cbEndY + 6 : hdrEndY + 5;
 
   const gc = aa.gridConfig || {};
   const bc = gc.bubbleConfig || {};
@@ -308,10 +310,20 @@ function convertTemplate(template) {
 
   // bubbleDimensions root = max bubble size across all blocks
   // (used as fallback by clients that don't read block-level sizes)
-  let maxBw = 0, maxBh = 0;
-  if (scBlock) { maxBw = Math.max(maxBw, scBlock.bubbleWidth); maxBh = Math.max(maxBh, scBlock.bubbleHeight); }
-  if (vcBlock) { maxBw = Math.max(maxBw, vcBlock.bubbleWidth); maxBh = Math.max(maxBh, vcBlock.bubbleHeight); }
-  for (const { config } of aaBlocks) { maxBw = Math.max(maxBw, config.bubbleWidth); maxBh = Math.max(maxBh, config.bubbleHeight); }
+  let maxBw = 0,
+    maxBh = 0;
+  if (scBlock) {
+    maxBw = Math.max(maxBw, scBlock.bubbleWidth);
+    maxBh = Math.max(maxBh, scBlock.bubbleHeight);
+  }
+  if (vcBlock) {
+    maxBw = Math.max(maxBw, vcBlock.bubbleWidth);
+    maxBh = Math.max(maxBh, vcBlock.bubbleHeight);
+  }
+  for (const { config } of aaBlocks) {
+    maxBw = Math.max(maxBw, config.bubbleWidth);
+    maxBh = Math.max(maxBh, config.bubbleHeight);
+  }
   // If no blocks, fall back to default 4mm for backward compat
   const bubbleW = maxBw || mmToPx(4);
   const bubbleH = maxBh || mmToPx(4);

@@ -17,7 +17,7 @@ async function testGenQuestion() {
       topic: 'Phương trình bậc 2 (ax² + bx + c = 0)',
       grade: 10,
       count: 5,
-      options: { difficulty: 'mixed', language: 'vietnamese' }
+      options: { difficulty: 'mixed', language: 'vietnamese' },
     });
 
     if (result && result.questions) {
@@ -47,7 +47,7 @@ async function testGenQuestion() {
       topic: 'Tác phẩm "Tắt đèn" của Ngô Tất Tố',
       grade: 9,
       count: 3,
-      options: { language: 'vietnamese' }
+      options: { language: 'vietnamese' },
     });
 
     if (result && result.questions) {
@@ -70,7 +70,7 @@ async function testGenQuestion() {
       topic: 'Present Perfect Tense',
       grade: 10,
       count: 3,
-      options: { language: 'english' }
+      options: { language: 'english' },
     });
 
     if (result && result.questions) {
@@ -93,7 +93,7 @@ async function testGenQuestion() {
       topic: 'Định luật Newton',
       grade: 10,
       count: 4,
-      options: { language: 'vietnamese' }
+      options: { language: 'vietnamese' },
     });
 
     if (result && result.questions) {

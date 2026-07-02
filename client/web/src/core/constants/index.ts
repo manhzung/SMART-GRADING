@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://159.223.169.35:3000/api/v1';
 
 export const API_ENDPOINTS = {
   auth: '/auth',

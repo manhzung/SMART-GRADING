@@ -6,9 +6,7 @@ const ApiError = require('./ApiError');
  */
 const buildFolder = (examId, submissionId, type) => {
   const safeExam = String(examId).replace(/[^a-zA-Z0-9_-]/g, '');
-  const safeSub = submissionId
-    ? String(submissionId).replace(/[^a-zA-Z0-9_-]/g, '')
-    : 'pending';
+  const safeSub = submissionId ? String(submissionId).replace(/[^a-zA-Z0-9_-]/g, '') : 'pending';
   const safeType = String(type).replace(/[^a-zA-Z0-9_-]/g, '');
   return `submissions/${safeExam}/${safeSub}/${safeType}`;
 };
@@ -29,9 +27,7 @@ const buildExamFolder = (examId) => {
  */
 const extractPublicIdFromUrl = (url) => {
   if (!url || typeof url !== 'string') return null;
-  const match = url.match(
-    /^https?:\/\/res\.cloudinary\.com\/[^/]+\/[^/]+\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-zA-Z0-9]+)?$/
-  );
+  const match = url.match(/^https?:\/\/res\.cloudinary\.com\/[^/]+\/[^/]+\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-zA-Z0-9]+)?$/);
   return match ? match[1] : null;
 };
 

@@ -4,12 +4,7 @@ const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
 
 const create = catchAsync(async (req, res) => {
-  const question = await questionService.create(
-    req.body,
-    req.user?.id,
-    req.user?.schoolId,
-    req.user?.role
-  );
+  const question = await questionService.create(req.body, req.user?.id, req.user?.schoolId, req.user?.role);
   res.status(httpStatus.CREATED).send(question);
 });
 
@@ -19,10 +14,7 @@ const getAll = catchAsync(async (req, res) => {
   // per-bank permission model.
   // Exception: if ?allBanks=true is passed, search across all banks in the school.
   if (req.user?.role !== 'admin' && !req.query.bankId && !req.query.allBanks) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'bankId is required. Please select or create a question bank first.'
-    );
+    throw new ApiError(httpStatus.BAD_REQUEST, 'bankId is required. Please select or create a question bank first.');
   }
   const result = await questionService.getAll(req.query, req.user);
   res.send(result);
@@ -54,24 +46,13 @@ const update = catchAsync(async (req, res) => {
 });
 
 const approve = catchAsync(async (req, res) => {
-  const question = await questionService.approve(
-    req.params.id,
-    req.user.id,
-    req.user.schoolId,
-    req.user.role
-  );
+  const question = await questionService.approve(req.params.id, req.user.id, req.user.schoolId, req.user.role);
   res.send(question);
 });
 
 const reject = catchAsync(async (req, res) => {
   const { reason } = req.body || {};
-  const question = await questionService.reject(
-    req.params.id,
-    req.user.id,
-    req.user.schoolId,
-    req.user.role,
-    reason
-  );
+  const question = await questionService.reject(req.params.id, req.user.id, req.user.schoolId, req.user.role, reason);
   res.send(question);
 });
 
@@ -91,10 +72,7 @@ const generate = catchAsync(async (req, res) => {
 
   let topicName = '';
   if (topicId) {
-    const existingQuestion = await Question.findOne({ topicId })
-      .select('topicName')
-      .lean()
-      .sort({ createdAt: -1 });
+    const existingQuestion = await Question.findOne({ topicId }).select('topicName').lean().sort({ createdAt: -1 });
     topicName = existingQuestion?.topicName || '';
   }
 
@@ -147,11 +125,14 @@ const generateSimilar = catchAsync(async (req, res) => {
   }
 
   // Build context from source questions
-  const sourceContext = sourceQuestions.map((q, idx) =>
-    `Câu ${idx + 1}: ${q.content}\n` +
-    `Đáp án: ${q.options.find(o => o.isCorrect)?.content || 'N/A'}\n` +
-    `Độ khó: ${q.difficulty}`
-  ).join('\n\n');
+  const sourceContext = sourceQuestions
+    .map(
+      (q, idx) =>
+        `Câu ${idx + 1}: ${q.content}\n` +
+        `Đáp án: ${q.options.find((o) => o.isCorrect)?.content || 'N/A'}\n` +
+        `Độ khó: ${q.difficulty}`
+    )
+    .join('\n\n');
 
   // Generate similar questions
   const generated = await questionGenService.generateSimilarQuestions({
@@ -211,7 +192,10 @@ const getByTags = catchAsync(async (req, res) => {
 
   // Parse tags (comma-separated)
   if (tags) {
-    const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+    const tagList = tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
     filter.tags = { $in: tagList };
   }
 
@@ -222,7 +206,10 @@ const getByTags = catchAsync(async (req, res) => {
 
   // Exclude specific IDs (questions already selected)
   if (excludeIds) {
-    const excludeList = excludeIds.split(',').map(id => id.trim()).filter(Boolean);
+    const excludeList = excludeIds
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
     filter._id = { $nin: excludeList };
   }
 
@@ -234,7 +221,7 @@ const getByTags = catchAsync(async (req, res) => {
 
   // Hide correct answers for non-admin/teacher
   const isPrivileged = req.user?.role === 'admin' || req.user?.role === 'teacher';
-  const sanitizedQuestions = questions.map(q => {
+  const sanitizedQuestions = questions.map((q) => {
     if (!isPrivileged) {
       return {
         ...q,
@@ -247,9 +234,9 @@ const getByTags = catchAsync(async (req, res) => {
 
   // Group by difficulty for UI display
   const byDifficulty = {
-    easy: sanitizedQuestions.filter(q => q.difficulty === 'easy'),
-    medium: sanitizedQuestions.filter(q => q.difficulty === 'medium'),
-    hard: sanitizedQuestions.filter(q => q.difficulty === 'hard'),
+    easy: sanitizedQuestions.filter((q) => q.difficulty === 'easy'),
+    medium: sanitizedQuestions.filter((q) => q.difficulty === 'medium'),
+    hard: sanitizedQuestions.filter((q) => q.difficulty === 'hard'),
   };
 
   res.send({
@@ -263,10 +250,7 @@ const getByTags = catchAsync(async (req, res) => {
 });
 
 const getByBank = catchAsync(async (req, res) => {
-  const result = await questionService.getAll(
-    { bankId: req.params.bankId },
-    req.user
-  );
+  const result = await questionService.getAll({ bankId: req.params.bankId }, req.user);
   res.send(result);
 });
 

@@ -18,7 +18,12 @@ describe('AMC Integration', () => {
       if (!amcAvailable) {
         console.log('AMC not available on this server — integration tests will be skipped.');
         console.log('Install AMC in WSL2 to run these tests.');
-        console.log('Missing tools:', Object.entries(envCheck.tools).filter(([, v]) => !v).map(([k]) => k));
+        console.log(
+          'Missing tools:',
+          Object.entries(envCheck.tools)
+            .filter(([, v]) => !v)
+            .map(([k]) => k)
+        );
       }
     } catch (err) {
       console.log('AMC environment check failed:', err.message);
@@ -97,9 +102,23 @@ describe('AMC Integration', () => {
       }));
 
       const result = generateAmcSource({
-        exam: { title: 'Long Exam', subjectName: 'Test', className: '10A', examDate: new Date(), duration: 90, totalScore: 50, numberOfVersions: 1 },
+        exam: {
+          title: 'Long Exam',
+          subjectName: 'Test',
+          className: '10A',
+          examDate: new Date(),
+          duration: 90,
+          totalScore: 50,
+          numberOfVersions: 1,
+        },
         questions,
-        config: { paperSize: 'A4', includeAnswerSheet: true, schoolHeader: 'School', shuffleQuestions: false, shuffleOptions: false },
+        config: {
+          paperSize: 'A4',
+          includeAnswerSheet: true,
+          schoolHeader: 'School',
+          shuffleQuestions: false,
+          shuffleOptions: false,
+        },
       });
 
       expect(result).toBeTruthy();

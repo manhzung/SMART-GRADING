@@ -6,33 +6,21 @@ const auth = require('../../middlewares/auth');
 
 const router = express.Router();
 
-router
-  .route('/me')
-  .get(auth(), validate(appealValidation.getMyAppeals), appealController.getMy);
+router.route('/me').get(auth(), validate(appealValidation.getMyAppeals), appealController.getMy);
 
 router
   .route('/')
   .post(auth('submitAppeals'), validate(appealValidation.createAppeal), appealController.create)
   .get(auth(), validate(appealValidation.getAppeals), appealController.getAll);
 
-router
-  .route('/:id')
-  .get(auth(), validate(appealValidation.getAppeal), appealController.getById);
+router.route('/:id').get(auth(), validate(appealValidation.getAppeal), appealController.getById);
 
-router
-  .route('/:id/review')
-  .post(auth('reviewAppeals'), validate(appealValidation.reviewAppeal), appealController.review);
+router.route('/:id/review').post(auth('reviewAppeals'), validate(appealValidation.reviewAppeal), appealController.review);
 
-router
-  .route('/student/:studentId')
-  .get(auth(), validate(appealValidation.getStudentAppeals), appealController.getByStudent);
+router.route('/student/:studentId').get(auth(), validate(appealValidation.getStudentAppeals), appealController.getByStudent);
 
-router
-  .route('/exam/:examId')
-  .get(auth(), validate(appealValidation.getExamAppeals), appealController.getByExam);
+router.route('/exam/:examId').get(auth(), validate(appealValidation.getExamAppeals), appealController.getByExam);
 
-router
-  .route('/exam/:examId/pending-count')
-  .get(auth(), appealController.getPendingCount);
+router.route('/exam/:examId/pending-count').get(auth(), appealController.getPendingCount);
 
 module.exports = router;

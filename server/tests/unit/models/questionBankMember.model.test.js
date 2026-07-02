@@ -32,8 +32,6 @@ describe('QuestionBankMember Model', () => {
     const bankId = new mongoose.Types.ObjectId();
     const userId = new mongoose.Types.ObjectId();
     await QuestionBankMember.create({ bankId, userId, role: 'owner', status: 'active' });
-    await expect(
-      QuestionBankMember.create({ bankId, userId, role: 'manager', status: 'active' })
-    ).rejects.toThrow();
+    await expect(QuestionBankMember.create({ bankId, userId, role: 'manager', status: 'active' })).rejects.toThrow();
   });
 });

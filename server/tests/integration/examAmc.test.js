@@ -4,18 +4,9 @@ const httpStatus = require('http-status');
 jest.setTimeout(15000);
 const app = require('../../src/app');
 const { Exam, ExamVersion, OMRTemplate, Question } = require('../../src/models');
-const {
-  teacherOne,
-  insertUsers,
-} = require('../fixtures/user.fixture');
-const {
-  schoolA,
-  insertSchools,
-} = require('../fixtures/school.fixture');
-const {
-  classA,
-  insertClasses,
-} = require('../fixtures/class.fixture');
+const { teacherOne, insertUsers } = require('../fixtures/user.fixture');
+const { schoolA, insertSchools } = require('../fixtures/school.fixture');
+const { classA, insertClasses } = require('../fixtures/class.fixture');
 const setupTestDB = require('../utils/setupTestDB');
 const { teacherOneAccessToken } = require('../fixtures/token.fixture');
 
@@ -111,10 +102,7 @@ describe('Exam AMC Integration APIs', () => {
     });
 
     it('should return 401 if no token', async () => {
-      await request(app)
-        .post('/api/v1/exams')
-        .send({ title: 'No Auth' })
-        .expect(httpStatus.UNAUTHORIZED);
+      await request(app).post('/api/v1/exams').send({ title: 'No Auth' }).expect(httpStatus.UNAUTHORIZED);
     });
   });
 
@@ -203,10 +191,10 @@ describe('Exam AMC Integration APIs', () => {
       const version = res.body[0];
       expect(version).toHaveProperty('versionCode');
       expect(version).toHaveProperty('paperEngine'); // AMC field
-      expect(version).toHaveProperty('pdfUrl');       // AMC field
-      expect(version).toHaveProperty('generatedAt');  // AMC field
+      expect(version).toHaveProperty('pdfUrl'); // AMC field
+      expect(version).toHaveProperty('generatedAt'); // AMC field
       expect(version).toHaveProperty('generationErrors'); // AMC field
-      expect(version).toHaveProperty('templateJson');  // AMC field
+      expect(version).toHaveProperty('templateJson'); // AMC field
 
       // Initial state — no PDF generated yet
       expect(version.pdfUrl).toBeNull();
@@ -215,9 +203,7 @@ describe('Exam AMC Integration APIs', () => {
     });
 
     it('should return 401 if no token', async () => {
-      await request(app)
-        .get(`/api/v1/exams/${exam._id}/versions`)
-        .expect(httpStatus.UNAUTHORIZED);
+      await request(app).get(`/api/v1/exams/${exam._id}/versions`).expect(httpStatus.UNAUTHORIZED);
     });
   });
 
@@ -248,9 +234,7 @@ describe('Exam AMC Integration APIs', () => {
     });
 
     it('should return 401 if no token', async () => {
-      await request(app)
-        .post(`/api/v1/exams/${exam._id}/generate-papers`)
-        .expect(httpStatus.UNAUTHORIZED);
+      await request(app).post(`/api/v1/exams/${exam._id}/generate-papers`).expect(httpStatus.UNAUTHORIZED);
     });
 
     it('should return 404 if exam not found', async () => {
@@ -303,9 +287,7 @@ describe('Exam AMC Integration APIs', () => {
     });
 
     it('should return 401 if no token', async () => {
-      await request(app)
-        .get(`/api/v1/exams/${exam._id}/versions/${exam.versionCode}/pdf`)
-        .expect(httpStatus.UNAUTHORIZED);
+      await request(app).get(`/api/v1/exams/${exam._id}/versions/${exam.versionCode}/pdf`).expect(httpStatus.UNAUTHORIZED);
     });
 
     it('should return 404 if version not found', async () => {
@@ -407,9 +389,7 @@ describe('Exam AMC Integration APIs', () => {
     });
 
     it('should return 401 if no token', async () => {
-      await request(app)
-        .get(`/api/v1/exams/${exam._id}/versions/export`)
-        .expect(httpStatus.UNAUTHORIZED);
+      await request(app).get(`/api/v1/exams/${exam._id}/versions/export`).expect(httpStatus.UNAUTHORIZED);
     });
   });
 

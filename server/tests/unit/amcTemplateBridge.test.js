@@ -7,8 +7,8 @@ describe('AmcTemplateBridge', () => {
         studentId: { digits: 10, coords: [{ x: 72, y: 200, w: 18, h: 18, digit: 0 }] },
         versionCode: { digits: 3, coords: [{ x: 72, y: 230, w: 18, h: 18, digit: 0 }] },
         answers: {
-          q1: { A: { x: 120, y: 300, w: 15, h: 15 }, B: { x: 140, y: 300, w: 15, h: 15 } }
-        }
+          q1: { A: { x: 120, y: 300, w: 15, h: 15 }, B: { x: 140, y: 300, w: 15, h: 15 } },
+        },
       };
       const versionData = {
         versionCode: '101',
@@ -18,7 +18,7 @@ describe('AmcTemplateBridge', () => {
         _id: 'exam123',
         numberOfQuestions: 1,
         totalScore: 10,
-        questionIds: [{ score: 10 }]
+        questionIds: [{ score: 10 }],
       };
 
       const bridge = new AmcTemplateBridge();
@@ -56,7 +56,7 @@ describe('AmcTemplateBridge', () => {
       const result = bridge.generate({
         csvData: { studentId: { coords: [] }, versionCode: { coords: [] }, answers: {} },
         versionData: { versionCode: '101', answerKey: {} },
-        examData: { _id: 'e1', totalScore: 10, questionIds: [{ score: 2 }, { score: 3 }] }
+        examData: { _id: 'e1', totalScore: 10, questionIds: [{ score: 2 }, { score: 3 }] },
       });
       expect(result.questionScores).toBeDefined();
       expect(result.totalScore).toBe(10);
@@ -67,7 +67,7 @@ describe('AmcTemplateBridge', () => {
       const result = bridge.generate({
         csvData: { studentId: { coords: [] }, versionCode: { coords: [] }, answers: {} },
         versionData: { versionCode: '101', answerKey: {} },
-        examData: { _id: 'e1', totalScore: 10, questionIds: [] }
+        examData: { _id: 'e1', totalScore: 10, questionIds: [] },
       });
       expect(result.answers).toEqual({});
       expect(result.questionScores).toEqual({});

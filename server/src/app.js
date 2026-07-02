@@ -38,10 +38,12 @@ app.use(mongoSanitize());
 app.use(compression());
 
 // enable cors
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://159.223.169.35:5173', 'http://159.223.169.35'],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'http://159.223.169.35:5173', 'http://159.223.169.35'],
+    credentials: true,
+  })
+);
 app.options('*', cors());
 
 // jwt authentication

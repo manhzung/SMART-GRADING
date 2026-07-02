@@ -94,10 +94,10 @@ const schoolSchema = mongoose.Schema(
         type: Map,
         of: Number,
         default: {
-          excellent: 8.5,  // Giỏi: >= 8.5
-          good: 7.0,       // Khá: >= 7.0
-          average: 5.0,    // Trung bình: >= 5.0
-          poor: 0,         // Yếu: < 5.0
+          excellent: 8.5, // Giỏi: >= 8.5
+          good: 7.0, // Khá: >= 7.0
+          average: 5.0, // Trung bình: >= 5.0
+          poor: 0, // Yếu: < 5.0
         },
       },
       // Thang điểm chi tiết hơn
@@ -121,9 +121,9 @@ const schoolSchema = mongoose.Schema(
         },
       ],
       omrConfig: {
-        bubbleSize: { 
-          width: { type: Number, default: 6 }, 
-          height: { type: Number, default: 6 } 
+        bubbleSize: {
+          width: { type: Number, default: 6 },
+          height: { type: Number, default: 6 },
         },
         rowHeight: { type: Number, default: 14 },
         colWidth: { type: Number, default: 8 },

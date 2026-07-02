@@ -1,8 +1,4 @@
-const {
-  extractPublicIdFromUrl,
-  assertIsCloudinaryUrl,
-  buildFolder,
-} = require('../../../src/utils/cloudinary.util');
+const { extractPublicIdFromUrl, assertIsCloudinaryUrl, buildFolder } = require('../../../src/utils/cloudinary.util');
 
 describe('cloudinary.util', () => {
   describe('extractPublicIdFromUrl', () => {
@@ -40,9 +36,7 @@ describe('cloudinary.util', () => {
     });
 
     it('throws for non-Cloudinary URL', () => {
-      expect(() =>
-        assertIsCloudinaryUrl('https://example.com/x.jpg', 'smart-grading')
-      ).toThrow();
+      expect(() => assertIsCloudinaryUrl('https://example.com/x.jpg', 'smart-grading')).toThrow();
     });
   });
 

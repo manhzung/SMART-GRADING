@@ -30,9 +30,7 @@ describe('GET /questions - bankId required for non-admins', () => {
   });
 
   it('returns 400 when teacher calls GET /questions without bankId', async () => {
-    const res = await request(app)
-      .get('/api/v1/questions')
-      .set('Authorization', `Bearer ${teacherOneAccessToken}`);
+    const res = await request(app).get('/api/v1/questions').set('Authorization', `Bearer ${teacherOneAccessToken}`);
 
     expect(res.status).toBe(httpStatus.BAD_REQUEST);
     expect(res.body.message).toMatch(/bankId/i);
@@ -53,9 +51,7 @@ describe('GET /questions - bankId required for non-admins', () => {
   });
 
   it('admin can still GET /questions without bankId (system view)', async () => {
-    const res = await request(app)
-      .get('/api/v1/questions')
-      .set('Authorization', `Bearer ${adminAccessToken}`);
+    const res = await request(app).get('/api/v1/questions').set('Authorization', `Bearer ${adminAccessToken}`);
 
     expect(res.status).toBe(httpStatus.OK);
   });

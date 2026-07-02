@@ -30,10 +30,7 @@ const markAsRead = catchAsync(async (req, res) => {
 });
 
 const markAllAsRead = catchAsync(async (req, res) => {
-  await Notification.updateMany(
-    { userId: req.user.id, isRead: false },
-    { isRead: true, readAt: new Date() }
-  );
+  await Notification.updateMany({ userId: req.user.id, isRead: false }, { isRead: true, readAt: new Date() });
   res.status(httpStatus.NO_CONTENT).send();
 });
 
@@ -43,10 +40,7 @@ const getUnreadCount = catchAsync(async (req, res) => {
 });
 
 const remove = catchAsync(async (req, res) => {
-  await Notification.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user.id },
-    { isDeleted: true }
-  );
+  await Notification.findOneAndUpdate({ _id: req.params.id, userId: req.user.id }, { isDeleted: true });
   res.status(httpStatus.NO_CONTENT).send();
 });
 

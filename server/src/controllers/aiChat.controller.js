@@ -119,10 +119,7 @@ const getReports = catchAsync(async (req, res) => {
   if (examId) query.examId = examId;
   if (subjectId) query.subjectId = subjectId;
 
-  const reports = await AIReport.find(query)
-    .sort({ createdAt: -1 })
-    .limit(parseInt(limit, 10))
-    .populate('examId', 'title');
+  const reports = await AIReport.find(query).sort({ createdAt: -1 }).limit(parseInt(limit, 10)).populate('examId', 'title');
 
   res.send({ success: true, data: reports });
 });

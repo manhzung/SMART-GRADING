@@ -13,13 +13,7 @@ const mistakeSchema = new mongoose.Schema({
   position: Number,
   mistakeType: {
     type: String,
-    enum: [
-      'concept_misunderstanding',
-      'calculation_error',
-      'careless_mistake',
-      'weak_topic',
-      'time_pressure',
-    ],
+    enum: ['concept_misunderstanding', 'calculation_error', 'careless_mistake', 'weak_topic', 'time_pressure'],
   },
   weakTopics: [weakTopicSchema],
   studentAnswer: String,
@@ -111,13 +105,13 @@ aiReportSchema.statics.findByStudent = async function (studentId, options = {}) 
   if (options.examId) {
     query.examId = options.examId;
   }
-  return this.find(query).sort({ createdAt: -1 }).limit(options.limit || 10);
+  return this.find(query)
+    .sort({ createdAt: -1 })
+    .limit(options.limit || 10);
 };
 
 aiReportSchema.statics.getRecentUnreadReports = async function (studentId) {
-  return this.find({ studentId, isRead: false })
-    .sort({ createdAt: -1 })
-    .populate('examId', 'title');
+  return this.find({ studentId, isRead: false }).sort({ createdAt: -1 }).populate('examId', 'title');
 };
 
 aiReportSchema.statics.generateReport = async function (submission, model = 'gemini') {

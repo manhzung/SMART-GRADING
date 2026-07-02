@@ -27,9 +27,7 @@ class AppealService {
     let currentAnswer;
     let expectedAnswer;
     if (data.questionId) {
-      const answer = submission.answers?.find(
-        (a) => a.questionId?.toString() === data.questionId.toString()
-      );
+      const answer = submission.answers?.find((a) => a.questionId?.toString() === data.questionId.toString());
       // selectedAnswer is already 'A'/'B'/'C'/'D' or null in the model
       currentAnswer = answer?.selectedAnswer != null ? String(answer.selectedAnswer) : undefined;
       // correctAnswer is 'A'/'B'/'C'/'D' or null
@@ -80,18 +78,7 @@ class AppealService {
   }
 
   async getAll(query = {}, user = null) {
-    const {
-      examId,
-      submissionId,
-      studentId,
-      status,
-      page,
-      limit,
-      search,
-      startDate,
-      endDate,
-      ...rest
-    } = query;
+    const { examId, submissionId, studentId, status, page, limit, search, startDate, endDate, ...rest } = query;
     const { skip } = parsePagination({ page, limit });
     const filter = { ...rest };
     if (examId) filter.examId = examId;
@@ -151,23 +138,24 @@ class AppealService {
     const { Exam, Class } = require('../models');
     const classIds = (await Class.find({ schoolId }).select('_id').lean()).map((c) => c._id);
     if (!classIds.length) return [];
-    const exams = await Exam.find({ classIds: { $in: classIds } }).select('_id').lean();
+    const exams = await Exam.find({ classIds: { $in: classIds } })
+      .select('_id')
+      .lean();
     return exams.map((e) => e._id);
   }
 
   async _getExamIdsByTeacherClasses(teacherId) {
     const { Exam, Class } = require('../models');
     const classes = await Class.find({
-      $or: [
-        { homeroomTeacherId: teacherId },
-        { 'subjectTeachers.teacherId': teacherId },
-      ],
+      $or: [{ homeroomTeacherId: teacherId }, { 'subjectTeachers.teacherId': teacherId }],
     })
       .select('_id')
       .lean();
     const classIds = classes.map((c) => c._id);
     if (!classIds.length) return [];
-    const exams = await Exam.find({ classIds: { $in: classIds } }).select('_id').lean();
+    const exams = await Exam.find({ classIds: { $in: classIds } })
+      .select('_id')
+      .lean();
     return exams.map((e) => e._id);
   }
 

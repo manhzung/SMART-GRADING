@@ -55,13 +55,13 @@ function parseCalage(content) {
   // First pass: collect all tracepos entries grouped by label
   // Each bubble has 2 entries (top-left and bottom-right corners)
   const traceposByLabel = {};
-  
+
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    
+
     // Skip empty lines
     if (!line) continue;
-    
+
     // Capture header info
     if (line.startsWith('\\version{')) {
       header = line;
@@ -107,13 +107,13 @@ function parseCalage(content) {
     //   - "case:ver1[1]:8,1" = version 1 digit 1, position 8, value 1
     //   - "chiffre:1,5" = student ID (legacy format)
     const actualLabel = label.replace(/^\d+\/\d+:/, '');
-    
+
     // Sort points by x+y to identify corners (top-left vs bottom-right)
-    const sorted = [...points].sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    const sorted = [...points].sort((a, b) => a.x + a.y - (b.x + b.y));
     const topLeft = sorted[0];
     const bottomRight = sorted[sorted.length - 1];
     const shape = topLeft.shape;
-    
+
     // Calculate actual bubble dimensions
     const w = Math.abs(bottomRight.x - topLeft.x);
     const h = Math.abs(bottomRight.y - topLeft.y);
@@ -132,10 +132,10 @@ function parseCalage(content) {
         if (name === 'student' || name.match(/^chiffre\d*$/)) {
           const digit = parseInt(indexStr || '1', 10);
           if (!studentIdBubbles[digit]) studentIdBubbles[digit] = {};
-          studentIdBubbles[digit][value] = { 
-            x: topLeft.x, 
+          studentIdBubbles[digit][value] = {
+            x: topLeft.x,
             y: topLeft.y,
-            w: Math.round(w), 
+            w: Math.round(w),
             h: Math.round(h),
             digit,
             value,
@@ -168,7 +168,7 @@ function parseCalage(content) {
           if (!versionCodeBubbles[verDigit]) versionCodeBubbles[verDigit] = {};
           versionCodeBubbles[verDigit][value] = {
             x: topLeft.x,
-            y: topLeft.y,  // AMC already uses image coords (top-left origin)
+            y: topLeft.y, // AMC already uses image coords (top-left origin)
             w: Math.round(w),
             h: Math.round(h),
             digit: verDigit,
@@ -181,7 +181,7 @@ function parseCalage(content) {
         const qMatch = name.match(/^q(\d+)$/);
         if (qMatch) {
           const qNum = parseInt(qMatch[1], 10);
-          
+
           // Option letter: value 1=A, 2=B, 3=C, 4=D
           const optionLetter = ['A', 'B', 'C', 'D', 'E', 'F'][value - 1] || `opt${value}`;
 
@@ -192,7 +192,7 @@ function parseCalage(content) {
             value,
             optionLetter,
             x: topLeft.x,
-            y: topLeft.y,  // AMC already uses image coords (top-left origin)
+            y: topLeft.y, // AMC already uses image coords (top-left origin)
             w: Math.round(w),
             h: Math.round(h),
             type: 'box',
@@ -204,7 +204,7 @@ function parseCalage(content) {
           if (!questions[qNum]) {
             questions[qNum] = { questionNum: qNum, slots: {} };
           }
-          
+
           // Only store bubble with smallest x (leftmost) for this option
           // AMC may have multiple bubbles per option (at different positions)
           // We want the FIRST bubble (leftmost in the row)
@@ -214,9 +214,9 @@ function parseCalage(content) {
           }
         }
       }
-    // Legacy format handling removed - only use modern case: format
-    // Legacy format (chiffre:DIGIT,VALUE) is deprecated and should not be used
-    // when case:student format is available
+      // Legacy format handling removed - only use modern case: format
+      // Legacy format (chiffre:DIGIT,VALUE) is deprecated and should not be used
+      // when case:student format is available
     }
   }
 
@@ -258,12 +258,16 @@ async function readAndParseCalage(filePath, fsModule = require('fs')) {
  */
 function scaleCalage(calageData, targetDpi = 300) {
   if (!calageData) {
-    return { bubbles: [], questions: {}, meta: { scale: targetDpi / PDF_PT_PER_INCH, targetDpi, sourceDpi: PDF_PT_PER_INCH } };
+    return {
+      bubbles: [],
+      questions: {},
+      meta: { scale: targetDpi / PDF_PT_PER_INCH, targetDpi, sourceDpi: PDF_PT_PER_INCH },
+    };
   }
-  
+
   const scale = targetDpi / PDF_PT_PER_INCH;
   const scaled = {
-    bubbles: calageData.bubbles.map(b => ({
+    bubbles: calageData.bubbles.map((b) => ({
       ...b,
       // Y is already flipped during parsing, now scale both axes
       x: Math.round(b.x * scale),

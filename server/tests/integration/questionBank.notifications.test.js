@@ -87,11 +87,7 @@ describe('Notification hooks on bank events', () => {
       createdBy: owner._id,
     });
 
-    await questionBankService.inviteMember(
-      bank._id.toString(),
-      invitee._id.toString(),
-      owner._id.toString()
-    );
+    await questionBankService.inviteMember(bank._id.toString(), invitee._id.toString(), owner._id.toString());
 
     const docs = await Notification.find({ type: 'bank_member_added' });
     expect(docs).toHaveLength(1);

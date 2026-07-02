@@ -229,9 +229,7 @@ examSchema.statics.getUpcomingExams = async function (classId) {
 };
 
 examSchema.statics.getRecentExams = async function (classId, limit = 10) {
-  return this.find({ classIds: classId, status: 'completed' })
-    .sort({ completedAt: -1 })
-    .limit(limit);
+  return this.find({ classIds: classId, status: 'completed' }).sort({ completedAt: -1 }).limit(limit);
 };
 
 const Exam = mongoose.model('Exam', examSchema);

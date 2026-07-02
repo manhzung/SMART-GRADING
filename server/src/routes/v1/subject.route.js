@@ -5,10 +5,7 @@ const subjectController = require('../../controllers/subject.controller');
 
 const router = express.Router();
 
-router
-  .route('/')
-  .post(auth('manageSubjects'), subjectController.create)
-  .get(auth(), subjectController.getAll);
+router.route('/').post(auth('manageSubjects'), subjectController.create).get(auth(), subjectController.getAll);
 
 router
   .route('/:id')

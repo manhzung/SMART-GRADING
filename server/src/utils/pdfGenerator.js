@@ -31,7 +31,10 @@ class PDFGenerator {
       this.doc
         .fontSize(10)
         .fillColor('#666')
-        .text('TRƯỜNG ' + (exam.schoolName || '________________'), centerX, this.currentY, { align: 'center', width: this.pageWidth })
+        .text('TRƯỜNG ' + (exam.schoolName || '________________'), centerX, this.currentY, {
+          align: 'center',
+          width: this.pageWidth,
+        })
         .moveDown(0.3);
     }
 
@@ -62,9 +65,7 @@ class PDFGenerator {
     this.doc.font('Helvetica').fontSize(11).fillColor('#000');
 
     for (const [label, value] of metadata) {
-      this.doc
-        .text(label, col1, this.currentY, { width: 80 })
-        .text(value, col2, this.currentY, { width: 250 });
+      this.doc.text(label, col1, this.currentY, { width: 80 }).text(value, col2, this.currentY, { width: 250 });
       this.currentY += lineHeight;
     }
 
@@ -74,10 +75,7 @@ class PDFGenerator {
   }
 
   addStudentInfoBlock() {
-    this.doc
-      .fontSize(11)
-      .font('Helvetica')
-      .fillColor('#000');
+    this.doc.fontSize(11).font('Helvetica').fillColor('#000');
 
     const leftCol = 60;
     const rightCol = 340;
@@ -137,10 +135,7 @@ class PDFGenerator {
     const questionNum = question.position || index + 1;
     const difficultyLabel = question.difficulty ? `(${this.getDifficultyLabel(question.difficulty)})` : '';
 
-    this.doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .fillColor('#000');
+    this.doc.fontSize(12).font('Helvetica-Bold').fillColor('#000');
 
     const questionText = `${questionNum}. ${question.content || '(Không có nội dung)'} ${difficultyLabel}`;
     const questionLines = this.doc
@@ -161,10 +156,7 @@ class PDFGenerator {
         const label = optionLabels[i] || String.fromCharCode(65 + i);
         const optText = `    ${label}. ${opt.content || ''}`;
 
-        this.doc
-          .font('Helvetica')
-          .fontSize(11)
-          .text(optText, 60, this.currentY, { width: this.pageWidth, lineGap: 2 });
+        this.doc.font('Helvetica').fontSize(11).text(optText, 60, this.currentY, { width: this.pageWidth, lineGap: 2 });
 
         const optHeight = this.doc.heightOfString(optText, { width: this.pageWidth });
         this.currentY += optHeight + 4;
@@ -237,12 +229,7 @@ class PDFGenerator {
   }
 
   _drawOmrHorizontalLine(x1, x2) {
-    this.doc
-      .strokeColor('#000')
-      .lineWidth(0.75)
-      .moveTo(x1, this.currentY)
-      .lineTo(x2, this.currentY)
-      .stroke();
+    this.doc.strokeColor('#000').lineWidth(0.75).moveTo(x1, this.currentY).lineTo(x2, this.currentY).stroke();
   }
 
   _drawStudentCodeSection(marginL, availW) {
@@ -289,18 +276,12 @@ class PDFGenerator {
 
       for (let pos = 0; pos < digits; pos++) {
         const x = startX + pos * spacing;
-        this.doc
-          .rect(x, rowY, bubbleSize, bubbleSize)
-          .stroke('#555');
+        this.doc.rect(x, rowY, bubbleSize, bubbleSize).stroke('#555');
       }
     }
     this.currentY += 10 * 18 + 4;
 
-    this.doc
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .fillColor('#000')
-      .text('Mã đề:', marginL, this.currentY, { width: 110 });
+    this.doc.fontSize(10).font('Helvetica-Bold').fillColor('#000').text('Mã đề:', marginL, this.currentY, { width: 110 });
     this.doc
       .fontSize(9)
       .font('Helvetica')
@@ -335,9 +316,7 @@ class PDFGenerator {
 
       for (let pos = 0; pos < versionDigits; pos++) {
         const x = startX + pos * spacing;
-        this.doc
-          .rect(x, rowY, bubbleSize, bubbleSize)
-          .stroke('#555');
+        this.doc.rect(x, rowY, bubbleSize, bubbleSize).stroke('#555');
       }
     }
     this.currentY += 10 * 18 + 4;
@@ -370,15 +349,11 @@ class PDFGenerator {
         const colX = gridStartX + col * colW;
 
         if (qNum > questions.length) {
-          this.doc
-            .rect(colX + 2, rowY, colW - 4, rowH)
-            .fillAndStroke('#f5f5f5', '#ccc');
+          this.doc.rect(colX + 2, rowY, colW - 4, rowH).fillAndStroke('#f5f5f5', '#ccc');
           continue;
         }
 
-        this.doc
-          .rect(colX + 2, rowY, colW - 4, rowH)
-          .stroke('#999');
+        this.doc.rect(colX + 2, rowY, colW - 4, rowH).stroke('#999');
 
         this.doc
           .fontSize(9)
@@ -390,9 +365,7 @@ class PDFGenerator {
         for (let o = 0; o < optLabels.length; o++) {
           const optY = rowY + 16 + o * optH;
           const bubbleX = colX + (colW - 4) / 2 - bubbleSize / 2;
-          this.doc
-            .rect(bubbleX, optY + (optH - bubbleSize) / 2, bubbleSize, bubbleSize)
-            .stroke('#888');
+          this.doc.rect(bubbleX, optY + (optH - bubbleSize) / 2, bubbleSize, bubbleSize).stroke('#888');
 
           this.doc
             .fontSize(8)
@@ -417,12 +390,10 @@ class PDFGenerator {
       .fontSize(9)
       .font('Helvetica')
       .fillColor('#999')
-      .text(
-        `${pageLabel} | Trang ${pageNum} | Smart Grading System`,
-        60,
-        this.doc.page.height - 40,
-        { align: 'center', width: this.pageWidth }
-      );
+      .text(`${pageLabel} | Trang ${pageNum} | Smart Grading System`, 60, this.doc.page.height - 40, {
+        align: 'center',
+        width: this.pageWidth,
+      });
   }
 
   generate() {

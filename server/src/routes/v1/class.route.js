@@ -11,9 +11,7 @@ router
   .post(auth('manageClasses'), validate(classValidation.createClass), classController.create)
   .get(auth(), classController.getAll);
 
-router
-  .route('/school/:schoolId')
-  .get(auth(), validate(classValidation.getClassesBySchool), classController.getAll);
+router.route('/school/:schoolId').get(auth(), validate(classValidation.getClassesBySchool), classController.getAll);
 
 router
   .route('/:id')
@@ -49,24 +47,16 @@ router
   .route('/:id/exams/:examId')
   .delete(auth('manageExams'), validate(classValidation.removeExamFromClass), classController.removeExamFromClass);
 
-router
-  .route('/:id/statistics')
-  .get(auth(), classController.getClassStatistics);
+router.route('/:id/statistics').get(auth(), classController.getClassStatistics);
 
 router
   .route('/:id/available-students')
   .get(auth(), validate(classValidation.getAvailableStudents), classController.getAvailableStudents);
 
-router
-  .route('/:id/students/credentials')
-  .get(auth('manageClasses'), classController.getStudentCredentials);
+router.route('/:id/students/credentials').get(auth('manageClasses'), classController.getStudentCredentials);
 
-router
-  .route('/:id/students/:studentId')
-  .patch(auth('manageClasses'), classController.updateStudent);
+router.route('/:id/students/:studentId').patch(auth('manageClasses'), classController.updateStudent);
 
-router
-  .route('/:id/students/:studentId/password')
-  .patch(auth('manageClasses'), classController.resetStudentPassword);
+router.route('/:id/students/:studentId/password').patch(auth('manageClasses'), classController.resetStudentPassword);
 
 module.exports = router;

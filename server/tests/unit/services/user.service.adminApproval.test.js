@@ -124,8 +124,7 @@ describe('Admin Teacher Approval Service', () => {
 
     it('throws 404 when user not found', async () => {
       const fakeId = new mongoose.Types.ObjectId();
-      await expect(userService.adminApproveTeacher(fakeId.toString()))
-        .rejects.toThrow('User not found');
+      await expect(userService.adminApproveTeacher(fakeId.toString())).rejects.toThrow('User not found');
     });
 
     it('throws 400 when user is not a teacher', async () => {
@@ -138,8 +137,9 @@ describe('Admin Teacher Approval Service', () => {
         registrationStatus: 'pending',
         registeredSchoolId: schoolId,
       });
-      await expect(userService.adminApproveTeacher(admin._id.toString()))
-        .rejects.toThrow('Chỉ có thể duyệt tài khoản giáo viên');
+      await expect(userService.adminApproveTeacher(admin._id.toString())).rejects.toThrow(
+        'Chỉ có thể duyệt tài khoản giáo viên'
+      );
     });
 
     it('throws 400 when teacher is not pending', async () => {
@@ -152,8 +152,9 @@ describe('Admin Teacher Approval Service', () => {
         registrationStatus: 'approved',
         registeredSchoolId: schoolId,
       });
-      await expect(userService.adminApproveTeacher(teacher._id.toString()))
-        .rejects.toThrow('Tài khoản không trong trạng thái chờ duyệt');
+      await expect(userService.adminApproveTeacher(teacher._id.toString())).rejects.toThrow(
+        'Tài khoản không trong trạng thái chờ duyệt'
+      );
     });
 
     it('throws 400 when teacher has no registeredSchoolId', async () => {
@@ -165,8 +166,9 @@ describe('Admin Teacher Approval Service', () => {
         registrationStatus: 'pending',
         registeredSchoolId: null,
       });
-      await expect(userService.adminApproveTeacher(teacher._id.toString()))
-        .rejects.toThrow('Giáo viên chưa đăng ký vào trường nào');
+      await expect(userService.adminApproveTeacher(teacher._id.toString())).rejects.toThrow(
+        'Giáo viên chưa đăng ký vào trường nào'
+      );
     });
   });
 
@@ -181,10 +183,7 @@ describe('Admin Teacher Approval Service', () => {
         registrationStatus: 'pending',
         registeredSchoolId: schoolId,
       });
-      const result = await userService.adminRejectTeacher(
-        teacher._id.toString(),
-        'Không đủ điều kiện'
-      );
+      const result = await userService.adminRejectTeacher(teacher._id.toString(), 'Không đủ điều kiện');
       expect(result.registrationStatus).toBe('rejected');
       expect(result.rejectedReason).toBe('Không đủ điều kiện');
     });
@@ -206,8 +205,7 @@ describe('Admin Teacher Approval Service', () => {
 
     it('throws 404 when user not found', async () => {
       const fakeId = new mongoose.Types.ObjectId();
-      await expect(userService.adminRejectTeacher(fakeId.toString()))
-        .rejects.toThrow('User not found');
+      await expect(userService.adminRejectTeacher(fakeId.toString())).rejects.toThrow('User not found');
     });
 
     it('throws 400 when user is not a teacher', async () => {
@@ -220,8 +218,9 @@ describe('Admin Teacher Approval Service', () => {
         registrationStatus: 'pending',
         registeredSchoolId: schoolId,
       });
-      await expect(userService.adminRejectTeacher(student._id.toString()))
-        .rejects.toThrow('Chỉ có thể từ chối tài khoản giáo viên');
+      await expect(userService.adminRejectTeacher(student._id.toString())).rejects.toThrow(
+        'Chỉ có thể từ chối tài khoản giáo viên'
+      );
     });
 
     it('throws 400 when teacher is not pending', async () => {
@@ -234,8 +233,9 @@ describe('Admin Teacher Approval Service', () => {
         registrationStatus: 'approved',
         registeredSchoolId: schoolId,
       });
-      await expect(userService.adminRejectTeacher(teacher._id.toString()))
-        .rejects.toThrow('Tài khoản không trong trạng thái chờ duyệt');
+      await expect(userService.adminRejectTeacher(teacher._id.toString())).rejects.toThrow(
+        'Tài khoản không trong trạng thái chờ duyệt'
+      );
     });
   });
 });

@@ -8,19 +8,30 @@ const createExam = {
   body: Joi.object().keys({
     title: Joi.string().min(3).max(200).trim().required(),
     description: Joi.string().allow(''),
-    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    subjectId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
     subjectName: Joi.string().allow(''),
-    classIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+    classIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
     primaryClassId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
-    omrTemplateId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    omrTemplateId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
     examDate: Joi.date().iso().required(),
-    startTime: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/).default('07:00'),
+    startTime: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .default('07:00'),
     duration: Joi.number().min(5).max(300).required(),
     totalScore: Joi.number().min(1).required(),
     passingScore: Joi.number().min(0).default(5),
     numberOfQuestions: Joi.number().min(1).required(),
     numberOfVersions: Joi.number().min(1).max(50).default(4),
-    questionIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1),
+    questionIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1),
     printConfig: Joi.object().keys({
       paperSize: Joi.string().valid('A4', 'A5'),
       questionsPerPage: Joi.number().min(1).max(10),
@@ -39,7 +50,9 @@ const updateExam = {
   body: Joi.object().keys({
     title: Joi.string().min(3).max(200).trim(),
     description: Joi.string().allow(''),
-    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    subjectId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
     subjectName: Joi.string().allow(''),
     examDate: Joi.date().iso(),
     startTime: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/),
@@ -49,7 +62,9 @@ const updateExam = {
     numberOfQuestions: Joi.number().min(1),
     numberOfVersions: Joi.number().min(1).max(50),
     primaryClassId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
-    questionIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1),
+    questionIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1),
     status: Joi.string().valid('draft', 'published', 'in_progress', 'completed', 'archived'),
     shuffleConfig: Joi.object().keys({
       shuffleQuestions: Joi.boolean(),
@@ -67,14 +82,20 @@ const updateExam = {
 const addClassesToExam = {
   params: id,
   body: Joi.object().keys({
-    classIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+    classIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
   }),
 };
 
 const removeClassesFromExam = {
   params: id,
   body: Joi.object().keys({
-    classIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+    classIds: Joi.array()
+      .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
+      .min(1)
+      .required(),
   }),
 };
 
@@ -127,7 +148,9 @@ const getUpcoming = {
 
 const validateGeneratePapers = {
   params: Joi.object({
-    id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    id: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
   }),
   body: Joi.object({
     forceRegenerate: Joi.boolean().default(false),
@@ -136,7 +159,9 @@ const validateGeneratePapers = {
 
 const getExamTemplate = {
   params: Joi.object({
-    id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    id: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
   }),
   query: Joi.object({
     versionCode: Joi.string().optional(),
@@ -152,14 +177,18 @@ const createExamFromSelection = {
       .description('Array of selected question IDs from question bank'),
     title: Joi.string().min(3).max(200).trim().required(),
     description: Joi.string().allow('', null),
-    subjectId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    subjectId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
     subjectName: Joi.string().allow('', null),
     classIds: Joi.array()
       .items(Joi.string().regex(/^[0-9a-fA-F]{24}$/))
       .min(1)
       .required(),
     primaryClassId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
-    omrTemplateId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
+    omrTemplateId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .allow(null, ''),
     examDate: Joi.date().iso().required(),
     startTime: Joi.string()
       .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)

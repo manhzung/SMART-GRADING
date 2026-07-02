@@ -10,9 +10,7 @@ router
   .route('/scan')
   .post(auth('scanSubmissions'), validate(submissionValidation.scanSubmission), submissionController.scan);
 
-router
-  .route('/me')
-  .get(auth(), validate(submissionValidation.getMySubmissions), submissionController.getMy);
+router.route('/me').get(auth(), validate(submissionValidation.getMySubmissions), submissionController.getMy);
 
 router
   .route('/')
@@ -32,17 +30,13 @@ router
   .route('/:id/answers')
   .patch(auth('scanSubmissions'), validate(submissionValidation.updateAnswers), submissionController.updateAnswers);
 
-router
-  .route('/exam/:examId')
-  .get(auth(), validate(submissionValidation.getExamSubmissions), submissionController.getByExam);
+router.route('/exam/:examId').get(auth(), validate(submissionValidation.getExamSubmissions), submissionController.getByExam);
 
 router
   .route('/exam/:examId/grouped-by-class')
   .get(auth(), validate(submissionValidation.getExamSubmissions), submissionController.getByExamGroupedByClass);
 
-router
-  .route('/exam/:examId/statistics')
-  .get(auth(), submissionController.getStatistics);
+router.route('/exam/:examId/statistics').get(auth(), submissionController.getStatistics);
 
 router
   .route('/student/:studentId')

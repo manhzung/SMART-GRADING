@@ -26,13 +26,13 @@ class AmcOutputParser {
     errors.push(...errorLines.slice(0, 5));
 
     // Extract LaTeX warnings (cap at 10)
-    const warningLines = (stdout + stderr).split('\n').filter((line) =>
-      line.includes('LaTeX Warning') && !line.includes('file')
-    );
+    const warningLines = (stdout + stderr)
+      .split('\n')
+      .filter((line) => line.includes('LaTeX Warning') && !line.includes('file'));
 
     // Support both legacy (number) and new (string[]) formats
     const isLegacyCall = typeof versionCodes === 'number';
-    const numVersions = isLegacyCall ? versionCodes : (Array.isArray(versionCodes) ? versionCodes.length : 0);
+    const numVersions = isLegacyCall ? versionCodes : Array.isArray(versionCodes) ? versionCodes.length : 0;
 
     const parsedPdfs = pdfPaths.map((pdfPath, index) => {
       let versionCode;

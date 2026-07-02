@@ -93,6 +93,12 @@ temp/
 # Git worktrees
 .worktrees/
 
+# Tar archives (large binary files — NEVER commit)
+*.tar
+*.tar.gz
+*.tar.bz2
+*.zip
+
 # Flutter web build
 .web/
 .flutter-plugins

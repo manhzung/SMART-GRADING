@@ -96,10 +96,7 @@ class CloudinaryService {
         attempt += 1;
       }
     }
-    throw new CloudinaryError(
-      `Cloudinary upload failed: ${lastErr?.message || 'unknown'}`,
-      lastErr?.http_code
-    );
+    throw new CloudinaryError(`Cloudinary upload failed: ${lastErr?.message || 'unknown'}`, lastErr?.http_code);
   }
 
   /**
@@ -140,10 +137,7 @@ class CloudinaryService {
         attempt += 1;
       }
     }
-    throw new CloudinaryError(
-      `Cloudinary PDF upload failed: ${lastErr?.message || 'unknown'}`,
-      lastErr?.http_code
-    );
+    throw new CloudinaryError(`Cloudinary PDF upload failed: ${lastErr?.message || 'unknown'}`, lastErr?.http_code);
   }
 
   async uploadBase64(dataUri, options) {

@@ -162,7 +162,7 @@ async function runTests() {
 
   // Test 4: Create exam from selected questions
   if (questions.length > 0) {
-    const questionIds = questions.map(q => q._id);
+    const questionIds = questions.map((q) => q._id);
     await testCreateExamFromSelection(questionIds);
   }
 

@@ -8,9 +8,7 @@ const router = express.Router();
 
 // ── Special routes (must be defined BEFORE /:id to avoid being matched as id) ──
 
-router
-  .route('/pending')
-  .get(auth('manageSchools'), schoolController.getPendingSchools);
+router.route('/pending').get(auth('manageSchools'), schoolController.getPendingSchools);
 
 // ── Generic CRUD routes ────────────────────────────────────────────────────────
 
@@ -25,9 +23,7 @@ router
   .patch(auth('manageSchools'), validate(schoolValidation.updateSchool), schoolController.update)
   .delete(auth('manageSchools'), validate(schoolValidation.deleteSchool), schoolController.remove);
 
-router
-  .route('/:id/grade-distribution')
-  .post(auth(), schoolController.getGradeDistribution);
+router.route('/:id/grade-distribution').post(auth(), schoolController.getGradeDistribution);
 
 router
   .route('/:schoolId/available-teachers')
@@ -35,12 +31,8 @@ router
 
 // ── School Approval routes ─────────────────────────────────────────────────────
 
-router
-  .route('/:id/approve')
-  .post(auth('manageSchools'), schoolController.approveSchool);
+router.route('/:id/approve').post(auth('manageSchools'), schoolController.approveSchool);
 
-router
-  .route('/:id/reject')
-  .post(auth('manageSchools'), schoolController.rejectSchool);
+router.route('/:id/reject').post(auth('manageSchools'), schoolController.rejectSchool);
 
 module.exports = router;

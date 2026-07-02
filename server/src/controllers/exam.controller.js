@@ -71,10 +71,7 @@ const createFromSelection = catchAsync(async (req, res) => {
   });
 
   // Increment usage count for selected questions
-  await Question.updateMany(
-    { _id: { $in: questionIds } },
-    { $inc: { usageCount: 1 } }
-  );
+  await Question.updateMany({ _id: { $in: questionIds } }, { $inc: { usageCount: 1 } });
 
   res.status(httpStatus.CREATED).send({
     success: true,
@@ -167,7 +164,7 @@ const getVersionAnswerKey = catchAsync(async (req, res) => {
   // Tìm tất cả versions và so khớp 2 số cuối
   const versions = await examService.getVersionsWithQuestions(id);
   console.log(`[getVersionAnswerKey] Found ${versions.length} versions in database`);
-  console.log(`[getVersionAnswerKey] Available versionCodes: ${versions.map(v => v.versionCode).join(', ')}`);
+  console.log(`[getVersionAnswerKey] Available versionCodes: ${versions.map((v) => v.versionCode).join(', ')}`);
 
   let matchedVersion = null;
   for (const v of versions) {
@@ -270,7 +267,7 @@ const exportVersionPDF = catchAsync(async (req, res) => {
     return res.status(404).send({ message: 'Phiên bản đề thi không tồn tại' });
   }
 
-    // Serve pre-generated AMC PDF if available
+  // Serve pre-generated AMC PDF if available
   if (version.pdfUrl) {
     const fs = require('fs');
     const path = require('path');
@@ -323,7 +320,9 @@ const exportVersionPDF = catchAsync(async (req, res) => {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename="${(versionData.title || 'exam').replace(/[^a-zA-Z0-9\u00C0-\u024F]/g, '_')}_${versionData.versionCode}.pdf"`
+    `attachment; filename="${(versionData.title || 'exam').replace(/[^a-zA-Z0-9\u00C0-\u024F]/g, '_')}_${
+      versionData.versionCode
+    }.pdf"`
   );
 
   const docStream = pdfGen.generate();
@@ -507,9 +506,7 @@ const getExamTemplate = catchAsync(async (req, res, next) => {
       const version = await ExamVersion.findOne({ examId: id, versionCode }).lean();
       if (version) {
         foundVersionCode = version.versionCode;
-        const map = version.answerKey instanceof Map
-          ? version.answerKey
-          : new Map(Object.entries(version.answerKey || {}));
+        const map = version.answerKey instanceof Map ? version.answerKey : new Map(Object.entries(version.answerKey || {}));
         for (const [pos, optId] of map.entries()) {
           answerKeyObj[parseInt(pos, 10)] = optId;
         }
@@ -518,9 +515,10 @@ const getExamTemplate = catchAsync(async (req, res, next) => {
       const firstVersion = await ExamVersion.findOne({ examId: id }).lean();
       if (firstVersion) {
         foundVersionCode = firstVersion.versionCode;
-        const map = firstVersion.answerKey instanceof Map
-          ? firstVersion.answerKey
-          : new Map(Object.entries(firstVersion.answerKey || {}));
+        const map =
+          firstVersion.answerKey instanceof Map
+            ? firstVersion.answerKey
+            : new Map(Object.entries(firstVersion.answerKey || {}));
         for (const [pos, optId] of map.entries()) {
           answerKeyObj[parseInt(pos, 10)] = optId;
         }
@@ -553,9 +551,7 @@ const getAnswerSheet = catchAsync(async (req, res) => {
   if (!exam) throw new ApiError(404, 'Exam not found');
 
   // Get answer sheet from first version (all versions share the same answer sheet)
-  const firstVersion = await ExamVersion.findOne({ examId: id })
-    .select('answerSheetPdfUrl')
-    .sort({ versionCode: 1 });
+  const firstVersion = await ExamVersion.findOne({ examId: id }).select('answerSheetPdfUrl').sort({ versionCode: 1 });
 
   res.json({
     answerSheetPdfUrl: firstVersion?.answerSheetPdfUrl || null,

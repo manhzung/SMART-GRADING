@@ -30,11 +30,21 @@ const SCHOOL_SUBMISSION_DOC = {
 function thenableChain(data) {
   const promise = Promise.resolve(data);
   const chain = {
-    sort: function () { return chain; },
-    limit: function () { return chain; },
-    populate: function () { return chain; },
-    select: function () { return chain; },
-    lean: function () { return chain; },
+    sort: function () {
+      return chain;
+    },
+    limit: function () {
+      return chain;
+    },
+    populate: function () {
+      return chain;
+    },
+    select: function () {
+      return chain;
+    },
+    lean: function () {
+      return chain;
+    },
     then: promise.then.bind(promise),
     catch: promise.catch.bind(promise),
   };
@@ -95,9 +105,7 @@ describe('AnalyticsController.getDashboardStats - role scoping', () => {
       const ids = filter && filter.examId && filter.examId.$in;
       let results;
       if (ids) {
-        results = ids.some((i) => i.toString() === SCHOOL_EXAM.toString())
-          ? [SCHOOL_SUBMISSION_DOC]
-          : [];
+        results = ids.some((i) => i.toString() === SCHOOL_EXAM.toString()) ? [SCHOOL_SUBMISSION_DOC] : [];
       } else {
         results = [SCHOOL_SUBMISSION_DOC, { _id: 'sub2', examId: OTHER_EXAM }];
       }
@@ -113,7 +121,9 @@ describe('AnalyticsController.getDashboardStats - role scoping', () => {
     });
   });
 
-  const next = (err) => { capturedErr = err; };
+  const next = (err) => {
+    capturedErr = err;
+  };
 
   it('returns scoped counts for a teacher', async () => {
     const req = makeReq({ id: 'teacher1', schoolId: SCHOOL_ID, role: 'teacher' });
@@ -180,7 +190,13 @@ describe('AnalyticsController.getDashboardStats - role scoping', () => {
     const examCountFilters = Exam.countDocuments.mock.calls.map((c) => c[0]);
     const appealFilters = Appeal.countDocuments.mock.calls.map((c) => c[0]);
 
-    for (const f of [...submissionFilters, ...submissionFindFilters, ...examFindFilters, ...examCountFilters, ...appealFilters]) {
+    for (const f of [
+      ...submissionFilters,
+      ...submissionFindFilters,
+      ...examFindFilters,
+      ...examCountFilters,
+      ...appealFilters,
+    ]) {
       if (!f) continue;
       expect(f).not.toHaveProperty('schoolId');
     }
