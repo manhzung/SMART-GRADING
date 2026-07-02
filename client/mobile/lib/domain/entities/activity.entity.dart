@@ -50,17 +50,17 @@ class Activity {
     final diff = now.difference(timestamp);
 
     if (diff.inMinutes < 1) {
-      return 'Vừa xong';
+      return 'Just now';
     } else if (diff.inMinutes < 60) {
-      return '${diff.inMinutes} phút trước';
+      return '${diff.inMinutes} minutes ago';
     } else if (diff.inHours < 24) {
-      return '${diff.inHours} giờ trước';
+      return '${diff.inHours} hours ago';
     } else if (diff.inDays < 7) {
-      return '${diff.inDays} ngày trước';
+      return '${diff.inDays} days ago';
     } else if (diff.inDays < 30) {
-      return '${(diff.inDays / 7).floor()} tuần trước';
+      return '${(diff.inDays / 7).floor()} weeks ago';
     } else {
-      return '${(diff.inDays / 30).floor()} tháng trước';
+      return '${(diff.inDays / 30).floor()} months ago';
     }
   }
 }

@@ -50,9 +50,9 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
     if (dateTime == null) return '';
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    if (difference.inMinutes < 60) return '${difference.inMinutes} phút trước';
-    if (difference.inHours < 24) return '${difference.inHours} giờ trước';
-    if (difference.inDays < 7) return '${difference.inDays} ngày trước';
+    if (difference.inMinutes < 60) return '${difference.inMinutes} minutes ago';
+    if (difference.inHours < 24) return '${difference.inHours} hours ago';
+    if (difference.inDays < 7) return '${difference.inDays} days ago';
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
 
@@ -85,13 +85,13 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
   String _getStatusLabel(String? status) {
     switch (status?.toLowerCase()) {
       case 'approved':
-        return 'Đã duyệt';
+        return 'Approved';
       case 'rejected':
-        return 'Từ chối';
+        return 'Rejected';
       case 'reviewing':
-        return 'Đang xem xét';
+        return 'Under Review';
       default:
-        return 'Đang chờ';
+        return 'Pending';
     }
   }
 
@@ -108,7 +108,7 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Phúc khảo của tôi',
+          'My Appeals',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -141,7 +141,7 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _loadAppeals,
-                          child: const Text('Thử lại'),
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
@@ -166,7 +166,7 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
                             ),
                             const SizedBox(height: 16),
                             const Text(
-                              'Không có yêu cầu phúc khảo nào',
+                              'No appeal requests',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -175,7 +175,7 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'Danh sách phúc khảo sẽ xuất hiện khi bạn\nyêu cầu xem xét lại bài thi.',
+                              'Appeal requests will appear here when you\nrequest a review of an exam.',
                               style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
                               textAlign: TextAlign.center,
                             ),
@@ -207,7 +207,7 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            appeal.examTitle ?? 'Phúc khảo',
+                                            appeal.examTitle ?? 'Appeal',
                                             style: const TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,
@@ -238,7 +238,7 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
                                         const Icon(Icons.help_outline, size: 14, color: Color(0xFF64748B)),
                                         const SizedBox(width: 4),
                                         Text(
-                                          'Câu hỏi #${appeal.questionNumber ?? '?'}',
+                                          'Question #${appeal.questionNumber ?? '?'}',
                                           style: const TextStyle(fontSize: 13, color: Color(0xFF475569)),
                                         ),
                                       ],
@@ -264,7 +264,7 @@ class _MyAppealsPageState extends State<MyAppealsPage> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             const Text(
-                                              'Phản hồi từ giáo viên:',
+                                              'Teacher Response:',
                                               style: TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.bold,

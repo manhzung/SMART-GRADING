@@ -101,14 +101,28 @@ export const useClassStore = create<ClassState>((set, get) => ({
       if (role === 'admin') {
         // Admin can view all classes, or scope to a school when schoolId is set
         response = schoolId
-          ? await classService.getBySchool(schoolId, params, user)
+          ? await classService.getBySchool(schoolId, params)
           : await classService.getAll(params);
+      } else if (schoolId) {
+        // school-admin and teacher with a school are scoped to their school
+        response = await classService.getBySchool(schoolId, params);
       } else {
-        // school-admin and teacher are always scoped to their school
-        if (!schoolId) {
-          throw new Error('Missing school context for your role');
+        // School-less teacher: fetch their own classes only.
+        // The backend scopes by homeroom teacher for school-less classes.
+        const fetchParams: Record<string, string | number> = {
+          ...(params as Record<string, string | number>),
+          limit: params?.limit ?? 100,
+        };
+        if (user?.id) {
+          fetchParams.homeroomTeacherId = user.id;
         }
-        response = await classService.getBySchool(schoolId, params, user);
+        response = await apiService.get<{
+          results: ClassItem[];
+          page: number;
+          limit: number;
+          total: number;
+          pages: number;
+        }>('/classes', { params: fetchParams });
       }
 
       set({
@@ -146,19 +160,23 @@ export const useClassStore = create<ClassState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const user = useAuthStore.getState().user;
-      const schoolId = user?.schoolId || '6a17f0091743766eb47a09ce'; // Fallback to database default seed
-      
+      // Only attach schoolId if the user actually belongs to a school.
+      // School-less teachers (e.g. self-registered without picking a school)
+      // must send null so the backend creates a school-less class instead of
+      // attributing it to some random seed school.
+      const userSchoolId = user?.schoolId ?? null;
+
       const payload = {
         ...classData,
-        schoolId,
+        schoolId: userSchoolId,
       };
-      
+
       const created = await apiService.post<ClassItem>('/classes', payload);
-      
+
       // Refresh the classes list
       const { fetchClasses, pagination } = get();
       await fetchClasses({ page: pagination.page, limit: pagination.limit });
-      
+
       set({ isLoading: false });
       return created;
     } catch (error) {

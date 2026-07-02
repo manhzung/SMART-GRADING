@@ -67,6 +67,40 @@ describe('Auth routes', () => {
       });
     });
 
+    test('should return 201 and successfully register user without a schoolId', async () => {
+      delete newUser.schoolId;
+
+      const res = await request(app).post('/api/v1/auth/register').send(newUser).expect(httpStatus.CREATED);
+
+      expect(res.body.user).toMatchObject({
+        name: newUser.name,
+        email: newUser.email,
+        role: 'teacher',
+        isEmailVerified: false,
+      });
+      expect(res.body.user.schoolId == null).toBe(true);
+
+      const dbUser = await User.findById(res.body.user.id);
+      expect(dbUser).toBeDefined();
+      expect(dbUser.schoolId).toBeNull();
+      expect(dbUser.registeredSchoolId).toBeNull();
+      expect(dbUser.registrationStatus).toBe('approved');
+      expect(dbUser.isActive).toBe(true);
+    });
+
+    test('should return 201 and successfully register user when schoolId is an empty string', async () => {
+      newUser.schoolId = '';
+
+      const res = await request(app).post('/api/v1/auth/register').send(newUser).expect(httpStatus.CREATED);
+
+      const dbUser = await User.findById(res.body.user.id);
+      expect(dbUser).toBeDefined();
+      expect(dbUser.schoolId).toBeNull();
+      expect(dbUser.registeredSchoolId).toBeNull();
+      expect(dbUser.registrationStatus).toBe('approved');
+      expect(dbUser.isActive).toBe(true);
+    });
+
     test('should return 400 error if email is invalid', async () => {
       newUser.email = 'invalidEmail';
 
@@ -92,12 +126,6 @@ describe('Auth routes', () => {
       await request(app).post('/api/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
 
       newUser.password = '11111111';
-
-      await request(app).post('/api/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-    });
-
-    test('should return 400 error if schoolId is missing', async () => {
-      delete newUser.schoolId;
 
       await request(app).post('/api/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
     });

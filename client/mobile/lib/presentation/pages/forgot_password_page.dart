@@ -38,7 +38,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Đã gửi email khôi phục mật khẩu đến ${state.email}. Vui lòng mở email và đặt lại mật khẩu trên trang web.',
+                  'Password reset email sent to ${state.email}. Please open the email and reset your password on the website.',
                 ),
               ),
             );
@@ -94,7 +94,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Nhập email để nhận liên kết khôi phục mật khẩu. Việc đặt lại mật khẩu sẽ được thực hiện trên trang web từ email bạn nhận được.',
+                    'Enter your email to receive a password reset link. The password reset will be done on the website from the email you receive.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -192,10 +192,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
-                                  return 'Vui lòng nhập email';
+                                  return 'Please enter your email';
                                 }
                                 if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
-                                  return 'Email không hợp lệ';
+                                  return 'Invalid email address';
                                 }
                                 return null;
                               },
@@ -230,7 +230,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                             ),
                                           )
                                         : const Text(
-                                            'Gửi yêu cầu',
+                                            'Submit Request',
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
@@ -255,7 +255,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   ),
                                   SizedBox(width: 8),
                                   Text(
-                                    'Quay lại đăng nhập',
+                                    'Back to Login',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,

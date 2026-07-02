@@ -13,6 +13,10 @@ router
   .post(auth(), bankController.createBank)
   .get(auth(), bankController.listBanks);
 
+router
+  .route('/search')
+  .get(auth(), bankController.listAllBanks);
+
 router.route('/:bankId').get(auth(), checkBankAccess, bankController.getBank);
 
 router

@@ -146,7 +146,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
           children: [
             Icon(Icons.people_outline, size: 64, color: Color(0xFF94A3B8)),
             SizedBox(height: 16),
-            Text('Không tìm thấy người dùng', style: TextStyle(color: Color(0xFF64748B))),
+            Text('No users found', style: TextStyle(color: Color(0xFF64748B))),
           ],
         ),
       );
@@ -207,8 +207,8 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
                 if (value == 'delete') _deleteUser(context, user.id);
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(value: 'edit', child: Text('Sửa')),
-                const PopupMenuItem(value: 'delete', child: Text('Xóa', style: TextStyle(color: Colors.red))),
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
               ],
             ),
           ),
@@ -234,13 +234,13 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Thêm người dùng'),
+          title: const Text('Add User'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Họ và tên', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -250,7 +250,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: selectedRole,
-                decoration: const InputDecoration(labelText: 'Vai trò', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Role', border: OutlineInputBorder()),
                 items: const [
                   DropdownMenuItem(value: 'admin', child: Text('Admin')),
                   DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
@@ -261,7 +261,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () {
                 if (nameController.text.trim().isEmpty || emailController.text.trim().isEmpty) return;
@@ -272,7 +272,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
                 ));
                 Navigator.pop(ctx);
               },
-              child: const Text('Thêm'),
+              child: const Text('Add'),
             ),
           ],
         ),
@@ -287,18 +287,18 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Sửa người dùng'),
+          title: const Text('Edit User'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Họ và tên', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: selectedRole,
-                decoration: const InputDecoration(labelText: 'Vai trò', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Role', border: OutlineInputBorder()),
                 items: const [
                   DropdownMenuItem(value: 'admin', child: Text('Admin')),
                   DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
@@ -309,7 +309,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () {
                 if (nameController.text.trim().isEmpty) return;
@@ -320,7 +320,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
                 ));
                 Navigator.pop(ctx);
               },
-              child: const Text('Lưu'),
+              child: const Text('Save'),
             ),
           ],
         ),
@@ -332,17 +332,17 @@ class _UsersManagementPageState extends State<UsersManagementPage> with SingleTi
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xóa người dùng'),
-        content: const Text('Bạn có chắc muốn xóa người dùng này?'),
+        title: const Text('Delete User'),
+        content: const Text('Are you sure you want to delete this user?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
               context.read<AdminBloc>().add(AdminDeleteUserRequested(userId: userId));
               Navigator.pop(ctx);
             },
-            child: const Text('Xóa'),
+            child: const Text('Delete'),
           ),
         ],
       ),

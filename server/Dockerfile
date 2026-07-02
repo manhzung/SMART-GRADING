@@ -6,10 +6,12 @@ WORKDIR /usr/src/node-app
 
 COPY package.json yarn.lock ./
 
-USER node
+RUN npm install
 
-RUN yarn install --pure-lockfile
+USER node
 
 COPY --chown=node:node . .
 
 EXPOSE 3000
+
+CMD ["node", "src/app.js"]

@@ -1,7 +1,75 @@
 const Joi = require('joi');
-const { updateClass, getAvailableStudents } = require('../../../src/validations/class.validation');
+const { createClass, updateClass, getAvailableStudents } = require('../../../src/validations/class.validation');
 
 describe('Class validation schemas', () => {
+  describe('createClass', () => {
+    const { body } = createClass;
+
+    test('should accept create payload with a schoolId', () => {
+      const validData = {
+        name: '10A1',
+        code: '10A1',
+        academicYear: '2024-2025',
+        schoolId: '507f1f77bcf86cd799439011',
+      };
+      const { error } = Joi.compile({ body }).validate({ body: validData });
+      expect(error).toBeUndefined();
+    });
+
+    test('should accept create payload without a schoolId (school-less class)', () => {
+      const validData = {
+        name: '10A1',
+        code: '10A1',
+        academicYear: '2024-2025',
+      };
+      const { error } = Joi.compile({ body }).validate({ body: validData });
+      expect(error).toBeUndefined();
+    });
+
+    test('should accept create payload with empty-string schoolId', () => {
+      const validData = {
+        name: '10A1',
+        code: '10A1',
+        academicYear: '2024-2025',
+        schoolId: '',
+      };
+      const { error } = Joi.compile({ body }).validate({ body: validData });
+      expect(error).toBeUndefined();
+    });
+
+    test('should accept create payload with explicit null schoolId', () => {
+      const validData = {
+        name: '10A1',
+        code: '10A1',
+        academicYear: '2024-2025',
+        schoolId: null,
+      };
+      const { error } = Joi.compile({ body }).validate({ body: validData });
+      expect(error).toBeUndefined();
+    });
+
+    test('should reject create payload with invalid schoolId format', () => {
+      const invalidData = {
+        name: '10A1',
+        code: '10A1',
+        academicYear: '2024-2025',
+        schoolId: 'invalid-id',
+      };
+      const { error } = Joi.compile({ body }).validate({ body: invalidData });
+      expect(error).toBeDefined();
+      expect(error.details[0].message).toContain('schoolId');
+    });
+
+    test('should reject create payload missing required academicYear', () => {
+      const invalidData = {
+        name: '10A1',
+        code: '10A1',
+      };
+      const { error } = Joi.compile({ body }).validate({ body: invalidData });
+      expect(error).toBeDefined();
+    });
+  });
+
   describe('updateClass', () => {
     const { body, params } = updateClass;
 

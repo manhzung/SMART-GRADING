@@ -9,13 +9,16 @@ import {
   Rocket, 
   ChevronLeft, 
   ChevronRight, 
-  FileText
+  FileText,
+  Eye,
+  CheckCircle
 } from 'lucide-react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { useClassStore } from '../presentation/store/classStore';
 import { useQuestionStore } from '../presentation/store/questionStore';
 import { useExamStore } from '../presentation/store/examStore';
+import { useBankStore } from '../presentation/store/bankStore';
 import { resolveAssignedQuestions } from './examPageAdapters';
 import styles from './CreateExamPage.module.css';
 
@@ -77,6 +80,7 @@ function parseMathText(text: string) {
 export default function CreateExamPage() {
   const navigate = useNavigate();
   const { classes, fetchClasses } = useClassStore();
+  const { banks, fetchBanks } = useBankStore();
   const { questions: storeQuestions, pagination: questionPagination, fetchQuestions, fetchTags, availableTags, fetchQuestionsByTags, tagQuestions, isLoadingTagQuestions } = useQuestionStore();
   const { fetchExams, createExam, generateExamVersions } = useExamStore();
 
@@ -114,10 +118,14 @@ export default function CreateExamPage() {
   const [bankSearchText, setBankSearchText] = useState('');
   const [bankDifficultyFilter, setBankDifficultyFilter] = useState('');
   const [bankPage, setBankPage] = useState(1);
+  const [selectedBankId, setSelectedBankId] = useState<string>('');
 
   // ─── Tag-based Selection ────────────────────────────────────────────────────
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagDifficultyFilter, setTagDifficultyFilter] = useState('');
+
+  // ─── Preview Drawer ─────────────────────────────────────────────────────────
+  const [isPreviewDrawerOpen, setIsPreviewDrawerOpen] = useState(false);
 
   const allAvailableQuestions = storeQuestions;
 
@@ -135,13 +143,14 @@ export default function CreateExamPage() {
   // ─── Initial Data Load ─────────────────────────────────────────────────────
   useEffect(() => {
     fetchClasses({ limit: 100 });
+    fetchBanks();
     fetchQuestions({ limit: 100, page: 1 });
     fetchTags(); // Load available tags for filtering
 
     // Preset today's date formatted for html input (yyyy-mm-dd)
     const today = new Date().toISOString().split('T')[0];
     setExamDate(today);
-  }, [fetchClasses, fetchQuestions, fetchTags]);
+  }, [fetchClasses, fetchQuestions, fetchTags, fetchBanks]);
 
   // Toggle class selection checkbox
   const handleToggleClass = (classId: string) => {
@@ -165,12 +174,25 @@ export default function CreateExamPage() {
   const openQuestionBankModal = () => {
     setIsBankModalOpen(true);
     setBankPage(1);
-    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter });
+    setSelectedBankId(''); // reset bank filter
+    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: undefined });
+    fetchTags(); // load all tags
+  };
+
+  const handleBankChange = (bankId: string) => {
+    setSelectedBankId(bankId);
+    setBankPage(1);
+    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: bankId || undefined });
+    if (bankId) {
+      fetchTags(bankId); // load tags from selected bank
+    } else {
+      fetchTags(); // load all tags
+    }
   };
 
   const handleBankSearch = () => {
     setBankPage(1);
-    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter });
+    fetchQuestions({ limit: 10, page: 1, search: bankSearchText, difficulty: bankDifficultyFilter, bankId: selectedBankId || undefined });
   };
 
   const handleBankPageChange = (newPage: number) => {
@@ -180,7 +202,8 @@ export default function CreateExamPage() {
         limit: 10, 
         page: newPage, 
         search: bankSearchText, 
-        difficulty: bankDifficultyFilter 
+        difficulty: bankDifficultyFilter,
+        bankId: selectedBankId || undefined,
       });
     }
   };
@@ -633,16 +656,30 @@ export default function CreateExamPage() {
       {/* ─── MODAL: QUESTION BANK SELECTOR ─── */}
       {isBankModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsBankModalOpen(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={`${styles.modal} ${isPreviewDrawerOpen ? styles.modalWithDrawer : ''}`} onClick={(e) => e.stopPropagation()}>
             
             <div className={styles.modalHeader}>
-              <h2>School Question Bank</h2>
+              <h2>Select Questions from Banks</h2>
               <button type="button" className={styles.closeBtn} onClick={() => setIsBankModalOpen(false)}>
                 <X size={20} />
               </button>
             </div>
 
             <div className={styles.modalFilterBar}>
+              {/* Bank selector */}
+              <select
+                value={selectedBankId}
+                onChange={(e) => handleBankChange(e.target.value)}
+                className={styles.modalSelectField}
+              >
+                <option value="">All Banks</option>
+                {banks.map((b) => (
+                  <option key={b.bank._id} value={b.bank._id}>
+                    {b.bank.name} ({b.bank.type === 'school' ? 'School' : 'Personal'})
+                  </option>
+                ))}
+              </select>
+
               {/* Tag selection chips */}
               <div className={styles.tagFilterSection}>
                 <label className={styles.tagFilterLabel}>Filter by Tags:</label>
@@ -855,6 +892,29 @@ export default function CreateExamPage() {
                 Selected {assignedQuestionIds.length} questions
               </span>
 
+              <button
+                type="button"
+                onClick={() => setIsPreviewDrawerOpen(true)}
+                disabled={assignedQuestionIds.length === 0}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: assignedQuestionIds.length === 0 ? '#e2e8f0' : '#7c3aed',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: assignedQuestionIds.length === 0 ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  opacity: assignedQuestionIds.length === 0 ? 0.6 : 1,
+                }}
+              >
+                <Eye size={16} />
+                Preview ({assignedQuestionIds.length})
+              </button>
+
               <div className={styles.modalPagination}>
                 <button 
                   type="button" 
@@ -890,6 +950,137 @@ export default function CreateExamPage() {
         </div>
       )}
 
+      {/* ─── Preview Drawer ─────────────────────────────────────────────── */}
+      {isPreviewDrawerOpen && (
+        <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '900px', maxWidth: '90vw', backgroundColor: '#ffffff', boxShadow: '-8px 0 30px rgba(0, 0, 0, 0.15)', zIndex: 2000, display: 'flex', flexDirection: 'column', animation: 'slideInRight 0.3s ease-out' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fafbfc' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0b2240', fontFamily: "'Outfit', sans-serif" }}>
+                Selected Questions Preview
+              </h2>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+                {assignedQuestionIds.length} questions selected for this exam
+              </p>
+            </div>
+            <button
+              onClick={() => setIsPreviewDrawerOpen(false)}
+              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', borderRadius: '6px', transition: 'all 0.15s' }}
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', backgroundColor: '#f8fafc' }}>
+            {resolveAssignedQuestions(allAvailableQuestions, assignedQuestionIds).map((q, idx) => (
+              <div key={q._id} style={{ backgroundColor: '#ffffff', borderRadius: '12px', marginBottom: '20px', padding: '24px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '20px', color: '#0b2240', minWidth: '100px' }}>Question {idx + 1}</span>
+                  <span className={styles.typeBadge}>
+                    {q.options.length === 2 ? 'TRUE/FALSE' : 'SINGLE CHOICE'}
+                  </span>
+                  <span className={`${styles.diffBadge} ${q.difficulty === 'Easy' ? styles.diffEasy : q.difficulty === 'Hard' ? styles.diffHard : styles.diffMedium}`}>
+                    {q.difficulty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleQuestionAssignment(q._id)}
+                    style={{ marginLeft: 'auto', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', cursor: 'pointer', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+                    title="Remove from selection"
+                  >
+                    <X size={16} />
+                    Remove
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '15px', color: '#1f2937', lineHeight: '1.7' }}>
+                    {parseMathText(q.text)}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '12px' }}>Answer Options</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {q.options.map((opt) => {
+                      const isCorrect = opt.isCorrect;
+                      return (
+                        <div
+                          key={opt.letter}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px 14px',
+                            backgroundColor: isCorrect ? '#f0fdf4' : '#f8fafc',
+                            borderRadius: '8px',
+                            border: `2px solid ${isCorrect ? '#16a34a' : '#e2e8f0'}`,
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              backgroundColor: isCorrect ? '#16a34a' : '#e2e8f0',
+                              color: isCorrect ? '#ffffff' : '#94a3b8',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '13px',
+                              fontWeight: 700,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {opt.letter}
+                          </span>
+                          <span style={{ fontSize: '14px', color: isCorrect ? '#166534' : '#374151', fontWeight: isCorrect ? 600 : 400 }}>
+                            {parseMathText(opt.text)}
+                          </span>
+                          {isCorrect && (
+                            <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: '#16a34a', backgroundColor: '#dcfce7', padding: '2px 8px', borderRadius: '10px' }}>
+                              Correct
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ padding: '20px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '12px', backgroundColor: '#ffffff' }}>
+            <button
+              type="button"
+              onClick={() => setIsPreviewDrawerOpen(false)}
+              style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #cbd5e1', color: '#475569', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPreviewDrawerOpen(false)}
+              style={{ padding: '10px 20px', background: '#0b2240', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <CheckCircle size={18} />
+              Done ({assignedQuestionIds.length})
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Global spinner keyframes ─────────────────────────────────────────── */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes slideInRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

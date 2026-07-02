@@ -21,7 +21,16 @@ const notificationDataSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Question',
   },
-});
+  bankId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'QuestionBank',
+  },
+  requesterId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  role: String,
+}, { strict: false });
 
 const notificationSchema = mongoose.Schema(
   {
@@ -40,6 +49,10 @@ const notificationSchema = mongoose.Schema(
         'appeal_resolved',
         'ai_report_ready',
         'system',
+        'bank_request_submitted',
+        'bank_request_approved',
+        'bank_request_rejected',
+        'bank_member_added',
       ],
       required: true,
     },

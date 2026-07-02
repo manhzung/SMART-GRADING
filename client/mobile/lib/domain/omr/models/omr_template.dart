@@ -2,7 +2,7 @@ import 'bubble.dart';
 import 'field_block.dart';
 import 'template_layout.dart';
 
-/// Represents the student ID field (Số báo danh) in AMC templates.
+/// Represents the student ID field in AMC templates.
 /// Contains coordinates for each digit position and possible values.
 class StudentIdField {
   final int digits;
@@ -58,7 +58,7 @@ class IdBubbleCoord {
   }
 }
 
-/// Represents the version code field (Mã đề) in AMC templates.
+/// Represents the version code field in AMC templates.
 class VersionCodeField {
   final int digits;
   final List<IdBubbleCoord> coords;
@@ -83,7 +83,7 @@ class VersionCodeField {
   }
 }
 
-/// Represents a fiducial marker (4 góc tròn) for document alignment/cropping.
+/// Represents a fiducial marker (4 corner circles) for document alignment/cropping.
 class FiducialMarker {
   final int x;
   final int y;
@@ -126,10 +126,10 @@ class OMRTemplate {
   /// calibrated against a real scanned sheet.
   final bool autoAlign;
 
-  /// Student ID field (Số báo danh) - extracted from AMC calage data.
+  /// Student ID field - extracted from AMC calage data.
   final StudentIdField? studentId;
 
-  /// Version code field (Mã đề) - extracted from AMC calage data.
+  /// Version code field - extracted from AMC calage data.
   final VersionCodeField? versionCodeZone;
 
   /// Answer key extracted from CSV (format: {'q1': 'A', 'q2': 'B', ...}).
@@ -378,7 +378,7 @@ class OMRTemplate {
   factory OMRTemplate.from15Question() {
     return OMRTemplate(
       id: '15q',
-      name: 'Phiếu 15 câu - Ngắn (A5)',
+      name: '15-Question Sheet - Short (A5)',
       pageWidth: 1748,
       pageHeight: 2480,
       bubbleWidth: 30,

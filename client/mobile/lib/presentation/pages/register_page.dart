@@ -155,7 +155,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             const SizedBox(height: 28),
                             const Text(
-                              'Họ và tên',
+                              'Full Name',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -170,12 +170,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                 fontSize: 14,
                               ),
                               decoration: _buildInputDecoration(
-                                hintText: 'Nhập họ và tên',
+                                hintText: 'Enter your full name',
                                 prefixIcon: Icons.person_outline_rounded,
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
-                                  return 'Vui lòng nhập họ và tên';
+                                  return 'Please enter your full name';
                                 }
                                 return null;
                               },
@@ -203,17 +203,17 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
-                                  return 'Vui lòng nhập email';
+                                  return 'Please enter email';
                                 }
                                 if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
-                                  return 'Email không hợp lệ';
+                                  return 'Invalid email format';
                                 }
                                 return null;
                               },
                             ),
                             const SizedBox(height: 20),
                             const Text(
-                              'Số điện thoại (Tùy chọn)',
+                              'Phone Number (Optional)',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -229,13 +229,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                 fontSize: 14,
                               ),
                               decoration: _buildInputDecoration(
-                                hintText: 'Nhập số điện thoại',
+                                hintText: 'Enter phone number',
                                 prefixIcon: Icons.phone_outlined,
                               ),
                             ),
                             const SizedBox(height: 20),
                             const Text(
-                              'Trường học',
+                              'School',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -255,8 +255,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                   ),
                                   decoration: _buildInputDecoration(
                                     hintText: state is SchoolLoading
-                                        ? 'Đang tải danh sách trường...'
-                                        : 'Chọn trường học của bạn',
+                                        ? 'Loading schools...'
+                                        : 'Select your school',
                                     prefixIcon: Icons.account_balance_outlined,
                                   ),
                                   icon: const Icon(
@@ -280,7 +280,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         },
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Vui lòng chọn trường học';
+                                      return 'Please select a school';
                                     }
                                     return null;
                                   },
@@ -289,7 +289,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             const SizedBox(height: 20),
                             const Text(
-                              'Mật khẩu',
+                              'Password',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -325,20 +325,20 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Vui lòng nhập mật khẩu';
+                                  return 'Please enter password';
                                 }
                                 if (value.length < 8) {
-                                  return 'Mật khẩu phải từ 8 ký tự';
+                                  return 'Password must be at least 8 characters';
                                 }
                                 if (!RegExp(r'^(?=.*[A-Za-z])(?=.*\d).+$').hasMatch(value)) {
-                                  return 'Mật khẩu phải có cả chữ và số';
+                                  return 'Password must contain both letters and numbers';
                                 }
                                 return null;
                               },
                             ),
                             const SizedBox(height: 20),
                             const Text(
-                              'Xác nhận mật khẩu',
+                              'Confirm Password',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -359,10 +359,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Vui lòng xác nhận mật khẩu';
+                                  return 'Please confirm password';
                                 }
                                 if (value != _passwordController.text) {
-                                  return 'Mật khẩu xác nhận không khớp';
+                                  return 'Passwords do not match';
                                 }
                                 return null;
                               },
@@ -372,7 +372,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               initialValue: false,
                               validator: (value) {
                                 if (value == null || !value) {
-                                  return 'Bạn cần đồng ý với điều khoản sử dụng';
+                                  return 'You must agree to the terms of use';
                                 }
                                 return null;
                               },
@@ -412,9 +412,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                                 fontFamily: 'Roboto',
                                               ),
                                               children: [
-                                                TextSpan(text: 'Đồng ý '),
+                                                TextSpan(text: 'I agree to the '),
                                                 TextSpan(
-                                                  text: 'điều khoản sử dụng',
+                                                  text: 'terms of use',
                                                   style: TextStyle(
                                                     color: Color(0xFF082142),
                                                     fontWeight: FontWeight.bold,
@@ -422,7 +422,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                                   ),
                                                 ),
                                                 TextSpan(
-                                                  text: ' và chính sách bảo mật của hệ thống.',
+                                                  text: ' and the system privacy policy.',
                                                 ),
                                               ],
                                             ),
@@ -472,7 +472,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                             ),
                                           )
                                         : const Text(
-                                            'Đăng ký',
+                                            'Register',
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
@@ -487,7 +487,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Text(
-                                  'Đã có tài khoản? ',
+                                  'Already have an account? ',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Color(0xFF64748B),
@@ -498,7 +498,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     Navigator.pushReplacementNamed(context, '/login');
                                   },
                                   child: const Text(
-                                    'Đăng nhập',
+                                    'Login',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,

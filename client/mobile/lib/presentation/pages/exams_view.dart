@@ -112,13 +112,12 @@ class _ExamsViewState extends State<ExamsView> {
               'exam': exam,
             };
           }).toList();
-        } else if (state is ExamLoading) {
-          examsToDisplay = [];
-        } else {
-          examsToDisplay = _mockExams;
         }
 
         List<Map<String, dynamic>> filteredExams = examsToDisplay;
+
+        final isLoading = state is ExamLoading || state is ExamInitial;
+        final ExamError? errorState = state is ExamError ? state : null;
 
         return Column(
           children: [
@@ -193,11 +192,28 @@ class _ExamsViewState extends State<ExamsView> {
                       ),
                       const SizedBox(height: 20),
 
-                      if (state is ExamLoading)
+                      if (isLoading)
                         const Center(
                           child: Padding(
                             padding: EdgeInsets.symmetric(vertical: 40),
                             child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (errorState != null)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Error: ${errorState.message}',
+                                  style: const TextStyle(color: Color(0xFFEF4444)),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       else if (filteredExams.isEmpty)
@@ -214,15 +230,7 @@ class _ExamsViewState extends State<ExamsView> {
                         ...filteredExams.map((exam) {
                           return GestureDetector(
                             onTap: () {
-                              final examObj = exam['exam'] as Exam? ?? Exam(
-                                id: 'mock_${exam['title']}',
-                                title: exam['title'] ?? 'Mock Exam',
-                                status: (exam['status'] ?? 'draft').toString().toLowerCase(),
-                                createdAt: DateTime.now(),
-                                duration: 90,
-                                totalStudents: 348,
-                                totalSubmissions: 320,
-                              );
+                              final examObj = exam['exam'] as Exam;
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -243,16 +251,18 @@ class _ExamsViewState extends State<ExamsView> {
                           );
                         }),
 
-                      const SizedBox(height: 20),
-                      Center(
-                        child: Text(
-                          'Showing ${filteredExams.length} of ${examsToDisplay.length} exams',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF64748B),
+                      if (!isLoading && errorState == null && filteredExams.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        Center(
+                          child: Text(
+                            'Showing ${filteredExams.length} of ${examsToDisplay.length} exams',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -265,49 +275,8 @@ class _ExamsViewState extends State<ExamsView> {
     );
   }
 
-  static final List<Map<String, dynamic>> _mockExams = [
-    {
-      'title': 'Midterm: Intro to Python',
-      'classCode': 'CS101 \u2014 Intro to Programming',
-      'status': 'COMPLETED',
-      'statusBgColor': const Color(0xFFE2E5FA),
-      'statusTextColor': const Color(0xFF6366F1),
-      'submissionsText': '28/30 Submissions',
-      'date': 'Oct 12',
-      'participants': 25,
-    },
-    {
-      'title': 'Final: Advanced Algorithms',
-      'classCode': 'CS204 \u2014 Data Structures',
-      'status': 'PUBLISHED',
-      'statusBgColor': const Color(0xFFDBEAFE),
-      'statusTextColor': const Color(0xFF1D4ED8),
-      'submissionsText': '4/25 Submissions',
-      'date': 'Oct 28',
-      'participants': 2,
-    },
-    {
-      'title': 'Weekly Quiz: Matrix Operations',
-      'classCode': 'MA302 \u2014 Linear Algebra',
-      'status': 'DRAFT',
-      'statusBgColor': const Color(0xFFF1F5F9),
-      'statusTextColor': const Color(0xFF475569),
-      'submissionsText': 'No submissions yet',
-      'date': 'Nov 02',
-      'participants': 0,
-    },
-    {
-      'title': 'Semester Exam: OOP Principles',
-      'classCode': 'CS101 \u2014 Intro to Programming',
-      'status': 'COMPLETED',
-      'statusBgColor': const Color(0xFFE2E5FA),
-      'statusTextColor': const Color(0xFF6366F1),
-      'submissionsText': '30/30 Submissions',
-      'date': 'Oct 05',
-      'participants': 28,
-    },
-  ];
 }
+
 
 class AvatarOverlapGroup extends StatelessWidget {
   final int count;

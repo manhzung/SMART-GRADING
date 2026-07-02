@@ -60,12 +60,12 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xóa câu hỏi'),
-        content: Text('Bạn có chắc muốn xóa câu hỏi "${question.content}"?'),
+        title: const Text('Delete question'),
+        content: Text('Are you sure you want to delete question "${question.content}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -76,19 +76,19 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                 _loadQuestions();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã xóa câu hỏi')),
+                    SnackBar(content: Text('Question deleted')),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e')),
+                    SnackBar(content: Text('Error: $e')),
                   );
                 }
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Xóa'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -211,7 +211,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
-            'Danh sách câu hỏi',
+            'Question List',
             style: TextStyle(
               color: Color(0xFF0F172A),
               fontWeight: FontWeight.bold,
@@ -239,7 +239,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
-            'Danh sách câu hỏi',
+            'Question List',
             style: TextStyle(
               color: Color(0xFF0F172A),
               fontWeight: FontWeight.bold,
@@ -248,7 +248,10 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
           ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1.0),
-            child: Container(color: const Color(0xFFE2E8F0), height: 1.0),
+            child: Container(
+              color: const Color(0xFFE2E8F0),
+              height: 1.0,
+            ),
           ),
         ),
         body: Center(
@@ -267,7 +270,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                   setState(() => _questionsError = null);
                   _loadQuestions();
                 },
-                child: const Text('Thử lại'),
+                child: const Text('Retry'),
               ),
             ],
           ),
@@ -290,7 +293,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Danh sách câu hỏi',
+          'Question List',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -306,7 +309,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              '$totalQuestions câu',
+              '$totalQuestions questions',
               style: const TextStyle(
                 color: Color(0xFF475569),
                 fontSize: 12,
@@ -344,7 +347,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                           const Icon(Icons.assignment_outlined, size: 18, color: Color(0xFF0F172A)),
                           const SizedBox(width: 8),
                           Text(
-                            '$totalQuestions câu hỏi',
+                            '$totalQuestions questions',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -369,7 +372,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                           const Icon(Icons.star_outline, size: 18, color: Color(0xFF0F172A)),
                           const SizedBox(width: 8),
                           Text(
-                            '$totalPoints điểm',
+                            '$totalPoints points',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -393,7 +396,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                   setState(() => _searchQuery = value);
                 },
                 decoration: InputDecoration(
-                  hintText: 'Tìm kiếm câu hỏi...',
+                  hintText: 'Search questions...',
                   hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                   prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B), size: 20),
                   filled: true,
@@ -466,7 +469,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                           ),
                           const SizedBox(height: 16),
                           const Text(
-                            'Không tìm thấy câu hỏi nào',
+                            'No questions found',
                             style: TextStyle(
                               fontSize: 16,
                               color: Color(0xFF64748B),
@@ -574,7 +577,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
-                            'MỚI',
+                            'NEW',
                             style: TextStyle(
                               color: Color(0xFFD97706),
                               fontSize: 10,
@@ -588,7 +591,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                           const Icon(Icons.star_outline, size: 13, color: Color(0xFF94A3B8)),
                           const SizedBox(width: 3),
                           Text(
-                            '$points đ',
+                            '$points pts',
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -609,7 +612,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
 
                   // Topic / Title
                   Text(
-                    question['topic'] as String? ?? 'Câu hỏi',
+                    question['topic'] as String? ?? 'Question',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -640,14 +643,14 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                     children: [
                       _buildStatChip(
                         icon: Icons.visibility_outlined,
-                        label: seen ? 'Đã scan' : 'Chưa scan',
+                        label: seen ? 'Scanned' : 'Not scanned',
                         color: seen ? const Color(0xFF16A34A) : const Color(0xFFD97706),
                         bg: seen ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
                       ),
                       const SizedBox(width: 8),
                       _buildStatChip(
                         icon: Icons.check_circle_outline,
-                        label: '${(correctRate * 100).round()}% đúng',
+                        label: '${(correctRate * 100).round()}% correct',
                         color: _getCorrectRateColor(correctRate),
                         bg: _getCorrectRateColor(correctRate).withValues(alpha: 0.1),
                       ),
@@ -659,7 +662,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                           size: 16,
                         ),
                         label: Text(
-                          isExpanded ? 'Thu gọn' : 'Xem chi tiết',
+                          isExpanded ? 'Collapse' : 'View details',
                           style: const TextStyle(fontSize: 12),
                         ),
                         style: TextButton.styleFrom(
@@ -685,7 +688,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                   children: [
                     if (options != null && options.isNotEmpty) ...[
                       const Text(
-                        'Đáp án đúng:',
+                        'Correct answer:',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -722,7 +725,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                       }),
                     ] else ...[
                       const Text(
-                        'Không có lựa chọn (câu hỏi tự luận)',
+                        'No options (essay question)',
                         style: TextStyle(
                           fontSize: 13,
                           color: Color(0xFF64748B),
@@ -749,7 +752,7 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Giải thích:',
+                                    'Explanation:',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -779,13 +782,13 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Chức năng sửa câu hỏi - sử dụng trang Question Bank'),
+                                content: Text('Question edit feature - use Question Bank page'),
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );
                           },
                           icon: const Icon(Icons.edit_outlined, size: 16),
-                          label: const Text('Sửa'),
+                          label: const Text('Edit'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF64748B),
                             side: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -802,14 +805,14 @@ class _ExamQuestionsPageState extends State<ExamQuestionsPage> {
                               : () {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Không thể xóa: câu hỏi chưa được tải từ server'),
+                                      content: Text('Cannot delete: question not loaded from server'),
                                       backgroundColor: Color(0xFFDC2626),
                                       behavior: SnackBarBehavior.floating,
                                     ),
                                   );
                                 },
                           icon: const Icon(Icons.delete_outline, size: 16),
-                          label: const Text('Xóa'),
+                          label: const Text('Delete'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFFDC2626),
                             side: const BorderSide(color: Color(0xFFDC2626)),

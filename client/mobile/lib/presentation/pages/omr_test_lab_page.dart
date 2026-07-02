@@ -418,7 +418,7 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
 
     // Add the 30-question demo template (hardcoded for testing)
     entries.add(_TemplateMenuEntry(
-      label: '30 Câu Demo (bundled)',
+      label: '30-Question Demo (bundled)',
       source: _TemplateSource.offlineFallback,
       template: _create30QuestionDemoTemplate(),
     ));
@@ -643,7 +643,7 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
             ],
           ),
         ),
-        // Header bar with detected SBD and Mã đề
+        // Header bar with detected Student ID and Version Code
         _buildInfoHeader(),
         Expanded(
           child: TabBarView(
@@ -743,7 +743,7 @@ class _OMRTestLabPageState extends State<OMRTestLabPage>
           if (sbd != null && md != null)
             const SizedBox(width: 24),
           if (md != null)
-            _CodeLabel(label: 'Mã đề', value: md, color: const Color(0xFF8B5CF6)),
+            _CodeLabel(label: 'Version Code', value: md, color: const Color(0xFF8B5CF6)),
         ],
       ),
     );

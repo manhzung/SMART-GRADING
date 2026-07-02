@@ -17,6 +17,7 @@ class QuestionService {
     String? tags,
     String? search,
     String? source,
+    String? bankId,
   }) {
     final queryParams = <String, dynamic>{
       'page': page,
@@ -27,6 +28,7 @@ class QuestionService {
     if (tags != null && tags.isNotEmpty) queryParams['tags'] = tags;
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (source != null && source.isNotEmpty) queryParams['source'] = source;
+    if (bankId != null && bankId.isNotEmpty) queryParams['bankId'] = bankId;
 
     return _apiClient.get<PaginatedQuestions>(
       ApiConstants.questions,

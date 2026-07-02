@@ -23,6 +23,7 @@ const createQuestion = {
     tags: Joi.array().items(Joi.string()),
     source: Joi.string().valid('ai', 'manual', 'imported').default('manual'),
     aiPrompt: Joi.string().allow(null, ''),
+    bankId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
   }),
 };
 
@@ -39,6 +40,7 @@ const updateQuestion = {
     imageUrl: Joi.string().uri().allow(null, ''),
     tags: Joi.array().items(Joi.string()),
     isApproved: Joi.boolean(),
+    bankId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
   }),
 };
 
@@ -49,6 +51,7 @@ const getQuestion = {
 const getQuestions = {
   query: Joi.object().keys({
     topicId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    bankId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
     difficulty: Joi.string(), // accepts single "easy" or comma-separated "easy,medium,hard"
     isApproved: Joi.string(), // accepts "true" or "false" as strings
     source: Joi.string().valid('ai', 'manual', 'imported'),

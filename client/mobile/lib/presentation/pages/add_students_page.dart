@@ -68,7 +68,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
       setState(() {
         _isLoadingExisting = false;
       });
-      _showSnackBar('Lỗi tải danh sách học sinh: ${e.toString()}', isError: true);
+      _showSnackBar('Error loading student list: ${e.toString()}', isError: true);
     }
   }
 
@@ -122,7 +122,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
         context.read<ClassBloc>().add(const ClassFetchRequested());
       }
 
-      _showSnackBar('Thêm học sinh thành công!');
+      _showSnackBar('Student added successfully!');
       if (mounted) {
         Navigator.pop(context, updatedClass);
       }
@@ -130,7 +130,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
       setState(() {
         _isLoadingExisting = false;
       });
-      _showSnackBar('Lỗi khi thêm học sinh: ${e.toString()}', isError: true);
+      _showSnackBar('Error adding student: ${e.toString()}', isError: true);
     }
   }
 
@@ -187,11 +187,11 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
 
       if (failedCount > 0) {
         _showSnackBar(
-          'Đã nhập thành công $successCount học sinh. Thất bại $failedCount học sinh.',
+          'Imported $successCount student(s). Failed: $failedCount.',
           isError: true,
         );
       } else {
-        _showSnackBar('Đã nhập thành công $successCount học sinh mới!');
+        _showSnackBar('Successfully imported $successCount new student(s)!');
       }
 
       // Fetch the fully updated class details
@@ -204,7 +204,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
       setState(() {
         _isImporting = false;
       });
-      _showSnackBar('Lỗi nhập học sinh: ${e.toString()}', isError: true);
+      _showSnackBar('Error importing students: ${e.toString()}', isError: true);
     }
   }
 
@@ -284,7 +284,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
           IconButton(
             icon: const Icon(Icons.help_outline, color: Color(0xFF081C43)),
             onPressed: () {
-              _showSnackBar('Chọn học sinh hiện có từ trường học hoặc nhập mới từ file Excel/nhập tay.');
+              _showSnackBar('Select existing students from the school or import new ones from Excel/manual input.');
             },
           ),
         ],
@@ -358,8 +358,8 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                       ? Center(
                           child: Text(
                             _allStudents.isEmpty
-                                ? 'Tất cả học sinh trong hệ thống đã có trong lớp.'
-                                : 'Không tìm thấy học sinh phù hợp.',
+                                ? 'All students in the system are already in this class.'
+                                : 'No matching students found.',
                             style: const TextStyle(color: Color(0xFF64748B)),
                             textAlign: TextAlign.center,
                           ),
@@ -558,7 +558,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
                 Text(
-                  'Đang xử lý nhập dữ liệu học sinh...',
+                  'Importing student data...',
                   style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold),
                 )
               ],
@@ -585,7 +585,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Thêm thông tin học sinh dưới đây. Email là bắt buộc và duy nhất. Mật khẩu mặc định sẽ được đặt là student123',
+                            'Add student information below. Email is required and must be unique. Default password will be set to student123',
                             style: TextStyle(
                               color: Color(0xFF1E40AF),
                               fontSize: 12.5,
@@ -622,7 +622,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Học sinh #${index + 1}',
+                                    'Student #${index + 1}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF081C43),
@@ -641,7 +641,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
 
                               // Name Field
                               const Text(
-                                'Họ và tên *',
+                                'Full Name *',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -651,10 +651,10 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                               const SizedBox(height: 6),
                               TextFormField(
                                 initialValue: _importRows[index]['name'],
-                                decoration: _buildFieldDecoration('Ví dụ: Nguyễn Văn An'),
+                                decoration: _buildFieldDecoration('Example: John Doe'),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Họ tên không được trống';
+                                    return 'Full name is required';
                                   }
                                   return null;
                                 },
@@ -666,7 +666,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
 
                               // Email Field
                               const Text(
-                                'Email học sinh *',
+                                'Student Email *',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -677,13 +677,13 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                               TextFormField(
                                 initialValue: _importRows[index]['email'],
                                 keyboardType: TextInputType.emailAddress,
-                                decoration: _buildFieldDecoration('Ví dụ: student@school.edu.vn'),
+                                decoration: _buildFieldDecoration('Example: student@school.edu.vn'),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Email không được trống';
+                                    return 'Email is required';
                                   }
                                   if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                    return 'Email không hợp lệ';
+                                    return 'Invalid email format';
                                   }
                                   return null;
                                 },
@@ -695,7 +695,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
 
                               // Student Code Field
                               const Text(
-                                'Mã học sinh (Tùy chọn)',
+                                'Student Code (Optional)',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -705,7 +705,7 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                               const SizedBox(height: 6),
                               TextFormField(
                                 initialValue: _importRows[index]['code'],
-                                decoration: _buildFieldDecoration('Ví dụ: HS10003'),
+                                decoration: _buildFieldDecoration('Example: STD10003'),
                                 onSaved: (value) {
                                   _importRows[index]['code'] = value ?? '';
                                 },
@@ -725,11 +725,11 @@ class _AddStudentsPageState extends State<AddStudentsPage> with SingleTickerProv
                   child: Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child:                         OutlinedButton.icon(
                           onPressed: _addImportRow,
                           icon: const Icon(Icons.add, color: Color(0xFF081C43)),
                           label: const Text(
-                            'Thêm dòng',
+                            'Add Row',
                             style: TextStyle(
                               color: Color(0xFF081C43),
                               fontWeight: FontWeight.bold,

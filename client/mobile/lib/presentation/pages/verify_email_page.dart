@@ -138,7 +138,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                         const SizedBox(height: 24),
                         // Title
                         const Text(
-                          'Xác thực địa chỉ email',
+                          'Verify Email Address',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -163,7 +163,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                           child: Column(
                             children: [
                               const Text(
-                                'Hệ thống đã gửi một liên kết xác thực bảo mật đến hòm thư:',
+                                'The system has sent a secure verification link to your inbox:',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -217,7 +217,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                               ),
                               const SizedBox(height: 16),
                               const Text(
-                                'Vui lòng kiểm tra hộp thư đến và truy cập liên kết được cung cấp để kích hoạt hồ sơ học thuật của bạn. Quá trình này bắt buộc để đảm bảo an toàn dữ liệu.',
+                                'Please check your inbox and access the provided link to activate your account. This is required to ensure data security.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
@@ -238,7 +238,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Xác thực tài khoản thành công!'),
+                                  content: Text('Account verified successfully!'),
                                   backgroundColor: Colors.green,
                                 ),
                               );
@@ -250,7 +250,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                               color: Colors.white,
                             ),
                             label: const Text(
-                              'Xác nhận đã kích hoạt',
+                              'Confirm Activation',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -283,8 +283,8 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                             ),
                             label: Text(
                               _canResend
-                                  ? 'Gửi lại email'
-                                  : 'Gửi lại email (${_start}s)',
+                                  ? 'Resend Email'
+                                  : 'Resend Email (${_start}s)',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -323,7 +323,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                               ),
                               SizedBox(width: 4),
                               Text(
-                                'Đăng nhập ngay',
+                                'Login Now',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -342,7 +342,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
                 // Outer Notice Footer
                 const Text(
-                  'Không nhận được email?',
+                  'Did not receive the email?',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -362,9 +362,9 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                         fontFamily: 'Roboto',
                       ),
                       children: [
-                        TextSpan(text: 'Vui lòng kiểm tra thư mục Spam hoặc '),
+                        TextSpan(text: 'Please check your Spam folder or '),
                         TextSpan(
-                          text: 'Liên hệ bộ phận Hỗ trợ Học vụ',
+                          text: 'Contact Academic Support',
                           style: TextStyle(
                             color: Color(0xFF082142),
                             fontWeight: FontWeight.bold,

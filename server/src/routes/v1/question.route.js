@@ -32,6 +32,10 @@ router
   .get(auth(), questionController.getBankStats);
 
 router
+  .route('/school-search')
+  .get(auth(), validate(questionValidation.getQuestions), questionController.searchAllBanks);
+
+router
   .route('/:id')
   .get(auth(), validate(questionValidation.getQuestion), questionController.getById)
   .patch(auth('manageQuestions'), validate(questionValidation.updateQuestion), questionController.update)

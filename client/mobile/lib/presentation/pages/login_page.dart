@@ -222,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Vui lòng nhập email';
+                                            return 'Please enter your email';
                                           }
                                           return null;
                                         },
@@ -317,7 +317,7 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Vui lòng nhập mật khẩu';
+                                            return 'Please enter your password';
                                           }
                                           return null;
                                         },
@@ -339,7 +339,7 @@ class _LoginPageState extends State<LoginPage> {
                                                 .shrinkWrap,
                                           ),
                                           child: const Text(
-                                            'Quên mật khẩu?',
+                                            'Forgot password?',
                                             style: TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold,
@@ -393,7 +393,7 @@ class _LoginPageState extends State<LoginPage> {
                                                               .center,
                                                       children: [
                                                         Text(
-                                                          'Đăng nhập',
+                                                          'Sign In',
                                                           style: TextStyle(
                                                             fontSize: 16,
                                                             fontWeight:
@@ -444,7 +444,7 @@ class _LoginPageState extends State<LoginPage> {
                                         );
                                       },
                                       child: const Text(
-                                        'Đăng ký ngay',
+                                        'Sign Up',
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
@@ -531,7 +531,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Noi dung cua $title se duoc cap nhat sau.\nVui long lien he ho tro neu ban can ho tro ngay lap tuc.',
+              'Content for $title will be updated soon.\nPlease contact support if you need immediate assistance.',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
@@ -540,7 +540,7 @@ class _LoginPageState extends State<LoginPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Dong'),
+                child: const Text('Close'),
               ),
             ),
             const SizedBox(height: 16),

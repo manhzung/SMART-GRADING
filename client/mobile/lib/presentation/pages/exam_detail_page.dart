@@ -88,19 +88,19 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
         : exam.questionIds.length;
     final examDateStr = exam.examDate != null
         ? '${exam.examDate!.day}/${exam.examDate!.month}/${exam.examDate!.year}'
-        : 'Chua xac dinh';
+        : 'Not set';
     final shareText = '''
-Bai kiem tra: ${exam.title}
-Mo ta: ${exam.description ?? 'Khong co'}
-Ngay: $examDateStr
-Thoi gian: ${exam.duration} phut
-So cau hoi: $questionCount
-Diem: ${exam.totalScore}
+Exam: ${exam.title}
+Description: ${exam.description ?? 'None'}
+Date: $examDateStr
+Duration: ${exam.duration} minutes
+Questions: $questionCount
+Score: ${exam.totalScore}
 ''';
     Clipboard.setData(ClipboardData(text: shareText));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Da sao chep thong tin bai kiem tra'),
+        content: Text('Exam information copied to clipboard'),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -161,7 +161,7 @@ Diem: ${exam.totalScore}
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          displayExam.title.isNotEmpty ? displayExam.title : 'Chi tiết kỳ thi',
+          displayExam.title.isNotEmpty ? displayExam.title : 'Exam Details',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -213,7 +213,7 @@ Diem: ${exam.totalScore}
                   children: [
                     // Exam title & class name
                     Text(
-                      displayExam.title.isNotEmpty ? displayExam.title : 'Không có tiêu đề',
+                      displayExam.title.isNotEmpty ? displayExam.title : 'No title',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -232,7 +232,7 @@ Diem: ${exam.totalScore}
                         Text(
                           displayExam.primaryClassName.isNotEmpty 
                               ? displayExam.primaryClassName 
-                              : 'Chưa có lớp',
+                              : 'No class assigned',
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF64748B),

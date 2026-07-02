@@ -18,9 +18,9 @@ class PendingSubmission {
   final DateTime timestamp;
   final SyncStatus status;
   final int retryCount;
-  /// Detected student code (SBD) — from engine_v2 scan
+  /// Detected student code - from engine_v2 scan
   final String? studentCode;
-  /// Detected version code (mã đề) — from engine_v2 scan
+  /// Detected version code - from engine_v2 scan
   final String? versionCode;
 
   const PendingSubmission({

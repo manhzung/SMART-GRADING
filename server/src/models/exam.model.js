@@ -35,7 +35,7 @@ const examSchema = mongoose.Schema(
     omrTemplateId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'OMRTemplate',
-      required: true,
+      required: false,
     },
     omrOverrides: {
       numberOfQuestions: Number,

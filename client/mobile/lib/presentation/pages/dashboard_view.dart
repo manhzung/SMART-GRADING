@@ -270,16 +270,16 @@ class _DashboardViewState extends State<DashboardView> {
                         const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 40),
                         const SizedBox(height: 8),
                         Text(
-                          'Không thể tải hoạt động',
+                          'Unable to load activity',
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                         const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: () {
-                            context.read<ActivityBloc>().add(const ActivityLoadRequested());
-                          },
-                          child: const Text('Thử lại'),
-                        ),
+                      TextButton(
+                        onPressed: () {
+                          context.read<ActivityBloc>().add(const ActivityLoadRequested());
+                        },
+                        child: const Text('Retry'),
+                      ),
                       ],
                     ),
                   );
@@ -301,7 +301,7 @@ class _DashboardViewState extends State<DashboardView> {
                           Icon(Icons.history, size: 40, color: Color(0xFFCBD5E1)),
                           SizedBox(height: 12),
                           Text(
-                            'Chưa có hoạt động nào',
+                            'No recent activity',
                             style: TextStyle(
                               fontSize: 14,
                               color: Color(0xFF94A3B8),

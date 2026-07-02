@@ -64,12 +64,12 @@ class _MyScoresPageState extends State<MyScoresPage> {
 
   String _getGradeLabel(double? score) {
     if (score == null) return '-';
-    if (score >= 9) return 'Xuất sắc';
-    if (score >= 8) return 'Giỏi';
-    if (score >= 7) return 'Khá';
-    if (score >= 5) return 'Trung bình';
-    if (score >= 3) return 'Yếu';
-    return 'Kém';
+    if (score >= 9) return 'Excellent';
+    if (score >= 8) return 'Good';
+    if (score >= 7) return 'Fair';
+    if (score >= 5) return 'Average';
+    if (score >= 3) return 'Poor';
+    return 'Failing';
   }
 
   @override
@@ -94,7 +94,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Điểm của tôi',
+          'My Scores',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -127,7 +127,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _loadSubmissions,
-                          child: const Text('Thử lại'),
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
@@ -161,7 +161,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 const Text(
-                                                  'Điểm trung bình',
+                                                  'Average Score',
                                                   style: TextStyle(color: Colors.white70, fontSize: 14),
                                                 ),
                                                 const SizedBox(height: 4),
@@ -217,7 +217,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                       ),
                                       const SizedBox(height: 8),
                                       const Text(
-                                        'bài thi đã được chấm',
+                                        'exams graded',
                                         style: TextStyle(color: Colors.white54, fontSize: 12),
                                       ),
                                     ],
@@ -228,7 +228,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                   children: [
                                     Expanded(
                                       child: _buildMiniStat(
-                                        'Tổng bài thi',
+                                        'Total Exams',
                                         '${mySubmissions.length}',
                                         Icons.assignment,
                                         const Color(0xFF6366F1),
@@ -237,7 +237,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: _buildMiniStat(
-                                        'Đã chấm',
+                                        'Graded',
                                         '${graded.length}',
                                         Icons.check_circle,
                                         const Color(0xFF16A34A),
@@ -246,7 +246,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: _buildMiniStat(
-                                        'Chờ chấm',
+                                        'Pending',
                                         '${mySubmissions.length - graded.length}',
                                         Icons.hourglass_empty,
                                         const Color(0xFFD97706),
@@ -267,7 +267,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                   Icon(Icons.assignment_outlined, size: 64, color: Colors.grey[300]),
                                   const SizedBox(height: 16),
                                   const Text(
-                                    'Chưa có bài thi nào',
+                                    'No exams yet',
                                     style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
                                   ),
                                 ],
@@ -310,7 +310,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                         ),
                                       ),
                                       title: Text(
-                                        submission.examTitle ?? 'Bài thi',
+                                        submission.examTitle ?? 'Exam',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Color(0xFF0F172A),
@@ -321,7 +321,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                         children: [
                                           const SizedBox(height: 4),
                                           Text(
-                                            'Ngày: ${_formatDate(submission.scannedAt)}',
+                                            'Date: ${_formatDate(submission.scannedAt)}',
                                             style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                                           ),
                                           if (submission.status.toUpperCase() == 'GRADED')
@@ -344,7 +344,7 @@ class _MyScoresPageState extends State<MyScoresPage> {
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Text(
-                                          submission.status.toUpperCase() == 'GRADED' ? 'Đã chấm' : 'Chờ chấm',
+                                          submission.status.toUpperCase() == 'GRADED' ? 'Graded' : 'Pending',
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w600,

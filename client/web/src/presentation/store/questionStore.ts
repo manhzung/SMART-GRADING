@@ -37,6 +37,8 @@ export interface BackendQuestion {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  // Source bank info (populated from bankId)
+  bankId?: { _id: string; name: string } | string;
 }
 
 // AI-generated questions (for preview, not saved yet)
@@ -85,6 +87,9 @@ export interface Question {
   createdBy?: string;
   schoolId?: string;
   createdByName?: string;
+  // For "Search All Banks" mode - source bank info
+  bankId?: string;
+  bankName?: string;
 }
 
 export interface CreateQuestionPayload {
@@ -98,6 +103,7 @@ export interface CreateQuestionPayload {
   tags?: string[];
   source?: 'ai' | 'manual' | 'imported';
   aiPrompt?: string;
+  bankId?: string;
 }
 
 // ─── Field Mapping Helpers ──────────────────────────────────────────────────────
@@ -113,6 +119,19 @@ function mapDifficulty(d: string): 'Easy' | 'Medium' | 'Hard' {
 
 export function toFrontendQuestion(bq: BackendQuestion): Question {
   const qId = bq.id || bq._id || '';
+  
+  // Handle bankId - can be populated object or string
+  let bankId: string | undefined;
+  let bankName: string | undefined;
+  if (bq.bankId) {
+    if (typeof bq.bankId === 'object') {
+      bankId = bq.bankId._id;
+      bankName = bq.bankId.name;
+    } else {
+      bankId = bq.bankId;
+    }
+  }
+  
   return {
     _id: qId,
     id: qId,
@@ -140,6 +159,8 @@ export function toFrontendQuestion(bq: BackendQuestion): Question {
     createdBy: typeof bq.createdBy === 'object' ? bq.createdBy._id : bq.createdBy,
     schoolId: bq.schoolId,
     createdByName: typeof bq.createdBy === 'object' ? bq.createdBy.name : undefined,
+    bankId,
+    bankName,
   };
 }
 
@@ -164,6 +185,7 @@ export const questionService = {
     order?: string;
     limit?: number;
     page?: number;
+    bankId?: string;
   }) {
     return apiService.get<PaginatedQuestions>('/questions', { params: { limit: 20, ...params } });
   },
@@ -204,14 +226,37 @@ export const questionService = {
     return apiService.post<BackendQuestion>(`/questions/${id}/approve`);
   },
 
-  async getTags(): Promise<string[]> {
-    const response = await apiService.get<{ tags: string[] }>('/questions/tags');
+  async getTags(bankId?: string): Promise<string[]> {
+    const response = await apiService.get<{ tags: string[] }>('/questions/tags', {
+      params: bankId ? { bankId } : undefined,
+    });
     return response.tags || [];
   },
 
-  async getBankStats(): Promise<BankStats> {
-    const response = await apiService.get<BankStats>('/questions/stats');
+  async getBankStats(bankId?: string): Promise<BankStats> {
+    const response = await apiService.get<BankStats>('/questions/stats', {
+      params: bankId ? { bankId } : undefined,
+    });
     return response;
+  },
+
+  /**
+   * Search questions across ALL banks in the user's school.
+   * Bypasses bankId scoping.
+   */
+  async searchAllSchool(params?: {
+    topicId?: string;
+    difficulty?: string;
+    isApproved?: boolean;
+    source?: string;
+    tags?: string;
+    search?: string;
+    sortBy?: string;
+    order?: string;
+    limit?: number;
+    page?: number;
+  }) {
+    return apiService.get<PaginatedQuestions>('/questions/school-search', { params: { limit: 20, ...params } });
   },
 };
 
@@ -235,6 +280,7 @@ interface QuestionState {
     source: string;
     tags: string;
     isApproved: boolean | null;
+    bankId: string | null;
   };
   availableTags: string[];
   // Questions fetched by tags (for exam creation)
@@ -249,13 +295,23 @@ interface QuestionState {
     source?: string;
     tags?: string;
     isApproved?: boolean;
+    bankId?: string;
+  }) => Promise<void>;
+  fetchQuestionsAllBanks: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    difficulty?: string;
+    source?: string;
+    tags?: string;
+    isApproved?: boolean;
   }) => Promise<void>;
   createQuestion: (data: CreateQuestionPayload) => Promise<Question>;
   updateQuestion: (id: string, data: Partial<CreateQuestionPayload>) => Promise<void>;
   deleteQuestion: (id: string) => Promise<void>;
   approveQuestion: (id: string) => Promise<void>;
   fetchTags: () => Promise<void>;
-  setFilters: (filters: Partial<QuestionState['filters']>) => void;
+  setFilters: (filters: Partial<Omit<QuestionState['filters'], 'bankId'>>) => void;
   clearError: () => void;
   clearCreateError: () => void;
   generateAiQuestions: (params: { topic: string; count: number; difficulty?: string; requirements?: string }) => Promise<AiGeneratedQuestion[]>;
@@ -280,6 +336,7 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
     source: '',
     tags: '',
     isApproved: null,
+    bankId: null,
   },
   availableTags: [],
   tagQuestions: [],
@@ -357,6 +414,57 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
     }
   },
 
+  fetchQuestionsAllBanks: async (params) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { filters } = get();
+      const mergedParams = {
+        ...filters,
+        ...params,
+        limit: params?.limit ?? get().pagination.limit,
+        page: params?.page ?? get().pagination.page,
+      };
+
+      const sanitizedParams: Partial<typeof mergedParams> = { ...mergedParams };
+
+      // Remove null/undefined/empty values
+      Object.keys(sanitizedParams).forEach((k) => {
+        const key = k as keyof typeof sanitizedParams;
+        const val = sanitizedParams[key];
+        if (
+          val === '' ||
+          val === null ||
+          val === undefined
+        ) {
+          delete sanitizedParams[key];
+        }
+      });
+
+      // Only pass isApproved if explicitly set
+      if ('isApproved' in sanitizedParams && sanitizedParams.isApproved === null) {
+        delete sanitizedParams.isApproved;
+      }
+
+      const response = await questionService.searchAllSchool(sanitizedParams as Parameters<typeof questionService.searchAllSchool>[0]);
+
+      set({
+        questions: response.results.map(toFrontendQuestion),
+        pagination: {
+          page: response.page,
+          limit: response.limit,
+          total: response.total,
+          pages: response.pages,
+        },
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        error: (error as Error).message || 'Failed to fetch questions from all banks',
+        isLoading: false,
+      });
+    }
+  },
+
   createQuestion: async (data) => {
     set({ isCreating: true, createError: null });
     try {
@@ -402,22 +510,26 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
   },
 
   deleteQuestion: async (id) => {
-    set({ isLoading: true, error: null });
+    set({ error: null });
     try {
       await questionService.delete(id);
 
-      set((state) => ({
-        questions: state.questions.filter((q) => q._id !== id),
-        pagination: {
-          ...state.pagination,
-          total: Math.max(0, state.pagination.total - 1),
-        },
-        isLoading: false,
-      }));
+      set((state) => {
+        const newQuestions = state.questions.filter((q) => q._id !== id && q.id !== id);
+        const isLastQuestionOnPage = newQuestions.length === 0 && state.pagination.page > 1;
+
+        return {
+          questions: newQuestions,
+          pagination: {
+            ...state.pagination,
+            page: isLastQuestionOnPage ? state.pagination.page - 1 : state.pagination.page,
+            total: Math.max(0, state.pagination.total - 1),
+          },
+        };
+      });
     } catch (error) {
       set({
         error: (error as Error).message || 'Failed to delete question',
-        isLoading: false,
       });
       throw error;
     }
@@ -442,10 +554,11 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
     }
   },
 
-  fetchTags: async () => {
+  fetchTags: async (bankId?: string) => {
     try {
-      const response = await apiService.get<{ tags: string[] }>('/questions/tags');
-      set({ availableTags: response.tags || [] });
+      const { filters } = get();
+      const response = await questionService.getTags(bankId ?? filters.bankId ?? undefined);
+      set({ availableTags: response });
     } catch (error) {
       console.error('Failed to fetch tags:', error);
     }

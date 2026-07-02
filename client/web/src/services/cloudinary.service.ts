@@ -153,7 +153,8 @@ export class CloudinaryService {
   }
 }
 
+import env from '../config/env';
+
 export const cloudinaryService = new CloudinaryService(
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/api\/v1\/?$/, '') ||
-    'http://localhost:3000'
+  env.apiUrl.replace(/\/api\/v1\/?$/, '')
 );

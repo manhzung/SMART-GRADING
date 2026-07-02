@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import env from '../config/env';
 import {
   Edit,
   Trash2,
@@ -257,7 +258,7 @@ export default function ExamDetailPage() {
     // Local server path: fetch with auth header, then trigger browser download
     try {
       const token = localStorage.getItem('token') || '';
-      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const apiBase = env.apiUrl.replace(/\/api\/v1\/?$/, '');
       const res = await fetch(`${apiBase}${pdfUrl}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

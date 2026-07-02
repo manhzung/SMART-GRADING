@@ -74,7 +74,7 @@ class _SchoolsManagementPageState extends State<SchoolsManagementPage> {
                     children: [
                       Icon(Icons.school_outlined, size: 64, color: Color(0xFF94A3B8)),
                       SizedBox(height: 16),
-                      Text('Chưa có trường học nào', style: TextStyle(color: Color(0xFF64748B))),
+                      Text('No schools found', style: TextStyle(color: Color(0xFF64748B))),
                     ],
                   ),
                 );
@@ -108,7 +108,7 @@ class _SchoolsManagementPageState extends State<SchoolsManagementPage> {
                         style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                       ),
                       subtitle: Text(
-                        school.address ?? 'Không có địa chỉ',
+                        school.address ?? 'No address',
                         style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                       ),
                       trailing: PopupMenuButton<String>(
@@ -118,8 +118,8 @@ class _SchoolsManagementPageState extends State<SchoolsManagementPage> {
                           if (value == 'delete') _deleteSchool(context, school.id);
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(value: 'edit', child: Text('Sửa')),
-                          const PopupMenuItem(value: 'delete', child: Text('Xóa', style: TextStyle(color: Colors.red))),
+                          const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                          const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
                         ],
                       ),
                     ),
@@ -143,23 +143,23 @@ class _SchoolsManagementPageState extends State<SchoolsManagementPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Thêm trường học'),
+        title: const Text('Add School'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Tên trường', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'School Name', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: addressController,
-              decoration: const InputDecoration(labelText: 'Địa chỉ', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isEmpty) return;
@@ -169,7 +169,7 @@ class _SchoolsManagementPageState extends State<SchoolsManagementPage> {
               ));
               Navigator.pop(ctx);
             },
-            child: const Text('Thêm'),
+            child: const Text('Add'),
           ),
         ],
       ),
@@ -182,23 +182,23 @@ class _SchoolsManagementPageState extends State<SchoolsManagementPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sửa trường học'),
+        title: const Text('Edit School'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Tên trường', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'School Name', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: addressController,
-              decoration: const InputDecoration(labelText: 'Địa chỉ', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isEmpty) return;
@@ -209,7 +209,7 @@ class _SchoolsManagementPageState extends State<SchoolsManagementPage> {
               ));
               Navigator.pop(ctx);
             },
-            child: const Text('Lưu'),
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -220,17 +220,17 @@ class _SchoolsManagementPageState extends State<SchoolsManagementPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xóa trường học'),
-        content: const Text('Bạn có chắc muốn xóa trường học này?'),
+        title: const Text('Delete School'),
+        content: const Text('Are you sure you want to delete this school?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
               context.read<AdminBloc>().add(AdminDeleteSchoolRequested(schoolId: schoolId));
               Navigator.pop(ctx);
             },
-            child: const Text('Xóa'),
+            child: const Text('Delete'),
           ),
         ],
       ),

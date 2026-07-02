@@ -80,16 +80,16 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Yêu cầu phúc khảo'),
-        content: const Text('Bạn có chắc chắn muốn gửi yêu cầu phúc khảo cho bài thi này không?'),
+        title: const Text('Request Re-grading'),
+        content: const Text('Are you sure you want to submit a re-grading request for this exam?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Gửi'),
+            child: const Text('Submit'),
           ),
         ],
       ),
@@ -107,7 +107,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đã gửi yêu cầu phúc khảo thành công'),
+            content: Text('Re-grading request submitted successfully'),
             backgroundColor: Color(0xFF16A34A),
             behavior: SnackBarBehavior.floating,
           ),
@@ -117,7 +117,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -137,18 +137,18 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
   String _formatTimestamp(DateTime? dt) {
     if (dt == null) return '';
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hours ago';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
     return _formatDate(dt);
   }
 
   String _getStatusLabel(String status) {
     switch (status.toUpperCase()) {
-      case 'GRADED': return 'Đã chấm';
-      case 'PENDING': return 'Đang chờ';
-      case 'SUBMITTED': return 'Đã nộp';
-      case 'APPEALED': return 'Phúc khảo';
+      case 'GRADED': return 'Graded';
+      case 'PENDING': return 'Pending';
+      case 'SUBMITTED': return 'Submitted';
+      case 'APPEALED': return 'Appeal';
       default: return status;
     }
   }
@@ -204,7 +204,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Chi tiết bài nộp',
+          'Submission Details',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -316,14 +316,14 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                               Expanded(
                                 child: _buildInfoItem(
                                   icon: Icons.assignment_outlined,
-                                  label: 'Kỳ thi',
+                                  label: 'Exam',
                                   value: submission.examTitle ?? 'Unknown',
                                 ),
                               ),
                               Expanded(
                                 child: _buildInfoItem(
                                   icon: Icons.calendar_today_outlined,
-                                  label: 'Ngày thi',
+                                  label: 'Exam Date',
                                   value: _formatDate(submission.examDate),
                                 ),
                               ),
@@ -335,14 +335,14 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                               Expanded(
                                 child: _buildInfoItem(
                                   icon: Icons.layers_outlined,
-                                  label: 'Mã đề',
+                                  label: 'Version',
                                   value: submission.versionCode ?? 'N/A',
                                 ),
                               ),
                               Expanded(
                                 child: _buildInfoItem(
                                   icon: Icons.access_time,
-                                  label: 'Thời gian nộp',
+                                  label: 'Submitted At',
                                   value: _formatTimestamp(submission.scannedAt),
                                 ),
                               ),
@@ -363,18 +363,18 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                           border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'ĐIỂM SỐ',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF64748B),
-                                letterSpacing: 0.5,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'SCORE',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF64748B),
+                                  letterSpacing: 0.5,
+                                ),
                               ),
-                            ),
                             const SizedBox(height: 16),
                             Row(
                               children: [
@@ -443,7 +443,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                             SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Bài thi chưa được chấm điểm.',
+                                'Exam has not been graded yet.',
                                 style: TextStyle(
                                   color: Color(0xFFD97706),
                                   fontWeight: FontWeight.w600,
@@ -472,7 +472,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                'CHI TIẾT ĐÁP ÁN',
+                                'ANSWER DETAILS',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
@@ -487,7 +487,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  '${_getCorrectCount(_answerDetails)}/${_getTotalQuestions(_answerDetails)} đúng',
+                                  '${_getCorrectCount(_answerDetails)}/${_getTotalQuestions(_answerDetails)} correct',
                                   style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
@@ -509,7 +509,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                                     Icon(Icons.help_outline, size: 48, color: Color(0xFFCBD5E1)),
                                     SizedBox(height: 12),
                                     Text(
-                                      'Chưa có chi tiết đáp án',
+                                      'No answer details available',
                                       style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
                                     ),
                                   ],
@@ -531,7 +531,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                               : const Icon(Icons.rate_review_outlined, size: 18),
                           label: Text(
-                            _isSubmittingAppeal ? 'Đang gửi...' : 'Yêu cầu phúc khảo',
+                            _isSubmittingAppeal ? 'Submitting...' : 'Request Re-grading',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           style: OutlinedButton.styleFrom(
@@ -646,11 +646,11 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
     final total = _getTotalQuestions(_answerDetails);
     return Column(
       children: [
-        _buildBreakdownRow('Câu đúng', correct, total, const Color(0xFF16A34A)),
+        _buildBreakdownRow('Correct', correct, total, const Color(0xFF16A34A)),
         const SizedBox(height: 10),
-        _buildBreakdownRow('Câu sai', wrong, total, const Color(0xFFDC2626)),
+        _buildBreakdownRow('Wrong', wrong, total, const Color(0xFFDC2626)),
         const SizedBox(height: 10),
-        _buildBreakdownRow('Câu bỏ trống', skipped, total, const Color(0xFF64748B)),
+        _buildBreakdownRow('Skipped', skipped, total, const Color(0xFF64748B)),
       ],
     );
   }
@@ -675,7 +675,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
           ),
         ),
         Text(
-          '$value câu ($pct%)',
+          '$value questions ($pct%)',
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
@@ -729,7 +729,7 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Câu $questionNum',
+                      'Question $questionNum',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -739,14 +739,14 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
                     if (!isCorrect) ...[
                       const SizedBox(height: 4),
                       Text(
-                        'Đáp án của bạn: $studentAnswer',
+                        'Your answer: $studentAnswer',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFFDC2626),
                         ),
                       ),
                       Text(
-                        'Đáp án đúng: $correctAnswer',
+                        'Correct answer: $correctAnswer',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF16A34A),
@@ -787,12 +787,12 @@ class _SubmissionDetailPageState extends State<SubmissionDetailPage> {
   }
 
   String _getGradeLabel(double pct) {
-    if (pct >= 90) return 'Xuất sắc';
-    if (pct >= 80) return 'Giỏi';
-    if (pct >= 70) return 'Khá';
-    if (pct >= 60) return 'Trung bình';
-    if (pct >= 50) return 'Yếu';
-    return 'Kém';
+    if (pct >= 90) return 'Excellent';
+    if (pct >= 80) return 'Good';
+    if (pct >= 70) return 'Fair';
+    if (pct >= 60) return 'Average';
+    if (pct >= 50) return 'Below Average';
+    return 'Poor';
   }
 
   Color _getGradeColor(double pct) {

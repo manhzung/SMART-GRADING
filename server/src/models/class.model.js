@@ -53,7 +53,8 @@ const classSchema = mongoose.Schema(
     schoolId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'School',
-      required: true,
+      required: false,
+      default: null,
     },
     isActive: {
       type: Boolean,
@@ -71,7 +72,7 @@ const classSchema = mongoose.Schema(
 
 classSchema.index(
   { schoolId: 1, code: 1, academicYear: 1 },
-  { unique: true }
+  { unique: true, partialFilterExpression: { schoolId: { $type: 'objectId' } } }
 );
 classSchema.index({ studentIds: 1 });
 classSchema.index({ homeroomTeacherId: 1 });

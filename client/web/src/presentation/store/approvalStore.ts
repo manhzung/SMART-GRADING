@@ -86,9 +86,10 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         adminPendingTeachersCount: data.total,
         isLoadingAdminTeachers: false,
       });
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch pending teachers for school';
       set({
-        error: err?.message || 'Failed to fetch pending teachers for school',
+        error: errorMessage,
         isLoadingAdminTeachers: false,
       });
     }
@@ -104,8 +105,9 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         adminPendingTeachers: filtered,
         adminPendingTeachersCount: get().adminPendingTeachersCount - 1,
       });
-    } catch (err: any) {
-      set({ error: err?.message || 'Failed to approve teacher' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to approve teacher';
+      set({ error: errorMessage });
       throw err;
     }
   },
@@ -120,8 +122,9 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         adminPendingTeachers: filtered,
         adminPendingTeachersCount: get().adminPendingTeachersCount - 1,
       });
-    } catch (err: any) {
-      set({ error: err?.message || 'Failed to reject teacher' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reject teacher';
+      set({ error: errorMessage });
       throw err;
     }
   },
@@ -135,9 +138,10 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         pendingQuestionsCount: data.total,
         isLoadingQuestions: false,
       });
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch pending questions';
       set({
-        error: err?.message || 'Failed to fetch pending questions',
+        error: errorMessage,
         isLoadingQuestions: false,
       });
     }
@@ -152,9 +156,10 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         pendingTeachersCount: data.total,
         isLoadingTeachers: false,
       });
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch pending teachers';
       set({
-        error: err?.message || 'Failed to fetch pending teachers',
+        error: errorMessage,
         isLoadingTeachers: false,
       });
     }
@@ -170,8 +175,9 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         pendingQuestions: filtered,
         pendingQuestionsCount: get().pendingQuestionsCount - 1,
       });
-    } catch (err: any) {
-      set({ error: err?.message || 'Failed to approve question' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to approve question';
+      set({ error: errorMessage });
       throw err;
     }
   },
@@ -186,8 +192,9 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         pendingQuestions: filtered,
         pendingQuestionsCount: get().pendingQuestionsCount - 1,
       });
-    } catch (err: any) {
-      set({ error: err?.message || 'Failed to reject question' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reject question';
+      set({ error: errorMessage });
       throw err;
     }
   },
@@ -202,8 +209,9 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         pendingTeachers: filtered,
         pendingTeachersCount: get().pendingTeachersCount - 1,
       });
-    } catch (err: any) {
-      set({ error: err?.message || 'Failed to approve teacher' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to approve teacher';
+      set({ error: errorMessage });
       throw err;
     }
   },
@@ -218,8 +226,9 @@ export const useApprovalStore = create<ApprovalState>((set, get) => ({
         pendingTeachers: filtered,
         pendingTeachersCount: get().pendingTeachersCount - 1,
       });
-    } catch (err: any) {
-      set({ error: err?.message || 'Failed to reject teacher' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reject teacher';
+      set({ error: errorMessage });
       throw err;
     }
   },

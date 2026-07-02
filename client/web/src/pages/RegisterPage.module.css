@@ -36,6 +36,12 @@
   color: #374151;
 }
 
+.optionalLabel {
+  font-weight: 400;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
 .input {
   padding: 10px 14px;
   border: 1px solid #d1d5db;

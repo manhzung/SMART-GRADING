@@ -128,7 +128,7 @@ const approveTeacher = async (userId, schoolId) => {
   }
 
   // Check if registeredSchoolId matches
-  if (user.registeredSchoolId?.toString() !== schoolId.toString()) {
+  if (user.registeredSchoolId && user.registeredSchoolId.toString() !== schoolId.toString()) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Giáo viên không đăng ký vào trường này');
   }
 
@@ -166,7 +166,7 @@ const rejectTeacher = async (userId, schoolId, reason = null) => {
 const getSchoolAdmins = async (schoolId, options = {}) => {
   const filter = {
     role: 'school-admin',
-    schoolId: schoolId,
+    schoolId,
     isActive: true,
   };
   const users = await User.paginate(filter, options);
@@ -188,10 +188,7 @@ const addSchoolAdmin = async (schoolId, userId) => {
   }
 
   if (!user.schoolId || user.schoolId.toString() !== schoolId.toString()) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Giáo viên phải thuộc trường này trước khi được nâng cấp thành School Admin'
-    );
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Giáo viên phải thuộc trường này trước khi được nâng cấp thành School Admin');
   }
 
   user.role = 'school-admin';
@@ -212,7 +209,7 @@ const removeSchoolAdmin = async (schoolId, userId) => {
   }
 
   // Check if this is the last admin
-  const adminCount = await User.countDocuments({ role: 'school-admin', schoolId: schoolId, isActive: true });
+  const adminCount = await User.countDocuments({ role: 'school-admin', schoolId, isActive: true });
   if (adminCount <= 1) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Không thể xóa school-admin cuối cùng của trường');
   }

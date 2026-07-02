@@ -5,8 +5,9 @@
 .closeBtn { background: none; border: none; cursor: pointer; color: #6b7280; }
 .message { color: #4b5563; line-height: 1.5; margin: 0 0 20px; }
 .footer { display: flex; gap: 12px; justify-content: flex-end; }
-.cancelBtn { padding: 8px 16px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; }
+.cancelBtn { padding: 8px 16px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; }
 .cancelBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .confirmBtn { padding: 8px 16px; border-radius: 8px; border: none; background: #10b981; color: #fff; cursor: pointer; font-weight: 500; }
-.confirmBtn.danger { background: #ef4444; }
+.confirmBtn.danger { background: #ef4444; color: #fff; }
+.confirmBtn.danger:hover { background: #dc2626; }
 .confirmBtn:disabled { opacity: 0.6; cursor: not-allowed; }

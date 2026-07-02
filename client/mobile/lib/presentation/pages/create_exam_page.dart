@@ -160,7 +160,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Chọn lớp học',
+                            'Select Class',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -170,7 +170,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                           TextButton(
                             onPressed: () => Navigator.pop(sheetCtx),
                             child: const Text(
-                              'Xong',
+                              'Done',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF081C43),
@@ -183,8 +183,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                           child: Text(
-                            '${_selectedClasses.length} lớp đã chọn'
-                            '${_primaryClass != null ? " • ${_primaryClass!.name} làm lớp chính" : ""}',
+                            '${_selectedClasses.length} class${_selectedClasses.length > 1 ? 'es' : ''} selected'
+                            '${_primaryClass != null ? " • ${_primaryClass!.name} as primary" : ""}',
                             style: const TextStyle(
                               fontSize: 13,
                               color: Color(0xFF16A34A),
@@ -233,7 +233,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                               subtitle: Row(
                                 children: [
                                   Text(
-                                    '${cls.code} • ${cls.studentCount ?? 0} học sinh',
+                                    '${cls.code} • ${cls.studentCount ?? 0} students',
                                     style: const TextStyle(
                                       color: Color(0xFF64748B),
                                       fontSize: 12,
@@ -248,7 +248,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: const Text(
-                                        'CHÍNH',
+                                        'PRIMARY',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 9,
@@ -274,7 +274,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                       ),
                                       child: const Text(
-                                        'Làm chính',
+                                        'Set as Primary',
                                         style: TextStyle(fontSize: 11),
                                       ),
                                     )
@@ -320,7 +320,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
       if (_selectedClasses.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Vui lòng chọn ít nhất một lớp học'),
+            content: Text('Please select at least one class'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -369,7 +369,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Tạo bài kiểm tra thành công!',
+            'Exam created successfully!',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           backgroundColor: const Color(0xFF081C43),
@@ -440,7 +440,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Tạo bài kiểm tra',
+          'Create Exam',
           style: TextStyle(
             color: Color(0xFF081C43),
             fontWeight: FontWeight.bold,
@@ -495,10 +495,10 @@ class _CreateExamPageState extends State<CreateExamPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Section 1 - Thông tin cơ bản
-                        _buildSectionLabel('THÔNG TIN CƠ BẢN'),
+                        // Section 1 - Basic Information
+                        _buildSectionLabel('BASIC INFORMATION'),
                         const Text(
-                          'Tên bài kiểm tra *',
+                          'Exam Name *',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -510,11 +510,11 @@ class _CreateExamPageState extends State<CreateExamPage> {
                           controller: _titleController,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Tên bài kiểm tra không được để trống';
+                              return 'Exam name is required';
                             }
                             return null;
                           },
-                          decoration: _buildInputDecoration('Nhập tên bài kiểm tra'),
+                          decoration: _buildInputDecoration('Enter exam name'),
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF0F172A),
@@ -522,7 +522,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Mô tả',
+                          'Description',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -533,7 +533,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         TextFormField(
                           controller: _descriptionController,
                           maxLines: 3,
-                          decoration: _buildInputDecoration('Nhập mô tả bài kiểm tra'),
+                          decoration: _buildInputDecoration('Enter exam description'),
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF0F172A),
@@ -541,10 +541,10 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Section 2 - Phân công lớp học
-                        _buildSectionLabel('PHÂN CÔNG LỚP HỌC'),
+                        // Section 2 - Class Assignment
+                        _buildSectionLabel('CLASS ASSIGNMENT'),
                         const Text(
-                          'Lớp học *',
+                          'Class *',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -559,8 +559,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                 ? ''
                                 : _selectedClasses.length == 1
                                     ? _selectedClasses.first.name
-                                    : '${_selectedClasses.length} lớp đã chọn';
-                            final hintText = _selectedClasses.isEmpty ? 'Chọn lớp học' : null;
+                                    : '${_selectedClasses.length} classes selected';
+                            final hintText = _selectedClasses.isEmpty ? 'Select a class' : null;
                             return TextFormField(
                               readOnly: true,
                               controller: TextEditingController(text: displayText),
@@ -584,10 +584,10 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Section 3 - Tham số bài kiểm tra
-                        _buildSectionLabel('THAM SỐ BÀI KIỂM TRA'),
+                        // Section 3 - Exam Parameters
+                        _buildSectionLabel('EXAM PARAMETERS'),
                         const Text(
-                          'Ngày kiểm tra',
+                          'Exam Date',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -600,7 +600,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                           readOnly: true,
                           onTap: _selectDate,
                           decoration: _buildInputDecoration(
-                            'Chọn ngày kiểm tra',
+                            'Select exam date',
                             prefixIcon: const Icon(
                               Icons.calendar_today_outlined,
                               color: Color(0xFF64748B),
@@ -622,7 +622,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Thời gian (phút)',
+                                    'Duration (minutes)',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -636,7 +636,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Nhập thời gian';
+                                        return 'Enter duration';
                                       }
                                       return null;
                                     },
@@ -644,7 +644,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                       suffixIcon: const Padding(
                                         padding: EdgeInsets.only(right: 12),
                                         child: Text(
-                                          'phút',
+                                          'min',
                                           style: TextStyle(
                                             color: Color(0xFF64748B),
                                             fontSize: 14,
@@ -670,7 +670,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Số câu hỏi',
+                                    'Number of Questions',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -684,7 +684,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Nhập số câu';
+                                        return 'Enter number';
                                       }
                                       return null;
                                     },
@@ -709,7 +709,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Số đề',
+                                    'Number of Versions',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -720,12 +720,12 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         DropdownButtonFormField<int>(
                           initialValue: _numberOfVersions,
                                     icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
-                                    decoration: _buildInputDecoration('Chọn số đề'),
+                                    decoration: _buildInputDecoration('Select number of versions'),
                                     items: const [
-                                      DropdownMenuItem(value: 1, child: Text('1 đề')),
-                                      DropdownMenuItem(value: 2, child: Text('2 đề')),
-                                      DropdownMenuItem(value: 4, child: Text('4 đề')),
-                                      DropdownMenuItem(value: 8, child: Text('8 đề')),
+                                      DropdownMenuItem(value: 1, child: Text('1 version')),
+                                      DropdownMenuItem(value: 2, child: Text('2 versions')),
+                                      DropdownMenuItem(value: 4, child: Text('4 versions')),
+                                      DropdownMenuItem(value: 8, child: Text('8 versions')),
                                     ],
                                     onChanged: (val) {
                                       setState(() {
@@ -742,7 +742,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Tổng điểm',
+                                    'Total Score',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -756,7 +756,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Nhập điểm';
+                                        return 'Enter score';
                                       }
                                       return null;
                                     },
@@ -775,7 +775,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
 
                         // Passing Score
                         const Text(
-                          'Điểm đạt',
+                          'Passing Score',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -789,12 +789,12 @@ class _CreateExamPageState extends State<CreateExamPage> {
                           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Nhập điểm đạt';
+                              return 'Enter passing score';
                             }
                             final totalScore = int.tryParse(_totalScoreController.text) ?? 10;
                             final passingScore = int.tryParse(value) ?? 0;
                             if (passingScore > totalScore) {
-                              return 'Điểm đạt không được lớn hơn tổng điểm';
+                              return 'Passing score cannot exceed total score';
                             }
                             return null;
                           },
@@ -806,8 +806,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Section 4 - Tùy chọn
-                        _buildSectionLabel('TÙY CHỌN'),
+                        // Section 4 - Options
+                        _buildSectionLabel('OPTIONS'),
                         Row(
                           children: [
                             Expanded(
@@ -815,7 +815,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    'Đảo câu hỏi',
+                                    'Shuffle Questions',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Color(0xFF0F172A),
@@ -839,7 +839,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    'Đảo đáp án',
+                                    'Shuffle Answers',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Color(0xFF0F172A),
@@ -862,9 +862,9 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         const SizedBox(height: 24),
 
                         // Section 5 - OMR Template
-                        _buildSectionLabel('MẪU OMR'),
+                        _buildSectionLabel('OMR TEMPLATE'),
                         const Text(
-                          'Mẫu OMR',
+                          'OMR Template',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -875,7 +875,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         DropdownButtonFormField<String>(
                           initialValue: _selectedOmrTemplate,
                           icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
-                          decoration: _buildInputDecoration('Chọn mẫu OMR'),
+                          decoration: _buildInputDecoration('Select OMR template'),
                           items: _omrTemplates.map((template) {
                             return DropdownMenuItem<String>(
                               value: template.id,
@@ -919,7 +919,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                       elevation: 0,
                     ),
                     child: const Text(
-                      'Tạo bài kiểm tra',
+                      'Create Exam',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -931,7 +931,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: const Text(
-                      'Hủy',
+                      'Cancel',
                       style: TextStyle(
                         color: Color(0xFF64748B),
                         fontSize: 15,

@@ -41,7 +41,7 @@ class ConfirmationPopup extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Xác nhận kết quả',
+                    'Confirm Result',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -92,7 +92,7 @@ class ConfirmationPopup extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Điểm',
+                        'Score',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
@@ -141,7 +141,7 @@ class ConfirmationPopup extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _buildInfoField(
-                      label: 'SBD',
+                      label: 'Student ID',
                       value: studentCode ?? '—',
                       icon: Icons.lock_outline,
                     ),
@@ -149,7 +149,7 @@ class ConfirmationPopup extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildInfoField(
-                      label: 'Mã đề',
+                      label: 'Version',
                       value: versionCode ?? '—',
                       icon: Icons.lock_outline,
                     ),
@@ -171,7 +171,7 @@ class ConfirmationPopup extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: onRetake,
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Chụp lại'),
+                        label: const Text('Retake'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
                           side: const BorderSide(color: Color(0xFF334155)),
@@ -190,7 +190,7 @@ class ConfirmationPopup extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: onConfirm,
                         icon: const Icon(Icons.check),
-                        label: const Text('Xác nhận & Gửi'),
+                        label: const Text('Confirm & Send'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF22C55E),
                           foregroundColor: Colors.white,

@@ -136,7 +136,7 @@ class OMRBubbleOverlay extends StatelessWidget {
                   if (detectedStudentId != null && detectedVersionCode != null)
                     const SizedBox(width: 12),
                   if (detectedVersionCode != null)
-                    _infoChip('Mã đề: $detectedVersionCode', const Color(0xFF8B5CF6)),
+                    _infoChip('Version Code: $detectedVersionCode', const Color(0xFF8B5CF6)),
                 ],
               ),
             ),

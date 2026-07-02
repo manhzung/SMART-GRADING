@@ -40,7 +40,7 @@ class _EmailVerificationPendingPageState extends State<EmailVerificationPendingP
               ),
               const SizedBox(height: 32),
               Text(
-                'Xác minh Email',
+                'Verify Email',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF0F172A),
@@ -48,7 +48,7 @@ class _EmailVerificationPendingPageState extends State<EmailVerificationPendingP
               ),
               const SizedBox(height: 12),
               Text(
-                'Chúng tôi đã gửi email xác minh đến',
+                'We have sent a verification email to',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: const Color(0xFF64748B),
                 ),
@@ -78,11 +78,11 @@ class _EmailVerificationPendingPageState extends State<EmailVerificationPendingP
                 ),
                 child: Column(
                   children: [
-                    _buildStep(1, 'Mở email và tìm thư từ Smart Grading'),
+                    _buildStep(1, 'Open email and find message from Smart Grading'),
                     const SizedBox(height: 12),
-                    _buildStep(2, 'Nhấp vào liên kết "Xác nhận Email"'),
+                    _buildStep(2, 'Click on the "Confirm Email" link'),
                     const SizedBox(height: 12),
-                    _buildStep(3, 'Trang sẽ tự động chuyển sang đăng nhập'),
+                    _buildStep(3, 'Page will automatically redirect to login'),
                   ],
                 ),
               ),
@@ -99,7 +99,7 @@ class _EmailVerificationPendingPageState extends State<EmailVerificationPendingP
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Kiểm tra hộp thư spam nếu không thấy email.',
+                        'Check your spam folder if you cannot find the email.',
                         style: TextStyle(color: Color(0xFF1D4ED8), fontSize: 13),
                       ),
                     ),
@@ -119,13 +119,13 @@ class _EmailVerificationPendingPageState extends State<EmailVerificationPendingP
                       setState(() => _isResent = true);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Email xác minh đã được gửi lại!'),
+                          content: Text('Verification email has been resent!'),
                           backgroundColor: Color(0xFF16A34A),
                         ),
                       );
                     },
                     icon: const Icon(Icons.send_outlined),
-                    label: const Text('Gửi lại Email'),
+                    label: const Text('Resend Email'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF0F172A),
                       side: const BorderSide(color: Color(0xFF0F172A)),
@@ -148,7 +148,7 @@ class _EmailVerificationPendingPageState extends State<EmailVerificationPendingP
                       Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 20),
                       SizedBox(width: 8),
                       Text(
-                        'Email đã được gửi lại!',
+                        'Email has been resent!',
                         style: TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -159,7 +159,7 @@ class _EmailVerificationPendingPageState extends State<EmailVerificationPendingP
               TextButton(
                 onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
                 child: const Text(
-                  'Quay lại Đăng nhập',
+                  'Back to Login',
                   style: TextStyle(color: Color(0xFF64748B)),
                 ),
               ),

@@ -313,7 +313,7 @@ export default function ExamsPage() {
                 return (
                   <tr key={exam._id} className={`${styles.tableRow} ${isSelected ? styles.rowSelected : ''}`}>
                     {/* Checkbox column */}
-                    <td>
+                    <td style={{ width: '40px' }}>
                       <input 
                         type="checkbox"
                         className={styles.checkboxInput}

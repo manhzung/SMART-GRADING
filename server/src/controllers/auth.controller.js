@@ -9,38 +9,41 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id) && String(ne
 const register = catchAsync(async (req, res) => {
   const { name, email, password, schoolId } = req.body;
 
-  if (!schoolId || String(schoolId).trim() === '') {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'School is required');
+  let resolvedSchoolId = null;
+  if (schoolId && String(schoolId).trim() !== '') {
+    if (!isValidObjectId(schoolId)) {
+      // schoolId is a name → resolve to _id
+      const school = await schoolService.getByName(schoolId);
+      if (!school) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'School not found');
+      }
+      resolvedSchoolId = school._id.toString();
+    } else {
+      // schoolId is a valid ObjectId → verify school exists
+      const school = await schoolService.getById(schoolId);
+      if (!school) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'School not found');
+      }
+      resolvedSchoolId = schoolId;
+    }
   }
 
-  let resolvedSchoolId = schoolId;
-  if (!isValidObjectId(schoolId)) {
-    // schoolId is a name → resolve to _id
-    const school = await schoolService.getByName(schoolId);
-    if (!school) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'School not found');
-    }
-    resolvedSchoolId = school._id.toString();
-  } else {
-    // schoolId is a valid ObjectId → verify school exists
-    const school = await schoolService.getById(schoolId);
-    if (!school) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'School not found');
-    }
-  }
-
-  // Self-registration is for teachers only. They are pending until a
-  // Super Admin approves, but we still attach schoolId so the user is
-  // already associated with the school for listing/queries while pending.
+  // Self-registration is for teachers only.
+  // - With a schoolId: account stays pending until a Super Admin approves
+  //   (a School Admin of that school can also act on it later).
+  // - Without a schoolId: auto-approve immediately, since there is no
+  //   school admin in scope to approve the request.
+  const hasSchool = Boolean(resolvedSchoolId);
   const user = await userService.createUser({
     name,
     email,
     password,
     role: 'teacher',
-    registeredSchoolId: resolvedSchoolId,
-    schoolId: resolvedSchoolId,
-    registrationStatus: 'pending',
-    isActive: false,
+    ...(hasSchool
+      ? { registeredSchoolId: resolvedSchoolId, schoolId: resolvedSchoolId }
+      : {}),
+    registrationStatus: hasSchool ? 'pending' : 'approved',
+    isActive: hasSchool ? false : true,
   });
   const userResponse = {
     id: user.id,

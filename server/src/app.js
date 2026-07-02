@@ -38,7 +38,10 @@ app.use(mongoSanitize());
 app.use(compression());
 
 // enable cors
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://159.223.169.35:5173', 'http://159.223.169.35'],
+  credentials: true,
+}));
 app.options('*', cors());
 
 // jwt authentication
@@ -52,6 +55,9 @@ if (config.env === 'production') {
 
 // v1 api routes
 app.use('/api/v1', routes);
+
+// Health check endpoint for Docker/load balancers (outside /api prefix)
+app.use('/health', require('./routes/v1/health.route'));
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {

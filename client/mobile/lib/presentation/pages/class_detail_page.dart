@@ -22,7 +22,7 @@ class ClassDetailPage extends StatefulWidget {
 }
 
 class _ClassDetailPageState extends State<ClassDetailPage> {
-  int _activeTab = 0; // 0: Học sinh, 1: Kỳ thi, 2: Giáo viên
+  int _activeTab = 0; // 0: Students, 1: Exams, 2: Teachers
   String _studentSearchQuery = '';
   final TextEditingController _studentSearchController = TextEditingController();
   late Class _currentClass;
@@ -65,12 +65,12 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi cập nhật dữ liệu: $e')),
+        SnackBar(content: Text('Error updating data: $e')),
       );
     }
   }
 
-  // Generates email for teacher or student realistically based on their name
+  // Normalize name for realistic email generation
   String _getEmailFromName(String? name, {bool isStudent = false}) {
     if (name == null || name.isEmpty) {
       return isStudent ? 'student@school.edu.vn' : 'teacher@school.edu.vn';
@@ -176,7 +176,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                   children: [
                     Icon(Icons.edit_outlined, size: 20, color: Color(0xFF0F172A)),
                     SizedBox(width: 10),
-                    Text('Chỉnh sửa lớp học'),
+                    Text('Edit Class'),
                   ],
                 ),
               ),
@@ -221,7 +221,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
 
               const SizedBox(height: 16),
 
-              // Tabs Section (Học sinh, Kỳ thi, Giáo viên)
+              // Tabs Section (Students, Exams, Teachers)
               _buildTabsRow(),
 
               // Tab View Content
@@ -324,7 +324,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
               Expanded(
                 child: _buildInfoGridItem(
                   icon: Icons.calendar_today_outlined,
-                  title: 'NIÊN KHÓA',
+                  title: 'ACADEMIC YEAR',
                   value: _currentClass.academicYear ?? '2023 - 2024',
                 ),
               ),
@@ -332,7 +332,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
               Expanded(
                 child: _buildInfoGridItem(
                   icon: Icons.school_outlined,
-                  title: 'KHỐI LỚP',
+                  title: 'GRADE LEVEL',
                   value: _currentClass.gradeDisplay.isNotEmpty
                       ? _currentClass.gradeDisplay
                       : 'Grade 12',
@@ -341,19 +341,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
             ],
           ),
           const SizedBox(height: 16),
-          // MÃ GHI DANH
-          Row(
-            children: [
-              Expanded(
-                child: _buildInfoGridItem(
-                  icon: Icons.vpn_key_outlined,
-                  title: 'MÃ GHI DANH',
-                  value: _currentClass.enrollmentCode ?? 'XJ9-2K1',
-                ),
-              ),
-              const Expanded(child: SizedBox.shrink()),
-            ],
-          ),
         ],
       ),
     );
@@ -412,7 +399,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   }
 
   Widget _buildHomeroomTeacherCard() {
-    final teacherName = _currentClass.homeroomTeacherName ?? 'Nguyễn Văn An';
+    final teacherName = _currentClass.homeroomTeacherName ?? 'John Smith';
     final teacherEmail = _getEmailFromName(teacherName);
 
     return Container(
@@ -427,7 +414,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'GIÁO VIÊN CHỦ NHIỆM',
+            'HOMEROOM TEACHER',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -548,9 +535,9 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildTabItem(0, 'Học sinh'),
-          _buildTabItem(1, 'Kỳ thi'),
-          _buildTabItem(2, 'Giáo viên'),
+          _buildTabItem(0, 'Students'),
+          _buildTabItem(1, 'Exams'),
+          _buildTabItem(2, 'Teachers'),
         ],
       ),
     );
@@ -629,7 +616,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
               });
             },
             decoration: const InputDecoration(
-              hintText: 'Tìm kiếm học sinh...',
+              hintText: 'Search students...',
               hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
               prefixIcon: Icon(Icons.search, color: Color(0xFF64748B), size: 20),
               border: InputBorder.none,
@@ -659,7 +646,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 },
                 icon: const Icon(Icons.person_add_alt_1, color: Colors.white, size: 18),
                 label: const Text(
-                  'Thêm học sinh',
+                  'Add Student',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -694,7 +681,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 },
                 icon: const Icon(Icons.file_open_outlined, color: Color(0xFF0F172A), size: 18),
                 label: const Text(
-                  'Nhập từ Excel',
+                  'Import from Excel',
                   style: TextStyle(
                     color: Color(0xFF0F172A),
                     fontWeight: FontWeight.bold,
@@ -716,7 +703,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
 
         // List label
         Text(
-          'Danh sách học sinh (${filtered.length})',
+          'Student List (${filtered.length})',
           style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
@@ -731,7 +718,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
             padding: EdgeInsets.symmetric(vertical: 30),
             child: Center(
               child: Text(
-                'Không tìm thấy học sinh nào.',
+                'No students found.',
                 style: TextStyle(color: Color(0xFF64748B)),
               ),
             ),
@@ -857,7 +844,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 Icon(Icons.assignment_outlined, size: 48, color: Color(0xFFCBD5E1)),
                 SizedBox(height: 16),
                 Text(
-                  'Chưa có kỳ thi nào cho lớp này.',
+                  'No exams found for this class.',
                   style: TextStyle(
                     fontSize: 14,
                     color: Color(0xFF64748B),
@@ -944,7 +931,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
             Icon(Icons.people_outline, size: 48, color: Color(0xFFCBD5E1)),
             SizedBox(height: 16),
             Text(
-              'Chưa có giáo viên bộ môn nào.',
+              'No subject teachers found.',
               style: TextStyle(
                 fontSize: 14,
                 color: Color(0xFF64748B),
@@ -962,9 +949,9 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       itemCount: teachers.length,
       itemBuilder: (context, index) {
         final teacher = teachers[index];
-        final name = teacher.teacherName ?? 'Giáo viên bộ môn';
+        final name = teacher.teacherName ?? 'Subject Teacher';
         final email = _getEmailFromName(name);
-        final subjectName = teacher.subject?.name ?? 'Môn học';
+        final subjectName = teacher.subject?.name ?? 'Subject';
         final subjectCode = teacher.subject?.code ?? '';
 
         return Container(

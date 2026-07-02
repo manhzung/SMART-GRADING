@@ -1005,6 +1005,21 @@
   background-color: #153259;
 }
 
+.modalWithDrawer {
+  margin-right: 900px;
+  max-width: calc(100% - 900px);
+  border-radius: 12px 0 0 12px;
+}
+
+@media (max-width: 1200px) {
+  .modalWithDrawer {
+    margin-right: 0;
+    max-width: 60%;
+    left: 0;
+    transform: none;
+  }
+}
+
 /* Tag Filter Styles */
 .tagFilterSection {
   width: 100%;

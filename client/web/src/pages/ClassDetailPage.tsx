@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import env from '../config/env';
 import {
   ArrowLeft,
   ChevronRight,
@@ -439,7 +440,7 @@ export default function ClassDetailPage() {
         setActionError(null);
         setActionSuccess(null);
         const token = localStorage.getItem('token') || (apiService as any).token;
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/classes/${id}/students`, {
+        const response = await fetch(`${env.apiUrl}/classes/${id}/students`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

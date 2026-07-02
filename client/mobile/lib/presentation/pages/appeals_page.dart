@@ -24,13 +24,13 @@ extension AppealStatusExt on AppealStatus {
   String get label {
     switch (this) {
       case AppealStatus.pending:
-        return 'Đang chờ';
+        return 'Pending';
       case AppealStatus.reviewing:
-        return 'Đang xem xét';
+        return 'Reviewing';
       case AppealStatus.approved:
-        return 'Đã duyệt';
+        return 'Approved';
       case AppealStatus.rejected:
-        return 'Từ chối';
+        return 'Rejected';
     }
   }
 }
@@ -44,7 +44,7 @@ class AppealsPage extends StatefulWidget {
 
 class _AppealsPageState extends State<AppealsPage> {
   String _searchQuery = '';
-  String _selectedFilter = 'Tất cả';
+  String _selectedFilter = 'All';
   final TextEditingController _searchController = TextEditingController();
 
   List<Appeal> _appeals = [];
@@ -52,11 +52,11 @@ class _AppealsPageState extends State<AppealsPage> {
   String? _errorMessage;
 
   final List<String> _filters = [
-    'Tất cả',
-    'Đang chờ',
-    'Đang xem xét',
-    'Đã duyệt',
-    'Từ chối',
+    'All',
+    'Pending',
+    'Reviewing',
+    'Approved',
+    'Rejected',
   ];
 
   AppealService get _appealService => GetIt.instance<AppealService>();
@@ -105,13 +105,13 @@ class _AppealsPageState extends State<AppealsPage> {
 
       final status = AppealStatusExt.fromString(appeal.status);
       bool matchesFilter = true;
-      if (_selectedFilter == 'Đang chờ') {
+      if (_selectedFilter == 'Pending') {
         matchesFilter = status == AppealStatus.pending;
-      } else if (_selectedFilter == 'Đang xem xét') {
+      } else if (_selectedFilter == 'Reviewing') {
         matchesFilter = status == AppealStatus.reviewing;
-      } else if (_selectedFilter == 'Đã duyệt') {
+      } else if (_selectedFilter == 'Approved') {
         matchesFilter = status == AppealStatus.approved;
-      } else if (_selectedFilter == 'Từ chối') {
+      } else if (_selectedFilter == 'Rejected') {
         matchesFilter = status == AppealStatus.rejected;
       }
 
@@ -201,11 +201,11 @@ class _AppealsPageState extends State<AppealsPage> {
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} phút trước';
+      return '${difference.inMinutes} minutes ago';
     } else if (difference.inHours < 24) {
-      return '${difference.inHours} giờ trước';
+      return '${difference.inHours} hours ago';
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} ngày trước';
+      return '${difference.inDays} days ago';
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
@@ -273,7 +273,7 @@ class _AppealsPageState extends State<AppealsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              action == 'approved' ? 'Đã duyệt yêu cầu phúc khảo' : 'Đã từ chối yêu cầu phúc khảo',
+              action == 'approved' ? 'Appeal request approved' : 'Appeal request rejected',
             ),
             backgroundColor: action == 'approved' ? const Color(0xFF22C55E) : const Color(0xFFDC2626),
           ),
@@ -283,7 +283,7 @@ class _AppealsPageState extends State<AppealsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: $e'),
+            content: Text('Error: $e'),
             backgroundColor: const Color(0xFFDC2626),
           ),
         );
@@ -316,7 +316,7 @@ class _AppealsPageState extends State<AppealsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Phúc khảo',
+          'Appeals',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -353,7 +353,7 @@ class _AppealsPageState extends State<AppealsPage> {
                       icon: Icons.flag_outlined,
                       iconColor: const Color(0xFF64748B),
                       value: _totalCount.toString(),
-                      label: 'Tổng số',
+                      label: 'Total',
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -362,7 +362,7 @@ class _AppealsPageState extends State<AppealsPage> {
                       icon: Icons.pending_actions_outlined,
                       iconColor: const Color(0xFFD97706),
                       value: _pendingCount.toString(),
-                      label: 'Đang chờ',
+                      label: 'Pending',
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -371,7 +371,7 @@ class _AppealsPageState extends State<AppealsPage> {
                       icon: Icons.rate_review_outlined,
                       iconColor: const Color(0xFF1D4ED8),
                       value: _reviewingCount.toString(),
-                      label: 'Đang xem xét',
+                      label: 'Reviewing',
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -380,7 +380,7 @@ class _AppealsPageState extends State<AppealsPage> {
                       icon: Icons.check_circle_outline,
                       iconColor: const Color(0xFF16A34A),
                       value: _processedCount.toString(),
-                      label: 'Đã xử lý',
+                      label: 'Processed',
                     ),
                   ),
                 ],
@@ -405,7 +405,7 @@ class _AppealsPageState extends State<AppealsPage> {
                         });
                       },
                       decoration: const InputDecoration(
-                        hintText: 'Tìm kiếm học sinh, kỳ thi...',
+                        hintText: 'Search students, exams...',
                         hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
                         prefixIcon: Icon(Icons.search, color: Color(0xFF64748B), size: 20),
                         border: InputBorder.none,
@@ -468,13 +468,13 @@ class _AppealsPageState extends State<AppealsPage> {
                               const Icon(Icons.error_outline, size: 48, color: Color(0xFFDC2626)),
                               const SizedBox(height: 16),
                               Text(
-                                'Không thể tải dữ liệu',
+                                'Unable to load data',
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
                               ),
                               const SizedBox(height: 8),
                               ElevatedButton(
                                 onPressed: _loadAppeals,
-                                child: const Text('Thử lại'),
+                                child: const Text('Retry'),
                               ),
                             ],
                           ),
@@ -625,7 +625,7 @@ class _AppealsPageState extends State<AppealsPage> {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          '${appeal.examTitle ?? 'N/A'} — Câu hỏi #${appeal.questionNumber ?? '?'}',
+                          '${appeal.examTitle ?? 'N/A'} — Question #${appeal.questionNumber ?? '?'}',
                           style: const TextStyle(
                             fontSize: 13,
                             color: Color(0xFF475569),
@@ -689,7 +689,7 @@ class _AppealsPageState extends State<AppealsPage> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Không có yêu cầu phúc khảo nào',
+            'No appeal requests',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -698,7 +698,7 @@ class _AppealsPageState extends State<AppealsPage> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Danh sách phúc khảo sẽ xuất hiện khi có học sinh\nyêu cầu xem xét lại bài thi.',
+            'Appeal list will appear when students\nrequest a review of their exam.',
             style: TextStyle(
               fontSize: 13,
               color: Color(0xFF94A3B8),
@@ -761,7 +761,7 @@ class _AppealActionSheetState extends State<_AppealActionSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Xử lý phúc khảo',
+                'Process Appeal',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -787,7 +787,7 @@ class _AppealActionSheetState extends State<_AppealActionSheet> {
             controller: _resolutionController,
             maxLines: 3,
             decoration: const InputDecoration(
-              hintText: 'Ghi chú xử lý (không bắt buộc)',
+              hintText: 'Resolution note (optional)',
               hintStyle: TextStyle(color: Color(0xFF94A3B8)),
               filled: true,
               fillColor: Color(0xFFF8FAFC),
@@ -812,7 +812,7 @@ class _AppealActionSheetState extends State<_AppealActionSheet> {
                     ),
                   ),
                   child: const Text(
-                    'Từ chối',
+                    'Reject',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -832,7 +832,7 @@ class _AppealActionSheetState extends State<_AppealActionSheet> {
                     ),
                   ),
                   child: const Text(
-                    'Duyệt',
+                    'Approve',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -843,7 +843,7 @@ class _AppealActionSheetState extends State<_AppealActionSheet> {
           TextButton(
             onPressed: () => Navigator.pop(context, 'detail'),
             child: const Text(
-              'Xem chi tiết',
+              'View Details',
               style: TextStyle(color: Color(0xFF64748B)),
             ),
           ),
@@ -891,7 +891,7 @@ class _AppealDetailSheet extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Chi tiết phúc khảo',
+                      'Appeal Details',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -913,7 +913,7 @@ class _AppealDetailSheet extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle('Thông tin học sinh'),
+                      _buildSectionTitle('Student Information'),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -923,19 +923,19 @@ class _AppealDetailSheet extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            _buildInfoRow('Họ và tên', appeal.displayName),
+                            _buildInfoRow('Full Name', appeal.displayName),
                             const SizedBox(height: 8),
                             _buildInfoRow('Email', appeal.studentEmail ?? 'N/A'),
                             if (appeal.className != null) ...[
                               const SizedBox(height: 8),
-                              _buildInfoRow('Lớp', appeal.className!),
+                              _buildInfoRow('Class', appeal.className!),
                             ],
                           ],
                         ),
                       ),
                       const SizedBox(height: 20),
 
-                      _buildSectionTitle('Thông tin kỳ thi'),
+                      _buildSectionTitle('Exam Information'),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -945,24 +945,24 @@ class _AppealDetailSheet extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            _buildInfoRow('Kỳ thi', appeal.examTitle ?? 'N/A'),
+                            _buildInfoRow('Exam', appeal.examTitle ?? 'N/A'),
                             const SizedBox(height: 8),
                             _buildInfoRow(
-                              'Ngày thi',
+                              'Exam Date',
                               appeal.submittedAt != null
                                   ? '${appeal.submittedAt!.day}/${appeal.submittedAt!.month}/${appeal.submittedAt!.year}'
                                   : 'N/A',
                             ),
                             if (appeal.score != null) ...[
                               const SizedBox(height: 8),
-                              _buildInfoRow('Điểm hiện tại', appeal.score!.toStringAsFixed(1)),
+                              _buildInfoRow('Current Score', appeal.score!.toStringAsFixed(1)),
                             ],
                           ],
                         ),
                       ),
                       const SizedBox(height: 20),
 
-                      _buildSectionTitle('Câu hỏi #${appeal.questionNumber ?? '?'}'),
+                      _buildSectionTitle('Question #${appeal.questionNumber ?? '?'}'),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -985,7 +985,7 @@ class _AppealDetailSheet extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: _buildAnswerBox(
-                                    label: 'Đáp án học sinh',
+                                    label: 'Student Answer',
                                     answer: appeal.studentAnswer ?? 'N/A',
                                     color: const Color(0xFFFEF3C7),
                                     textColor: const Color(0xFFD97706),
@@ -994,7 +994,7 @@ class _AppealDetailSheet extends StatelessWidget {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: _buildAnswerBox(
-                                    label: 'Đáp án đúng',
+                                    label: 'Correct Answer',
                                     answer: appeal.correctAnswer ?? 'N/A',
                                     color: const Color(0xFFDCFCE7),
                                     textColor: const Color(0xFF16A34A),
@@ -1007,7 +1007,7 @@ class _AppealDetailSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
 
-                      _buildSectionTitle('Lý do phúc khảo'),
+                      _buildSectionTitle('Appeal Reason'),
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -1026,7 +1026,7 @@ class _AppealDetailSheet extends StatelessWidget {
                       ),
                       if (appeal.resolutionNote != null && appeal.resolutionNote!.isNotEmpty) ...[
                         const SizedBox(height: 20),
-                        _buildSectionTitle('Ghi chú xử lý'),
+                        _buildSectionTitle('Resolution Note'),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),

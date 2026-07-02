@@ -86,7 +86,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Thống kê',
+          'Statistics',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -126,13 +126,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         const Icon(Icons.error_outline, size: 48, color: Color(0xFFDC2626)),
                         const SizedBox(height: 16),
                         const Text(
-                          'Không thể tải dữ liệu thống kê',
+                          'Unable to load statistics data',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
                         ),
                         const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: _loadAnalytics,
-                          child: const Text('Thử lại'),
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
@@ -168,7 +168,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget _buildPeriodSelector() {
-    final periods = ['7 ngày', '30 ngày', 'Học kỳ'];
+    final periods = ['7 days', '30 days', 'Semester'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -223,7 +223,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               iconColor: const Color(0xFF3B82F6),
               iconBgColor: const Color(0xFFDBEAFE),
               value: _formatNumber(totalStudents),
-              label: 'Tổng học sinh',
+              label: 'Total Students',
             )),
             const SizedBox(width: 12),
             Expanded(child: _buildStatCard(
@@ -231,7 +231,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               iconColor: const Color(0xFF8B5CF6),
               iconBgColor: const Color(0xFFEDE9FE),
               value: _formatNumber(totalExams),
-              label: 'Tổng kỳ thi',
+              label: 'Total Exams',
             )),
           ],
         ),
@@ -243,7 +243,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               iconColor: const Color(0xFF10B981),
               iconBgColor: const Color(0xFFD1FAE5),
               value: '${avgScore.toStringAsFixed(1)}/10',
-              label: 'Điểm trung bình',
+              label: 'Average Score',
             )),
             const SizedBox(width: 12),
             Expanded(child: _buildStatCard(
@@ -251,7 +251,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               iconColor: const Color(0xFFF59E0B),
               iconBgColor: const Color(0xFFFEF3C7),
               value: '$passRate%',
-              label: 'Tỷ lệ đạt',
+              label: 'Pass Rate',
             )),
           ],
         ),
@@ -325,7 +325,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Xu hướng điểm',
+            'Score Trend',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -381,7 +381,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Phân bố điểm',
+            'Score Distribution',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -454,7 +454,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Học sinh xuất sắc',
+            'Top Students',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -607,7 +607,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Theo môn học',
+            'By Subject',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,

@@ -37,7 +37,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, schoolId: string) => Promise<void>;
+  register: (email: string, password: string, name: string, schoolId?: string) => Promise<void>;
   logout: () => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
@@ -77,14 +77,14 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (_email: string, _password: string, _name: string, _schoolId: string) => {
+      register: async (_email: string, _password: string, _name: string, _schoolId?: string) => {
         set({ isLoading: true, error: null });
         try {
           await apiService.post('/auth/register', {
             email: _email,
             password: _password,
             name: _name,
-            schoolId: _schoolId,
+            ...(_schoolId ? { schoolId: _schoolId } : {}),
           });
           set({ isLoading: false });
         } catch (error) {

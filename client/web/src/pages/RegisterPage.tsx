@@ -41,9 +41,6 @@ export default function RegisterPage() {
       try {
         const response = await apiService.get<{ results: School[] }>('/schools', { params: { limit: 100 } });
         setSchools(response.results || []);
-        if (response.results && response.results.length > 0) {
-          setFormData((prev) => ({ ...prev, schoolId: response.results![0].id }));
-        }
       } catch {
         console.error('Failed to load schools');
       } finally {
@@ -81,10 +78,6 @@ export default function RegisterPage() {
       setLocalError('Please enter your academic email.');
       return;
     }
-    if (!formData.schoolId) {
-      setLocalError('Please select a school.');
-      return;
-    }
     if (formData.password.length < 8) {
       setLocalError('Password must be at least 8 characters long.');
       return;
@@ -103,7 +96,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(formData.email, formData.password, formData.fullName, formData.schoolId);
+      await register(formData.email, formData.password, formData.fullName, formData.schoolId || undefined);
       toast.success(
         'Registration successful! Please verify your email and wait for School Admin to approve your account.'
       );
@@ -166,15 +159,13 @@ export default function RegisterPage() {
 
           {/* School */}
           <div className={styles.formGroup}>
-            <label htmlFor="schoolId" className={styles.label}>School</label>
+            <label htmlFor="schoolId" className={styles.label}>
+              School <span className={styles.optionalLabel}>(optional)</span>
+            </label>
             <div className={styles.selectWrapper}>
               {isLoadingSchools ? (
                 <select className={styles.select} disabled>
                   <option>Loading schools...</option>
-                </select>
-              ) : schools.length === 0 ? (
-                <select className={styles.select} disabled>
-                  <option>No schools available</option>
                 </select>
               ) : (
                 <select
@@ -183,8 +174,8 @@ export default function RegisterPage() {
                   value={formData.schoolId}
                   onChange={handleChange}
                   className={styles.select}
-                  required
                 >
+                  <option value="">— No school / Skip —</option>
                   {schools.map((school) => (
                     <option key={school.id} value={school.id}>
                       {getSchoolLabel(school)}

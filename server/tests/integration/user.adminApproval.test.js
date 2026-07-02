@@ -1,9 +1,12 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
+const moment = require('moment');
 const httpStatus = require('http-status');
 const app = require('../../src/app');
 const setupTestDB = require('../utils/setupTestDB');
 const { User } = require('../../src/models');
+const { tokenTypes } = require('../../src/config/tokens');
+const tokenService = require('../../src/services/token.service');
 const {
   admin,
   teacherOne,
@@ -11,16 +14,18 @@ const {
   schoolIdB,
   insertUsers,
 } = require('../fixtures/user.fixture');
-const {
-  adminAccessToken,
-  teacherOneAccessToken,
-} = require('../fixtures/token.fixture');
 
 setupTestDB();
 
 describe('User Admin Approval routes', () => {
+  let adminAccessToken;
+  let teacherOneAccessToken;
+
   beforeEach(async () => {
-    await insertUsers([admin]);
+    await insertUsers([admin, teacherOne]);
+    const accessTokenExpires = moment().add(30, 'minutes');
+    adminAccessToken = tokenService.generateToken(admin._id, accessTokenExpires, tokenTypes.ACCESS);
+    teacherOneAccessToken = tokenService.generateToken(teacherOne._id, accessTokenExpires, tokenTypes.ACCESS);
   });
 
   describe('GET /api/v1/users/admin/teachers/pending', () => {
@@ -63,7 +68,6 @@ describe('User Admin Approval routes', () => {
     });
 
     it('should return 403 when user is not admin', async () => {
-      await insertUsers([teacherOne]);
       const res = await request(app)
         .get('/api/v1/users/admin/teachers/pending')
         .set('Authorization', `Bearer ${teacherOneAccessToken}`)
@@ -120,7 +124,6 @@ describe('User Admin Approval routes', () => {
     });
 
     it('should return 403 when user is not admin', async () => {
-      await insertUsers([teacherOne]);
       const res = await request(app)
         .post(`/api/v1/users/admin/teachers/${pendingTeacherId}/approve`)
         .set('Authorization', `Bearer ${teacherOneAccessToken}`)
@@ -191,7 +194,6 @@ describe('User Admin Approval routes', () => {
     });
 
     it('should return 403 when user is not admin', async () => {
-      await insertUsers([teacherOne]);
       const res = await request(app)
         .post(`/api/v1/users/admin/teachers/${pendingTeacherId}/reject`)
         .set('Authorization', `Bearer ${teacherOneAccessToken}`)

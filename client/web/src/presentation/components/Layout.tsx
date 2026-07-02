@@ -16,6 +16,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import NotificationBadge from './NotificationBadge';
 import styles from './Layout.module.css';
 
 type Role = 'admin' | 'school-admin' | 'teacher' | 'student';
@@ -164,7 +165,7 @@ export default function Layout() {
           <div className={styles.headerRight}>
             <span className={styles.profileRole}>{profileRoleLabel}</span>
             <div className={styles.headerDivider} />
-            <button className={styles.headerIconBtn} aria-label="Notifications"><Bell size={18} /></button>
+            <NotificationBadge />
             <button className={styles.headerIconBtn} aria-label="Help"><HelpCircle size={18} /></button>
           </div>
         </header>

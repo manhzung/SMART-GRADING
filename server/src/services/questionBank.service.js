@@ -1,5 +1,6 @@
-const { QuestionBank, QuestionBankMember } = require('../models');
+const { QuestionBank, QuestionBankMember, User } = require('../models');
 const ApiError = require('../utils/ApiError');
+const notificationService = require('./notification.service');
 
 class QuestionBankService {
   async createBank({ _id, name, description, type, schoolId, createdBy }) {
@@ -22,7 +23,7 @@ class QuestionBankService {
       throw new ApiError(400, 'User is already an active member');
     }
 
-    return QuestionBankMember.create({
+    const member = await QuestionBankMember.create({
       bankId,
       userId,
       role: 'viewer',
@@ -30,6 +31,20 @@ class QuestionBankService {
       invitedBy,
       invitedAt: new Date(),
     });
+
+    try {
+      const bank = await QuestionBank.findById(bankId).select('name').lean();
+      await notificationService.notifyBankMemberAdded({
+        bankId,
+        bankName: bank?.name || 'Bank',
+        userId,
+        role: 'viewer',
+      });
+    } catch (err) {
+      // Notifications are best-effort
+    }
+
+    return member;
   }
 
   async approveMember(bankId, userId, approvedBy) {
@@ -95,16 +110,39 @@ class QuestionBankService {
       throw new ApiError(400, 'User is already an active member');
     }
 
+    let member;
     if (existing) {
-      return existing;
+      member = existing;
+    } else {
+      member = await QuestionBankMember.create({
+        bankId,
+        userId,
+        role: 'viewer',
+        status: 'pending',
+      });
     }
 
-    return QuestionBankMember.create({
-      bankId,
-      userId,
-      role: 'viewer',
-      status: 'pending',
-    });
+    // Best-effort: notify all owners/managers of the bank about the request
+    try {
+      const bank = await QuestionBank.findById(bankId).select('name').lean();
+      const owners = await QuestionBankMember.find({ bankId, role: 'owner', status: 'active' }).lean();
+      const requester = await User.findById(userId).select('name').lean();
+      await Promise.all(
+        owners.map((o) =>
+          notificationService.notifyBankRequestSubmitted({
+            bankId,
+            bankName: bank?.name || 'Bank',
+            requesterName: requester?.name || 'A user',
+            ownerId: o.userId,
+            requesterId: userId,
+          })
+        )
+      );
+    } catch (err) {
+      // Notifications are best-effort
+    }
+
+    return member;
   }
 
   async respondToRequest(bankId, userId, decision, approverId) {
@@ -113,17 +151,35 @@ class QuestionBankService {
       throw new ApiError(404, 'Pending request not found');
     }
 
-    if (decision === 'approve') {
-      member.status = 'active';
-      member.approvedBy = approverId;
-      member.approvedAt = new Date();
-      await member.save();
-      return member;
-    }
+    try {
+      const bank = await QuestionBank.findById(bankId).select('name').lean();
+      const bankName = bank?.name || 'Bank';
 
-    if (decision === 'reject') {
-      await QuestionBankMember.deleteOne({ _id: member._id });
-      return { status: 'rejected' };
+      if (decision === 'approve') {
+        member.status = 'active';
+        member.approvedBy = approverId;
+        member.approvedAt = new Date();
+        await member.save();
+        await notificationService.notifyBankRequestApproved({
+          bankId,
+          bankName,
+          userId,
+        });
+        return member;
+      }
+
+      if (decision === 'reject') {
+        await QuestionBankMember.deleteOne({ _id: member._id });
+        await notificationService.notifyBankRequestRejected({
+          bankId,
+          bankName,
+          userId,
+        });
+        return { status: 'rejected' };
+      }
+    } catch (err) {
+      // If notification fails, still throw original errors below
+      if (err instanceof ApiError) throw err;
     }
 
     throw new ApiError(400, 'Invalid decision');
@@ -179,6 +235,10 @@ class QuestionBankService {
     const bankIds = memberships.map((m) => m.bankId);
     if (bankIds.length === 0) return [];
     return QuestionBank.find({ _id: { $in: bankIds } }).lean();
+  }
+
+  async listSchoolBanks(schoolId) {
+    return QuestionBank.find({ schoolId }).lean();
   }
 }
 

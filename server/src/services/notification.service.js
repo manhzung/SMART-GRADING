@@ -168,6 +168,66 @@ class NotificationService {
       priority: 'normal',
     });
   }
+
+  /**
+   * Notify bank owner(s) when a user requests access
+   */
+  async notifyBankRequestSubmitted({ bankId, bankName, requesterName, ownerId, requesterId }) {
+    await Notification.create({
+      userId: ownerId,
+      type: 'bank_request_submitted',
+      title: 'New bank access request',
+      body: `${requesterName} requested access to bank "${bankName}".`,
+      data: { bankId, requesterId },
+      channels: ['in_app'],
+      priority: 'normal',
+    });
+  }
+
+  /**
+   * Notify a user that their access request was approved
+   */
+  async notifyBankRequestApproved({ bankId, bankName, userId }) {
+    await Notification.create({
+      userId,
+      type: 'bank_request_approved',
+      title: 'Bank access approved',
+      body: `Your request to access bank "${bankName}" was approved.`,
+      data: { bankId },
+      channels: ['in_app'],
+      priority: 'normal',
+    });
+  }
+
+  /**
+   * Notify a user that their access request was rejected
+   */
+  async notifyBankRequestRejected({ bankId, bankName, userId }) {
+    await Notification.create({
+      userId,
+      type: 'bank_request_rejected',
+      title: 'Bank access rejected',
+      body: `Your request to access bank "${bankName}" was rejected.`,
+      data: { bankId },
+      channels: ['in_app'],
+      priority: 'normal',
+    });
+  }
+
+  /**
+   * Notify a user they have been added as a bank member
+   */
+  async notifyBankMemberAdded({ bankId, bankName, userId, role }) {
+    await Notification.create({
+      userId,
+      type: 'bank_member_added',
+      title: `Added to bank as ${role}`,
+      body: `You were added to bank "${bankName}" with role ${role}.`,
+      data: { bankId },
+      channels: ['in_app'],
+      priority: 'normal',
+    });
+  }
 }
 
 module.exports = new NotificationService();

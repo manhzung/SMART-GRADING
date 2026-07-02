@@ -14,7 +14,26 @@ const create = catchAsync(async (req, res) => {
 });
 
 const getAll = catchAsync(async (req, res) => {
+  // Non-admins MUST select a bank before listing questions. This prevents
+  // accidental exposure of legacy/unbanked questions and enforces the new
+  // per-bank permission model.
+  // Exception: if ?allBanks=true is passed, search across all banks in the school.
+  if (req.user?.role !== 'admin' && !req.query.bankId && !req.query.allBanks) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'bankId is required. Please select or create a question bank first.'
+    );
+  }
   const result = await questionService.getAll(req.query, req.user);
+  res.send(result);
+});
+
+/**
+ * Search questions across ALL banks in the user's school.
+ * Respects role-based permissions (school scoping).
+ */
+const searchAllBanks = catchAsync(async (req, res) => {
+  const result = await questionService.getAllSchoolQuestions(req.query, req.user);
   res.send(result);
 });
 
@@ -158,12 +177,17 @@ const getTags = catchAsync(async (req, res) => {
   const { Question } = require('../models');
   const user = req.user;
 
+  // Lọc theo bank nếu có bankId, không thì áp dụng role-based filter
   const filter = {};
-  if (user?.role === 'teacher' && user?.schoolId) {
-    filter.schoolId = user.schoolId;
-  } else if (user?.role === 'student') {
-    filter.schoolId = user.schoolId;
-    filter.isApproved = true;
+  if (req.query.bankId) {
+    filter.bankId = req.query.bankId;
+  } else {
+    if (user?.role === 'teacher' && user?.schoolId) {
+      filter.schoolId = user.schoolId;
+    } else if (user?.role === 'student') {
+      filter.schoolId = user.schoolId;
+      filter.isApproved = true;
+    }
   }
 
   const tags = await Question.distinct('tags', filter);
@@ -260,4 +284,5 @@ module.exports = {
   getBankStats,
   getByTags,
   getByBank,
+  searchAllBanks,
 };

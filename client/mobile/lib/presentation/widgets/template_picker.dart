@@ -3,7 +3,7 @@ import 'package:smart_grading_mobile/domain/omr/models/omr_template.dart';
 
 /// Chip-based picker for selecting the OMR template used in the Test Lab.
 ///
-/// The Phiếu 30 câu - A4 option is rendered as disabled (greyed out, not
+  /// The 15-question sheet - A5 option is rendered as disabled (greyed out, not
 /// tappable) because the factory for that template is not yet implemented.
 class TemplatePicker extends StatelessWidget {
   /// Currently selected template. Used to determine which chip is highlighted.
@@ -35,14 +35,14 @@ class TemplatePicker extends StatelessWidget {
           enabled: true,
         ),
         _buildChip(
-          label: 'Phiếu 15 câu - A5',
+          label: '15-Question Sheet - A5',
           keyValue: '15q',
           selectedKey: selectedKey,
           factoryBuilder: OMRTemplate.from15Question,
           enabled: true,
         ),
         _buildChip(
-          label: 'Phiếu 30 câu - A4',
+          label: '30-Question Sheet - A4',
           keyValue: '30q',
           selectedKey: selectedKey,
           factoryBuilder: null,

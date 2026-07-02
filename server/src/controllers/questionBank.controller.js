@@ -56,13 +56,18 @@ const listBanks = catchAsync(async (req, res) => {
 
 /**
  * List ALL banks in the system (for searching across all banks).
- * Everyone can search all banks - no school restriction.
- * Students/Teachers can view banks and request access.
+ * School-admin: only banks in their school
+ * Others: all banks
  */
 const listAllBanks = catchAsync(async (req, res) => {
   const { search, type, limit = 50, page = 1 } = req.query;
   
   let filter = {};
+  
+  // School-admin can only see banks in their school
+  if (req.user.role === 'school-admin' && req.user.schoolId) {
+    filter.schoolId = req.user.schoolId;
+  }
   
   // Filter by type (personal/school)
   if (type) {
@@ -71,10 +76,13 @@ const listAllBanks = catchAsync(async (req, res) => {
   
   // Text search on name/description
   if (search) {
-    filter.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } },
-    ];
+    filter.$and = filter.$and || [];
+    filter.$and.push({
+      $or: [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ],
+    });
   }
   
   const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);

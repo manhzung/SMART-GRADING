@@ -16,7 +16,7 @@ import 'package:smart_grading_mobile/presentation/blocs/camera/camera_bloc.dart'
 import 'package:smart_grading_mobile/presentation/pages/omr_result_page.dart';
 import 'package:smart_grading_mobile/presentation/widgets/corner_overlay_painter.dart';
 
-/// Data class để lưu kết quả scan trước khi xác nhận
+/// Data class for storing scan result before confirmation
 class _ScanResultData {
   final Uint8List imageBytes;
   final OMRGradingResult gradingResult;
@@ -68,7 +68,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
   final ImagePicker _imagePicker = ImagePicker();
   late ExamTemplateService _examTemplateService;
 
-  // Lưu kết quả scan để hiển thị popup xác nhận
+  /// Save scan result to show confirmation popup
   _ScanResultData? _pendingScanResult;
 
   @override
@@ -199,7 +199,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
       child: BlocConsumer<OMRScannerBloc, OMRScannerState>(
         listener: (context, state) {
           if (state is OMRScannerSuccess) {
-            // Lưu kết quả và hiện popup xác nhận
+            // Store result and show confirmation popup
             setState(() {
               _pendingScanResult = _ScanResultData(
                 imageBytes: state.imageBytes,
@@ -243,7 +243,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                 return Stack(
                   children: [
                     _buildBody(omrState, cameraState),
-                    // Popup xác nhận kết quả scan
+                    // Scan result confirmation popup
                     if (_pendingScanResult != null)
                       _buildConfirmPopup(_pendingScanResult!),
                   ],
@@ -804,7 +804,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
     );
   }
 
-  /// Hiển thị popup xác nhận kết quả scan
+  /// Show scan result confirmation popup
   Widget _buildConfirmPopup(_ScanResultData result) {
     final correctCount = result.gradingResult.verdicts
         .where((v) => v.verdict == 'correct')
@@ -816,14 +816,14 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
       child: SafeArea(
         child: Column(
           children: [
-            // Header với nút đóng
+            // Header with close button
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Kết quả quét',
+                    'Scan Result',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -838,7 +838,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
               ),
             ),
 
-            // Ảnh kết quả
+            // Result image
             Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -849,7 +849,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                 child: Stack(
                   alignment: Alignment.topRight,
                   children: [
-                    // Ảnh annotated
+                    // Annotated image
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: result.processingResult?.annotatedImageBytes != null
@@ -864,7 +864,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                               width: double.infinity,
                             ),
                     ),
-                    // Thông tin SBD/MADE/ĐIỂM
+                    // Student ID/Version/Score info
                     Positioned(
                       top: 12,
                       right: 12,
@@ -890,7 +890,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                               ),
                             if (result.studentCode != null && result.studentCode!.isNotEmpty)
                               Text(
-                                'SBD: ${result.studentCode}',
+                                'Student ID: ${result.studentCode}',
                                 style: TextStyle(
                                   color: Colors.red.shade700,
                                   fontSize: 10,
@@ -899,7 +899,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                               ),
                             if (result.versionCode != null && result.versionCode!.isNotEmpty)
                               Text(
-                                'MADE: ${result.versionCode}',
+                                'Version: ${result.versionCode}',
                                 style: TextStyle(
                                   color: Colors.red.shade700,
                                   fontSize: 10,
@@ -908,7 +908,7 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                               ),
                             if (totalCount > 0)
                               Text(
-                                'DIEM: ${result.gradingResult.score.toStringAsFixed(1)} ($correctCount/$totalCount)',
+                                'Score: ${result.gradingResult.score.toStringAsFixed(1)} ($correctCount/$totalCount)',
                                 style: TextStyle(
                                   color: Colors.red.shade700,
                                   fontSize: 10,
@@ -924,18 +924,18 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
               ),
             ),
 
-            // 2 nút Xác nhận (V) và Hủy (X)
+            // Confirm and Cancel buttons
             Padding(
               padding: const EdgeInsets.all(24),
               child: Row(
                 children: [
-                  // Nút Hủy (X)
+                  // Cancel button
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: _dismissConfirmPopup,
                       icon: const Icon(Icons.close, size: 28),
                       label: const Text(
-                        'Hủy',
+                        'Cancel',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -949,13 +949,13 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  // Nút Xác nhận (V)
+                  // Confirm button
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => _onConfirmResult(result),
                       icon: const Icon(Icons.check, size: 28),
                       label: const Text(
-                        'Xác nhận',
+                        'Confirm',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -977,20 +977,20 @@ class _CameraScannerPageState extends State<CameraScannerPage> {
     );
   }
 
-  /// Đóng popup xác nhận
+  /// Close confirmation popup
   void _dismissConfirmPopup() {
     setState(() {
       _pendingScanResult = null;
     });
   }
 
-  /// Xử lý khi xác nhận kết quả - gửi API và quay về scan
+  /// Handle confirm result - submit API and return to scan
   void _onConfirmResult(_ScanResultData result) {
     setState(() {
       _pendingScanResult = null;
     });
 
-    // Trigger submit ngay lập tức
+    // Submit immediately
     context.read<OMRScannerBloc>().add(OMRScannerSubmit());
   }
 }

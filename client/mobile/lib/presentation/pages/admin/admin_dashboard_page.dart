@@ -50,7 +50,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Quản lý hệ thống',
+                'System Management',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -59,7 +59,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Quản lý người dùng, trường học và cài đặt hệ thống.',
+                'Manage users, schools, and system settings.',
                 style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 24),
@@ -102,7 +102,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'Quản lý',
+                'Management',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -114,8 +114,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 context,
                 icon: Icons.people,
                 iconColor: const Color(0xFF6366F1),
-                title: 'Quản lý Users',
-                subtitle: 'Thêm, sửa, xóa tài khoản người dùng',
+                title: 'Manage Users',
+                subtitle: 'Add, edit, or delete user accounts',
                 onTap: () => Navigator.pushNamed(context, '/admin/users'),
               ),
               const SizedBox(height: 12),
@@ -123,8 +123,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 context,
                 icon: Icons.school,
                 iconColor: const Color(0xFF10B981),
-                title: 'Quản lý Schools',
-                subtitle: 'Thêm, sửa, xóa trường học',
+                title: 'Manage Schools',
+                subtitle: 'Add, edit, or delete schools',
                 onTap: () => Navigator.pushNamed(context, '/admin/schools'),
               ),
               const SizedBox(height: 12),
@@ -133,7 +133,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 icon: Icons.bar_chart,
                 iconColor: const Color(0xFFF59E0B),
                 title: 'Analytics',
-                subtitle: 'Xem thống kê hệ thống',
+                subtitle: 'View system statistics',
                 onTap: () => Navigator.pushNamed(context, '/analytics'),
               ),
               const SizedBox(height: 12),
@@ -142,7 +142,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 icon: Icons.settings,
                 iconColor: const Color(0xFF64748B),
                 title: 'Settings',
-                subtitle: 'Cài đặt hệ thống',
+                subtitle: 'System settings',
                 onTap: () => Navigator.pushNamed(context, '/settings'),
               ),
               const SizedBox(height: 30),

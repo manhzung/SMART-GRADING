@@ -518,19 +518,27 @@ class ExamPaperService {
     console.log('[ExamPaper] AMC calibration prepare result:', {
       success: calageResult.success,
       hasCalage: !!calageResult.calagePath,
+      hasAmcCompiledXy: !!calageResult.amcCompiledXyPath,
       hasSujet: !!calageResult.sujetPdf,
       hasCorrige: !!calageResult.corrigePdf,
     });
 
-    // 3. Copy calage.xy to output directory
+    // 3. Copy .xy file to output directory
+    // Priority: amc-compiled.xy (AMC generated) > calage.xy (legacy)
     const wslXyDst = amcRunner._toWslPath(path.join(outputDir, 'calage.xy'));
 
-    if (calageResult.calagePath) {
-      // AMC generated calage.xy directly
+    if (calageResult.amcCompiledXyPath) {
+      // AMC generated amc-compiled.xy - this is the correct file from calibration
+      await amcRunner.wslExec(
+        `cp '${calageResult.amcCompiledXyPath}' '${wslXyDst}' && echo 'XY_COPY_OK'`
+      );
+      console.log('[ExamPaper] amc-compiled.xy copied to calage.xy');
+    } else if (calageResult.calagePath) {
+      // Fallback: use calage.xy if amc-compiled.xy not available
       await amcRunner.wslExec(
         `cp '${calageResult.calagePath}' '${wslXyDst}' && echo 'XY_COPY_OK'`
       );
-      console.log('[ExamPaper] .calage.xy copied from AMC calibration mode');
+      console.log('[ExamPaper] calage.xy copied (fallback)');
     } else {
       // Fall back to manual parsing
       console.warn('[ExamPaper] AMC calibration failed, falling back to manual .xy generation');

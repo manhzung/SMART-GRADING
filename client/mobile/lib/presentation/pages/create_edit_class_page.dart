@@ -102,7 +102,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
       if (authState is! AuthAuthenticated) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Phiên đăng nhập đã hết hạn'),
+            content: Text('Session expired'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -116,7 +116,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
       if (schoolId == null || schoolId.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Tài khoản chưa được gán trường học'),
+            content: Text('Account not assigned to a school'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -165,7 +165,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                isEdit ? 'Cap nhat lop hoc thanh cong!' : 'Tao lop hoc moi thanh cong!',
+                isEdit ? 'Class updated successfully!' : 'New class created successfully!',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               backgroundColor: const Color(0xFF081C43),
@@ -180,7 +180,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
           Navigator.pop(context); // Close loading dialog
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Loi: ${e.toString()}'),
+              content: Text('Error: ${e.toString()}'),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
@@ -211,7 +211,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          isEditMode ? 'Chỉnh sửa lớp học' : 'Tạo lớp học',
+          isEditMode ? 'Edit Class' : 'Create Class',
           style: const TextStyle(
             color: Color(0xFF081C43),
             fontWeight: FontWeight.bold,
@@ -273,9 +273,9 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Tên lớp học
+                        // Class Name
                         const Text(
-                          'Tên lớp học *',
+                          'Class Name *',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -287,11 +287,11 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                           controller: _nameController,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Tên lớp học không được để trống';
+                              return 'Class name is required';
                             }
                             return null;
                           },
-                          decoration: _buildInputDecoration('Ví dụ: 12A1'),
+                          decoration: _buildInputDecoration('Example: 12A1'),
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF0F172A),
@@ -299,11 +299,11 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Mã lớp
+                        // Class Code
                         Row(
                           children: [
                             const Text(
-                              'Mã lớp',
+                              'Class Code',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -325,14 +325,14 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                           controller: _codeController,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Mã lớp không được để trống';
+                              return 'Class code is required';
                             }
                             if (value.trim().length < 2 || value.trim().length > 20) {
-                              return 'Mã lớp phải từ 2-20 ký tự';
+                              return 'Class code must be 2-20 characters';
                             }
                             return null;
                           },
-                          decoration: _buildInputDecoration('Ví dụ: CL12A1'),
+                          decoration: _buildInputDecoration('Example: CL12A1'),
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF0F172A),
@@ -340,9 +340,9 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Khối lớp (Grade level dropdown)
+                        // Grade Level (dropdown)
                         const Text(
-                          'Khối lớp',
+                          'Grade Level',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -353,11 +353,11 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                         DropdownButtonFormField<int>(
                           initialValue: _selectedGradeLevel,
                           icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
-                          decoration: _buildInputDecoration('Chọn khối lớp'),
+                          decoration: _buildInputDecoration('Select grade level'),
                           items: const [
-                            DropdownMenuItem(value: 10, child: Text('Khối 10')),
-                            DropdownMenuItem(value: 11, child: Text('Khối 11')),
-                            DropdownMenuItem(value: 12, child: Text('Khối 12')),
+                            DropdownMenuItem(value: 10, child: Text('Grade 10')),
+                            DropdownMenuItem(value: 11, child: Text('Grade 11')),
+                            DropdownMenuItem(value: 12, child: Text('Grade 12')),
                           ],
                           onChanged: (val) {
                             setState(() {
@@ -366,16 +366,16 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                           },
                           validator: (value) {
                             if (value == null) {
-                              return 'Vui lòng chọn khối lớp';
+                              return 'Please select a grade level';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
 
-                        // Niên khóa
+                        // Academic Year
                         const Text(
-                          'Niên khóa',
+                          'Academic Year',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -387,11 +387,11 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                           controller: _academicYearController,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Niên khóa không được để trống';
+                              return 'Academic year is required';
                             }
                             return null;
                           },
-                          decoration: _buildInputDecoration('Ví dụ: 2023-2024'),
+                          decoration: _buildInputDecoration('Example: 2023-2024'),
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF0F172A),
@@ -399,9 +399,9 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Giáo viên chủ nhiệm (matches web: dropdown, default = current user)
+                        // Homeroom Teacher (matches web: dropdown, default = current user)
                         const Text(
-                          'Giáo viên chủ nhiệm',
+                          'Homeroom Teacher',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -413,7 +413,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                           initialValue: _selectedTeacherId,
                           icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
                           decoration: _buildInputDecoration(
-                            _isLoadingTeachers ? 'Đang tải...' : 'Chọn giáo viên chủ nhiệm',
+                            _isLoadingTeachers ? 'Loading...' : 'Select homeroom teacher',
                             prefixIcon: const Icon(
                               Icons.person_outline,
                               color: Color(0xFF64748B),
@@ -423,7 +423,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                           items: [
                             const DropdownMenuItem<String>(
                               value: '',
-                              child: Text('-- Chọn giáo viên --'),
+                              child: Text('-- Select Teacher --'),
                             ),
                             ..._teachers.map((t) => DropdownMenuItem<String>(
                                   value: t.id,
@@ -463,7 +463,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                     onPressed: _saveForm,
                     icon: const Icon(Icons.save, color: Colors.white, size: 20),
                     label: const Text(
-                      'Lưu thông tin',
+                      'Save',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -483,7 +483,7 @@ class _CreateEditClassPageState extends State<CreateEditClassPage> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: const Text(
-                      'Hủy',
+                      'Cancel',
                       style: TextStyle(
                         color: Color(0xFF64748B),
                         fontSize: 15,

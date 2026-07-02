@@ -78,7 +78,7 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            widget.exam != null ? 'Bài nộp: ${widget.exam!.title}' : 'Bài nộp theo lớp',
+            widget.exam != null ? 'Submissions: ${widget.exam!.title}' : 'Class Submissions',
             style: const TextStyle(
               color: Color(0xFF0F172A),
               fontWeight: FontWeight.bold,
@@ -129,13 +129,13 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
         children: [
           const Icon(Icons.error_outline, size: 48, color: Color(0xFFDC2626)),
           const SizedBox(height: 16),
-          Text('Không thể tải dữ liệu: $message',
+          Text('Could not load data: $message',
               style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
               textAlign: TextAlign.center),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: () => _bloc.add(ExamSubmissionsRefreshRequested(examId: _effectiveExamId)),
-            child: const Text('Thử lại'),
+            child: const Text('Retry'),
           ),
         ],
       ),
@@ -158,7 +158,7 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
               controller: _searchController,
               onChanged: (value) => _bloc.add(ExamSubmissionsSearchChanged(query: value)),
               decoration: const InputDecoration(
-                hintText: 'Tìm kiếm học sinh, mã bài...',
+                hintText: 'Search students, codes...',
                 hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
                 prefixIcon: Icon(Icons.search, color: Color(0xFF64748B), size: 20),
                 border: InputBorder.none,
@@ -198,13 +198,13 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
       child: Row(
         children: [
           _buildStatCard(Icons.assignment_turned_in, const Color(0xFF3B82F6), const Color(0xFFDBEAFE),
-              totalSubmitted.toString(), 'Tổng bài nộp'),
+              totalSubmitted.toString(), 'Total Submitted'),
           const SizedBox(width: 8),
           _buildStatCard(Icons.check_circle, const Color(0xFF16A34A), const Color(0xFFDCFCE7),
-              totalGraded.toString(), 'Đã chấm'),
+              totalGraded.toString(), 'Graded'),
           const SizedBox(width: 8),
           _buildStatCard(Icons.class_outlined, const Color(0xFFD97706), const Color(0xFFFEF3C7),
-              state.byClass.length.toString(), 'Lớp'),
+              state.byClass.length.toString(), 'Classes'),
         ],
       ),
     );
@@ -238,7 +238,7 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
 
   Widget _buildFilterChips(ExamSubmissionsLoaded state) {
     const filters = ['ALL', 'GRADED', 'PENDING', 'SUBMITTED'];
-    const labels = {'ALL': 'Tất cả', 'GRADED': 'Đã chấm', 'PENDING': 'Đang chờ', 'SUBMITTED': 'Đã nộp'};
+    const labels = {'ALL': 'All', 'GRADED': 'Graded', 'PENDING': 'Pending', 'SUBMITTED': 'Submitted'};
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -311,7 +311,7 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
               const Padding(
                 padding: EdgeInsets.all(16),
                 child: Text(
-                  'Không có bài nộp phù hợp',
+                  'No matching submissions',
                   style: TextStyle(color: Color(0xFF94A3B8)),
                 ),
               )
@@ -343,9 +343,9 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
     final name = submission.studentName ?? submission.studentCode ?? 'Unknown';
     Color statusBg; Color statusText; String statusLabel;
     switch (submission.status.toUpperCase()) {
-      case 'GRADED': statusBg = const Color(0xFFDCFCE7); statusText = const Color(0xFF16A34A); statusLabel = 'Đã chấm'; break;
-      case 'PENDING': statusBg = const Color(0xFFFEF3C7); statusText = const Color(0xFFD97706); statusLabel = 'Đang chờ'; break;
-      case 'SUBMITTED': statusBg = const Color(0xFFDBEAFE); statusText = const Color(0xFF1D4ED8); statusLabel = 'Đã nộp'; break;
+      case 'GRADED': statusBg = const Color(0xFFDCFCE7); statusText = const Color(0xFF16A34A); statusLabel = 'Graded'; break;
+      case 'PENDING': statusBg = const Color(0xFFFEF3C7); statusText = const Color(0xFFD97706); statusLabel = 'Pending'; break;
+      case 'SUBMITTED': statusBg = const Color(0xFFDBEAFE); statusText = const Color(0xFF1D4ED8); statusLabel = 'Submitted'; break;
       default: statusBg = const Color(0xFFF1F5F9); statusText = const Color(0xFF64748B); statusLabel = submission.status;
     }
 
@@ -407,7 +407,7 @@ class _SubmissionsPageState extends State<SubmissionsPage> {
           children: [
             const Icon(Icons.assignment_outlined, size: 64, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 16),
-            const Text('Chưa có bài nộp nào', style: TextStyle(fontSize: 15, color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
+            const Text('No submissions yet', style: TextStyle(fontSize: 15, color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
           ],
         ),
       ),

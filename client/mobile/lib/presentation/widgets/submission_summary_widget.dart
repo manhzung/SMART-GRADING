@@ -38,7 +38,7 @@ class SubmissionSummaryWidget extends StatelessWidget {
             const Icon(Icons.class_outlined, size: 48, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 8),
             const Text(
-              'Chưa có lớp nào trong kỳ thi này',
+              'No classes assigned to this exam yet',
               style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
           ],

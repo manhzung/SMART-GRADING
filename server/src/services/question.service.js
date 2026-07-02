@@ -25,8 +25,9 @@ class QuestionService {
       case 'admin':
         // Admin thấy tất cả câu hỏi
         break;
+      case 'school-admin':
       case 'teacher':
-        // Teacher chỉ thấy câu hỏi của trường mình
+        // school-admin và teacher chỉ thấy câu hỏi của trường mình
         if (user.schoolId) {
           filter.schoolId = user.schoolId;
         }
@@ -114,6 +115,11 @@ class QuestionService {
     // not before. The ...rest was putting page/limit INTO the filter,
     // causing Mongoose to search for documents with page=1, limit=20 fields.
     const filter = { ...extraFilters };
+
+    // Only return active questions by default
+    if (extraFilters.isActive === undefined) {
+      filter.isActive = { $ne: false };
+    }
 
     // Apply role-based access control
     if (user) {
@@ -214,9 +220,27 @@ class QuestionService {
       throw new ApiError(404, 'Question not found');
     }
 
-    // Chỉ admin hoặc teacher cùng trường được duyệt
-    if (approverRole !== 'admin') {
-      if (!approverSchoolId || question.schoolId?.toString() !== approverSchoolId.toString()) {
+    // Admin toàn hệ thống được duyệt bất kỳ
+    if (approverRole === 'admin') {
+      // OK
+    }
+    // School-admin hoặc teacher: cùng trường HOẶC là owner/manager của bank
+    else {
+      const BankMembership = require('../models').QuestionBankMember;
+      const membership = await BankMembership.findOne({
+        bankId: question.bankId,
+        userId: approverId,
+        status: 'active',
+        role: { $in: ['owner', 'manager'] },
+      }).lean();
+
+      if (membership) {
+        // OK - là owner/manager của bank
+      }
+      else if (approverSchoolId && String(question.schoolId || '') === String(approverSchoolId)) {
+        // OK - cùng trường
+      }
+      else {
         throw new ApiError(403, 'Bạn không có quyền duyệt câu hỏi này');
       }
     }
@@ -236,9 +260,27 @@ class QuestionService {
       throw new ApiError(404, 'Question not found');
     }
 
-    // Chỉ admin hoặc teacher cùng trường được từ chối
-    if (rejecterRole !== 'admin') {
-      if (!rejecterSchoolId || question.schoolId?.toString() !== rejecterSchoolId.toString()) {
+    // Admin toàn hệ thống được từ chối bất kỳ
+    if (rejecterRole === 'admin') {
+      // OK
+    }
+    // School-admin hoặc teacher: cùng trường HOẶC là owner/manager của bank
+    else {
+      const BankMembership = require('../models').QuestionBankMember;
+      const membership = await BankMembership.findOne({
+        bankId: question.bankId,
+        userId: rejecterId,
+        status: 'active',
+        role: { $in: ['owner', 'manager'] },
+      }).lean();
+
+      if (membership) {
+        // OK - là owner/manager của bank
+      }
+      else if (rejecterSchoolId && String(question.schoolId || '') === String(rejecterSchoolId)) {
+        // OK - cùng trường
+      }
+      else {
         throw new ApiError(403, 'Bạn không có quyền từ chối câu hỏi này');
       }
     }
@@ -315,6 +357,96 @@ class QuestionService {
       approved,
       pending,
       integrity: total > 0 ? Math.round((approved / total) * 1000) / 10 : 100,
+    };
+  }
+
+  /**
+   * Search questions across ALL banks in the user's school.
+   * Similar to getAll but WITHOUT bankId filter.
+   * Respects role-based permissions (school scoping for non-admin).
+   */
+  async getAllSchoolQuestions(query = {}, user = null) {
+    const {
+      topicId,
+      difficulty,
+      isApproved,
+      source,
+      tags,
+      search,
+      sortBy = 'createdAt',
+      order = 'desc',
+      page,
+      limit: queryLimit,
+      ...extraFilters
+    } = query;
+    const { page: pageNum, limit, skip } = parsePagination(query);
+
+    const filter = { ...extraFilters };
+
+    // Only return active questions by default
+    if (extraFilters.isActive === undefined) {
+      filter.isActive = { $ne: false };
+    }
+
+    // Apply role-based access control (school scoping)
+    if (user) {
+      const roleFilter = this.buildRoleFilter(user);
+      Object.assign(filter, roleFilter);
+    }
+
+    if (topicId) filter.topicId = topicId;
+
+    // NO bankId filter - search across all banks in school
+
+    // Case-insensitive difficulty filter
+    if (difficulty) {
+      const levels = difficulty.split(',').map((d) => d.trim().toLowerCase()).filter(Boolean);
+      if (levels.length === 1) {
+        filter.difficulty = new RegExp(`^${levels[0]}$`, 'i');
+      } else if (levels.length > 1) {
+        filter.difficulty = { $in: levels };
+      }
+    }
+
+    // Parse isApproved from string "true"/"false" to boolean
+    if (isApproved !== undefined) {
+      if (isApproved === true || isApproved === 'true') {
+        filter.isApproved = true;
+      } else if (isApproved === false || isApproved === 'false') {
+        filter.isApproved = false;
+      }
+    }
+
+    if (source) filter.source = source;
+    if (tags) filter.tags = { $in: tags.split(',') };
+
+    // Text search
+    if (search) {
+      filter.$text = { $search: search };
+    }
+
+    const sortOrder = order === 'asc' ? 1 : -1;
+    const sort = sortBy === 'score'
+      ? { difficulty: sortOrder === 1 ? 1 : -1 }
+      : { [sortBy]: sortOrder };
+
+    const [results, total] = await Promise.all([
+      Question.find(filter)
+        .populate('createdBy', 'name')
+        .populate('topicId', 'name code')
+        .populate('bankId', 'name')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+      Question.countDocuments(filter),
+    ]);
+
+    return {
+      results,
+      page: pageNum,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
     };
   }
 }

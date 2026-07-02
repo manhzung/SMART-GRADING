@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ImageGallery } from './ImageGallery';
+import env from '../../config/env';
 
 interface Submission {
   _id: string;
@@ -19,11 +20,7 @@ interface SubmissionDetailPageProps {
   submissionId: string;
 }
 
-const apiBase = (() => {
-  const url = (import.meta.env.VITE_API_URL as string | undefined) ||
-    'http://localhost:3000/api/v1';
-  return url.replace(/\/api\/v1\/?$/, '');
-})();
+const apiBase = env.apiUrl.replace(/\/api\/v1\/?$/, '');
 
 export const SubmissionDetailPage: React.FC<SubmissionDetailPageProps> = ({
   submissionId,

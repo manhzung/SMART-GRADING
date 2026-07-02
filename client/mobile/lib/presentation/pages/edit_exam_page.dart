@@ -133,13 +133,13 @@ class _EditExamPageState extends State<EditExamPage> {
   String _getStatusLabel(String status) {
     switch (status.toUpperCase()) {
       case 'DRAFT':
-        return 'BẢN NHÁP';
+        return 'DRAFT';
       case 'PUBLISHED':
-        return 'ĐÃ XUẤT BẢN';
+        return 'PUBLISHED';
       case 'IN_PROGRESS':
-        return 'ĐANG THI';
+        return 'IN PROGRESS';
       case 'COMPLETED':
-        return 'HOÀN THÀNH';
+        return 'COMPLETED';
       default:
         return status.toUpperCase();
     }
@@ -246,7 +246,7 @@ class _EditExamPageState extends State<EditExamPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
-              'Cập nhật bài kiểm tra thành công!',
+              'Exam updated successfully!',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: const Color(0xFF16A34A),
@@ -260,9 +260,9 @@ class _EditExamPageState extends State<EditExamPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
-            backgroundColor: Colors.red,
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
@@ -294,7 +294,7 @@ class _EditExamPageState extends State<EditExamPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Chọn lớp học',
+                'Select class',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -307,7 +307,7 @@ class _EditExamPageState extends State<EditExamPage> {
                   child: Padding(
                     padding: EdgeInsets.all(20),
                     child: Text(
-                      'Không có lớp học nào',
+                      'No classes available',
                       style: TextStyle(color: Color(0xFF64748B)),
                     ),
                   ),
@@ -407,7 +407,7 @@ class _EditExamPageState extends State<EditExamPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          displayExam.title.isNotEmpty ? displayExam.title : 'Chỉnh sửa bài kiểm tra',
+          displayExam.title.isNotEmpty ? displayExam.title : 'Edit exam',
           style: const TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -492,9 +492,9 @@ class _EditExamPageState extends State<EditExamPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Section 1: Thông tin cơ bản
+                        // Section 1: Basic Information
                         const Text(
-                          '1. Thông tin cơ bản',
+                          '1. Basic Information',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -504,7 +504,7 @@ class _EditExamPageState extends State<EditExamPage> {
                         const SizedBox(height: 16),
 
                         const Text(
-                          'Tiêu đề bài kiểm tra *',
+                          'Exam title *',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -516,11 +516,11 @@ class _EditExamPageState extends State<EditExamPage> {
                           controller: _titleController,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Tiêu đề không được để trống';
+                              return 'Title cannot be empty';
                             }
                             return null;
                           },
-                          decoration: _buildInputDecoration('Ví dụ: Giữa kỳ HK1'),
+                          decoration: _buildInputDecoration('Example: Midterm Exam Semester 1'),
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF0F172A),
@@ -529,7 +529,7 @@ class _EditExamPageState extends State<EditExamPage> {
                         const SizedBox(height: 16),
 
                         const Text(
-                          'Mô tả',
+                          'Description',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -540,7 +540,7 @@ class _EditExamPageState extends State<EditExamPage> {
                         TextFormField(
                           controller: _descriptionController,
                           maxLines: 3,
-                          decoration: _buildInputDecoration('Mô tả bài kiểm tra (tùy chọn)'),
+                          decoration: _buildInputDecoration('Exam description (optional)'),
                           style: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF0F172A),
@@ -549,7 +549,7 @@ class _EditExamPageState extends State<EditExamPage> {
                         const SizedBox(height: 16),
 
                         const Text(
-                          'Lớp học',
+                          'Class',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -562,11 +562,11 @@ class _EditExamPageState extends State<EditExamPage> {
                           child: AbsorbPointer(
                             child: TextFormField(
                               controller: TextEditingController(
-                                text: _selectedClass?.name ?? 'Chọn lớp học',
+                                text: _selectedClass?.name ?? 'Select class',
                               ),
                               readOnly: true,
                               decoration: _buildInputDecoration(
-                                'Chọn lớp học',
+                                'Select class',
                                 prefixIcon: const Icon(
                                   Icons.school_outlined,
                                   color: Color(0xFF64748B),
@@ -584,9 +584,9 @@ class _EditExamPageState extends State<EditExamPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Section 2: Tham số bài kiểm tra
+                        // Section 2: Exam Parameters
                         const Text(
-                          '2. Tham số bài kiểm tra',
+                          '2. Exam Parameters',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -596,7 +596,7 @@ class _EditExamPageState extends State<EditExamPage> {
                         const SizedBox(height: 16),
 
                         const Text(
-                          'Ngày thi',
+                          'Exam date',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -611,11 +611,11 @@ class _EditExamPageState extends State<EditExamPage> {
                               controller: TextEditingController(
                                 text: _selectedExamDate != null
                                     ? '${_selectedExamDate!.day}/${_selectedExamDate!.month}/${_selectedExamDate!.year}'
-                                    : 'Chọn ngày thi',
+                                    : 'Select exam date',
                               ),
                               readOnly: true,
                               decoration: _buildInputDecoration(
-                                'Chọn ngày thi',
+                                'Select exam date',
                                 prefixIcon: const Icon(
                                   Icons.calendar_today_outlined,
                                   color: Color(0xFF64748B),
@@ -640,7 +640,7 @@ class _EditExamPageState extends State<EditExamPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Thời gian (phút) *',
+                                    'Duration (minutes) *',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -653,11 +653,11 @@ class _EditExamPageState extends State<EditExamPage> {
                                     keyboardType: TextInputType.number,
                                     validator: (value) {
                                       if (value == null || value.trim().isEmpty) {
-                                        return 'Không được để trống';
+                                        return 'Cannot be empty';
                                       }
                                       final duration = int.tryParse(value);
                                       if (duration == null || duration <= 0) {
-                                        return 'Phải là số > 0';
+                                        return 'Must be a number > 0';
                                       }
                                       return null;
                                     },
@@ -676,7 +676,7 @@ class _EditExamPageState extends State<EditExamPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Số câu hỏi',
+                                    'Number of questions',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -707,7 +707,7 @@ class _EditExamPageState extends State<EditExamPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Số đề',
+                                    'Number of versions',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -718,7 +718,7 @@ class _EditExamPageState extends State<EditExamPage> {
                                   DropdownButtonFormField<int>(
                                     initialValue: _numberOfVersions,
                                     icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
-                                    decoration: _buildInputDecoration('Số đề'),
+                                    decoration: _buildInputDecoration('Number of versions'),
                                     items: List.generate(10, (index) {
                                       final val = index + 1;
                                       return DropdownMenuItem(
@@ -743,7 +743,7 @@ class _EditExamPageState extends State<EditExamPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Tổng điểm',
+                                    'Total points',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -768,7 +768,7 @@ class _EditExamPageState extends State<EditExamPage> {
                         const SizedBox(height: 16),
 
                         const Text(
-                          'Điểm đạt',
+                          'Passing score',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -787,9 +787,9 @@ class _EditExamPageState extends State<EditExamPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Section 3: Tùy chọn đảo
+                        // Section 3: Shuffle Options
                         const Text(
-                          '3. Tùy chọn đảo',
+                          '3. Shuffle Options',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -808,7 +808,7 @@ class _EditExamPageState extends State<EditExamPage> {
                             children: [
                               SwitchListTile(
                                 title: const Text(
-                                  'Đảo câu hỏi',
+                                  'Shuffle questions',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -816,7 +816,7 @@ class _EditExamPageState extends State<EditExamPage> {
                                   ),
                                 ),
                                 subtitle: const Text(
-                                  'Câu hỏi sẽ được xáo trộn thứ tự',
+                                  'Questions will be randomly ordered',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF64748B),
@@ -833,7 +833,7 @@ class _EditExamPageState extends State<EditExamPage> {
                               const Divider(height: 1, color: Color(0xFFE2E8F0)),
                               SwitchListTile(
                                 title: const Text(
-                                  'Đảo đáp án',
+                                  'Shuffle answers',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -841,7 +841,7 @@ class _EditExamPageState extends State<EditExamPage> {
                                   ),
                                 ),
                                 subtitle: const Text(
-                                  'Các lựa chọn đáp án sẽ được xáo trộn',
+                                  'Answer options will be shuffled',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF64748B),
@@ -860,9 +860,9 @@ class _EditExamPageState extends State<EditExamPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Section 4: Câu hỏi đã gán
+                        // Section 4: Assigned Questions
                         Text(
-                          '4. Câu hỏi đã gán (${displayExam.questions.length} câu)',
+                          '4. Assigned Questions (${displayExam.questions.length})',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -881,7 +881,7 @@ class _EditExamPageState extends State<EditExamPage> {
                             ),
                             child: const Center(
                               child: Text(
-                                'Chưa có câu hỏi nào được gán',
+                                'No questions assigned yet',
                                 style: TextStyle(
                                   color: Color(0xFF64748B),
                                   fontSize: 14,
@@ -908,14 +908,14 @@ class _EditExamPageState extends State<EditExamPage> {
                             onPressed: () {
                               // TODO: Navigate to question bank or show bottom sheet
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Tính năng đang phát triển'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.add, size: 20),
-                            label: const Text('Thêm câu hỏi'),
+                              const SnackBar(
+                                content: Text('Feature under development'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.add, size: 20),
+                          label: const Text('Add question'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF081C43),
                               side: const BorderSide(color: Color(0xFF081C43)),
@@ -967,7 +967,7 @@ class _EditExamPageState extends State<EditExamPage> {
                             ),
                           )
                         : const Text(
-                            'Lưu thay đổi',
+                            'Save changes',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -979,7 +979,7 @@ class _EditExamPageState extends State<EditExamPage> {
                   TextButton(
                     onPressed: _isSaving ? null : () => Navigator.pop(context),
                     child: const Text(
-                      'Hủy',
+                      'Cancel',
                       style: TextStyle(
                         color: Color(0xFF64748B),
                         fontSize: 15,
@@ -1042,7 +1042,7 @@ class _EditExamPageState extends State<EditExamPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  question.topic ?? 'Câu hỏi',
+                  question.topic ?? 'Question',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1082,7 +1082,7 @@ class _EditExamPageState extends State<EditExamPage> {
           ),
           const SizedBox(width: 8),
           Text(
-            '${question.score} đ',
+            '${question.score} pts',
             style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,

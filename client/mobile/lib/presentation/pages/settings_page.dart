@@ -78,7 +78,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
         context.read<AuthBloc>().add(AuthProfileUpdated(updated));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Cập nhật thông tin thành công'),
+            content: Text('Profile updated successfully'),
             backgroundColor: Color(0xFF22C55E),
           ),
         );
@@ -86,8 +86,8 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi: ${e.toString().replaceFirst('Exception: ', '')}'),
+          SnackBar(
+          content: Text('Error: ${e.toString().replaceFirst('Exception: ', '')}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -112,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đổi mật khẩu thành công'),
+            content: Text('Password changed successfully'),
             backgroundColor: Color(0xFF22C55E),
           ),
         );
@@ -120,8 +120,8 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi: ${e.toString().replaceFirst('Exception: ', '')}'),
+          SnackBar(
+          content: Text('Error: ${e.toString().replaceFirst('Exception: ', '')}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -135,7 +135,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
     final authState = context.watch<AuthBloc>().state;
     String? avatarUrl;
     String role = 'student';
-    String schoolName = 'Trường THPT Smart Grading';
+    String schoolName = 'Smart Grading High School';
     String schoolCode = 'SGS-2024';
 
     if (authState is AuthAuthenticated) {
@@ -150,7 +150,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
         elevation: 0,
         scrolledUnderElevation: 0,
         title: const Text(
-          'Cài đặt',
+          'Settings',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -208,9 +208,9 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               indicatorWeight: 2,
               indicatorSize: TabBarIndicatorSize.tab,
               tabs: const [
-                Tab(text: 'Tài khoản'),
-                Tab(text: 'Thông báo'),
-                Tab(text: 'Bảo mật'),
+                Tab(text: 'Account'),
+                Tab(text: 'Notifications'),
+                Tab(text: 'Security'),
               ],
             ),
           ),
@@ -281,7 +281,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    role == 'teacher' ? 'Giáo viên' : 'Học sinh',
+                    role == 'teacher' ? 'Teacher' : 'Student',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -295,10 +295,10 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           const SizedBox(height: 24),
 
           // Name TextField
-          _buildSectionHeader('HỌ VÀ TÊN'),
+          _buildSectionHeader('FULL NAME'),
           TextFormField(
             controller: _nameController,
-            decoration: _inputDecoration('Nhập họ và tên'),
+            decoration: _inputDecoration('Enter your full name'),
             textCapitalization: TextCapitalization.words,
           ),
           const SizedBox(height: 16),
@@ -317,10 +317,10 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           const SizedBox(height: 16),
 
           // Phone TextField
-          _buildSectionHeader('SỐ ĐIỆN THOẠI'),
+          _buildSectionHeader('PHONE NUMBER'),
           TextFormField(
             controller: _phoneController,
-            decoration: _inputDecoration('Nhập số điện thoại'),
+            decoration: _inputDecoration('Enter phone number'),
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 24),
@@ -345,7 +345,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Text(
-                      'Lưu thay đổi',
+                      'Save Changes',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
             ),
@@ -353,7 +353,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           const SizedBox(height: 24),
 
           // School Information Section
-          _buildSectionHeader('THÔNG TIN TRƯỜNG'),
+          _buildSectionHeader('SCHOOL INFORMATION'),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -366,7 +366,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Tên trường',
+                  'School Name',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF64748B),
@@ -387,7 +387,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                   child: Divider(color: Color(0xFFE2E8F0), height: 1),
                 ),
                 const Text(
-                  'Mã trường',
+                  'School Code',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF64748B),
@@ -411,9 +411,9 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           // Language row
           _buildRowTile(
             icon: Icons.language,
-            title: 'Ngôn ngữ',
+            title: 'Language',
             trailing: const Text(
-              'Tiếng Việt',
+              'Vietnamese',
               style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
             ),
             onTap: () => _showLanguageBottomSheet(context),
@@ -423,7 +423,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           // Appearance toggle
           _buildRowTile(
             icon: Icons.tonality_outlined,
-            title: 'Giao diện',
+            title: 'Appearance',
             trailing: _buildAppearanceToggle(),
             onTap: () => _showAppearanceBottomSheet(context),
           ),
@@ -432,7 +432,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           // Version
           Center(
             child: Text(
-              'Phiên bản 2.4.0 (Build 882)',
+              'Version 2.4.0 (Build 882)',
               style: const TextStyle(
                 fontSize: 12,
                 color: Color(0xFF94A3B8),
@@ -461,35 +461,35 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               children: [
                 _buildNotificationToggle(
                   icon: Icons.email_outlined,
-                  title: 'Email thông báo',
+                  title: 'Email notifications',
                   value: _emailNotifications,
                   onChanged: (val) => setState(() => _emailNotifications = val),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
                 _buildNotificationToggle(
                   icon: Icons.notifications_outlined,
-                  title: 'Push thông báo',
+                  title: 'Push notifications',
                   value: _pushNotifications,
                   onChanged: (val) => setState(() => _pushNotifications = val),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
                 _buildNotificationToggle(
                   icon: Icons.assignment_turned_in_outlined,
-                  title: 'Nhắc nhở chấm điểm',
+                  title: 'Grading reminders',
                   value: _gradingReminders,
                   onChanged: (val) => setState(() => _gradingReminders = val),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
                 _buildNotificationToggle(
                   icon: Icons.rate_review_outlined,
-                  title: 'Cập nhật phúc khảo',
+                  title: 'Appeal updates',
                   value: _appealUpdates,
                   onChanged: (val) => setState(() => _appealUpdates = val),
                 ),
                 const Divider(color: Color(0xFFE2E8F0), height: 1),
                 _buildNotificationToggle(
                   icon: Icons.settings_outlined,
-                  title: 'Thông báo hệ thống',
+                  title: 'System notifications',
                   value: _systemNotifications,
                   onChanged: (val) => setState(() => _systemNotifications = val),
                 ),
@@ -540,7 +540,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader('ĐỔI MẬT KHẨU'),
+          _buildSectionHeader('CHANGE PASSWORD'),
           const SizedBox(height: 8),
           _PasswordChangeForm(
             onSubmit: _changePassword,
@@ -627,10 +627,10 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
-            const Text('Chon ngon ngu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Select Language', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             ListTile(
-              title: const Text('Tiếng Việt'),
+              title: const Text('Vietnamese'),
               leading: const Icon(Icons.check, color: Color(0xFF6366F1)),
               onTap: () => Navigator.pop(context),
             ),
@@ -660,10 +660,10 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
-            const Text('Chon giao dien', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Select Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             ListTile(
-              title: const Text('Sang'),
+              title: const Text('Light'),
               leading: const Icon(Icons.light_mode_outlined),
               onTap: () {
                 setState(() => _appearance = 'Light');
@@ -671,7 +671,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               },
             ),
             ListTile(
-              title: const Text('Toi'),
+              title: const Text('Dark'),
               leading: const Icon(Icons.dark_mode_outlined),
               onTap: () {
                 setState(() => _appearance = 'Dark');
@@ -835,7 +835,7 @@ class _PasswordChangeFormState extends State<_PasswordChangeForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Mật khẩu hiện tại',
+              'Current Password',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
             ),
             const SizedBox(height: 8),
@@ -843,7 +843,7 @@ class _PasswordChangeFormState extends State<_PasswordChangeForm> {
               controller: _currentController,
               obscureText: _obscureCurrent,
               decoration: InputDecoration(
-                hintText: 'Nhập mật khẩu hiện tại',
+                hintText: 'Enter current password',
                 hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                 filled: true,
                 fillColor: Colors.white,
@@ -868,11 +868,11 @@ class _PasswordChangeFormState extends State<_PasswordChangeForm> {
                   onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
                 ),
               ),
-              validator: (v) => (v == null || v.isEmpty) ? 'Vui lòng nhập mật khẩu' : null,
+              validator: (v) => (v == null || v.isEmpty) ? 'Please enter password' : null,
             ),
             const SizedBox(height: 16),
             const Text(
-              'Mật khẩu mới',
+              'New Password',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
             ),
             const SizedBox(height: 8),
@@ -880,7 +880,7 @@ class _PasswordChangeFormState extends State<_PasswordChangeForm> {
               controller: _newController,
               obscureText: _obscureNew,
               decoration: InputDecoration(
-                hintText: 'Nhập mật khẩu mới',
+                hintText: 'Enter new password',
                 hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                 filled: true,
                 fillColor: Colors.white,
@@ -906,14 +906,14 @@ class _PasswordChangeFormState extends State<_PasswordChangeForm> {
                 ),
               ),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Vui lòng nhập mật khẩu mới';
-                if (v.length < 6) return 'Mật khẩu tối thiểu 6 ký tự';
+                if (v == null || v.isEmpty) return 'Please enter new password';
+                if (v.length < 6) return 'Password must be at least 6 characters';
                 return null;
               },
             ),
             const SizedBox(height: 16),
             const Text(
-              'Xác nhận mật khẩu mới',
+              'Confirm New Password',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
             ),
             const SizedBox(height: 8),
@@ -921,7 +921,7 @@ class _PasswordChangeFormState extends State<_PasswordChangeForm> {
               controller: _confirmController,
               obscureText: _obscureConfirm,
               decoration: InputDecoration(
-                hintText: 'Nhập lại mật khẩu mới',
+                hintText: 'Re-enter new password',
                 hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                 filled: true,
                 fillColor: Colors.white,
@@ -947,7 +947,7 @@ class _PasswordChangeFormState extends State<_PasswordChangeForm> {
                 ),
               ),
               validator: (v) {
-                if (v != _newController.text) return 'Mật khẩu không khớp';
+                if (v != _newController.text) return 'Passwords do not match';
                 return null;
               },
             ),
@@ -971,7 +971,7 @@ class _PasswordChangeFormState extends State<_PasswordChangeForm> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : const Text(
-                        'Đổi mật khẩu',
+                        'Change Password',
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
               ),

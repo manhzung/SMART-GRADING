@@ -8,62 +8,42 @@ const router = express.Router();
 
 // ── Special routes (must be defined BEFORE /:userId to avoid being matched as userId) ──
 
-router
-  .route('/teachers/pending')
-  .get(auth('getUsers'), userController.getPendingTeachers);
+router.route('/teachers/pending').get(auth('manageUsers'), userController.getPendingTeachers);
 
-router
-  .route('/school-admin/:schoolId')
-  .get(auth('getUsers'), userController.getSchoolAdmins);
+router.route('/school-admin/:schoolId').get(auth('manageUsers'), userController.getSchoolAdmins);
 
-router
-  .route('/school-admin/:schoolId')
-  .post(auth('manageUsers'), userController.addSchoolAdmin);
+router.route('/school-admin/:schoolId').post(auth('manageUsers'), userController.addSchoolAdmin);
 
-router
-  .route('/school-admin/:schoolId/:userId')
-  .delete(auth('manageUsers'), userController.removeSchoolAdmin);
+router.route('/school-admin/:schoolId/:userId').delete(auth('manageUsers'), userController.removeSchoolAdmin);
 
 // ── Admin Teacher Approval routes (must be defined BEFORE /:userId to avoid being matched as userId) ──
 
-router
-  .route('/admin/teachers/pending')
-  .get(auth('manageUsers'), userController.adminGetPendingTeachers);
+router.route('/admin/teachers/pending').get(auth('manageUsers'), userController.adminGetPendingTeachers);
 
-router
-  .route('/admin/teachers/:userId/approve')
-  .post(auth('manageUsers'), userController.adminApproveTeacher);
+router.route('/admin/teachers/:userId/approve').post(auth('manageUsers'), userController.adminApproveTeacher);
 
-router
-  .route('/admin/teachers/:userId/reject')
-  .post(auth('manageUsers'), userController.adminRejectTeacher);
+router.route('/admin/teachers/:userId/reject').post(auth('manageUsers'), userController.adminRejectTeacher);
 
 // ── Generic CRUD routes ────────────────────────────────────────────────────────
 
 router
   .route('/')
   .post(auth('manageUsers'), validate(userValidation.createUser), userController.createUser)
-  .get(auth('getUsers'), validate(userValidation.getUsers), userController.getUsers);
+  .get(auth('manageUsers'), validate(userValidation.getUsers), userController.getUsers);
 
 router
   .route('/:userId')
-  .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
+  .get(auth('manageUsers'), validate(userValidation.getUser), userController.getUser)
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
   .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
 
-router
-  .route('/:userId/change-password')
-  .post(auth(), userController.changePassword);
+router.route('/:userId/change-password').post(auth(), userController.changePassword);
 
 // ── Teacher Approval routes ────────────────────────────────────────────────────
 
-router
-  .route('/:userId/approve')
-  .post(auth('manageUsers'), userController.approveTeacher);
+router.route('/:userId/approve').post(auth('manageUsers'), userController.approveTeacher);
 
-router
-  .route('/:userId/reject')
-  .post(auth('manageUsers'), userController.rejectTeacher);
+router.route('/:userId/reject').post(auth('manageUsers'), userController.rejectTeacher);
 
 module.exports = router;
 

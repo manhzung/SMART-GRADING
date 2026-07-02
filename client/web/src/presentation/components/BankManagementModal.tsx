@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Crown, Users, Clock, Loader2, UserMinus, UserPlus, Check, XCircle } from 'lucide-react';
+import { Crown, Users, Clock, Loader2, UserMinus, UserPlus, Check, XCircle, ArrowDown } from 'lucide-react';
 import Modal from './shared/Modal';
 import ConfirmDialog from './shared/ConfirmDialog';
 import { bankService, type BankMember } from '../../services/bankService';
@@ -15,7 +15,8 @@ interface Props {
 }
 
 interface UserInfo {
-  _id: string;
+  _id?: string;
+  id?: string;
   name: string;
   email?: string;
 }
@@ -23,6 +24,9 @@ interface UserInfo {
 interface MemberWithUser extends BankMember {
   userId: UserInfo;
 }
+
+// Helper to get user ID (handles both _id and virtual id)
+const getUserId = (userId: UserInfo): string => userId._id || userId.id || '';
 
 export default function BankManagementModal({ bankId, open, onClose, userRole }: Props) {
   const { currentMembership: storeMembership } = useBankStore();
@@ -52,18 +56,31 @@ export default function BankManagementModal({ bankId, open, onClose, userRole }:
         bankService.listPendingRequests(bankId),
       ]);
 
+      console.log('[ManageBank] activeRes:', activeRes);
+      console.log('[ManageBank] pendingRes:', pendingRes);
+
+      const activeMembers = Array.isArray(activeRes) ? activeRes : (activeRes?.results || []);
+      const pendingMembers = Array.isArray(pendingRes) ? pendingRes : (pendingRes?.results || []);
+
       const allMembers: MemberWithUser[] = [
-        ...activeRes.results,
-        ...(Array.isArray(pendingRes) ? pendingRes : pendingRes.results || []),
+        ...activeMembers,
+        ...pendingMembers,
       ].map((m) => ({
         ...m,
         userId: m.userId as UserInfo,
       }));
 
-      setManagers(allMembers.filter((m) => m.role === 'owner' || m.role === 'manager'));
-      setViewers(allMembers.filter((m) => m.role === 'viewer'));
+      console.log('[ManageBank] allMembers:', allMembers);
+
+      const sortedManagers = allMembers
+        .filter((m) => (m.role === 'owner' || m.role === 'manager') && m.status === 'active')
+        .sort((a, b) => (b.role === 'owner' ? 1 : 0) - (a.role === 'owner' ? 1 : 0));
+
+      setManagers(sortedManagers);
+      setViewers(allMembers.filter((m) => m.role === 'viewer' && m.status === 'active'));
       setPending(allMembers.filter((m) => m.status === 'pending'));
-    } catch {
+    } catch (err) {
+      console.error('[ManageBank] fetchMembers error:', err);
       toast.error('Failed to load members');
     } finally {
       setLoading(false);
@@ -124,6 +141,19 @@ export default function BankManagementModal({ bankId, open, onClose, userRole }:
     }
   };
 
+  const handleDemote = async (userId: string) => {
+    setActionLoading(userId);
+    try {
+      await bankService.updateMemberRole(bankId, userId, 'viewer');
+      toast.success('Member demoted to viewer');
+      fetchMembers();
+    } catch {
+      toast.error('Failed to demote member');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   return (
     <>
       <Modal
@@ -165,11 +195,21 @@ export default function BankManagementModal({ bankId, open, onClose, userRole }:
                         <span className={`${styles.roleBadge} ${member.role === 'owner' ? styles.ownerBadge : styles.managerBadge}`}>
                           {member.role === 'owner' ? 'Owner' : 'Manager'}
                         </span>
+                        {isOwner && member.role === 'manager' && (
+                          <button
+                            className={styles.demoteBtn}
+                            onClick={() => handleDemote(getUserId(member.userId))}
+                            disabled={actionLoading === getUserId(member.userId)}
+                          >
+                            <ArrowDown size={16} />
+                            Demote
+                          </button>
+                        )}
                         {!isOwner && member.role === 'manager' && (
                           <button
                             className={styles.removeBtn}
-                            onClick={() => setConfirmRemove({ userId: member.userId._id, name: member.userId?.name || 'Member' })}
-                            disabled={actionLoading === member.userId._id}
+                            onClick={() => setConfirmRemove({ userId: getUserId(member.userId), name: member.userId?.name || 'Member' })}
+                            disabled={actionLoading === getUserId(member.userId)}
                           >
                             <UserMinus size={16} />
                             Remove
@@ -209,16 +249,16 @@ export default function BankManagementModal({ bankId, open, onClose, userRole }:
                           <>
                             <button
                               className={styles.promoteBtn}
-                              onClick={() => handlePromote(member.userId._id)}
-                              disabled={actionLoading === member.userId._id}
+                              onClick={() => handlePromote(getUserId(member.userId))}
+                              disabled={actionLoading === getUserId(member.userId)}
                             >
                               <UserPlus size={16} />
                               Promote
                             </button>
                             <button
                               className={styles.removeBtn}
-                              onClick={() => setConfirmRemove({ userId: member.userId._id, name: member.userId?.name || 'Member' })}
-                              disabled={actionLoading === member.userId._id}
+                              onClick={() => setConfirmRemove({ userId: getUserId(member.userId), name: member.userId?.name || 'Member' })}
+                              disabled={actionLoading === getUserId(member.userId)}
                             >
                               <UserMinus size={16} />
                               Remove
@@ -259,16 +299,16 @@ export default function BankManagementModal({ bankId, open, onClose, userRole }:
                           <>
                             <button
                               className={styles.approveBtn}
-                              onClick={() => handleApprove(member.userId._id)}
-                              disabled={actionLoading === member.userId._id}
+                              onClick={() => handleApprove(getUserId(member.userId))}
+                              disabled={actionLoading === getUserId(member.userId)}
                             >
                               <Check size={16} />
                               Approve
                             </button>
                             <button
                               className={styles.rejectBtn}
-                              onClick={() => handleReject(member.userId._id)}
-                              disabled={actionLoading === member.userId._id}
+                              onClick={() => handleReject(getUserId(member.userId))}
+                              disabled={actionLoading === getUserId(member.userId)}
                             >
                               <XCircle size={16} />
                               Reject

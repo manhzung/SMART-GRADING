@@ -10,7 +10,7 @@ const createClass = {
     code: Joi.string().min(2).max(20).trim().required(),
     gradeLevel: Joi.number().min(0).max(12).allow(null),
     academicYear: Joi.string().pattern(/^\d{4}-\d{4}$/).required(),
-    schoolId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    schoolId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
     homeroomTeacherId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow(null, ''),
     studentIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)),
   }),

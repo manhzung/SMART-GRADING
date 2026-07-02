@@ -515,7 +515,7 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             ListTile(
               leading: const Icon(Icons.language),
-              title: const Text('Tiếng Việt'),
+                              title: const Text('Vietnamese'),
               onTap: () => Navigator.pop(context),
             ),
             const SizedBox(height: 16),
@@ -540,10 +540,10 @@ class _ProfileViewState extends State<ProfileView> {
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
-            const Text('Lien he ho tro', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Contact Support', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             const Text(
-              'Neu ban can ho tro, vui long lien he qua email: support@smartgrading.edu.vn',
+              'If you need support, please contact via email: support@smartgrading.edu.vn',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
@@ -556,7 +556,7 @@ class _ProfileViewState extends State<ProfileView> {
                   await _openEmail('support@smartgrading.edu.vn');
                 },
                 icon: const Icon(Icons.email_outlined),
-                label: const Text('Gui email ho tro'),
+                label: const Text('Send Support Email'),
               ),
             ),
             const SizedBox(height: 12),
@@ -564,7 +564,7 @@ class _ProfileViewState extends State<ProfileView> {
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Dong'),
+                child: const Text('Close'),
               ),
             ),
             const SizedBox(height: 16),

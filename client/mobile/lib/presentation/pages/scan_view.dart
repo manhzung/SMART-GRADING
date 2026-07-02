@@ -73,7 +73,7 @@ class _ScanViewState extends State<ScanView> {
         } else if (state is SubmissionError) {
           debugPrint('[ScanView]   ERROR: ${state.message}');
         } else if (state is SubmissionInitial) {
-          debugPrint('[ScanView]   INITIAL — bloc chua duoc load');
+          debugPrint('[ScanView]   INITIAL — bloc not loaded');
         } else if (state is SubmissionLoading) {
           debugPrint('[ScanView]   LOADING...');
         }
@@ -85,7 +85,7 @@ class _ScanViewState extends State<ScanView> {
         } else if (state is SubmissionLoading) {
           submissionsToDisplay = [];
         } else {
-          // SubmissionInitial or SubmissionError: không hiển thị mock
+          // SubmissionInitial or SubmissionError: do not display mock
           submissionsToDisplay = [];
         }
 
@@ -127,26 +127,28 @@ class _ScanViewState extends State<ScanView> {
 
                       Row(
                         children: [
-                          GestureDetector(
-                            onTap: () => _openCameraScanner(context),
-                            child: Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0F172A),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Center(
+                          Expanded(
+                            flex: 10,
+                            child: GestureDetector(
+                              onTap: () => _openCameraScanner(context),
+                              child: Container(
+                                height: 72,
+                                padding: const EdgeInsets.symmetric(horizontal: 24),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0F172A),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.videocam_outlined, color: Colors.white, size: 20),
-                                    SizedBox(width: 8),
+                                  children: const [
+                                    Icon(Icons.videocam_outlined, color: Colors.white, size: 36),
+                                    SizedBox(width: 14),
                                     Text(
                                       'Live Scan',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                        fontSize: 20,
                                       ),
                                     ),
                                   ],
@@ -156,119 +158,36 @@ class _ScanViewState extends State<ScanView> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            flex: 4,
+                            flex: 6,
                             child: GestureDetector(
                               onTap: () => _openReview(context),
                               child: Container(
-                                height: 48,
+                                height: 64,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   border: Border.all(color: const Color(0xFFE2E8F0)),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: const Center(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.warning_amber_rounded, color: Color(0xFF0F172A), size: 20),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Review',
-                                        style: TextStyle(
-                                          color: Color(0xFF0F172A),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.warning_amber_rounded, color: Color(0xFF0F172A), size: 32),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Review',
+                                      style: TextStyle(
+                                        color: Color(0xFF0F172A),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const OMRTestLabPage(),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF6366F1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.science_outlined, color: Colors.white, size: 22),
                               ),
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      DashedBorderContainer(
-                        child: GestureDetector(
-                          onTap: () => _uploadSubmissions(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.01),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE8F0FE),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.note_add_outlined,
-                                      color: Color(0xFF1A73E8),
-                                      size: 22,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                const Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Upload Submissions',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF0F172A),
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        'Tap to browse or drag PDF scans here.',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0xFF64748B),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.chevron_right,
-                                  color: Color(0xFF94A3B8),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -340,7 +259,7 @@ class _ScanViewState extends State<ScanView> {
                                           context.read<SubmissionBloc>().add(const SubmissionLoadRequested());
                                         },
                                         child: const Text(
-                                          'Thu lai',
+                                          'Retry',
                                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC5221F)),
                                         ),
                                       ),

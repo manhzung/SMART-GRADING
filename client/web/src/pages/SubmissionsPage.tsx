@@ -19,6 +19,7 @@ import {
   BarChart3,
   Trash2,
 } from 'lucide-react';
+import env from '../config/env';
 import { toast } from 'sonner';
 import { useSubmissionStore, type BackendSubmission } from '../presentation/store/submissionStore';
 import { useExamStore } from '../presentation/store/examStore';
@@ -252,7 +253,7 @@ export default function SubmissionsPage() {
     try {
       const token = localStorage.getItem('token') || '';
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/submissions/${submissionId}/download`,
+        `${env.apiUrl}/submissions/${submissionId}/download`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!response.ok) throw new Error('Download failed');

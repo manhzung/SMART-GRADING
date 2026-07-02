@@ -20,7 +20,7 @@ class BatchSummaryPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
-        title: const Text('Kết quả quét'),
+        title: const Text('Scan Results'),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -45,7 +45,7 @@ class BatchSummaryPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Tổng kết',
+                      'Summary',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -53,20 +53,20 @@ class BatchSummaryPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _buildStatRow('Đã quét', '${state.totalScanned} phiếu'),
+                    _buildStatRow('Scanned', '${state.totalScanned} sheets'),
                     const SizedBox(height: 12),
                     _buildStatRow(
-                      'Điểm TB',
+                      'Avg Score',
                       state.averageScore.toStringAsFixed(1),
                     ),
                     const SizedBox(height: 12),
                     _buildStatRow(
-                      'Cao nhất',
+                      'Highest',
                       state.highestScore.toStringAsFixed(1),
                     ),
                     const SizedBox(height: 12),
                     _buildStatRow(
-                      'Thấp nhất',
+                      'Lowest',
                       state.lowestScore.toStringAsFixed(1),
                     ),
                   ],
@@ -86,7 +86,7 @@ class BatchSummaryPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Phân bố điểm',
+                      'Score Distribution',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -115,7 +115,7 @@ class BatchSummaryPage extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onViewDetails,
                   icon: const Icon(Icons.list_alt),
-                  label: const Text('Xem chi tiết'),
+                  label: const Text('View Details'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Color(0xFF334155)),
@@ -131,7 +131,7 @@ class BatchSummaryPage extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onContinueScanning,
                   icon: const Icon(Icons.camera_alt),
-                  label: const Text('Quay lại quét tiếp'),
+                  label: const Text('Continue Scanning'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6366F1),
                     foregroundColor: Colors.white,

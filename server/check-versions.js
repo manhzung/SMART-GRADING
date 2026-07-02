@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/smart-grading').then(async () => {
+const config = require('./src/config/config');
+
+mongoose.connect(config.mongoose.url, config.mongoose.options).then(async () => {
   const { ExamVersion } = require('./src/models');
   
   const examId = '6a3cc3a9e288476df0c3ba67';

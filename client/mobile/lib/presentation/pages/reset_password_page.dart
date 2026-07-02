@@ -85,7 +85,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.',
+              'Password reset successful. Please log in again.',
             ),
           ),
         );
@@ -385,7 +385,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                           ),
                                         )
                                       : const Text(
-                                          'Đặt lại mật khẩu',
+                                          'Reset Password',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -518,14 +518,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Text(
-              'Noi dung cua $title se duoc cap nhat sau.\nVui long lien he ho tro neu ban can ho tro ngay lap tuc.',
+              'Content for $title will be updated soon.\nPlease contact support if you need immediate assistance.',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Dong')),
+              child: ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
             ),
             const SizedBox(height: 16),
           ],

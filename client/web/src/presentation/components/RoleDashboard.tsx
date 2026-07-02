@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { analyticsService, type DashboardStats } from '../../services/analytics.service';
+import NotificationBadge from './NotificationBadge';
 import styles from './RoleDashboard.module.css';
 
 interface KpiProps {
@@ -164,13 +165,16 @@ export default function RoleDashboard() {
                 : 'View and manage your classes and teaching activities'}
           </p>
         </div>
-        <button className={styles.refreshBtn} onClick={load} disabled={isLoading}>
-          <RefreshCw
-            size={14}
-            className={isLoading ? styles.refreshIconSpin : undefined}
-          />
-          {isLoading ? 'Loading...' : 'Refresh'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <NotificationBadge variant="inline" />
+          <button className={styles.refreshBtn} onClick={load} disabled={isLoading}>
+            <RefreshCw
+              size={14}
+              className={isLoading ? styles.refreshIconSpin : undefined}
+            />
+            {isLoading ? 'Loading...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {error && (

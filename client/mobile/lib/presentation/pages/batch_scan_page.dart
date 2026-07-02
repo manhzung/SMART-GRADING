@@ -68,7 +68,7 @@ class _BatchScanPageState extends State<BatchScanPage> {
   Future<void> _onCapture() async {
     final cameraState = _cameraBloc.state;
     if (cameraState is! CameraStable) {
-      _showSnackBar('Vui lòng căn chỉnh phiếu trước');
+      _showSnackBar('Please align the sheet first');
       return;
     }
 
@@ -82,7 +82,7 @@ class _BatchScanPageState extends State<BatchScanPage> {
       _batchScanBloc.add(CaptureForBatch(imageBytes: bytes));
       _processImage(bytes);
     } catch (e) {
-      _showSnackBar('Lỗi chụp ảnh: $e');
+      _showSnackBar('Camera capture error: $e');
     }
   }
 
@@ -247,7 +247,7 @@ class _BatchScanPageState extends State<BatchScanPage> {
               onPressed: () => _batchScanBloc.add(const FinishBatchScan()),
               icon: const Icon(Icons.done_all, color: Color(0xFF22C55E)),
               label: const Text(
-                'Xong',
+                'Done',
                 style: TextStyle(color: Color(0xFF22C55E)),
               ),
             ),
@@ -310,7 +310,7 @@ class _BatchScanPageState extends State<BatchScanPage> {
                     Icon(Icons.check_circle, color: Colors.white, size: 18),
                     SizedBox(width: 8),
                     Text(
-                      'Đã căn chỉnh - Có thể chụp',
+                      'Aligned - Ready to capture',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

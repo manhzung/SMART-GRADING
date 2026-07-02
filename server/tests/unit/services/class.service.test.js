@@ -123,3 +123,87 @@ describe('Class Service - getAvailableStudents', () => {
     expect(result.results).toHaveLength(0);
   });
 });
+
+describe('Class Service - create with optional schoolId', () => {
+  let classService;
+  let schoollessTeacher;
+  let schoollessTeacherUser;
+
+  beforeEach(async () => {
+    classService = Object.create(ClassService);
+
+    schoollessTeacherUser = {
+      _id: mongoose.Types.ObjectId(),
+      name: 'School-less Teacher',
+      email: 'schoolless@example.com',
+      password: 'password1',
+      role: 'teacher',
+      isEmailVerified: true,
+      schoolId: null,
+      registrationStatus: 'approved',
+      isActive: true,
+    };
+
+    await insertUsers([schoollessTeacherUser]);
+  });
+
+  it('should allow a school-less teacher to create a class without a schoolId', async () => {
+    const data = {
+      name: 'Free Class',
+      code: 'FREE-2026',
+      academicYear: '2026-2027',
+      schoolId: null,
+    };
+
+    const created = await classService.create(data, schoollessTeacherUser);
+    expect(created).toBeDefined();
+    expect(created.schoolId).toBeNull();
+  });
+
+  it('should allow a school-less teacher to create a class with empty-string schoolId (normalized to null)', async () => {
+    const data = {
+      name: 'Free Class 2',
+      code: 'FREE2-2026',
+      academicYear: '2026-2027',
+      schoolId: '',
+    };
+
+    const created = await classService.create(data, schoollessTeacherUser);
+    expect(created).toBeDefined();
+    expect(created.schoolId).toBeNull();
+  });
+
+  it('should reject a school-less teacher from creating a class for a specific school', async () => {
+    await insertSchools([schoolA]);
+    const data = {
+      name: '10A1',
+      code: '10A1-2026',
+      academicYear: '2026-2027',
+      schoolId: schoolA._id.toString(),
+    };
+
+    await expect(classService.create(data, schoollessTeacherUser)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('should reject a teacher from a different school creating a class for their target school', async () => {
+    await insertSchools([schoolA]);
+    teacherOne.schoolId = new mongoose.Types.ObjectId();
+    await mongoose.model('User').updateOne(
+      { _id: teacherOne._id },
+      { $set: { schoolId: teacherOne.schoolId } }
+    );
+
+    const data = {
+      name: '10A1',
+      code: '10A1-2026',
+      academicYear: '2026-2027',
+      schoolId: schoolA._id.toString(),
+    };
+
+    await expect(classService.create(data, teacherOne)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+});

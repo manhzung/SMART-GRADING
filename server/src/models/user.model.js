@@ -151,7 +151,7 @@ userSchema.virtual('id').get(function () {
   return this._id.toString();
 });
 
-userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toJSON', { virtuals: true, ...userSchema.options.toJSON });
 userSchema.set('toObject', { virtuals: true });
 
 const User = mongoose.model('User', userSchema);

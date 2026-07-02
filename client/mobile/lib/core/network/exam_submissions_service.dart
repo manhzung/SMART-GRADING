@@ -41,7 +41,7 @@ class ExamSubmissionsService {
     for (final entry in classes) {
       final map = entry as Map<String, dynamic>;
       final classId = (map['classId'] ?? 'unknown').toString();
-      final className = (map['className'] ?? 'Chưa xác định').toString();
+      final className = (map['className'] ?? 'Undefined').toString();
       final submissionsList = (map['submissions'] as List?) ?? const [];
       final submissions = submissionsList
           .map((e) => Submission.fromJson(e as Map<String, dynamic>))

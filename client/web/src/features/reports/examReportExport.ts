@@ -5,6 +5,7 @@ import type { ExamReport } from './types';
 import type { Exam } from '../../presentation/store/examStore';
 import type { BackendSubmission } from '../../presentation/store/submissionStore';
 import { apiService } from '../../core/api';
+import env from '../../config/env';
 
 // ─── Type Definitions ──────────────────────────────────────────────────────────
 
@@ -491,7 +492,7 @@ export async function exportOmrTemplatePdf(
   // path as the /json endpoint, guaranteeing alignment with mobile overlay.
   const params = new URLSearchParams({ examTitle, schoolName: schoolName || '' });
   const response = await fetch(
-    `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/omr-templates/${templateId}/pdf?${params}`,
+    `${env.apiUrl}/omr-templates/${templateId}/pdf?${params}`,
     { headers: apiService.getHeaders() }
   );
 
@@ -527,7 +528,7 @@ export async function exportOmrTemplateVersionSheetsPdf(
 
   // Multiple versions — call the versions endpoint (returns ZIP)
   const response = await fetch(
-    `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/omr-templates/${templateId}/pdf/versions`,
+    `${env.apiUrl}/omr-templates/${templateId}/pdf/versions`,
     {
       method: 'POST',
       headers: { ...apiService.getHeaders(), 'content-type': 'application/json' },

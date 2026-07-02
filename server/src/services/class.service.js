@@ -6,11 +6,28 @@ const { parsePagination } = require('../utils/parsePagination');
 class ClassService {
   async create(data, requestingUser = null) {
     if (data.homeroomTeacherId === '') data.homeroomTeacherId = null;
+    if (data.schoolId === '') data.schoolId = null;
 
-    // Authorization: admin can create any class; teacher can only create in their own school
+    // Authorization:
+    // - admin can create any class
+    // - teacher with a schoolId can only create in their own school
+    // - teacher without a schoolId can still create a "school-less" class
     if (requestingUser) {
-      if (requestingUser.role === 'teacher' && requestingUser.schoolId?.toString() !== data.schoolId?.toString()) {
-        throw new ApiError(403, 'You can only create classes in your own school');
+      const userSchoolId = requestingUser.schoolId?.toString();
+      const dataSchoolId = data.schoolId?.toString();
+
+      if (requestingUser.role === 'teacher') {
+        // Teacher with a school must create within that school
+        if (userSchoolId && userSchoolId !== dataSchoolId) {
+          throw new ApiError(403, 'You can only create classes in your own school');
+        }
+        // Teacher without a school cannot create a class tied to a specific school
+        if (!userSchoolId && dataSchoolId) {
+          throw new ApiError(
+            403,
+            'You cannot create a class for a school you do not belong to. Leave schoolId empty.'
+          );
+        }
       }
       if (requestingUser.role !== 'admin' && requestingUser.role !== 'teacher') {
         throw new ApiError(403, 'Only admin and teachers can create classes');
@@ -45,7 +62,16 @@ class ClassService {
 
     // Authorization: only users in the same school can view the class
     if (requestingUser && requestingUser.schoolId) {
-      if (classData.schoolId.toString() !== requestingUser.schoolId.toString()) {
+      if (!classData.schoolId) {
+        // Class has no school: only visible to its creator (homeroom teacher) or admin
+        const isAdmin = requestingUser.role === 'admin';
+        const isHomeroom =
+          classData.homeroomTeacherId &&
+          classData.homeroomTeacherId.toString() === requestingUser._id?.toString();
+        if (!isAdmin && !isHomeroom) {
+          throw new ApiError(403, 'You can only view classes in your own school');
+        }
+      } else if (classData.schoolId.toString() !== requestingUser.schoolId.toString()) {
         throw new ApiError(403, 'You can only view classes in your own school');
       }
     }
@@ -74,6 +100,11 @@ class ClassService {
       filter.schoolId = targetSchoolId;
     } else if (userSchoolId) {
       filter.schoolId = userSchoolId;
+    } else if (requestingUser && requestingUser.role === 'teacher') {
+      // School-less teacher: only see classes they are homeroom teacher of.
+      const teacherId = requestingUser._id || requestingUser.id;
+      filter.schoolId = null;
+      filter.homeroomTeacherId = teacherId;
     } else {
       // No school context at all — return empty result instead of error
       return { results: [], page: parsedPage, limit: parsedLimit, total: 0, pages: 0 };
@@ -82,7 +113,7 @@ class ClassService {
     if (academicYear) filter.academicYear = academicYear;
     if (gradeLevel) filter.gradeLevel = gradeLevel;
 
-    if (requestingUser && requestingUser.role === 'teacher') {
+    if (requestingUser && requestingUser.role === 'teacher' && userSchoolId) {
       const teacherId = requestingUser._id || requestingUser.id;
       filter.$or = [
         { homeroomTeacherId: teacherId },
@@ -121,10 +152,21 @@ class ClassService {
     }
 
     const userSchoolId = requestingUser?.schoolId?.toString();
-    const classSchoolId = classData.schoolId.toString();
+    const classSchoolId = classData.schoolId?.toString() || null;
 
     // Admin can access any class
     if (requestingUser?.role === 'admin') {
+      return classData;
+    }
+
+    // School-less class: only the homeroom teacher (creator) can access it
+    if (!classSchoolId) {
+      const isHomeroom =
+        classData.homeroomTeacherId &&
+        classData.homeroomTeacherId.toString() === requestingUser?._id?.toString();
+      if (!isHomeroom) {
+        throw new ApiError(403, `You can only ${action} classes in your own school`);
+      }
       return classData;
     }
 
@@ -312,8 +354,10 @@ class ClassService {
     }
 
     // Authorization: enforce school boundary
-    if (requestingUser?.schoolId && classData.schoolId.toString() !== requestingUser.schoolId.toString()) {
-      throw new ApiError(403, 'You can only access students in your own school');
+    if (requestingUser?.schoolId && classData.schoolId) {
+      if (classData.schoolId.toString() !== requestingUser.schoolId.toString()) {
+        throw new ApiError(403, 'You can only access students in your own school');
+      }
     }
 
     return {

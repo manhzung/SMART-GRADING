@@ -16,8 +16,9 @@ export function useQuestionPermissions(): QuestionPermissions {
 
   const isAdmin = user?.role === 'admin';
   const isTeacher = user?.role === 'teacher';
+  const isSchoolAdmin = user?.role === 'school-admin';
 
-  const canManage = isAdmin || isTeacher;
+  const canManage = isAdmin || isTeacher || isSchoolAdmin;
 
   return {
     canView: !!user,

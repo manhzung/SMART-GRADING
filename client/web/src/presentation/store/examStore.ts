@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { apiService } from '../../core/api';
 import { useAuthStore } from './authStore';
+import env from '../../config/env';
 
 // ─── Backend Types ─────────────────────────────────────────────────────────────
 
@@ -483,7 +484,7 @@ export const useExamStore = create<ExamState>((set) => ({
   exportExamPdf: async (id) => {
     const token = useAuthStore.getState().token || '';
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/exams/${id}/export?format=pdf`,
+      `${env.apiUrl}/exams/${id}/export?format=pdf`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -513,7 +514,7 @@ export const useExamStore = create<ExamState>((set) => ({
   exportVersionPdf: async (examId, versionCode) => {
     const token = useAuthStore.getState().token || '';
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/exams/${examId}/versions/${versionCode}/pdf`,
+      `${env.apiUrl}/exams/${examId}/versions/${versionCode}/pdf`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -542,7 +543,7 @@ export const useExamStore = create<ExamState>((set) => ({
 
   exportResults: async (id, format = 'pdf') => {
     const token = useAuthStore.getState().token || '';
-    const endpoint = `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/exams/${id}/results/export?format=${format}`;
+    const endpoint = `${env.apiUrl}/exams/${id}/results/export?format=${format}`;
     const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
 
     if (!response.ok) {
@@ -638,7 +639,7 @@ export const useExamStore = create<ExamState>((set) => ({
   downloadExamTemplateJson: async (id) => {
     const token = useAuthStore.getState().token || '';
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/exams/${id}/template`,
+      `${env.apiUrl}/exams/${id}/template`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -667,7 +668,7 @@ export const useExamStore = create<ExamState>((set) => ({
     
     // First, get the answer sheet URL
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/exams/${id}/answer-sheet`,
+      `${env.apiUrl}/exams/${id}/answer-sheet`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -691,7 +692,7 @@ export const useExamStore = create<ExamState>((set) => ({
 
     // Otherwise, download via API
     const fileResponse = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}${answerSheetUrl}`,
+      `${env.apiUrl}${answerSheetUrl}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 

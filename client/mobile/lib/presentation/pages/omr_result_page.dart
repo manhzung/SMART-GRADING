@@ -100,15 +100,15 @@ class OMRResultPage extends StatelessWidget {
     // Build scan info lines from actual data
     final lines = <String>[];
     if (studentCode != null && studentCode!.isNotEmpty) {
-      lines.add('SBD: $studentCode');
+      lines.add('Student ID: $studentCode');
     }
     if (versionCode != null && versionCode!.isNotEmpty) {
-      lines.add('MADE: $versionCode');
+      lines.add('Version: $versionCode');
     }
     final correctCount = gradingResult.verdicts.where((v) => v.verdict == 'correct').length;
     final totalCount = gradingResult.verdicts.length;
     if (totalCount > 0) {
-      lines.add('DIEM: ${gradingResult.score.toStringAsFixed(1)} ($correctCount/$totalCount)');
+      lines.add('Score: ${gradingResult.score.toStringAsFixed(1)} ($correctCount/$totalCount)');
     }
 
     return Container(
@@ -204,7 +204,7 @@ class OMRResultPage extends StatelessWidget {
   }
 
   Widget _buildDetectedInfoCard() {
-    // Hiển thị SBD và Mã đề được đọc từ OMR scan (không chỉnh sửa được)
+    // Display detected Student ID and Version Code from OMR scan (read-only)
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -224,7 +224,7 @@ class OMRResultPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Số báo danh',
+                    'Student ID',
                     style: TextStyle(
                       color: Colors.white60,
                       fontSize: 11,
@@ -256,7 +256,7 @@ class OMRResultPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Mã đề',
+                    'Version Code',
                     style: TextStyle(
                       color: Colors.white60,
                       fontSize: 11,
@@ -318,7 +318,7 @@ class OMRResultPage extends StatelessWidget {
                 ),
                 if (displayCode != null && student != null)
                   Text(
-                    'MSSV: $displayCode',
+                    'Student Code: $displayCode',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 13,
@@ -365,7 +365,7 @@ class OMRResultPage extends StatelessWidget {
             _buildStudentInfoCard(),
             const SizedBox(height: 16),
           ],
-          // Hiển thị SBD và Mã đề đã đọc được từ OMR
+          // Display detected Student ID and Version Code from OMR
           if (studentCode != null || versionCode != null) ...[
             _buildDetectedInfoCard(),
             const SizedBox(height: 16),
@@ -648,7 +648,7 @@ class OMRResultPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Câu ${q.position}',
+                            'Q${q.position}',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,

@@ -7,15 +7,8 @@ const { parsePagination } = require('../utils/parsePagination');
 
 class ExamService {
   async create(data) {
-    // Auto-assign default OMR template if not provided
-    if (!data.omrTemplateId) {
-      const defaultTemplate = await OMRTemplate.findOne({ isDefault: true, isActive: true });
-      if (!defaultTemplate) {
-        throw new ApiError(400, 'No OMR Template specified and no default template found. Please create or set a default OMR Template.');
-      }
-      data.omrTemplateId = defaultTemplate._id;
-    } else {
-      // Validate OMR template exists
+    // OMR Template is optional when creating exam - can be assigned later
+    if (data.omrTemplateId) {
       const template = await OMRTemplate.findById(data.omrTemplateId);
       if (!template) {
         throw new ApiError(400, 'OMR Template not found');

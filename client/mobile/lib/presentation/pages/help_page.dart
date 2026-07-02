@@ -28,7 +28,7 @@ class _HelpPageState extends State<HelpPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Trợ giúp',
+          'Help',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontSize: 18,
@@ -80,7 +80,7 @@ class _HelpPageState extends State<HelpPage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm câu hỏi...',
+                hintText: 'Search questions...',
                 hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B), size: 22),
                 filled: true,
@@ -111,7 +111,7 @@ class _HelpPageState extends State<HelpPage> {
                   const SizedBox(height: 20),
 
                   // Quick Guides Section
-                  _buildSectionTitle('Hướng dẫn nhanh'),
+                  _buildSectionTitle('Quick Guides'),
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 110,
@@ -121,25 +121,25 @@ class _HelpPageState extends State<HelpPage> {
                         _buildQuickGuideCard(
                           icon: Icons.play_circle_outline,
                           color: Colors.blue,
-                          title: 'Bắt đầu',
+                          title: 'Getting Started',
                         ),
                         const SizedBox(width: 12),
                         _buildQuickGuideCard(
                           icon: Icons.class_outlined,
                           color: Colors.green,
-                          title: 'Quản lý lớp',
+                          title: 'Class Management',
                         ),
                         const SizedBox(width: 12),
                         _buildQuickGuideCard(
                           icon: Icons.document_scanner_outlined,
                           color: Colors.purple,
-                          title: 'Quét OMR',
+                          title: 'OMR Scanning',
                         ),
                         const SizedBox(width: 12),
                         _buildQuickGuideCard(
                           icon: Icons.settings_outlined,
                           color: Colors.orange,
-                          title: 'Cài đặt',
+                          title: 'Settings',
                         ),
                       ],
                     ),
@@ -148,91 +148,91 @@ class _HelpPageState extends State<HelpPage> {
                   const SizedBox(height: 28),
 
                   // FAQ Section
-                  _buildSectionTitle('Câu hỏi thường gặp'),
+                  _buildSectionTitle('Frequently Asked Questions'),
                   const SizedBox(height: 12),
 
-                  // Category 1 - Bắt đầu sử dụng
+                  // Category 1 - Getting Started
                   _buildFAQCategory(
                     icon: Icons.rocket_launch,
-                    title: 'Bắt đầu sử dụng',
+                    title: 'Getting Started',
                     items: const [
                       FAQItem(
-                        question: 'Làm sao để đăng nhập?',
-                        answer: 'Sử dụng email và mật khẩu được cấp bởi trường để đăng nhập vào ứng dụng. Nếu chưa có tài khoản, vui lòng liên hệ quản trị viên.',
+                        question: 'How do I log in?',
+                        answer: 'Use the email and password provided by your school to log in to the app. If you don\'t have an account, please contact the administrator.',
                       ),
                       FAQItem(
-                        question: 'Làm sao tạo lớp học mới?',
-                        answer: 'Nhấn nút + trong tab Lớp học, điền đầy đủ thông tin lớp học bao gồm tên lớp, môn học và mô tả, sau đó nhấn Lưu.',
+                        question: 'How do I create a new class?',
+                        answer: 'Press the + button in the Classes tab, fill in the class information including class name, subject, and description, then press Save.',
                       ),
                       FAQItem(
-                        question: 'Tôi quên mật khẩu thì sao?',
-                        answer: 'Nhấn "Quên mật khẩu" ở trang đăng nhập và làm theo hướng dẫn để đặt lại mật khẩu mới qua email đã đăng ký.',
+                        question: 'What if I forgot my password?',
+                        answer: 'Press "Forgot Password" on the login page and follow the instructions to reset your password via your registered email.',
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 16),
 
-                  // Category 2 - Thi cử
+                  // Category 2 - Exams
                   _buildFAQCategory(
                     icon: Icons.assignment,
-                    title: 'Thi cử',
+                    title: 'Exams',
                     items: const [
                       FAQItem(
-                        question: 'Làm sao tạo bài thi mới?',
-                        answer: 'Vào tab Thi, chọn "Tạo bài thi mới", nhập thông tin bài thi như tên, thời gian, số câu hỏi và chọn lớp học để giao bài.',
+                        question: 'How do I create a new exam?',
+                        answer: 'Go to the Exams tab, select "Create New Exam", enter exam information such as name, time, number of questions, and select a class to assign the exam.',
                       ),
                       FAQItem(
-                        question: 'Cách chấm điểm tự động hoạt động?',
-                        answer: 'Hệ thống sẽ tự động chấm điểm dựa trên đáp án đã được thiết lập khi tạo bài thi OMR. Kết quả sẽ được cập nhật ngay sau khi quét.',
+                        question: 'How does auto-grading work?',
+                        answer: 'The system will automatically grade based on the answers set up when creating the OMR exam. Results will be updated immediately after scanning.',
                       ),
                       FAQItem(
-                        question: 'Làm sao xuất kết quả thi?',
-                        answer: 'Sau khi chấm xong, vào chi tiết bài thi và chọn "Xuất kết quả" để tải file Excel hoặc PDF chứa điểm số của tất cả học sinh.',
+                        question: 'How do I export exam results?',
+                        answer: 'After grading, go to exam details and select "Export Results" to download an Excel or PDF file containing scores for all students.',
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 16),
 
-                  // Category 3 - Quét OMR
+                  // Category 3 - OMR Scanning
                   _buildFAQCategory(
                     icon: Icons.document_scanner,
-                    title: 'Quét OMR',
+                    title: 'OMR Scanning',
                     items: const [
                       FAQItem(
-                        question: 'Làm sao quét phiếu trả lời?',
-                        answer: 'Đặt phiếu trả lời trên mặt phẳng, căn chỉnh và chụp ảnh bằng camera của ứng dụng. Đảm bảo ánh sáng đủ và phiếu nằm trong khung hình.',
+                        question: 'How do I scan answer sheets?',
+                        answer: 'Place the answer sheet on a flat surface, align it, and take a photo using the app\'s camera. Ensure adequate lighting and that the sheet is within the frame.',
                       ),
                       FAQItem(
-                        question: 'Tại sao kết quả quét không chính xác?',
-                        answer: 'Kiểm tra lại độ sáng, đảm bảo phiếu không bị nhàu và các bọt đen được tô đầy đủ. Nếu vẫn lỗi, thử quét lại với góc chụp khác.',
+                        question: 'Why are scan results inaccurate?',
+                        answer: 'Check the brightness again, ensure the sheet is not wrinkled and all black bubbles are fully filled. If still having errors, try scanning from a different angle.',
                       ),
                       FAQItem(
-                        question: 'Có thể quét nhiều phiếu cùng lúc không?',
-                        answer: 'Hiện tại mỗi lần quét chỉ xử lý một phiếu trả lời. Vui lòng quét lần lượt từng phiếu để đảm bảo độ chính xác.',
+                        question: 'Can I scan multiple sheets at once?',
+                        answer: 'Currently, each scan only processes one answer sheet. Please scan each sheet individually to ensure accuracy.',
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 16),
 
-                  // Category 4 - Tài khoản
+                  // Category 4 - Account
                   _buildFAQCategory(
                     icon: Icons.person,
-                    title: 'Tài khoản',
+                    title: 'Account',
                     items: const [
                       FAQItem(
-                        question: 'Làm sao thay đổi thông tin cá nhân?',
-                        answer: 'Vào mục Hồ sơ trong tab Tài khoản, nhấn vào ảnh đại diện để chỉnh sửa thông tin cá nhân như tên, số điện thoại.',
+                        question: 'How do I change personal information?',
+                        answer: 'Go to Profile in the Account tab, click on the avatar to edit personal information such as name and phone number.',
                       ),
                       FAQItem(
-                        question: 'Có thể đổi mật khẩu không?',
-                        answer: 'Có, vào mục Hồ sơ > Đổi mật khẩu, nhập mật khẩu hiện tại và mật khẩu mới muốn đặt.',
+                        question: 'Can I change my password?',
+                        answer: 'Yes, go to Profile > Change Password, enter your current password and the new password you want to set.',
                       ),
                       FAQItem(
-                        question: 'Làm sao đăng xuất khỏi ứng dụng?',
-                        answer: 'Vào mục Hồ sơ, kéo xuống dưới và nhấn nút "Đăng xuất" để đăng xuất khỏi tài khoản.',
+                        question: 'How do I log out of the app?',
+                        answer: 'Go to Profile, scroll down and press the "Logout" button to log out of your account.',
                       ),
                     ],
                   ),
@@ -259,7 +259,7 @@ class _HelpPageState extends State<HelpPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Liên hệ hỗ trợ',
+                          'Contact Support',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -279,7 +279,7 @@ class _HelpPageState extends State<HelpPage> {
                         const SizedBox(height: 12),
                         _buildContactRow(
                           icon: Icons.access_time,
-                          text: 'Thứ 2 - Thứ 6: 8:00 - 17:00',
+                          text: 'Monday - Friday: 8:00 - 17:00',
                         ),
                       ],
                     ),

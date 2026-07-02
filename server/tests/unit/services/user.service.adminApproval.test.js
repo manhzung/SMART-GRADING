@@ -96,10 +96,11 @@ describe('Admin Teacher Approval Service', () => {
           registeredSchoolId: schoolId,
         });
       }
-      const result = await userService.getPendingTeachersForSchool(schoolId, { limit: 2, page: 1 });
+      const result = await userService.getPendingTeachersForSchool(schoolId, { limit: 2, page: 1, sortBy: 'createdAt:asc' });
       expect(result.results).toHaveLength(2);
       expect(result.total).toBe(5);
       expect(result.pages).toBe(3);
+      expect(result.results.map((r) => r.name)).toEqual(['Teacher 0', 'Teacher 1']);
     });
   });
 

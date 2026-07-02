@@ -107,16 +107,16 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xóa câu hỏi'),
-        content: const Text('Bạn có chắc chắn muốn xóa câu hỏi này không?'),
+        title: const Text('Delete question'),
+        content: const Text('Are you sure you want to delete this question?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -132,7 +132,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đã xóa câu hỏi'),
+            content: Text('Question deleted'),
             backgroundColor: Color(0xFF16A34A),
           ),
         );
@@ -141,7 +141,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi xóa: $e'),
+            content: Text('Error deleting: $e'),
             backgroundColor: const Color(0xFFDC2626),
           ),
         );
@@ -168,7 +168,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Ngân hàng câu hỏi',
+          'Question Bank',
           style: TextStyle(
             color: Color(0xFF0F172A),
             fontWeight: FontWeight.bold,
@@ -215,7 +215,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                 },
                 onSubmitted: (_) => _loadQuestions(),
                 decoration: InputDecoration(
-                  hintText: 'Tìm kiếm câu hỏi...',
+                  hintText: 'Search questions...',
                   hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                   prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B)),
                   filled: true,
@@ -282,7 +282,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Tổng: ${_filteredQuestions.length} câu hỏi',
+                  'Total: ${_filteredQuestions.length} questions',
                   style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                 ),
               ),
@@ -301,13 +301,13 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                               const Icon(Icons.error_outline, size: 48, color: Color(0xFFDC2626)),
                               const SizedBox(height: 16),
                               const Text(
-                                'Không thể tải dữ liệu',
+                                'Unable to load data',
                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
                               ),
                               const SizedBox(height: 8),
                               ElevatedButton(
                                 onPressed: _loadQuestions,
-                                child: const Text('Thử lại'),
+                                child: const Text('Retry'),
                               ),
                             ],
                           ),
@@ -320,7 +320,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                                   Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
                                   const SizedBox(height: 16),
                                   const Text(
-                                    'Không tìm thấy câu hỏi nào',
+                                    'No questions found',
                                     style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
                                   ),
                                 ],
@@ -528,7 +528,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                       const Icon(Icons.history, size: 14, color: Color(0xFF94A3B8)),
                       const SizedBox(width: 4),
                       Text(
-                        'Đã dùng: ${question.usageCount} lần',
+                        'Used: ${question.usageCount} times',
                         style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                       ),
                       const Spacer(),
@@ -562,7 +562,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Đáp án đúng:',
+                      'Correct answer:',
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                     ),
                     const SizedBox(height: 8),
@@ -610,7 +610,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Giải thích:',
+                                    'Explanation:',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -768,15 +768,15 @@ class _AddQuestionSheetState extends State<_AddQuestionSheet> {
       Navigator.of(context).pop();
       widget.onSaved?.call();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(widget.existingQuestion != null ? 'Đã cập nhật câu hỏi' : 'Đã thêm câu hỏi mới'),
-          backgroundColor: const Color(0xFF16A34A),
-        ),
+          SnackBar(
+            content: Text(widget.existingQuestion != null ? 'Question updated' : 'New question added'),
+            backgroundColor: const Color(0xFF16A34A),
+          ),
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: const Color(0xFFDC2626)),
+          SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFDC2626)),
         );
       }
     } finally {
@@ -816,27 +816,27 @@ class _AddQuestionSheetState extends State<_AddQuestionSheet> {
               ),
               const SizedBox(height: 20),
               Text(
-                isEditing ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới',
+                isEditing ? 'Edit question' : 'Add new question',
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
               ),
               const SizedBox(height: 20),
 
-              const Text('Nội dung câu hỏi *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+              const Text('Question content *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _questionController,
                 minLines: 3,
                 maxLines: 5,
-                decoration: _inputDecoration('Nhập nội dung câu hỏi'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Vui lòng nhập câu hỏi' : null,
+                decoration: _inputDecoration('Enter question content'),
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a question' : null,
               ),
               const SizedBox(height: 16),
 
-              const Text('Độ khó', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+              const Text('Difficulty', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _selectedDifficulty,
-                decoration: _inputDecoration('Chọn độ khó'),
+                decoration: _inputDecoration('Select difficulty'),
                 items: const [
                   DropdownMenuItem(value: 'Easy', child: Text('Easy')),
                   DropdownMenuItem(value: 'Medium', child: Text('Medium')),
@@ -846,7 +846,7 @@ class _AddQuestionSheetState extends State<_AddQuestionSheet> {
               ),
               const SizedBox(height: 16),
 
-              const Text('Các lựa chọn (chọn đáp án đúng)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+              const Text('Options (select the correct answer)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
               const SizedBox(height: 8),
               _buildOptionField('A', _optionAController, 0),
               const SizedBox(height: 8),
@@ -857,21 +857,21 @@ class _AddQuestionSheetState extends State<_AddQuestionSheet> {
               _buildOptionField('D', _optionDController, 3),
               const SizedBox(height: 16),
 
-              const Text('Tags (cách nhau bởi dấu phẩy)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+              const Text('Tags (comma separated)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _tagsController,
-                decoration: _inputDecoration('Ví dụ: Toán, Hình học, Lớp 10'),
+                decoration: _inputDecoration('Example: Math, Geometry, Grade 10'),
               ),
               const SizedBox(height: 16),
 
-              const Text('Giải thích (tùy chọn)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+              const Text('Explanation (optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _explanationController,
                 minLines: 2,
                 maxLines: 4,
-                decoration: _inputDecoration('Nhập giải thích cho đáp án'),
+                decoration: _inputDecoration('Enter explanation for the answer'),
               ),
               const SizedBox(height: 24),
 
@@ -885,7 +885,7 @@ class _AddQuestionSheetState extends State<_AddQuestionSheet> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         side: const BorderSide(color: Color(0xFFE2E8F0)),
                       ),
-                      child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B))),
+                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -901,7 +901,7 @@ class _AddQuestionSheetState extends State<_AddQuestionSheet> {
                       ),
                       child: _isSubmitting
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text('Lưu'),
+                          : const Text('Save'),
                     ),
                   ),
                 ],
@@ -939,7 +939,7 @@ class _AddQuestionSheetState extends State<_AddQuestionSheet> {
           child: TextFormField(
             controller: controller,
             decoration: InputDecoration(
-              hintText: 'Nhập đáp án $label',
+              hintText: 'Enter option $label',
               hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
               filled: true,
               fillColor: isCorrect ? const Color(0xFFDCFCE7) : Colors.white,
@@ -957,7 +957,7 @@ class _AddQuestionSheetState extends State<_AddQuestionSheet> {
                 borderSide: BorderSide(color: isCorrect ? const Color(0xFF16A34A) : const Color(0xFF081C43), width: 2),
               ),
             ),
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Vui lòng nhập đáp án' : null,
+            validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter an answer' : null,
           ),
         ),
       ],
