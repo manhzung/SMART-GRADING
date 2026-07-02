@@ -44,16 +44,26 @@ if (error) {
   throw new Error(`Config validation error: ${error.message}`);
 }
 
+let mongoUrl = envVars.MONGODB_URL;
+if (envVars.NODE_ENV === 'test') {
+  if (mongoUrl.includes('?')) {
+    const [base, query] = mongoUrl.split('?');
+    mongoUrl = `${base}-test?${query}`;
+  } else {
+    mongoUrl = `${mongoUrl}-test`;
+  }
+}
+
 module.exports = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
   mongoose: {
-    url: envVars.MONGODB_URL + (envVars.NODE_ENV === 'test' ? '-test' : ''),
+    url: mongoUrl,
     options: {
       useCreateIndex: true,
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      ...(envVars.NODE_ENV !== 'test' ? { w: 'majority' } : {}),
+      ...(envVars.NODE_ENV !== 'test' ? { writeConcern: { w: 'majority' } } : {}),
     },
   },
   jwt: {
@@ -73,7 +83,7 @@ module.exports = {
       },
     },
     from: envVars.EMAIL_FROM,
-    frontendUrl: envVars.FRONTEND_URL,
+    frontendUrl: envVars.FRONTEND_URL ? envVars.FRONTEND_URL.replace(/\/$/, '') : undefined,
   },
   cloudinary: {
     cloud_name: envVars.CLOUDINARY_CLOUD_NAME,
