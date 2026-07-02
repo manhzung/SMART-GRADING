@@ -229,14 +229,14 @@ export default function ClassDetailPage() {
 
   const handleSelectAllAvailable = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      const pageIds = availableStudents.map(s => s._id);
+      const pageIds = availableStudents.map(s => s.id || s._id);
       setSelectedAvailableIds(prev => {
         const next = new Set(prev);
         pageIds.forEach(id => next.add(id));
         return next;
       });
     } else {
-      const pageIds = availableStudents.map(s => s._id);
+      const pageIds = availableStudents.map(s => s.id || s._id);
       setSelectedAvailableIds(prev => {
         const next = new Set(prev);
         pageIds.forEach(id => next.delete(id));
@@ -259,7 +259,7 @@ export default function ClassDetailPage() {
 
   const isAllAvailablePageSelected =
     availableStudents.length > 0 &&
-    availableStudents.every(s => selectedAvailableIds.has(s._id));
+    availableStudents.every(s => selectedAvailableIds.has(s.id || s._id));
 
   // Fetch class statistics from API
   const { data: classStats } = useQuery({
@@ -1634,20 +1634,21 @@ export default function ClassDetailPage() {
                       </thead>
                       <tbody>
                         {availableStudents.map((student) => {
-                          const isSelected = selectedAvailableIds.has(student._id);
-                          const studentCode = student.studentCode || `STU-${student._id.slice(-5).toUpperCase()}`;
+                          const studentId = student.id || student._id;
+                          const isSelected = selectedAvailableIds.has(studentId);
+                          const studentCode = student.studentCode || `STU-${String(studentId).slice(-5).toUpperCase()}`;
                           return (
                             <tr
-                              key={student._id}
+                              key={studentId}
                               className={isSelected ? styles.rowSelected : ''}
                               style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
-                              onClick={() => handleSelectRowAvailable(student._id, !isSelected)}
+                              onClick={() => handleSelectRowAvailable(studentId, !isSelected)}
                             >
                               <td style={{ textAlign: 'center', padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
                                 <input
                                   type="checkbox"
                                   checked={isSelected}
-                                  onChange={(e) => handleSelectRowAvailable(student._id, e.target.checked)}
+                                  onChange={(e) => handleSelectRowAvailable(studentId, e.target.checked)}
                                   className={styles.checkbox}
                                 />
                               </td>
