@@ -218,9 +218,7 @@ class QuestionBankService {
 
     const owners = await QuestionBankMember.find({ bankId, role: 'owner', status: 'active' });
     const ownerIds = new Set(owners.map((o) => o.userId.toString()));
-    const hasAdmin = candidateOwners.some(
-      (c) => c.role === 'school-admin' && ownerIds.has(c.userId.toString())
-    );
+    const hasAdmin = candidateOwners.some((c) => c.role === 'school-admin' && ownerIds.has(c.userId.toString()));
 
     if (!hasAdmin) {
       throw new ApiError(400, 'School bank must have at least one school admin owner');
@@ -238,7 +236,18 @@ class QuestionBankService {
   }
 
   async listApprovedBanksForUser(userId) {
-    return this.listBanksForUser(userId);
+    const memberships = await QuestionBankMember.find({
+      userId,
+      status: 'active',
+    }).lean();
+    const bankIds = memberships.map((membership) => membership.bankId);
+    if (bankIds.length === 0) {
+      return [];
+    }
+    return QuestionBank.find({ _id: { $in: bankIds } })
+      .select('name description type schoolId createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
   }
 
   async listSchoolBanks(schoolId) {

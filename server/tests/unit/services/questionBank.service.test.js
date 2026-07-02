@@ -30,9 +30,9 @@ describe('QuestionBank Service', () => {
     const userId = new mongoose.Types.ObjectId();
     await QuestionBank.create({ _id: bankId, name: 'Bank', createdBy: ownerId });
     await QuestionBankMember.create({ bankId, userId, role: 'viewer', status: 'active' });
-    await expect(
-      service.inviteMember(bankId.toString(), userId.toString(), ownerId)
-    ).rejects.toThrow(/already an? active member/i);
+    await expect(service.inviteMember(bankId.toString(), userId.toString(), ownerId)).rejects.toThrow(
+      /already an? active member/i
+    );
   });
 
   it('approves pending member', async () => {
@@ -91,9 +91,9 @@ describe('QuestionBank Service', () => {
       const userId = new mongoose.Types.ObjectId();
       await QuestionBank.create({ _id: bankId, name: 'Bank', createdBy: ownerId });
       await QuestionBankMember.create({ bankId, userId, role: 'viewer', status: 'active' });
-      await expect(
-        service.setMemberRole(bankId.toString(), userId.toString(), 'owner', ownerId)
-      ).rejects.toThrow(/Cannot promote via setMemberRole/i);
+      await expect(service.setMemberRole(bankId.toString(), userId.toString(), 'owner', ownerId)).rejects.toThrow(
+        /Cannot promote via setMemberRole/i
+      );
     });
   });
 
@@ -110,9 +110,7 @@ describe('QuestionBank Service', () => {
     it('throws when owner tries to leave', async () => {
       await QuestionBank.create({ _id: bankId, name: 'Bank', createdBy: ownerId });
       await QuestionBankMember.create({ bankId, userId: ownerId, role: 'owner', status: 'active' });
-      await expect(
-        service.leaveBank(bankId.toString(), ownerId.toString())
-      ).rejects.toThrow(/transfer ownership/i);
+      await expect(service.leaveBank(bankId.toString(), ownerId.toString())).rejects.toThrow(/transfer ownership/i);
     });
 
     it('non-owner can leave', async () => {
@@ -136,21 +134,16 @@ describe('QuestionBank Service', () => {
     it('throws when active member requests access again', async () => {
       await QuestionBank.create({ _id: bankId, name: 'Bank', createdBy: ownerId });
       await QuestionBankMember.create({ bankId, userId: ownerId, role: 'owner', status: 'active' });
-      await expect(
-        service.requestAccess(bankId.toString(), ownerId.toString())
-      ).rejects.toThrow(/already an? active member/i);
+      await expect(service.requestAccess(bankId.toString(), ownerId.toString())).rejects.toThrow(
+        /already an? active member/i
+      );
     });
 
     it('approves pending request', async () => {
       const requester = new mongoose.Types.ObjectId();
       await QuestionBank.create({ _id: bankId, name: 'Bank', createdBy: ownerId });
       await QuestionBankMember.create({ bankId, userId: requester, role: 'viewer', status: 'pending' });
-      const result = await service.respondToRequest(
-        bankId.toString(),
-        requester.toString(),
-        'approve',
-        ownerId.toString()
-      );
+      const result = await service.respondToRequest(bankId.toString(), requester.toString(), 'approve', ownerId.toString());
       expect(result.status).toBe('active');
     });
 
@@ -158,12 +151,7 @@ describe('QuestionBank Service', () => {
       const requester = new mongoose.Types.ObjectId();
       await QuestionBank.create({ _id: bankId, name: 'Bank', createdBy: ownerId });
       await QuestionBankMember.create({ bankId, userId: requester, role: 'viewer', status: 'pending' });
-      await service.respondToRequest(
-        bankId.toString(),
-        requester.toString(),
-        'reject',
-        ownerId.toString()
-      );
+      await service.respondToRequest(bankId.toString(), requester.toString(), 'reject', ownerId.toString());
       const m = await QuestionBankMember.findOne({ bankId, userId: requester });
       expect(m).toBeNull();
     });
@@ -191,9 +179,9 @@ describe('QuestionBank Service', () => {
         { bankId, userId: ownerId, role: 'owner', status: 'active' },
         { bankId, userId: targetId, role: 'viewer', status: 'pending' },
       ]);
-      await expect(
-        service.transferOwnership(bankId.toString(), ownerId.toString(), targetId.toString())
-      ).rejects.toThrow(/Target must be an? active member/i);
+      await expect(service.transferOwnership(bankId.toString(), ownerId.toString(), targetId.toString())).rejects.toThrow(
+        /Target must be an? active member/i
+      );
     });
   });
 
@@ -254,36 +242,29 @@ describe('QuestionBank Service', () => {
 
   describe('listApprovedBanksForUser', () => {
     it('returns only active membership banks and ignores pending', async () => {
+      const userId = new mongoose.Types.ObjectId();
       const bankIdA = new mongoose.Types.ObjectId();
       const bankIdB = new mongoose.Types.ObjectId();
       const bankIdC = new mongoose.Types.ObjectId();
       await QuestionBank.insertMany([
-        { _id: bankIdA, name: 'A', createdBy: ownerId },
-        { _id: bankIdB, name: 'B', createdBy: ownerId },
-        { _id: bankIdC, name: 'C', createdBy: ownerId },
+        { _id: bankIdA, name: 'Approved A', createdBy: ownerId },
+        { _id: bankIdB, name: 'Approved B', createdBy: ownerId },
+        { _id: bankIdC, name: 'Pending C', createdBy: ownerId },
       ]);
       await QuestionBankMember.insertMany([
-        { bankId: bankIdA, userId: ownerId, role: 'owner', status: 'active' },
-        { bankId: bankIdB, userId: ownerId, role: 'manager', status: 'active' },
-        { bankId: bankIdC, userId: ownerId, role: 'viewer', status: 'pending' },
+        { bankId: bankIdA, userId, role: 'owner', status: 'active' },
+        { bankId: bankIdB, userId, role: 'viewer', status: 'active' },
+        { bankId: bankIdC, userId, role: 'viewer', status: 'pending' },
       ]);
-      const banks = await service.listApprovedBanksForUser(ownerId.toString());
-      const ids = banks.map((b) => b._id.toString()).sort();
+
+      const banks = await service.listApprovedBanksForUser(userId.toString());
+      const ids = banks.map((bank) => bank._id.toString()).sort();
       expect(ids).toEqual([bankIdA.toString(), bankIdB.toString()].sort());
     });
 
     it('returns empty array when user has no active membership', async () => {
-      const bankIdA = new mongoose.Types.ObjectId();
-      const bankIdB = new mongoose.Types.ObjectId();
-      await QuestionBank.insertMany([
-        { _id: bankIdA, name: 'A', createdBy: ownerId },
-        { _id: bankIdB, name: 'B', createdBy: ownerId },
-      ]);
-      await QuestionBankMember.insertMany([
-        { bankId: bankIdA, userId: ownerId, role: 'viewer', status: 'pending' },
-        { bankId: bankIdB, userId: ownerId, role: 'viewer', status: 'pending' },
-      ]);
-      const banks = await service.listApprovedBanksForUser(ownerId.toString());
+      const userId = new mongoose.Types.ObjectId();
+      const banks = await service.listApprovedBanksForUser(userId.toString());
       expect(banks).toEqual([]);
     });
   });
