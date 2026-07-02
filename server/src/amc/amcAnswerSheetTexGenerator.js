@@ -10,6 +10,15 @@
 
 const { escapeLatex } = require('./amcSourceGenerator');
 
+function removeVietnameseTones(str) {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D');
+}
+
 /**
  * Build compact header - single line metadata
  */
@@ -25,10 +34,10 @@ function buildAnswerSheetHeader(exam) {
   lines.push('');
 
   // Header
-  const title = escapeLatex(exam.title || 'Bai kiem tra');
-  const subject = exam.subjectName ? escapeLatex(exam.subjectName) : '';
-  const className = exam.className ? escapeLatex(exam.className) : '';
-  const school = exam.schoolHeader ? escapeLatex(exam.schoolHeader) : '';
+  const title = escapeLatex(removeVietnameseTones(exam.title || 'Bai kiem tra'));
+  const subject = exam.subjectName ? escapeLatex(removeVietnameseTones(exam.subjectName)) : '';
+  const className = exam.className ? escapeLatex(removeVietnameseTones(exam.className)) : '';
+  const school = exam.schoolHeader ? escapeLatex(removeVietnameseTones(exam.schoolHeader)) : '';
 
   lines.push('\\begin{document}');
   lines.push('');
