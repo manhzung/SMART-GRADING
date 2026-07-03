@@ -3,6 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { X, Edit3, Trash2, Save, AlertTriangle } from 'lucide-react';
 import { apiService } from '../../core/api';
 import { useSubmissionStore } from '../../presentation/store/submissionStore';
+import { useExamStore } from '../../presentation/store/examStore';
 import { AnswerEditTable, type AnswerRow } from './AnswerEditTable';
 import { ImageGallery } from './ImageGallery';
 import styles from './SubmissionDetailModal.module.css';
@@ -35,10 +36,37 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
     clearError,
   } = useSubmissionStore();
 
+  const { examVersions, fetchExamVersions } = useExamStore();
+
   const [mode, setMode] = useState<ModalMode>(initialMode);
   const [editedAnswers, setEditedAnswers] = useState<Record<string, string>>({});
   const [reasons, setReasons] = useState<Record<number, string>>({});
+  const [selectedVersionId, setSelectedVersionId] = useState<string>('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const examId = useMemo(() => {
+    if (!currentSubmission?.examId) return undefined;
+    return typeof currentSubmission.examId === 'object'
+      ? (currentSubmission.examId as any)._id
+      : currentSubmission.examId;
+  }, [currentSubmission]);
+
+  useEffect(() => {
+    if (open && examId) {
+      fetchExamVersions(examId);
+    }
+  }, [open, examId, fetchExamVersions]);
+
+  useEffect(() => {
+    if (currentSubmission?.versionId) {
+      const vId = typeof currentSubmission.versionId === 'object'
+        ? (currentSubmission.versionId as any)._id
+        : currentSubmission.versionId;
+      setSelectedVersionId(vId || '');
+    } else {
+      setSelectedVersionId('');
+    }
+  }, [currentSubmission]);
 
   useEffect(() => {
     if (open && submissionId) {
@@ -51,6 +79,7 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
     clearCurrentSubmission();
     setEditedAnswers({});
     setReasons({});
+    setSelectedVersionId('');
     setMode(initialMode);
     setShowDeleteConfirm(false);
     clearError();
@@ -103,9 +132,18 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
   };
 
   const handleSave = async () => {
-    if (!submissionId || !hasChanges) return;
+    if (!submissionId) return;
+    const originalVersionId = typeof currentSubmission?.versionId === 'object'
+      ? (currentSubmission.versionId as any)._id
+      : currentSubmission?.versionId;
+    const versionChanged = selectedVersionId !== originalVersionId;
+    if (!hasChanges && !versionChanged) return;
     try {
-      await updateSubmission(submissionId, editedAnswers);
+      await updateSubmission(
+        submissionId,
+        hasChanges ? editedAnswers : undefined,
+        versionChanged ? selectedVersionId : undefined
+      );
       setMode('view');
       setEditedAnswers({});
       onSaved?.();
@@ -209,7 +247,22 @@ export const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
                   </div>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Version:</span>
-                    <span className={styles.infoValue}>{versionCode}</span>
+                    {mode === 'edit' ? (
+                      <select
+                        value={selectedVersionId}
+                        onChange={(e) => setSelectedVersionId(e.target.value)}
+                        className={styles.select}
+                      >
+                        <option value="">Select Version</option>
+                        {examVersions.map((v) => (
+                          <option key={v._id} value={v._id}>
+                            {v.versionCode}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={styles.infoValue}>{versionCode}</span>
+                    )}
                   </div>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Status:</span>

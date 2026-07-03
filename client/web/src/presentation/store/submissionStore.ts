@@ -121,7 +121,7 @@ interface SubmissionState {
   fetchByExam: (examId: string) => Promise<void>;
   fetchStatistics: (examId: string) => Promise<void>;
   fetchById: (id: string) => Promise<void>;
-  updateSubmission: (id: string, answers: Record<string, string>) => Promise<void>;
+  updateSubmission: (id: string, answers?: Record<string, string>, versionId?: string) => Promise<void>;
   createSubmission: (data: CreateSubmissionPayload) => Promise<BackendSubmission>;
   deleteSubmission: (id: string) => Promise<void>;
   clearSubmissions: () => void;
@@ -196,10 +196,10 @@ export const useSubmissionStore = create<SubmissionState>((set) => ({
     }
   },
 
-  updateSubmission: async (id: string, answers: Record<string, string>) => {
+  updateSubmission: async (id: string, answers?: Record<string, string>, versionId?: string) => {
     set({ isSubmitting: true, error: null });
     try {
-      await apiService.patch(`/submissions/${id}/answers`, { answers });
+      await apiService.patch(`/submissions/${id}/answers`, { answers, versionId });
       const response = await apiService.get<BackendSubmission>(`/submissions/${id}`);
       set((state) => ({
         currentSubmission: response,

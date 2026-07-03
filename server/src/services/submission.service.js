@@ -753,7 +753,7 @@ class SubmissionService {
     };
   }
 
-  async updateAnswers(id, answers) {
+  async updateAnswers(id, updateData) {
     const submission = await Submission.findById(id);
     if (!submission) {
       throw new ApiError(404, 'Submission not found');
@@ -762,18 +762,44 @@ class SubmissionService {
     const { Exam, ExamVersion } = require('../models');
     const exam = await Exam.findById(submission.examId).select('totalScore numberOfQuestions').lean();
 
-    for (const [posStr, selectedAnswer] of Object.entries(answers)) {
-      const position = parseInt(posStr, 10);
-      const answer = submission.answers.find((a) => a.position === position);
-      if (!answer) continue;
+    let newVersion = null;
+    if (updateData.versionId && String(submission.versionId) !== String(updateData.versionId)) {
+      newVersion = await ExamVersion.findById(updateData.versionId);
+      if (!newVersion) {
+        throw new ApiError(404, 'Exam version not found');
+      }
+      submission.versionId = updateData.versionId;
+    }
 
-      answer.selectedAnswer = selectedAnswer;
+    const scorePerQuestion = (exam?.totalScore || 10) / (exam?.numberOfQuestions || 1);
 
-      // Re-grade
-      if (answer.correctAnswer) {
-        answer.isCorrect = selectedAnswer === answer.correctAnswer;
-        const scorePerQuestion = (exam?.totalScore || 10) / (exam?.numberOfQuestions || 1);
-        answer.score = answer.isCorrect ? scorePerQuestion : 0;
+    // Apply version changes to all answers if version changed
+    if (newVersion) {
+      for (const answer of submission.answers) {
+        const correct = newVersion.getAnswerForPosition(answer.position) || null;
+        answer.correctAnswer = correct;
+        // Recalculate correctness using existing selectedAnswer
+        if (correct) {
+          answer.isCorrect = answer.selectedAnswer === correct;
+          answer.score = answer.isCorrect ? scorePerQuestion : 0;
+        }
+      }
+    }
+
+    // Apply specific answer updates if provided
+    if (updateData.answers) {
+      for (const [posStr, selectedAnswer] of Object.entries(updateData.answers)) {
+        const position = parseInt(posStr, 10);
+        const answer = submission.answers.find((a) => a.position === position);
+        if (!answer) continue;
+
+        answer.selectedAnswer = selectedAnswer || null;
+
+        // Re-grade
+        if (answer.correctAnswer) {
+          answer.isCorrect = answer.selectedAnswer === answer.correctAnswer;
+          answer.score = answer.isCorrect ? scorePerQuestion : 0;
+        }
       }
     }
 

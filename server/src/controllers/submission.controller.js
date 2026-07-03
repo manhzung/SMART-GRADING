@@ -76,7 +76,7 @@ const manualOverride = catchAsync(async (req, res) => {
 });
 
 const updateAnswers = catchAsync(async (req, res) => {
-  const result = await submissionService.updateAnswers(req.params.id, req.body.answers);
+  const result = await submissionService.updateAnswers(req.params.id, req.body);
   res.send(result);
 });
 

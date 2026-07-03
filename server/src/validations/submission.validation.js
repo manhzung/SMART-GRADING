@@ -101,7 +101,8 @@ const manualOverride = {
 const updateAnswers = {
   params: id,
   body: Joi.object().keys({
-    answers: Joi.object().pattern(Joi.string(), Joi.string().valid('A', 'B', 'C', 'D')).required(),
+    answers: Joi.object().pattern(Joi.string(), Joi.string().valid('A', 'B', 'C', 'D', '')).optional(),
+    versionId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
   }),
 };
 
